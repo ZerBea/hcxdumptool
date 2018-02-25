@@ -15,7 +15,8 @@ Detailed description
 
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | raw socket version of wlandump-ng                                                                      |
+| hcxdumptool    | Raw socket version of wlandump-ng                                                                      |
+| pioff          | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
 Compile
@@ -76,20 +77,34 @@ Useful scripts
 | killmonnb    | Example script to deactivate monitor mode                |
 
 
-Hardware mod (wlandump-ng)
+Hardware mod (hcxdumptool)
 --------------
 
-LED flashes 5 times if wlandump-ng successfully started
+LED flashes 5 times if hcxdumptool successfully started
 
 LED flashes every 5 seconds if everything is fine
 
-Press push button at least > 5 seconds until LED turns on (LED turns on if wlandump-ng terminates)
+Press push button at least > 5 seconds until LED turns on (LED turns on if hcxdumptool terminates)
 
 Green ACT LED flashes 10 times
 
 Raspberry Pi turned off and can be disconnected from power supply
 
-Do not use hcxdumptool and pioff together!
+Do not use hcxdumptool and hcxpioff together!
+
+
+Hardware mod (hcxpioff)
+--------------
+
+LED flashes every 10 seconds 2 times if hcxpioff successfully started
+
+Press push button at least > 10 seconds until LED turns on (hcxpioff will shut down Raspberry Pi safely)
+
+Green ACT LED flashes 10 times
+
+Raspberry Pi turned off and can be disconnected from power supply
+
+Do not use hcxdumptool or hcxpioff together!
 
 
 Warning
