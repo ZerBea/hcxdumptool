@@ -40,29 +40,31 @@ make GPIOSUPPORT=on install (as super user)
 Requirements
 --------------
 
-* Linux (Recommended Arch, but other distros should work, too), Kernel >= 4.9
+* Operatingsystem: archlinux (strict), Kernel >= 4.14 (strict)
 
 * libpthread and pthread-dev installed (used by hcxhashcattool)
 
 * Raspberry Pi: additionally libwiringpi and wiringpi dev installed (Raspberry Pi GPIO support)
 
-* Chipset must be able to run in monitor mode. Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (stable and fast)
+* Chipset must be able to run in monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (stable and fast)
 
-* Raspberry Pi (Recommended: A+ = very low power consumption or B+), but notebooks and desktops should work, too.
+* Raspberry Pi A, B, A+, B+ (Recommended: A+ = very low power consumption or B+), but notebooks and desktops could work, too.
 
+* GPIO hardware mod recommended
+ 
 
-Tested adapters
+Supported adapters (strict)
 --------------
 
-USB ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+* USB ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
 
-USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
+* USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 
-USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
+* USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 
-USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
+* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
 
-USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
+* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
 
 
 Useful scripts
