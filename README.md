@@ -42,7 +42,7 @@ Requirements
 
 * Operatingsystem: archlinux (strict), Kernel >= 4.14 (strict)
 
-* libpthread and pthread-dev installed (used by hcxhashcattool)
+* libpthread and pthread-dev installed
 
 * Raspberry Pi: additionally libwiringpi and wiringpi dev installed (Raspberry Pi GPIO support)
 
