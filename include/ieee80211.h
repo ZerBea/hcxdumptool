@@ -294,11 +294,13 @@ typedef struct llc_frame llc_t;
 /*===========================================================================*/
 struct authentication_frame
 {
- uint16_t	authentication_algho;
- uint16_t	authentication_seq;
+ uint16_t	algorithm;
+ uint16_t	sequence;
+ uint16_t	statuscode;
+ uint8_t	data[1];
 } __attribute__((__packed__));
 typedef struct authentication_frame authf_t;
-#define	AUTHENTICATIONFRAME_SIZE (sizeof(authf_t))
+#define	AUTHENTICATIONFRAME_SIZE offsetof(authf_t, data)
 /*===========================================================================*/
 struct action_frame
 {

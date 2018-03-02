@@ -1,68 +1,51 @@
-#define PROBEREQUESTLISTESIZEMAX 256
-#define PROBERESPONSELISTESIZEMAX 256
-#define HANDSHAKELISTESIZEMAX 256
-#define BLACKLISTESIZEMAX 256
+#define MACSTAESSIDLISTZEMAX 256
+#define MACAPESSIDLISTZEMAX 128
+#define MACMYAPESSIDLISTZEMAX 256
+#define NETWORKLISTZEMAX 256
 
-#define TXBUFFERSIZEMAX 0x2ff
-
-#define TT_SIGUSR1 (SIGUSR1)
-#define TT_SIGUSR2 (SIGUSR2)
-#define TIME_INTERVAL_1S 5
-#define TIME_INTERVAL_1NS 0
-
-#define TIME_INTERVAL_2S 5
-#define TIME_INTERVAL_2NS 0
-
-#define STATUS_NONE	  0b00000000
-#define STATUS_ASSOCIATED 0b00000001
-#define STATUS_M1	  0b00000010
+#define TIME_INTERVAL 5
 
 /*===========================================================================*/
-struct maclist
+struct arg_s
 {
- long int	tv_sec;
- uint8_t	mac_addr[6];
-};
-typedef struct maclist macl_t;
-#define	MACLIST_SIZE (sizeof(macl_t))
-
-static int sort_maclist_by_time(const void *a, const void *b)
-{
-const macl_t *ia = (const macl_t *)a;
-const macl_t *ib = (const macl_t *)b;
-return ia->tv_sec < ib->tv_sec;
-}
+ uint32_t	waittime;
+} __attribute__((__packed__));
+typedef struct arg_s arg_t;
 /*===========================================================================*/
-struct macessidlist
+struct networklist_s
 {
  long int	tv_sec;
- uint8_t	mac_addr[6];
+ uint8_t	status;
+ uint8_t	mac_sta[6];
+ uint8_t	mac_ap[6];
  uint8_t	essid_len;
  uint8_t	essid[32];
 };
-typedef struct macessidlist macessidl_t;
-#define	MACESSIDLIST_SIZE (sizeof(macessidl_t))
+typedef struct networklist_s networklist_t;
+#define	NETWORKLIST_SIZE (sizeof(networklist_t))
 
-static int sort_macessidlist_by_time(const void *a, const void *b)
+static int sort_networklist_by_time(const void *a, const void *b)
 {
-const macessidl_t *ia = (const macessidl_t *)a;
-const macessidl_t *ib = (const macessidl_t *)b;
+const networklist_t *ia = (const networklist_t *)a;
+const networklist_t *ib = (const networklist_t *)b;
 return ia->tv_sec < ib->tv_sec;
 }
 /*===========================================================================*/
-struct macapstalist
+struct macessidlist_s
 {
  long int	tv_sec;
- uint8_t	mac_ap[6];
- uint8_t	mac_sta[6];
+ uint8_t	status;
+ uint8_t	addr[6];
+ uint8_t	essid_len;
+ uint8_t	essid[32];
 };
-typedef struct macapstalist macapstal_t;
-#define	MACAPSTALIST_SIZE (sizeof(macapstal_t))
+typedef struct macessidlist_s macessidlist_t;
+#define	MACESSIDLIST_SIZE (sizeof(macessidlist_t))
 
-static int sort_macapstalist_by_time(const void *a, const void *b)
+static int sort_macessidlist_by_time(const void *a, const void *b)
 {
-const macapstal_t *ia = (const macapstal_t *)a;
-const macapstal_t *ib = (const macapstal_t *)b;
+const macessidlist_t *ia = (const macessidlist_t *)a;
+const macessidlist_t *ib = (const macessidlist_t *)b;
 return ia->tv_sec < ib->tv_sec;
 }
 /*===========================================================================*/
