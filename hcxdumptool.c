@@ -83,6 +83,7 @@ static bool channelsetflag = false;
 static bool deauthflag = false;
 static bool requestflag = false;
 static bool respondflag = false;
+static bool qosflag = false;
 
 
 static const uint8_t hdradiotap[] =
@@ -718,30 +719,16 @@ return;
 static void send_m1_org()
 {
 static int retw;
-static mac_t *macf;
-static wpakey_t *keynew;
-static const uint8_t anoncewpa2data[] =
+uint16_t eapollen;
+
+static const uint8_t myrcanonce[] =
 {
-0x06, 0x00,
-0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
-0x02,
-0x03,
-0x00, 0x5f,
-0x02,
-0x00, 0x8a,
-0x00, 0x10,
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf7, 0x00,
 0x68, 0x20, 0x09, 0xe2, 0x1f, 0x0e, 0xbc, 0xe5, 0x62, 0xb9, 0x06, 0x5b, 0x54, 0x89, 0x79, 0x09,
 0x9a, 0x65, 0x52, 0x86, 0xc0, 0x77, 0xea, 0x28, 0x2f, 0x6a, 0xaf, 0x13, 0x8e, 0x50, 0xcd, 0xb9,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00
 };
-#define ANONCEWPA2_SIZE sizeof(anoncewpa2data)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +256];
 
 if(respondflag == true)
 	{
@@ -752,22 +739,28 @@ if(checknetwork_m1org() == true)
 	return;
 	}
 
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE +1);
-memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
-macf = (mac_t*)(packetout +HDRRT_SIZE);
-macf->type = IEEE80211_FTYPE_DATA;
-macf->subtype = IEEE80211_STYPE_QOS_DATA;
-memcpy(macf->addr1, mac_ptr->addr1, 6);
-memcpy(macf->addr2, mac_ptr->addr2, 6);
-memcpy(macf->addr3, mac_ptr->addr2, 6);
-macf->from_ds = 1;
-macf->duration = 0x013a;
-macf->sequence = 0;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &anoncewpa2data, ANONCEWPA2_SIZE);
-keynew = (wpakey_t*)(packetout +HDRRT_SIZE +MAC_SIZE_QOS +0x0c);
-keynew->keydescriptor = wpak->keydescriptor;
-keynew->keyinfo = wpak->keyinfo;
-CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE));
+
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +98);
+eapollen = ntohs(eap->len);
+if(eapollen > 256)
+	{
+	eapollen = 95;
+	}
+
+if(qosflag ==false)
+	{
+	memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+	memcpy(&packetout[HDRRT_SIZE], packet_ptr, +MAC_SIZE_NORM +LLC_SIZE +EAPAUTH_SIZE +eapollen);
+	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +EAPAUTH_SIZE +5], &myrcanonce, 40);
+	CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +EAPAUTH_SIZE +eapollen));
+	}
+else
+	{
+	memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+	memcpy(&packetout[HDRRT_SIZE], packet_ptr, +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +eapollen);
+	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +5], &myrcanonce, 40);
+	CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +eapollen));
+	}
 return;
 }
 /*===========================================================================*/
@@ -917,7 +910,7 @@ if(eap->type == 3)
 			}
 		else
 			{
-			send_m1_org();
+			send_m1_org(qosflag);
 			}
 		}
 	if(keyinfo == 2)
@@ -1397,7 +1390,7 @@ printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"INTERFACE: %s\n"
 	"MAC_AP...: %06x%06x (rogue access point)\n"
 	"MAC_STA..: %06x%06x (rogue client)\n"
-	"INFO.....: cha=%d, rcv=%llu, err=%d\r",
+	"INFO.....: cha=%d, rcv=%llu, err=%d (refresh time  depends on option -t\r",
 	interfacename, myouiap, mynicap, myouista, mynicsta, channelscanlist[cpa], packetcount, errorcount);
 set_channel();
 send_broadcastbeacon();
@@ -1606,6 +1599,7 @@ while(1)
 				{
 				continue;
 				}
+			qosflag = false;
 			llc = (llc_t*)(packet_ptr +MAC_SIZE_NORM);
 			if(((ntohs(llc->type)) == LLC_TYPE_AUTH)&& (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
 				{
@@ -1643,6 +1637,7 @@ while(1)
 				{
 				continue;
 				}
+			qosflag = true;
 			llc = (llc_t*)(packet_ptr +MAC_SIZE_QOS);
 			if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
 				{
