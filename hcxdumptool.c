@@ -97,8 +97,6 @@ static const uint8_t hdradiotap[] =
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
-
-
 static uint8_t channeldefaultlist[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
@@ -667,11 +665,16 @@ return;
 /*===========================================================================*/
 static void send_m1()
 {
-static int retw;
-static mac_t *macf;
+int retw;
+mac_t *macf;
 
-static const uint8_t anoncewpa2data[] =
+uint8_t anoncewpa2data[] =
 {
+0x88, 0x02, 0x3a, 0x01,
+0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+0x00, 0x00, 0x06, 0x00,
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x02,
 0x03,
@@ -690,45 +693,36 @@ static const uint8_t anoncewpa2data[] =
 };
 #define ANONCEWPA2_SIZE sizeof(anoncewpa2data)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +ANONCEWPA2_SIZE +1];
 
 if(respondflag == true)
 	{
 	return;
 	}
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE +1);
+memset(&packetout, 0, HDRRT_SIZE +ANONCEWPA2_SIZE);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+memcpy(&packetout[HDRRT_SIZE], &anoncewpa2data, ANONCEWPA2_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
-macf->type = IEEE80211_FTYPE_DATA;
-macf->subtype = IEEE80211_STYPE_QOS_DATA;
 memcpy(macf->addr1, networkliste->mac_sta, 6);
 memcpy(macf->addr2, networkliste->mac_ap, 6);
 memcpy(macf->addr3, networkliste->mac_ap, 6);
-macf->from_ds = 1;
-macf->duration = 0x013a;
-macf->sequence = mysequencenr++ << 4;
-if(mysequencenr >= 4096)
-	{
-	mysequencenr = 0;
-	}
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &anoncewpa2data, ANONCEWPA2_SIZE);
-CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_QOS +ANONCEWPA2_SIZE));
+CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +ANONCEWPA2_SIZE));
 return;
 }
 /*===========================================================================*/
 static void send_m1_org()
 {
-static int retw;
+int retw;
 uint16_t eapollen;
 
-static const uint8_t myrcanonce[] =
+const uint8_t myrcanonce[] =
 {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf7, 0x00,
 0x68, 0x20, 0x09, 0xe2, 0x1f, 0x0e, 0xbc, 0xe5, 0x62, 0xb9, 0x06, 0x5b, 0x54, 0x89, 0x79, 0x09,
 0x9a, 0x65, 0x52, 0x86, 0xc0, 0x77, 0xea, 0x28, 0x2f, 0x6a, 0xaf, 0x13, 0x8e, 0x50, 0xcd, 0xb9,
 };
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +256];
+uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +256];
 
 if(respondflag == true)
 	{
@@ -738,15 +732,12 @@ if(checknetwork_m1org() == true)
 	{
 	return;
 	}
-
-
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +98);
 eapollen = ntohs(eap->len);
 if(eapollen > 256)
 	{
 	eapollen = 95;
 	}
-
 if(qosflag ==false)
 	{
 	memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
