@@ -967,6 +967,7 @@ for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	zeiger++;
 	}
 
+
 zeiger->tv_sec = tv.tv_sec;
 memcpy(zeiger->addr, mac_ptr->addr2, 6);
 zeiger->essid_len = essid_tag->len;
@@ -1128,6 +1129,34 @@ if(essid_tag != NULL)
 return;
 }
 /*===========================================================================*/
+static void setmac()
+{
+macessidlist_t *zeiger;
+int c;
+
+zeiger = macapessidliste;
+for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
+	{
+	if(memcmp(&mac_null, zeiger->addr, 6) == 0)
+		{
+		break;
+		}
+	if((memcmp(mac_ptr->addr1, zeiger->addr, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		return;
+		}
+	zeiger++;
+	}
+zeiger->tv_sec = tv.tv_sec;
+memcpy(zeiger->addr, mac_ptr->addr1, 6);
+memset(zeiger->essid, 0, 32);
+zeiger->essid_len = essid_tag->len;
+memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
+qsort(macapessidliste, MACAPESSIDLISTZEMAX , MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+return;
+}
+/*===========================================================================*/
 static void handle_directedproberequest()
 {
 essid_tag = (ietag_t*)getessidtag(caplen -MAC_SIZE_NORM, packet_ptr +MAC_SIZE_NORM);
@@ -1135,6 +1164,7 @@ if(essid_tag == NULL)
 	{
 	return;
 	}
+setmac();
 send_directproberesponse();
 writemacsta();
 return;
@@ -1506,6 +1536,10 @@ while(1)
 			}
 		else if(mac_ptr->subtype == IEEE80211_STYPE_PROBE_RESP)
 			{
+			if(memcmp(&mac_myap, mac_ptr->addr2, 3) == 0)
+				{
+				continue;
+				}
 			handle_proberesponse();
 			continue;
 			}
