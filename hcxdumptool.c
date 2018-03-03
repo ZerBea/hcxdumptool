@@ -148,7 +148,7 @@ int p;
 char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-fprintf(stdout, "[%s] ", timestring);
+fprintf(stdout, "\33[2K[%s] ", timestring);
 
 for(p = 0; p< 6; p++)
 	{
@@ -177,7 +177,7 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 		{
 		return false;
 		}
-	if((zeiger->status >= 3) && (memcmp(zeiger->mac_ap, mac_ptr->addr2,  6) == 0) && (memcmp(zeiger->mac_sta, mac_ptr->addr1, 6) == 0))
+	if((zeiger->status >= 7) && (memcmp(zeiger->mac_ap, mac_ptr->addr2,  6) == 0) && (memcmp(zeiger->mac_sta, mac_ptr->addr1, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		return true;
@@ -199,7 +199,7 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 		{
 		return false;
 		}
-	if((zeiger->status >= 3) && (memcmp(zeiger->mac_ap, mac_ptr->addr1,  6) == 0) && (memcmp(zeiger->mac_sta, mac_ptr->addr2, 6) == 0))
+	if((zeiger->status >= 7) && (memcmp(zeiger->mac_ap, mac_ptr->addr1,  6) == 0) && (memcmp(zeiger->mac_sta, mac_ptr->addr2, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		return true;
@@ -221,7 +221,7 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 		{
 		return false;
 		}
-	if((zeiger->status >= 3) && (memcmp(zeiger->mac_ap, mac_ptr->addr2,  6) == 0))
+	if((zeiger->status >= 7) && (memcmp(zeiger->mac_ap, mac_ptr->addr2,  6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		return true;
@@ -841,7 +841,7 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
-		zeiger->status |= 1;
+		zeiger->status |= 2;
 		qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
 		return;
 		}
@@ -850,7 +850,7 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 return;
 }
 /*===========================================================================*/
-static uint8_t addnetwork_m2()
+static bool addnetwork_m2()
 {
 networklist_t *zeiger;
 int c;
@@ -860,32 +860,30 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 	{
 	if(memcmp(&mac_null, zeiger->mac_ap, 6) == 0)
 		{
-		return 0;
+		return false;
 		}
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
-		if(zeiger->status == 3)
+		if(zeiger->status == 7)
 			{
-			return 0;
+			qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
+			return false;
 			}
-		if((zeiger->essid_len != 0) && (zeiger->essid[0] != 0))
-			{
-			zeiger->status |= 2;
-			}
+		zeiger->status |= 4;
 		qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
-		return zeiger->status;
+		return true;
 		}
 	zeiger++;
 	}
-return 0;
+return false;
 }
 /*===========================================================================*/
 static void process80211networkauthentication()
 {
 uint16_t keyinfo;
 uint64_t replaycount;
-uint8_t retn;
+
 if(eap->type == 3)
 	{
 	keyinfo = (getkeyinfo(ntohs(wpak->keyinfo)));
@@ -914,14 +912,9 @@ if(eap->type == 3)
 			{
 			if(wantstatusflag == true)
 				{
-				retn = addnetwork_m2();
-				if(retn == 3)
+				if(addnetwork_m2() == true)
 					{
 					printnetwork("[HANDSHAKE]");
-					}
-				if(retn == 7)
-					{
-					printnetwork("[HANDSHAKE blacklisted client connected us]");
 					}
 				}
 			}
@@ -1234,13 +1227,24 @@ for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->status |= 1;
+		qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
+		return;
+		}
+	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0) && (zeiger->essid_len == 0) && (zeiger->essid[0] == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		zeiger->status |= 1;
+		memset(zeiger->essid, 0, 32);
+		zeiger->essid_len = essid_tag->len;
+		memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
 		qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
 		return;
 		}
 	zeiger++;
 	}
 zeiger->tv_sec = tv.tv_sec;
-zeiger->status = 0;
+zeiger->status = 1;
 memcpy(zeiger->mac_ap, mac_ptr->addr1, 6);
 memcpy(zeiger->mac_sta, mac_ptr->addr2, 6);
 memset(zeiger->essid, 0, 32);
@@ -1381,7 +1385,7 @@ printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"INTERFACE: %s\n"
 	"MAC_AP...: %06x%06x (rogue access point)\n"
 	"MAC_STA..: %06x%06x (rogue client)\n"
-	"INFO.....: cha=%d, rcv=%llu, err=%d (refresh time  depends on option -t\r",
+	"INFO.....: cha=%d, rcv=%llu, err=%d (refresh time depends on option -t)\r",
 	interfacename, myouiap, mynicap, myouista, mynicsta, channelscanlist[cpa], packetcount, errorcount);
 set_channel();
 send_broadcastbeacon();
@@ -1953,7 +1957,7 @@ while((len = fgetline(fh_black, 60, linein)) != -1)
 		{
 		printf("reached maximum of blacklist entries at %d\n", c);
 		break;
-	zeiger->status = 4;
+	zeiger->status = 0xf;
 		}
 	zeiger++;
 	c++;
@@ -2089,7 +2093,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default = 5 seconds\n"
 	"-T <maxerrors> : terminate after <x> maximal errors\n"
-	"               : default = 1000000\n"
+	"                 default = 1000000\n"
 	"-D             : do not transmit deauthentications or disassociations\n"
 	"-R             : do not transmit requests\n"
 	"-A             : do not respond to requests from clients\n"
