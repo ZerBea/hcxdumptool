@@ -1179,6 +1179,7 @@ int c;
 zeiger1 = macapessidliste;
 for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	{
+
 	if(memcmp(&mac_null, zeiger1->addr, 6) == 0)
 		{
 		break;
@@ -1214,7 +1215,6 @@ memcpy(zeiger2->addr, &mac_myap, 6);
 memset(zeiger2->essid, 0, 32);
 zeiger2->essid_len = essid_tag->len;
 memcpy(zeiger2->essid, essid_tag->data, essid_tag->len);
-qsort(macmyapessidliste, MACMYAPESSIDLISTZEMAX , MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return macmyapessidliste->addr;
 }
 /*===========================================================================*/
@@ -1281,6 +1281,7 @@ memset(zeiger->essid, 0, 32);
 zeiger->essid_len = essid_tag->len;
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
 qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
+return;
 }
 /*===========================================================================*/
 void handle_association()
