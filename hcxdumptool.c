@@ -51,6 +51,7 @@
 static int fd_socket = 0;
 static int fd_pcap = 0;
 static int fd_ippcap = 0;
+static int fd_weppcap = 0;
 
 static uint32_t myouiap = 0;
 static uint32_t mynicap = 0;
@@ -65,6 +66,7 @@ static uint8_t cpa = 0;
 static char *interfacename = NULL;
 static char *pcapoutname = NULL;
 static char *ippcapoutname = NULL;
+static char *weppcapoutname = NULL;
 
 static macessidlist_t *macapessidliste = NULL;
 static int macapessidcount = 0;
@@ -131,6 +133,7 @@ static ietag_t *essid_tag;
 static llc_t *llc;
 static eapauth_t *eap;
 static wpakey_t *wpak;
+static mpdu_t *mpdu;
 
 static actf_t *action_ptr;
 static uint8_t authenticationstatus;
@@ -1026,18 +1029,9 @@ for(c = 0; c < macapessidcount; c++)
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		zeiger->status += 1;
-		if(zeiger->status == 5)
+		if(zeiger->status == 20)
 			{
 			zeiger->status = 0;
-			send_deauthentication(WLAN_REASON_UNSPECIFIED);
-			send_deauthentication(WLAN_REASON_UNSPECIFIED);
-			}
-		if(zeiger->status >= 20)
-			{
-			zeiger->status = 0;
-			send_deauthentication(WLAN_REASON_UNSPECIFIED);
-			send_deauthentication(WLAN_REASON_UNSPECIFIED);
-			send_deauthentication(WLAN_REASON_UNSPECIFIED);
 			send_deauthentication(WLAN_REASON_UNSPECIFIED);
 			}
 		return;
@@ -1087,7 +1081,6 @@ for(c = 0; c < macapessidcount; c++)
 			{
 			zeiger->status = 0;
 			send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
-			send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
 			}
 		return;
 		}
@@ -1106,6 +1099,8 @@ if(macapessidcount >= MACAPESSIDLISTZEMAX)
 	}
 qsort(macapessidliste, macapessidcount, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
+send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
+send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
 send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
 send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
 return;
@@ -1247,7 +1242,6 @@ if(networkcount >= NETWORKLISTZEMAX)
 	{
 	networkcount = NETWORKLISTZEMAX;
 	}
-
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 return;
 }
@@ -1530,6 +1524,9 @@ while(1)
 			if(authentication_ptr->sequence == 1)
 				{
 				send_acknowledgement();
+				authenticationstatus = 1;
+				tvfd.tv_sec = 0;
+				tvfd.tv_usec = 500000;
 				send_authenticationresponse();
 				}
 			continue;
@@ -1537,6 +1534,9 @@ while(1)
 		else if(mac_ptr->subtype == IEEE80211_STYPE_ASSOC_REQ)
 			{ 
 			send_acknowledgement();
+			authenticationstatus = 1;
+			tvfd.tv_sec = 0;
+			tvfd.tv_usec = 500000;
 			handle_association();
 			continue;
 			}
@@ -1553,6 +1553,9 @@ while(1)
 		else if(mac_ptr->subtype == IEEE80211_STYPE_REASSOC_REQ)
 			{ 
 			send_acknowledgement();
+			authenticationstatus = 1;
+			tvfd.tv_sec = 0;
+			tvfd.tv_usec = 500000;
 			handle_reassociation();
 			continue;
 			}
@@ -1572,8 +1575,9 @@ while(1)
 			if((authenticationstatus >= 1) && (action_ptr->categorycode == CAT_BLOCK_ACK) && (action_ptr->actioncode == ACT_ADD_BLOCK_ACK_REQ))
 				{
 				send_acknowledgement();
+				tvfd.tv_sec = 0;
+				tvfd.tv_usec = 500000;
 				send_m1();
-				authenticationstatus = 0;
 				}
 			continue;
 			}
@@ -1586,9 +1590,8 @@ while(1)
 			if(authenticationstatus == 2)
 				{
 				send_m1_akt(aktmac_sta, aktmac_ap);
-				tvfd.tv_sec = 5;
-				tvfd.tv_usec = 0;
-				authenticationstatus = 0;
+				tvfd.tv_sec = 0;
+				tvfd.tv_usec = 500000;
 				}
 			if(authenticationstatus == 1)
 				{
@@ -1606,8 +1609,9 @@ while(1)
 			if((authenticationstatus > 1) && (mac_ptr->to_ds == 1) &&  (mac_ptr->power == 0))
 				{
 				send_acknowledgement();
+				tvfd.tv_sec = 0;
+				tvfd.tv_usec = 500000;
 				send_m1();
-				authenticationstatus = 3;
 				}
 			continue;
 			}
@@ -1646,6 +1650,18 @@ while(1)
 					}
 				continue;
 				}
+			else if(mac_ptr->protected ==1)
+				{
+				if(fd_weppcap != 0)
+					{
+					mpdu = (mpdu_t*)(packet_ptr +MAC_SIZE_NORM);
+					if(((mpdu->keyid >> 5) &1) == 0)
+						{
+						CHK_ERR(retw = write(fd_weppcap, packetin, pkh->incl_len +PCAPREC_SIZE));
+						}
+					}
+				continue;
+				}
 			continue;
 			}
 		else if((mac_ptr->subtype == IEEE80211_STYPE_QOS_DATA) || (mac_ptr->subtype == IEEE80211_STYPE_QOS_DATA_CFACK) || (mac_ptr->subtype == IEEE80211_STYPE_QOS_DATA_CFPOLL) || (mac_ptr->subtype == IEEE80211_STYPE_QOS_DATA_CFACKPOLL))
@@ -1681,6 +1697,19 @@ while(1)
 					{
 					CHK_ERR(retw = write(fd_ippcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 					}
+				continue;
+				}
+			else if(mac_ptr->protected ==1)
+				{
+				if(fd_weppcap != 0)
+					{
+					mpdu = (mpdu_t*)(packet_ptr +MAC_SIZE_QOS);
+					if(((mpdu->keyid >> 5) &1) == 0)
+						{
+						CHK_ERR(retw = write(fd_weppcap, packetin, pkh->incl_len +PCAPREC_SIZE));
+						}
+					}
+				continue;
 				}
 			continue;
 			}
@@ -1833,6 +1862,28 @@ if(ippcapoutname != NULL)
 		return false;
 		}
 	}
+
+if(weppcapoutname != NULL)
+	{
+	c = 0;
+	strcpy(newpcapoutname, weppcapoutname);
+	while(stat(newpcapoutname, &statinfo) == 0)
+		{
+		snprintf(newpcapoutname, PATH_MAX, "%s-%d.pcap", weppcapoutname, c);
+		c++;
+		}
+	fd_weppcap = hcxopenpcapdump(newpcapoutname);
+	if(fd_weppcap <= 0)
+		{
+		fprintf(stderr, "could not create dumpfile %s\n", newpcapoutname);
+		return false;
+		}
+	}
+
+
+
+
+
 ret = pthread_create(&thread1, NULL, &channelswitchthread, NULL);
 if(ret != 0)
 	{
@@ -2093,8 +2144,9 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 ip link set <interface> down\n"
 	"                 iw dev <interface> set type monitor\n"
 	"                 ip link set <interface> up\n"
-	"-o <dump file> : output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"-O <dump file> : ip based traffic output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-o <dump file> : EAPOL and EAP based output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-O <dump file> : IPv4 and IPv6 output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-W <dump file> : WEP encrypted packets output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
 	"-c <digit>     : set scanlist  (1,2,3,... / default = default scanlist)\n"
 	"                 default scanlist: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12\n"
 	"                 allowed channels:\n"
@@ -2136,7 +2188,7 @@ char *blacklistname = NULL;
 
 srand(time(NULL));
 setbuf(stdout, NULL);
-while ((auswahl = getopt(argc, argv, "i:o:O:c:t:T:DRAB:PsIhv")) != -1)
+while ((auswahl = getopt(argc, argv, "i:o:O:W:c:t:T:DRAB:PsIhv")) != -1)
 	{
 	switch (auswahl)
 		{
@@ -2155,6 +2207,10 @@ while ((auswahl = getopt(argc, argv, "i:o:O:c:t:T:DRAB:PsIhv")) != -1)
 
 		case 'O':
 		ippcapoutname = optarg;
+		break;
+
+		case 'W':
+		weppcapoutname = optarg;
 		break;
 
 		case 'c':

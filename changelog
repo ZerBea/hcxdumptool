@@ -1,3 +1,14 @@
+04.03.2018
+==========
+hcxdumptool: added new option -W
+-W <dump file> : WEP encrypted packets output file in pcapformat including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)
+
+
+04.03.2018
+==========
+hcxdumptool again complete refactored:
+
+
 02.03.2018
 ==========
 hcxdumptool is complete refactored:
