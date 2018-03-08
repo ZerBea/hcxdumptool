@@ -690,7 +690,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(macap, zeiger->mac_ap, 6) == 0) && (memcmp(macsta, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
