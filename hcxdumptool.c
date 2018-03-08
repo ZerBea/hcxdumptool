@@ -135,6 +135,8 @@ static mpdu_t *mpdu;
 
 static actf_t *action_ptr;
 static uint8_t authenticationstatus;
+uint8_t aktmac_ap[6];
+uint8_t aktmac_sta[6];
 
 static int caplen;
 static uint8_t packetin[PCAP_SNAPLEN +PCAPREC_SIZE];
@@ -396,6 +398,11 @@ if(mysequencenr >= 4096)
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationresponsedata, MYAUTHENTICATIONRESPONSE_SIZE);
 CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONRESPONSE_SIZE));
+tvfd.tv_sec = 0;
+tvfd.tv_usec = 100000;
+authenticationstatus = 1;
+memcpy(&aktmac_ap, mac_ptr->addr1, 6);
+memcpy(&aktmac_sta, mac_ptr->addr2, 6);
 return;
 }
 /*===========================================================================*/
@@ -463,6 +470,11 @@ if(mysequencenr >= 4096)
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &associationid, ASSOCIATIONID_SIZE);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE], &associationresponsedata, ASSOCIATIONRESPONSE_SIZE);
 CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE));
+tvfd.tv_sec = 0;
+tvfd.tv_usec = 100000;
+authenticationstatus = 1;
+memcpy(&aktmac_ap, mac_ptr->addr1, 6);
+memcpy(&aktmac_sta, mac_ptr->addr2, 6);
 return;
 }
 /*===========================================================================*/
@@ -530,6 +542,11 @@ if(mysequencenr >= 4096)
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &associationid, ASSOCIATIONID_SIZE);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE], &associationresponsedata, ASSOCIATIONRESPONSE_SIZE);
 CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE));
+tvfd.tv_sec = 0;
+tvfd.tv_usec = 100000;
+authenticationstatus = 1;
+memcpy(&aktmac_ap, mac_ptr->addr1, 6);
+memcpy(&aktmac_sta, mac_ptr->addr2, 6);
 return;
 }
 /*===========================================================================*/
@@ -1472,8 +1489,6 @@ unsigned long long int packetcount = 0;
 int retw;
 int fdnum;
 fd_set readfds;
-uint8_t aktmac_ap[6];
-uint8_t aktmac_sta[6];
 
 pkh = (pcaprec_hdr_t*)packetin;
 printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
@@ -1617,9 +1632,6 @@ while(1)
 			if(authentication_ptr->sequence == 1)
 				{
 				send_acknowledgement();
-				authenticationstatus = 1;
-				tvfd.tv_sec = 0;
-				tvfd.tv_usec = 100000;
 				send_authenticationresponse();
 				}
 			continue;
@@ -1627,38 +1639,22 @@ while(1)
 		else if(mac_ptr->subtype == IEEE80211_STYPE_ASSOC_REQ)
 			{ 
 			send_acknowledgement();
-			authenticationstatus = 1;
-			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 100000;
 			handle_association();
 			continue;
 			}
 		else if(mac_ptr->subtype == IEEE80211_STYPE_ASSOC_RESP)
 			{ 
-			authenticationstatus = 1;
-			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 100000;
-			memcpy(&aktmac_ap, mac_ptr->addr2, 6);
-			memcpy(&aktmac_sta, mac_ptr->addr1, 6);
 			CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 			continue;
 			}
 		else if(mac_ptr->subtype == IEEE80211_STYPE_REASSOC_REQ)
 			{ 
 			send_acknowledgement();
-			authenticationstatus = 1;
-			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 100000;
 			handle_reassociation();
 			continue;
 			}
 		else if(mac_ptr->subtype == IEEE80211_STYPE_REASSOC_RESP)
 			{ 
-			authenticationstatus = 1;
-			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 100000;
-			memcpy(&aktmac_ap, mac_ptr->addr2, 6);
-			memcpy(&aktmac_sta, mac_ptr->addr1, 6);
 			CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 			continue;
 			}
