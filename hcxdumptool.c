@@ -69,9 +69,7 @@ static char *ippcapoutname = NULL;
 static char *weppcapoutname = NULL;
 
 static macessidlist_t *macapessidliste = NULL;
-static int macapessidcount = 0;
 static networklist_t *networkliste = NULL;
-static int networkcount = 0;
 
 static int errorcount = 0;
 static int maxerrorcount = ERRORMAX;
@@ -270,9 +268,11 @@ return;
 /*===========================================================================*/
 static void send_proberesponse(uint8_t *macap)
 {
+int c;
 static int retw;
 static mac_t *macf;
 static capap_t *capap;
+networklist_t *zeiger;
 
 const uint8_t proberesponsedata[] =
 {
@@ -309,6 +309,19 @@ if(respondflag == true)
 	{
 	return;
 	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
+	}
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +32 +PROBERESPONSE_SIZE);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
@@ -337,8 +350,10 @@ return;
 /*===========================================================================*/
 static void send_authenticationresponse()
 {
+int c;
 int retw;
 mac_t *macf;
+networklist_t *zeiger;
 
 const uint8_t authenticationresponsedata[] =
 {
@@ -351,6 +366,19 @@ uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONRESPONSE_SIZE +1];
 if(respondflag == true)
 	{
 	return;
+	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
 	}
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONRESPONSE_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -373,8 +401,10 @@ return;
 /*===========================================================================*/
 static void send_associationresponse()
 {
+int c;
 static int retw;
 static mac_t *macf;
+networklist_t *zeiger;
 
 static const uint8_t associationresponsedata[] =
 {
@@ -403,6 +433,19 @@ if(respondflag == true)
 	{
 	return;
 	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
+	}
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
@@ -425,8 +468,10 @@ return;
 /*===========================================================================*/
 static void send_reassociationresponse()
 {
+int c;
 static int retw;
 static mac_t *macf;
+networklist_t *zeiger;
 
 static const uint8_t associationresponsedata[] =
 {
@@ -455,6 +500,19 @@ if(respondflag == true)
 	{
 	return;
 	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
+	}
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
@@ -477,8 +535,10 @@ return;
 /*===========================================================================*/
 static void send_action_rmr_akt(uint8_t *macsta, uint8_t *macap)
 {
+int c;
 static int retw;
 static mac_t *macf;
+networklist_t *zeiger;
 
 static const uint8_t actionrmrdata[] =
 {
@@ -491,6 +551,23 @@ static const uint8_t actionrmrdata[] =
 
 static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM + ACTIONRMR_SIZE +1];
 
+if(respondflag == true)
+	{
+	return;
+	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(macap, zeiger->mac_ap, 6) == 0) && (memcmp(macsta, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
+	}
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM + ACTIONRMR_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
@@ -513,7 +590,9 @@ return;
 static void send_m1()
 {
 int retw;
+int c;
 mac_t *macf;
+networklist_t *zeiger;
 
 const uint8_t anoncewpa2data[] =
 {
@@ -546,6 +625,19 @@ if(respondflag == true)
 	{
 	return;
 	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
+	}
 memset(&packetout, 0, HDRRT_SIZE +ANONCEWPA2_SIZE);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 memcpy(&packetout[HDRRT_SIZE], &anoncewpa2data, ANONCEWPA2_SIZE);
@@ -560,7 +652,9 @@ return;
 static void send_m1_akt(uint8_t *macsta, uint8_t *macap)
 {
 int retw;
+int c;
 mac_t *macf;
+networklist_t *zeiger;
 
 const uint8_t anoncewpa2data[] =
 {
@@ -592,6 +686,19 @@ static uint8_t packetout[HDRRT_SIZE +ANONCEWPA2_SIZE +1];
 if(respondflag == true)
 	{
 	return;
+	}
+zeiger = networkliste;
+for(c = 0; c < NETWORKLISTZEMAX; c++)
+	{
+	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+		{
+		zeiger->tv_sec = tv.tv_sec;
+		if(zeiger->status >= 7)
+			{
+			return;
+			}
+		}
+	zeiger++;
 	}
 memset(&packetout, 0, HDRRT_SIZE +ANONCEWPA2_SIZE);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -626,7 +733,7 @@ if(respondflag == true)
 	return;
 	}
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
 		{
@@ -696,7 +803,7 @@ if(deauthflag == true)
 	return;
 	}
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0))
 		{
@@ -741,7 +848,7 @@ if(deauthflag == true)
 	return;
 	}
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0))
 		{
@@ -786,7 +893,7 @@ if(deauthflag == true)
 	return;
 	}
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
@@ -862,13 +969,14 @@ int c;
 networklist_t *zeiger;
 
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status |= 2;
-		qsort(networkliste, networkcount, NETWORKLIST_SIZE, sort_networklist_by_time);
+		qsort(networkliste, NETWORKLISTZEMAX, NETWORKLIST_SIZE, sort_networklist_by_time);
 		return;
 		}
 	zeiger++;
@@ -882,11 +990,12 @@ int c;
 networklist_t *zeiger;
 
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		if(zeiger->status >= 7)
 			{
 			return NULL;
@@ -945,9 +1054,6 @@ if(eap->type == 3)
 					}
 				}
 			}
-		tvfd.tv_sec = 5;
-		tvfd.tv_usec = 0;
-		authenticationstatus = 0;
 		CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 		return;
 		}
@@ -1023,11 +1129,12 @@ if(essid_tag == NULL)
 	return;
 	}
 zeiger = macapessidliste;
-for(c = 0; c < macapessidcount; c++)
+for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	{
 	if((memcmp(zeiger->addr, mac_ptr->addr2, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status += 1;
 		if(zeiger->status == 20)
 			{
@@ -1038,18 +1145,16 @@ for(c = 0; c < macapessidcount; c++)
 		}
 	zeiger++;
 	}
+
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 0;
 memcpy(zeiger->addr, mac_ptr->addr2, 6);
 zeiger->essid_len = essid_tag->len;
 memset(zeiger->essid, 0, 32);
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
-macapessidcount += 1;
-if(macapessidcount >= MACAPESSIDLISTZEMAX)
-	{
-	macapessidcount = MACAPESSIDLISTZEMAX;
-	}
-qsort(macapessidliste, macapessidcount, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(macapessidliste, MACAPESSIDLISTZEMAX, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+zeiger = macapessidliste;
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 send_deauthentication(WLAN_REASON_UNSPECIFIED);
 send_deauthentication(WLAN_REASON_UNSPECIFIED);
@@ -1071,11 +1176,12 @@ if(essid_tag == NULL)
 	}
 send_proberesponse(mac_ptr->addr1);
 zeiger = macapessidliste;
-for(c = 0; c < macapessidcount; c++)
+for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	{
 	if((memcmp(zeiger->addr, mac_ptr->addr1, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status += 1;
 		if(zeiger->status == 20)
 			{
@@ -1086,18 +1192,15 @@ for(c = 0; c < macapessidcount; c++)
 		}
 	zeiger++;
 	}
+
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 0;
 memcpy(zeiger->addr, mac_ptr->addr1, 6);
 zeiger->essid_len = essid_tag->len;
 memset(zeiger->essid, 0, 32);
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
-macapessidcount += 1;
-if(macapessidcount >= MACAPESSIDLISTZEMAX)
-	{
-	macapessidcount = MACAPESSIDLISTZEMAX;
-	}
-qsort(macapessidliste, macapessidcount, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(macapessidliste, MACAPESSIDLISTZEMAX, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
 send_deauthentication_to_addr2(WLAN_REASON_UNSPECIFIED);
@@ -1118,17 +1221,19 @@ if(essid_tag == NULL)
 	return;
 	}
 zeiger = macapessidliste;
-for(c = 0; c < macapessidcount; c++)
+for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	{
 	if((zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		send_proberesponse(zeiger->addr);
 		return;
 		}
 	zeiger++;
 	}
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 0;
 mynicap++;
 zeiger->addr[5] = mynicap & 0xff;
@@ -1149,12 +1254,7 @@ zeiger->essid_len = essid_tag->len;
 memset(zeiger->essid, 0, 32);
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
 send_proberesponse(zeiger->addr);
-macapessidcount += 1;
-if(macapessidcount >= MACAPESSIDLISTZEMAX)
-	{
-	macapessidcount = MACAPESSIDLISTZEMAX;
-	}
-qsort(macapessidliste, macapessidcount , MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(macapessidliste, MACAPESSIDLISTZEMAX, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 return;
 }
@@ -1171,11 +1271,12 @@ if(essid_tag == NULL)
 	return;
 	}
 zeiger = macapessidliste;
-for(c = 0; c < macapessidcount; c++)
+for(c = 0; c < MACAPESSIDLISTZEMAX -1; c++)
 	{
 	if((memcmp(zeiger->addr, mac_ptr->addr2, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status += 1;
 		if(zeiger->status == 20)
 			{
@@ -1189,17 +1290,13 @@ for(c = 0; c < macapessidcount; c++)
 	}
 
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 0;
 memcpy(zeiger->addr, mac_ptr->addr2, 6);
 zeiger->essid_len = essid_tag->len;
 memset(zeiger->essid, 0, 32);
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
-macapessidcount += 1;
-if(macapessidcount >= MACAPESSIDLISTZEMAX)
-	{
-	macapessidcount = MACAPESSIDLISTZEMAX;
-	}
-qsort(macapessidliste, macapessidcount, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(macapessidliste, MACAPESSIDLISTZEMAX, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 send_disassociation_to_addr2(WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 send_disassociation_to_addr2(WLAN_REASON_DISASSOC_STA_HAS_LEFT);
@@ -1219,29 +1316,26 @@ if(essid_tag == NULL)
 	}
 send_associationresponse();
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 	{
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status |= 1;
 		return;
 		}
 	zeiger++;
 	}
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 1;
 memcpy(zeiger->mac_ap, mac_ptr->addr1, 6);
 memcpy(zeiger->mac_sta, mac_ptr->addr2, 6);
 memset(zeiger->essid, 0, 32);
 zeiger->essid_len = essid_tag->len;
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
-qsort(networkliste, networkcount, NETWORKLIST_SIZE, sort_networklist_by_time);
-networkcount += 1;
-if(networkcount >= NETWORKLISTZEMAX)
-	{
-	networkcount = NETWORKLISTZEMAX;
-	}
+qsort(networkliste, NETWORKLISTZEMAX, NETWORKLIST_SIZE, sort_networklist_by_time);
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 return;
 }
@@ -1259,17 +1353,19 @@ if(essid_tag == NULL)
 	}
 send_reassociationresponse();
 zeiger = networkliste;
-for(c = 0; c < networkcount; c++)
+for(c = 0; c < NETWORKLISTZEMAX -1; c++)
 	{
 	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0) && (zeiger->essid_len == essid_tag->len) && (memcmp(zeiger->essid, essid_tag->data, essid_tag->len) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
+		zeiger->tv_usec = tv.tv_usec;
 		zeiger->status |= 1;
 		return;
 		}
 	zeiger++;
 	}
 zeiger->tv_sec = tv.tv_sec;
+zeiger->tv_usec = tv.tv_usec;
 zeiger->status = 1;
 memcpy(zeiger->mac_ap, mac_ptr->addr1, 6);
 memcpy(zeiger->mac_sta, mac_ptr->addr2, 6);
@@ -1277,11 +1373,6 @@ memset(zeiger->essid, 0, 32);
 zeiger->essid_len = essid_tag->len;
 memcpy(zeiger->essid, essid_tag->data, essid_tag->len);
 qsort(networkliste, NETWORKLISTZEMAX , NETWORKLIST_SIZE, sort_networklist_by_time);
-networkcount += 1;
-if(networkcount >= NETWORKLISTZEMAX)
-	{
-	networkcount = NETWORKLISTZEMAX;
-	}
 CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 return;
 }
@@ -1396,6 +1487,7 @@ send_broadcastbeacon();
 send_undirected_proberequest();
 tvfd.tv_sec = 5;
 tvfd.tv_usec = 0;
+authenticationstatus = 0;
 while(1)
 	{
 	if((wantstopflag == true) || (errorcount >= maxerrorcount))
@@ -1442,6 +1534,7 @@ while(1)
 		{
 		tvfd.tv_sec = 5;
 		tvfd.tv_usec = 0;
+		authenticationstatus = 0;
 		continue;
 		}
 	if(caplen <= 0)
@@ -1526,7 +1619,7 @@ while(1)
 				send_acknowledgement();
 				authenticationstatus = 1;
 				tvfd.tv_sec = 0;
-				tvfd.tv_usec = 500000;
+				tvfd.tv_usec = 100000;
 				send_authenticationresponse();
 				}
 			continue;
@@ -1536,7 +1629,7 @@ while(1)
 			send_acknowledgement();
 			authenticationstatus = 1;
 			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 500000;
+			tvfd.tv_usec = 100000;
 			handle_association();
 			continue;
 			}
@@ -1544,7 +1637,7 @@ while(1)
 			{ 
 			authenticationstatus = 1;
 			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 500000;
+			tvfd.tv_usec = 100000;
 			memcpy(&aktmac_ap, mac_ptr->addr2, 6);
 			memcpy(&aktmac_sta, mac_ptr->addr1, 6);
 			CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
@@ -1555,7 +1648,7 @@ while(1)
 			send_acknowledgement();
 			authenticationstatus = 1;
 			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 500000;
+			tvfd.tv_usec = 100000;
 			handle_reassociation();
 			continue;
 			}
@@ -1563,7 +1656,7 @@ while(1)
 			{ 
 			authenticationstatus = 1;
 			tvfd.tv_sec = 0;
-			tvfd.tv_usec = 500000;
+			tvfd.tv_usec = 100000;
 			memcpy(&aktmac_ap, mac_ptr->addr2, 6);
 			memcpy(&aktmac_sta, mac_ptr->addr1, 6);
 			CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
@@ -1575,8 +1668,6 @@ while(1)
 			if((authenticationstatus >= 1) && (action_ptr->categorycode == CAT_BLOCK_ACK) && (action_ptr->actioncode == ACT_ADD_BLOCK_ACK_REQ))
 				{
 				send_acknowledgement();
-				tvfd.tv_sec = 0;
-				tvfd.tv_usec = 500000;
 				send_m1();
 				}
 			continue;
@@ -1590,8 +1681,6 @@ while(1)
 			if(authenticationstatus == 2)
 				{
 				send_m1_akt(aktmac_sta, aktmac_ap);
-				tvfd.tv_sec = 0;
-				tvfd.tv_usec = 500000;
 				}
 			if(authenticationstatus == 1)
 				{
@@ -1606,11 +1695,9 @@ while(1)
 		{
 		if(mac_ptr->subtype == IEEE80211_STYPE_NULLFUNC)
 			{
-			if((authenticationstatus > 1) && (mac_ptr->to_ds == 1) &&  (mac_ptr->power == 0))
+			if((authenticationstatus >= 1) && (mac_ptr->to_ds == 1) &&  (mac_ptr->power == 0))
 				{
 				send_acknowledgement();
-				tvfd.tv_sec = 0;
-				tvfd.tv_usec = 500000;
 				send_m1();
 				}
 			continue;
@@ -1879,11 +1966,6 @@ if(weppcapoutname != NULL)
 		return false;
 		}
 	}
-
-
-
-
-
 ret = pthread_create(&thread1, NULL, &channelswitchthread, NULL);
 if(ret != 0)
 	{

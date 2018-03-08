@@ -1,5 +1,5 @@
-#define MACAPESSIDLISTZEMAX 512
-#define NETWORKLISTZEMAX 1024
+#define MACAPESSIDLISTZEMAX 256
+#define NETWORKLISTZEMAX 512
 #define ERRORMAX 100000
 
 #define TIME_INTERVAL 5
@@ -14,6 +14,7 @@ typedef struct arg_s arg_t;
 struct networklist_s
 {
  long int	tv_sec;
+ long int	tv_usec;
  uint8_t	status;
  uint8_t	mac_sta[6];
  uint8_t	mac_ap[6];
@@ -27,12 +28,21 @@ static int sort_networklist_by_time(const void *a, const void *b)
 {
 const networklist_t *ia = (const networklist_t *)a;
 const networklist_t *ib = (const networklist_t *)b;
-return ia->tv_sec < ib->tv_sec;
+if(ia->tv_sec < ib->tv_sec)
+	return 1;
+else if(ia->tv_sec > ib->tv_sec)
+	return -1;
+if(ia->tv_usec < ib->tv_usec)
+	return 1;
+else if(ia->tv_usec > ib->tv_usec)
+	return -1;
+return 0;
 }
 /*===========================================================================*/
 struct macessidlist_s
 {
  long int	tv_sec;
+ long int	tv_usec;
  uint8_t	status;
  uint8_t	addr[6];
  uint8_t	essid_len;
@@ -45,6 +55,14 @@ static int sort_macessidlist_by_time(const void *a, const void *b)
 {
 const macessidlist_t *ia = (const macessidlist_t *)a;
 const macessidlist_t *ib = (const macessidlist_t *)b;
-return ia->tv_sec < ib->tv_sec;
+if(ia->tv_sec < ib->tv_sec)
+	return 1;
+else if(ia->tv_sec > ib->tv_sec)
+	return -1;
+if(ia->tv_usec < ib->tv_usec)
+	return 1;
+else if(ia->tv_usec > ib->tv_usec)
+	return -1;
+return 0;
 }
 /*===========================================================================*/
