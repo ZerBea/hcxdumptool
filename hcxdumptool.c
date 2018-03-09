@@ -314,7 +314,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(macap, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
@@ -372,7 +372,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
@@ -443,7 +443,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
@@ -515,7 +515,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
@@ -645,7 +645,7 @@ if(respondflag == true)
 zeiger = networkliste;
 for(c = 0; c < NETWORKLISTZEMAX; c++)
 	{
-	if((memcmp(mac_ptr->addr2, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr1, zeiger->mac_sta, 6) == 0))
+	if((memcmp(mac_ptr->addr1, zeiger->mac_ap, 6) == 0) && (memcmp(mac_ptr->addr2, zeiger->mac_sta, 6) == 0))
 		{
 		zeiger->tv_sec = tv.tv_sec;
 		if(zeiger->status >= 7)
@@ -659,9 +659,9 @@ memset(&packetout, 0, HDRRT_SIZE +ANONCEWPA2_SIZE);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 memcpy(&packetout[HDRRT_SIZE], &anoncewpa2data, ANONCEWPA2_SIZE);
 macf = (mac_t*)(packetout +HDRRT_SIZE);
-memcpy(macf->addr1, networkliste->mac_sta, 6);
-memcpy(macf->addr2, networkliste->mac_ap, 6);
-memcpy(macf->addr3, networkliste->mac_ap, 6);
+memcpy(macf->addr1, mac_ptr->addr2, 6);
+memcpy(macf->addr2, mac_ptr->addr1, 6);
+memcpy(macf->addr3, mac_ptr->addr1, 6);
 CHK_ERR(retw = write(fd_socket, packetout, HDRRT_SIZE +ANONCEWPA2_SIZE));
 return;
 }
