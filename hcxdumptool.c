@@ -1409,6 +1409,10 @@ if(fd_ippcap > 0)
 	{
 	close(fd_ippcap);
 	}
+if(fd_weppcap > 0)
+	{
+	close(fd_weppcap);
+	}
 
 free(macapessidliste);
 free(networkliste);
