@@ -8,7 +8,7 @@ then
 	ip link set $WLANDEV down
 	iw dev $WLANDEV set type monitor
 	ip link set $WLANDEV up
-	hcxdumptool -i $WLANDEV -o $ARCHIVNAME.pcap -t 5
+	hcxdumptool -i $WLANDEV -o $ARCHIVNAME.cap -t 5
 fi
 hcxpioff &
 systemctl start dhcpcd@eth0.service
