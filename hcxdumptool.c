@@ -1454,7 +1454,7 @@ static bool set_channel()
 static struct iwreq pwrq;
 
 memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
@@ -1818,7 +1818,7 @@ if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(protocol))) < 0)
 
 
 memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ);
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ifr.ifr_flags = 0;
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	{
@@ -2157,7 +2157,7 @@ static bool check_wlaninterface(const char* ifname)
 int fd_info;
 struct iwreq fpwrq;
 memset(&fpwrq, 0, sizeof(fpwrq));
-strncpy(fpwrq.ifr_name, ifname, IFNAMSIZ);
+strncpy(fpwrq.ifr_name, ifname, IFNAMSIZ -1);
 
 if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
