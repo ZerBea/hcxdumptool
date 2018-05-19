@@ -1922,7 +1922,7 @@ if(pcapoutname != NULL)
 	strcpy(newpcapoutname, pcapoutname);
 	while(stat(newpcapoutname, &statinfo) == 0)
 		{
-		snprintf(newpcapoutname, PATH_MAX, "%s-%d.pcap", pcapoutname, c);
+		snprintf(newpcapoutname, PATH_MAX, "%s-%d.cap", pcapoutname, c);
 		c++;
 		}
 	fd_pcap = hcxopenpcapdump(newpcapoutname);
@@ -1939,7 +1939,7 @@ if(ippcapoutname != NULL)
 	strcpy(newpcapoutname, ippcapoutname);
 	while(stat(newpcapoutname, &statinfo) == 0)
 		{
-		snprintf(newpcapoutname, PATH_MAX, "%s-%d.pcap", ippcapoutname, c);
+		snprintf(newpcapoutname, PATH_MAX, "%s-%d.cap", ippcapoutname, c);
 		c++;
 		}
 	fd_ippcap = hcxopenpcapdump(newpcapoutname);
@@ -1956,7 +1956,7 @@ if(weppcapoutname != NULL)
 	strcpy(newpcapoutname, weppcapoutname);
 	while(stat(newpcapoutname, &statinfo) == 0)
 		{
-		snprintf(newpcapoutname, PATH_MAX, "%s-%d.pcap", weppcapoutname, c);
+		snprintf(newpcapoutname, PATH_MAX, "%s-%d.cap", weppcapoutname, c);
 		c++;
 		}
 	fd_weppcap = hcxopenpcapdump(newpcapoutname);
