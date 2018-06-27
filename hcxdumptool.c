@@ -1632,6 +1632,7 @@ while(1)
 			}
 		else if(mac_ptr->subtype == IEEE80211_STYPE_AUTH)
 			{ 
+			CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 			authentication_ptr = (authf_t*)(packet_ptr +MAC_SIZE_NORM);
 			if(authentication_ptr->sequence == 1)
 				{
