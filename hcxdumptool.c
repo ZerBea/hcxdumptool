@@ -1032,6 +1032,8 @@ uint16_t keyinfo;
 uint64_t replaycount;
 networklist_t *zeiger_n;
 
+
+CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 if(eap->type == 3)
 	{
 	keyinfo = (getkeyinfo(ntohs(wpak->keyinfo)));
@@ -1049,7 +1051,6 @@ if(eap->type == 3)
 			{
 			send_m1_org();
 			}
-		CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 		return;
 		}
 	else if(keyinfo == 2)
@@ -1071,37 +1072,24 @@ if(eap->type == 3)
 					}
 				}
 			}
-		CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 		return;
 		}
 	else if(keyinfo == 3)
 		{
-		CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 		return;
 		}
 	else if(keyinfo == 4)
 		{
 		send_disassociation_to_addr2(WLAN_REASON_DISASSOC_AP_BUSY);
 		send_disassociation_to_addr2(WLAN_REASON_DISASSOC_AP_BUSY);
-		CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 		return;
 		}
-	return;
-	}
-else if(eap->type == 0)
-	{
 	return;
 	}
 else if(eap->type == 1)
 	{
 	send_acknowledgement();
 	send_requestidentity();
-	CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
-	return;
-	}
-else if(eap->type == 5)
-	{
-	CHK_ERR(retw = write(fd_pcap, packetin, pkh->incl_len +PCAPREC_SIZE));
 	return;
 	}
 return;
