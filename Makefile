@@ -1,13 +1,11 @@
 INSTALLDIR	= /usr/local/bin
 
 HOSTOS := $(shell uname -s)
-OPENCLSUPPORT=off
 GPIOSUPPORT=off
-DOACTIVE=on
-DOSTATUS=on
 
 CC	= gcc
-CFLAGS = -std=gnu99 -O3 -Wall -Wextra
++CFLAGS ?= -O3 -Wall -Wextra
++CFLAGS += -std=gnu99
 INSTFLAGS = -m 0755
 
 ifeq ($(HOSTOS), Linux)
