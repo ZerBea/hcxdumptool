@@ -1,3 +1,9 @@
+01.08.2018
+==========
+moved some stuff from hcxtools to hcxdumptool repository
+prepare complete refactoring!
+
+
 04.03.2018
 ==========
 hcxdumptool: added new option -W
