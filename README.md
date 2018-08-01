@@ -19,7 +19,7 @@ Detailed description
 
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | Raw socket version of wlandump-ng                                                                      |
+| hcxdumptool    | Tool to run several tests to determine if access points or clients are vulnerable                      |
 | pioff          | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
