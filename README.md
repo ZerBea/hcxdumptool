@@ -2,12 +2,16 @@ hcxdumptool
 ==============
 
 Small tool to capture packets from wlan devices.
+After capturing, upload the "uncleaned" cap here (https://wpa-sec.stanev.org/?submit)
+to see if your ap or the client is vulnerable by using common wordlists.
+Convert the cap to hccapx and/or to WPA-PMKID-PBKDF2 hashline (16800) with hcxpcaptool (hcxtools)
+and check if wlan-key or plainmasterkey was transmitted unencrypted.
 
 
 Brief description
 --------------
 
-Stand-alone binary - designed to run on Raspberry Pi's.
+Stand-alone binary - designed to run on Raspberry Pi's. It should work on LINUX systems (notebooks, desktops), too.
 
 
 Detailed description
@@ -79,7 +83,7 @@ Useful scripts
 | killmonnb    | Example script to deactivate monitor mode                |
 
 
-Hardware mod (hcxdumptool)
+Hardware mod - see docs gpiowait.odg (hcxdumptool)
 --------------
 
 LED flashes 5 times if hcxdumptool successfully started
@@ -95,7 +99,7 @@ Raspberry Pi turned off and can be disconnected from power supply
 Do not use hcxdumptool and hcxpioff together!
 
 
-Hardware mod (hcxpioff)
+Hardware mod - see docs gpiowait.odg (hcxpioff)
 --------------
 
 LED flashes every 10 seconds 2 times if hcxpioff successfully started
@@ -116,9 +120,11 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 
 * hcxdumptool is able to prevent complete wlan traffic
 
+* hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
+
 * hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
 
-* hcxdumptool is are able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
+* hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
 
 * hcxdumptool is able to capture extended EAPOL (RADIUS, GSM-SIM, WPS)
 
