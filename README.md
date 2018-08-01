@@ -11,7 +11,8 @@ and check if wlan-key or plainmasterkey was transmitted unencrypted.
 Brief description
 --------------
 
-Stand-alone binary - designed to run on Raspberry Pi's. It should work on LINUX systems (notebooks, desktops), too.
+Stand-alone binary - designed to run on Raspberry Pi's with installed Arch Linux.
+It should work on other Linux systems (notebooks, desktops) and distributions, too.
 
 
 Detailed description
@@ -44,7 +45,7 @@ make GPIOSUPPORT=on install (as super user)
 Requirements
 --------------
 
-* Operatingsystem: archlinux (strict), Kernel >= 4.14 (strict)
+* Operatingsystem: Arch Linux (strict), Kernel >= 4.14 (strict). It should work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions). Don't use Kernel 4.4 (rt2x00 driver regression)
 
 * libpthread and pthread-dev installed
 
