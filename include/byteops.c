@@ -1,3 +1,8 @@
+#define _GNU_SOURCE
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
 /*===========================================================================*/
 uint32_t rotl32(uint32_t a, uint32_t n)
 {

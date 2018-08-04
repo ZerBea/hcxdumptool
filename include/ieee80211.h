@@ -1,10 +1,11 @@
 #define MYREPLAYCOUNT 63232
 
-#define	MAC_SIZE_ACK	(10)
-#define	MAC_SIZE_RTS	(16)
-#define	MAC_SIZE_NORM	(24)
-#define	MAC_SIZE_QOS	(26)
-#define	MAC_SIZE_LONG	(30)
+#define	MAC_SIZE_ACK		(10)
+#define	MAC_SIZE_RTS		(16)
+#define	MAC_SIZE_NORM		(24)
+#define	MAC_SIZE_QOS		(26)
+#define	MAC_SIZE_LONG		(30)
+#define	MAC_SIZE_QOS_LONG	(32)
 
 #define FCS_LEN 4
 
@@ -157,6 +158,27 @@ struct prism_header
 typedef struct prism_item prism_item_t;
 typedef struct prism_header prism_t;
 #define	PRISM_SIZE (sizeof(prism_t))
+
+/*===========================================================================*/
+struct avs_header
+{
+  uint32_t version;
+  uint32_t len;
+  uint64_t mactime;
+  uint64_t hosttime;
+  uint32_t phytype;
+  uint32_t channel;
+  uint32_t datarate;
+  uint32_t antenna;
+  uint32_t priority;
+  uint32_t ssi_type;
+  int32_t ssi_signal;
+  int32_t ssi_noise;
+  uint32_t preamble;
+  uint32_t encoding;
+} __attribute__((packed));
+typedef struct avs_header avs_t;
+#define	AVS_SIZE (sizeof(avs_t))
 /*===========================================================================*/
 struct ppi_header
 {
@@ -167,6 +189,33 @@ struct ppi_header
 } __attribute__((packed));
 typedef struct ppi_header ppi_t;
 #define	PPI_SIZE (sizeof(ppi_t))
+/*===========================================================================*/
+struct msnetmon_header
+{
+ uint8_t	version_minor;
+ uint8_t	version_major;
+ uint16_t	network;
+ uint16_t	ts_year;
+ uint16_t	ts_month;
+ uint16_t	ts_weekday;
+ uint16_t	ts_day;
+ uint16_t	ts_hour;
+ uint16_t	ts_min;
+ uint16_t	ts_sec;
+ uint16_t	ts_msec;
+ uint32_t	frametableoffset;
+ uint32_t	frametablelength;
+ uint32_t	userdataoffset;
+ uint32_t	userdatalength;
+ uint32_t	commentdataoffset;
+ uint32_t	commentdatalength;
+ uint32_t	statisticsoffset;
+ uint32_t	statisticslength;
+ uint32_t	networkinfooffset;
+ uint32_t	networkinfolength;
+} __attribute__((packed));
+typedef struct msnetmon_header msntm_t;
+#define MSNETMON_SIZE (sizeof(msntm_t))
 /*===========================================================================*/
 struct fcs_frame
 {
@@ -241,39 +290,60 @@ struct capabilities_ap_frame
 {
  uint64_t	timestamp;
  uint16_t	beaconintervall;
- uint16_t	capapinfo;
+ uint16_t	capabilities;
 } __attribute__((__packed__));
 typedef struct capabilities_ap_frame capap_t;
 #define	CAPABILITIESAP_SIZE sizeof(capap_t)
 /*===========================================================================*/
 struct capabilities_sta_frame
 {
- uint16_t client_capabilities;
- uint16_t client_listeninterval;
+ uint16_t capabilities;
+ uint16_t listeninterval;
 } __attribute__((__packed__));
 typedef struct capabilities_sta_frame capsta_t;
 #define	CAPABILITIESSTA_SIZE sizeof(capsta_t)
 /*===========================================================================*/
-struct capabilitiesre_sta_frame
+struct capabilitiesreq_sta_frame
 {
- uint16_t client_capabilities;
- uint16_t client_listeninterval;
- uint8_t	addr1[6];
+ uint16_t 	capabilities;
+ uint16_t 	listeninterval;
+ uint8_t	addr[6];
 } __attribute__((__packed__));
-typedef struct capabilitiesre_sta_frame capresta_t;
-#define	CAPABILITIESRESTA_SIZE sizeof(capresta_t)
+typedef struct capabilitiesreq_sta_frame capreqsta_t;
+#define	CAPABILITIESREQSTA_SIZE sizeof(capreqsta_t)
 /*===========================================================================*/
 struct ie_tag
 {
-	uint8_t		id;
-#define	TAG_SSID	0
-#define	TAG_RATE	1
-#define	TAG_CHAN	3
-	uint8_t		len;
-	uint8_t		data[1];
+ uint8_t		id;
+#define	TAG_SSID	0x00
+#define	TAG_RATE	0x01
+#define	TAG_CHAN	0x03
+#define	TAG_RSN		0x30
+ uint8_t		len;
+ uint8_t		data[1];
 } __attribute__((__packed__));
 typedef struct ie_tag ietag_t;
 #define	IETAG_SIZE offsetof(ietag_t, data)
+/*===========================================================================*/
+struct rsn_tag
+{
+ uint8_t	id;
+ uint8_t	len;
+ uint16_t	version;
+} __attribute__((__packed__));
+typedef struct rsn_tag rsntag_t;
+#define	RSNTAG_SIZE sizeof(rsntag_t)
+/*===========================================================================*/
+struct vendor_tag
+{
+ uint8_t	tagnr;
+ uint8_t	taglen;
+ uint8_t	oui[3];
+ uint8_t	data[1];
+} __attribute__ ((packed));
+typedef struct vendor_tag vendor_t;
+#define	VENDORTAG_SIZE offsetof(vendor_t, data)
+#define VENDORTAG_AUTH_SIZE 0x0b
 /*===========================================================================*/
 struct llc_frame
 {
@@ -294,32 +364,54 @@ typedef struct llc_frame llc_t;
 /*===========================================================================*/
 struct authentication_frame
 {
- uint16_t	algorithm;
- uint16_t	sequence;
+ uint16_t	authentication_algho;
+#define OPEN_SYSTEM 0
+#define SHARED_KEY 1
+#define FBT 2
+#define SAE 3
+#define FILS 4
+#define FILSPFS 5
+#define FILSPK 6
+ uint16_t	authentication_seq;
  uint16_t	statuscode;
- uint8_t	data[1];
 } __attribute__((__packed__));
 typedef struct authentication_frame authf_t;
-#define	AUTHENTICATIONFRAME_SIZE offsetof(authf_t, data)
+#define	AUTHENTICATIONFRAME_SIZE (sizeof(authf_t))
+/*===========================================================================*/
+struct association_resp_frame
+{
+ uint16_t	capabilities;
+ uint16_t	authentication_seq;
+ uint16_t	statuscode;
+ uint16_t	id;
+} __attribute__((__packed__));
+typedef struct association_resp_frame assocrepf_t;
+#define	ASSOCIATIONRESPFRAME_SIZE (sizeof(assocrepf_t))
 /*===========================================================================*/
 struct action_frame
 {
- uint8_t	categorycode;
-#define		CAT_BLOCK_ACK			3
-#define		CAT_RADIO_MEASUREMENT		5
+ uint8_t	categoriecode;
+#define CAT_BLOCK_ACK		3
+#define CAT_RADIO_MEASUREMENT		5
  uint8_t	actioncode;
-#define		ACT_ADD_BLOCK_ACK_REQ		0
-#define		ACT_ADD_BLOCK_ACK_RESP		0
-#define		ACT_DELETE_BLOCK_REQ		2
-#define		ACT_RADIO_MEASUREMENT_REQ	0
+#define ACT_ADD_BLOCK_ACK_REQ		0
+#define ACT_ADD_BLOCK_ACK_RESP		0
+#define ACT_DELETE_BLOCK_REQ		2
+#define ACT_RADIO_MEASUREMENT_REQ	0
 };
 typedef struct action_frame actf_t;
-#define	ACTIONFRAME_SIZE (sizeof(actf_t))
+#define ACTIONFRAME_SIZE (sizeof(actf_t))
 /*===========================================================================*/
 struct eapauthentication_frame
 {
  uint8_t	version;
  uint8_t	type;
+#define EAP_PACKET 0
+#define EAPOL_START 1
+#define EAPOL_LOGOFF 2
+#define EAPOL_KEY 3
+#define EAPOL_ASF 4
+#define EAPOL_MKA 5
  uint16_t	len;
  uint8_t	data[1];
 } __attribute__((__packed__));
@@ -343,17 +435,28 @@ struct wpakey_frame
 typedef struct wpakey_frame wpakey_t;
 #define	WPAKEY_SIZE offsetof(wpakey_t, data)
 /*===========================================================================*/
+struct pmkid_frame
+{
+ uint8_t	id;
+ uint8_t	len;
+ uint8_t	oui[3];
+ uint8_t	type;
+ uint8_t	pmkid[16];
+} __attribute__((__packed__));
+typedef struct pmkid_frame pmkid_t;
+#define	PMKID_SIZE (sizeof(pmkid_t))
+/*===========================================================================*/
 struct exteap_frame
 {
  uint8_t			code;
-#define	EAP_CODE_REQ		1
-#define	EAP_CODE_RESP		2
-#define	EAP_CODE_SUCCESS	3
-#define	EAP_CODE_FAILURE	4
-#define	EAP_CODE_INITIATE	5
-#define	EAP_CODE_FINISH		6
+#define EAP_CODE_REQ		1
+#define EAP_CODE_RESP		2
+#define EAP_CODE_SUCCESS	3
+#define EAP_CODE_FAILURE	4
+#define EAP_CODE_INITIATE	5
+#define EAP_CODE_FINISH		6
  uint8_t			id;
-#define	EAP_TYPE_ID		1
+#define EAP_TYPE_ID		1
  uint16_t			extlen;
  uint8_t			exttype;
 #define EAP_TYPE_EAP		0
@@ -522,11 +625,44 @@ struct udp_frame
 #define UDP_DHCP6_SERVERPORT 547
 #define UDP_DHCP6_CLIENTPORT 546
 #define UDP_RADIUS_DESTINATIONPORT 1812
+#define UDP_TZSP_DESTINATIONPORT 37008
  uint16_t	len;
  uint16_t	checksum;
 } __attribute__ ((packed));
 typedef struct udp_frame udp_t;
 #define	UDP_SIZE (sizeof(udp_t))
+
+/*===========================================================================*/
+struct tzsp_frame
+{
+ uint8_t	version;
+ uint8_t	type;
+ uint16_t	enc_protocol;
+#define TZSP_ENCAP_ETHERNET		1
+#define TZSP_ENCAP_TOKEN_RING		2
+#define TZSP_ENCAP_SLIP			3
+#define TZSP_ENCAP_PPP			4
+#define TZSP_ENCAP_FDDI			5
+#define TZSP_ENCAP_RAW			7
+#define TZSP_ENCAP_IEEE_802_11		18
+#define TZSP_ENCAP_IEEE_802_11_PRISM	119
+#define TZSP_ENCAP_IEEE_802_11_AVS	127
+ uint8_t	data[1];
+} __attribute__ ((packed));
+typedef struct tzsp_frame tzsp_t;
+#define	TZSP_SIZE offsetof(tzsp_t, data)
+/*===========================================================================*/
+struct tzsp_tag
+{
+ uint8_t	tag;
+#define TZSP_TAG_END 1
+#define TZSP_TAG_ORGLEN 41
+
+ uint8_t	len;
+ uint8_t	data[1];
+} __attribute__ ((packed));
+typedef struct tzsp_tag tzsptag_t;
+#define	TZSPTAG_SIZE offsetof(tzsptag_t, data)
 /*===========================================================================*/
 struct gre_frame
 {
@@ -591,11 +727,18 @@ struct radius_frame_t
  uint16_t	length;
  uint8_t	authenticator[RADIUS_AUTHENTICATOR_LENGTH];
  uint8_t	attrs[RADIUS_MAX_SIZE -RADIUS_HEADER_LENGTH];
+ uint8_t	data[1];
 } __attribute__ ((packed));
-typedef struct radius_frame radius_t;
+typedef struct radius_frame_t radius_t;
 #define	RADIUS_SIZE offsetof(radius_t, data)
 /*===========================================================================*/
 /* global var */
+static const uint8_t nulliv[] =
+{
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+#define	NULLIV_SIZE (sizeof(nulliv))
+
 static const uint8_t nullnonce[] =
 {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
