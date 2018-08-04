@@ -409,12 +409,26 @@ while(0 < restlen)
 return NULL;
 }
 /*===========================================================================*/
+static inline bool checkfilterlistentry(uint8_t *filtermac)
+{
+static int c;
+static maclist_t * zeiger;
+
+zeiger = filterlist;
+for(c = 0; c < filterlist_len; c++)
+	{
+	if(memcmp(zeiger->addr, filtermac, 6) == 0)
+		{
+		return true;
+		}
+	zeiger++;
+	}
+return false;
+}
+/*===========================================================================*/
 static void send_requestidentity()
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
-
 const uint8_t requestidentitydata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
@@ -424,31 +438,15 @@ const uint8_t requestidentitydata[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -477,37 +475,19 @@ return;
 /*===========================================================================*/
 static void send_disassociation(uint8_t reason)
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +2 +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -535,37 +515,19 @@ return;
 /*===========================================================================*/
 static void send_broadcast_deauthentication(uint8_t reason)
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +2 +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -593,37 +555,18 @@ return;
 /*===========================================================================*/
 static inline void send_acknowledgement()
 {
-int c;
 mac_t *macftx;
-maclist_t * zeiger;
-
 uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_ACK +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -643,9 +586,7 @@ return;
 /*===========================================================================*/
 static inline void send_authenticationresponseopensystem()
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
 
 const uint8_t authenticationresponsedata[] =
 {
@@ -653,32 +594,14 @@ const uint8_t authenticationresponsedata[] =
 };
 #define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 
-
 uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
+	return;
 	}
-if(filtermode == 2)
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
 
@@ -709,9 +632,7 @@ return;
 /*===========================================================================*/
 static inline void send_authenticationrequestopensystem()
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
 
 const uint8_t authenticationrequestdata[] =
 {
@@ -720,34 +641,16 @@ const uint8_t authenticationrequestdata[] =
 };
 #define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 
-uint8_t packetout[1024];
-
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
+	return;
 	}
-if(filtermode == 2)
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
 
+uint8_t packetout[1024];
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -775,9 +678,7 @@ return;
 /*===========================================================================*/
 static inline void send_directed_proberequest()
 {
-int c;
 static mac_t *macftx;
-maclist_t * zeiger;
 static uint8_t *beaconptr;
 static int beaconlen;
 static uint8_t *essidtagptr;
@@ -792,31 +693,15 @@ const uint8_t directedproberequestdata[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +DIRECTEDPROBEREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
@@ -869,6 +754,15 @@ const uint8_t undirectedproberequestdata[] =
 #define UNDIRECTEDPROBEREQUEST_SIZE sizeof(undirectedproberequestdata)
 
 static uint8_t packetout[1024];
+
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
+	{
+	return;
+	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
 
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -1225,9 +1119,7 @@ return;
 /*===========================================================================*/
 static void send_m1()
 {
-int c;
 static mac_t *macftx;
-static maclist_t * zeiger;
 
 static uint8_t anoncewpa2data[] =
 {
@@ -1248,32 +1140,14 @@ static uint8_t anoncewpa2data[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
-
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
 
 memset(&packetout, 0, HDRRT_SIZE +140);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -1315,9 +1189,7 @@ return;
 /*===========================================================================*/
 static void send_reassociationresponse()
 {
-static int c;
 static mac_t *macftx;
-static maclist_t * zeiger;
 
 static const uint8_t associationresponsedata[] =
 {
@@ -1342,29 +1214,12 @@ static const uint8_t associationid[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
+	return;
 	}
-if(filtermode == 2)
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
 
@@ -1454,9 +1309,7 @@ return;
 /*===========================================================================*/
 static void send_associationresponse()
 {
-static int c;
 static mac_t *macftx;
-static maclist_t * zeiger;
 
 static const uint8_t associationresponsedata[] =
 {
@@ -1481,29 +1334,12 @@ static const uint8_t associationid[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
+	return;
 	}
-if(filtermode == 2)
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macftx->addr1, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
 
@@ -1557,11 +1393,9 @@ return;
 /*===========================================================================*/
 static inline void send_associationrequest()
 {
-static int c;
+int c;
 static mac_t *macftx;
-static maclist_t * zeiger1;
-static macessidlist_t *zeiger2;
-
+static macessidlist_t *zeiger;
 
 static const uint8_t associationrequestcapa[] =
 {
@@ -1587,40 +1421,23 @@ static const uint8_t associationrequestdata[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger1 = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger1->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger1++;
-		}
+	return;
 	}
-if(filtermode == 2)
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
 	{
-	zeiger1 = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger1->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger1++;
-		}
 	return;
 	}
 
-zeiger2 = proberesponselist;
+zeiger = proberesponselist;
 for(c = 0; c < PROBERESPONSELIST_MAX -1; c++)
 	{
-	if(memcmp(zeiger2->addr, &mac_null, 6) == 0)
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
 		{
 		return;
 		}
-	if(memcmp(zeiger2->addr, macfrx->addr2, 6) == 0)
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
 		{
 		memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +ASSOCIATIONREQUEST_SIZE +ESSID_LEN_MAX +RSN_LEN_MAX +6);
 		memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -1637,13 +1454,13 @@ for(c = 0; c < PROBERESPONSELIST_MAX -1; c++)
 			myassociationrequestsequence = 0;
 			}
 		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
-		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +1] = zeiger2->essid_len;
-		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +2], zeiger2->essid, zeiger2->essid_len);
-		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger2->essid_len +2], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
-		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger2->essid_len +2 +ASSOCIATIONREQUEST_SIZE] = TAG_RSN;
-		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger2->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1] = zeiger2->rsn_len;
-		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger2->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1], zeiger2->rsn, zeiger2->rsn_len);
-		if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger2->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1 +zeiger2->rsn_len, 0) < 0)
+		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +1] = zeiger->essid_len;
+		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +2], zeiger->essid, zeiger->essid_len);
+		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
+		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE] = TAG_RSN;
+		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1] = zeiger->rsn_len;
+		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1], zeiger->rsn, zeiger->rsn_len);
+		if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1 +zeiger->rsn_len, 0) < 0)
 			{
 			errorcount++;
 			outgoingcount--;
@@ -1652,7 +1469,7 @@ for(c = 0; c < PROBERESPONSELIST_MAX -1; c++)
 		fsync(fd_socket);
 		return;
 		}
-	zeiger2++;
+	zeiger++;
 	}
 return;
 }
@@ -1943,11 +1760,9 @@ return;
 /*===========================================================================*/
 static inline void send_proberesponse(uint8_t *macap, uint8_t *essidtagptr)
 {
-int c;
 static mac_t *macftx;
 static capap_t *capap;
 static ietag_t *essidtag;
-maclist_t * zeiger;
 
 const uint8_t proberesponsedata[] =
 {
@@ -1979,31 +1794,15 @@ const uint8_t proberesponsedata[] =
 
 static uint8_t packetout[1024];
 
-if(filtermode == 1)
+if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			return;
-			}
-		zeiger++;
-		}
-	}
-if(filtermode == 2)
-	{
-	zeiger = filterlist;
-	for(c = 0; c < filterlist_len; c++)
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-			{
-			break;
-			}
-		zeiger++;
-		}
 	return;
 	}
+if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
+	{
+	return;
+	}
+
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +ESSID_LEN_MAX +IETAG_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
