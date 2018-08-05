@@ -4,7 +4,7 @@ INSTALLDIR	= $(DESTDIR)$(PREFIX)/bin
 HOSTOS		:= $(shell uname -s)
 GPIOSUPPORT=off
 
-CC		= gcc
+CC		?= gcc
 CFLAGS		?= -O3 -Wall -Wextra
 CFLAGS 		+= -std=gnu99
 INSTFLAGS	= -m 0755
