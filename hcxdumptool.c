@@ -916,15 +916,15 @@ if(authlen > (eapauthlen -4))
 	}
 if(eapauth->type == EAPOL_KEY)
 	{
-	if(fd_pcapng != 0)
-		{
-		writeepb(fd_pcapng);
-		}
 	wpak = (wpakey_t*)(eapauthptr +EAPAUTH_SIZE);
 	keyinfo = (getkeyinfo(ntohs(wpak->keyinfo)));
 	rc = byte_swap_64(wpak->replaycount);
 	if(keyinfo == 1)
 		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		if(attackapflag == false)
 			{
 			if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
@@ -954,6 +954,10 @@ if(eapauth->type == EAPOL_KEY)
 		}
 	if(keyinfo == 3)
 		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		calceapoltimeout = timestamp -lasttimestampm2;
 		if((calceapoltimeout < eapoltimeout) && ((rc -lastrcm2) == 1) && (memcmp(&laststam2,macfrx->addr1, 6) == 0) && (memcmp(&lastapm2, macfrx->addr2, 6) == 0))
 			{
@@ -978,6 +982,10 @@ if(eapauth->type == EAPOL_KEY)
 		}
 	if(keyinfo == 2)
 		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		calceapoltimeout = timestamp -lasttimestampm1;
 		if((rc == rcrandom) && (memcmp(&laststam1,macfrx->addr2, 6) == 0) && (memcmp(&lastapm1, macfrx->addr1, 6) == 0))
 			{
@@ -1001,6 +1009,10 @@ if(eapauth->type == EAPOL_KEY)
 		}
 	if(keyinfo == 4)
 		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		if(checkpownedap(macfrx->addr1) < RX_M23)
 			{
 			if(disassociationflag == false)
@@ -1025,10 +1037,21 @@ if(eapauth->type == EAPOL_KEY)
 		lasttimestampm2 = 0;
 		return;
 		}
+	else
+		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
+		}
 	return;
 	}
 if(eapauth->type == EAP_PACKET)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if(fd_pcapng != 0)
 		{
 		writeepb(fd_pcapng);
