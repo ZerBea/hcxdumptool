@@ -86,6 +86,7 @@ static unsigned long long int pownedcount;
 
 static bool poweroffflag;
 static bool statusflag;
+static bool activescanflag;
 static bool deauthenticationflag;
 static bool disassociationflag;
 static bool attackapflag;
@@ -2096,7 +2097,7 @@ while(1)
 		}
 	if(set_channel() == true)
 		{
-		if(attackapflag == false)
+		if(activescanflag == false)
 			{
 			send_undirected_proberequest();
 			}
@@ -2179,7 +2180,7 @@ lastsequencereassociationresponse = 0;
 memset(&lastaddr1data, 0, 6);
 memset(&lastaddr2data, 0, 6);
 lastsequencedata = 0;
-if(attackapflag == false)
+if(activescanflag == false)
 	{
 	send_undirected_proberequest();
 	}
@@ -2874,6 +2875,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--filtermode=<digit>               : mode for filter list\n"
 	"                                     1: use filter list as protection list (default)\n"
 	"                                     2: use filter list as target list\n"
+	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"--disable_deauthentications        : disable transmitting deauthentications\n"
 	"                                     affected: connections between client an access point\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
@@ -2922,6 +2924,7 @@ filtermode = 0;
 
 statusflag = 0;
 poweroffflag = false;
+activescanflag = false;
 deauthenticationflag = false;
 disassociationflag = false;
 attackapflag = false;
@@ -2939,6 +2942,7 @@ static const struct option long_options[] =
 {
 	{"filterlist",			required_argument,	NULL,	HCXD_FILTERLIST},
 	{"filtermode",			required_argument,	NULL,	HCXD_FILTERMODE},
+	{"disable_active_scan",		no_argument,		NULL,	HCXD_DISABLE_ACTIVE_SCAN},
 	{"disable_deauthentications",	no_argument,		NULL,	HCXD_DISABLE_DEAUTHENTICATIONS},
 	{"give_up_deauthentications",	required_argument,	NULL,	HCXD_GIVE_UP_DEAUTHENTICATIONS},
 	{"disable_disassociations",	no_argument,		NULL,	HCXD_DISABLE_DISASSOCIATIONS},
@@ -2975,6 +2979,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 			fprintf(stderr, "wrong filtermode\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCXD_DISABLE_ACTIVE_SCAN:
+		activescanflag = true;
 		break;
 
 		case HCXD_DISABLE_DEAUTHENTICATIONS:

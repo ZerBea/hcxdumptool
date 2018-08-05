@@ -1,5 +1,11 @@
 04.08.2018
 ==========
+addet new option (--disable-active_scan) to hcxdumptool
+--disable_active_scan: do not transmit proberequests to BROADCAST using a BROADCAST ESSID
+
+
+04.08.2018
+==========
 release hcxdumptool 4.2.0
 complete refactored:
 -various new options
