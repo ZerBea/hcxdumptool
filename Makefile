@@ -1,4 +1,5 @@
-INSTALLDIR	= /usr/local/bin
+PREFIX?=/usr/local
+INSTALLDIR	= $(DESTDIR)$(PREFIX)/bin
 
 HOSTOS := $(shell uname -s)
 GPIOSUPPORT=off
@@ -14,7 +15,7 @@ endif
 
 ifeq ($(GPIOSUPPORT), on)
 CFLAGS	+= -DDOGPIOSUPPORT
-LFLAGS	= -lwiringPi
+LDFLAGS	+= -lwiringPi
 endif
 
 
@@ -22,10 +23,10 @@ all: build
 
 build:
 ifeq ($(GPIOSUPPORT), on)
-	$(CC) $(CFLAGS) -o hcxpioff hcxpioff.c $(LFLAGS)
+	$(CC) $(CFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
 endif
 ifeq ($(HOSTOS), Linux)
-	$(CC) $(CFLAGS) -o hcxdumptool hcxdumptool.c -lpthread $(LFLAGS)
+	$(CC) $(CFLAGS) -o hcxdumptool hcxdumptool.c -lpthread $(LDFLAGS)
 endif
 
 
