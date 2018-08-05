@@ -5,8 +5,8 @@ HOSTOS		:= $(shell uname -s)
 GPIOSUPPORT=off
 
 CC		= gcc
-+CFLAGS		?= -O3 -Wall -Wextra
-+CFLAGS 	+= -std=gnu99
+CFLAGS		?= -O3 -Wall -Wextra
+CFLAGS 		+= -std=gnu99
 INSTFLAGS	= -m 0755
 
 ifeq ($(HOSTOS), Linux)
