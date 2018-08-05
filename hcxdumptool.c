@@ -50,7 +50,7 @@ static int fd_pcapng;
 static int fd_ippcapng;
 static int fd_weppcapng;
 
-maclist_t *filterlist;
+static maclist_t *filterlist;
 static int filterlist_len;
 
 maclist_t *beaconlist;
@@ -414,6 +414,7 @@ static inline bool checkfilterlistentry(uint8_t *filtermac)
 static int c;
 static maclist_t * zeiger;
 
+
 zeiger = filterlist;
 for(c = 0; c < filterlist_len; c++)
 	{
@@ -423,6 +424,7 @@ for(c = 0; c < filterlist_len; c++)
 		}
 	zeiger++;
 	}
+
 return false;
 }
 /*===========================================================================*/
@@ -754,15 +756,6 @@ const uint8_t undirectedproberequestdata[] =
 #define UNDIRECTEDPROBEREQUEST_SIZE sizeof(undirectedproberequestdata)
 
 static uint8_t packetout[1024];
-
-if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
-	{
-	return;
-	}
-if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
-	{
-	return;
-	}
 
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -2501,8 +2494,8 @@ return len;
 /*===========================================================================*/
 static inline int readfilterlist(char *listname, maclist_t *zeiger)
 {
-int len;
 int c;
+int len;
 static FILE *fh_filter;
 
 static char linein[FILTERLIST_LINE_LEN];
@@ -3148,9 +3141,6 @@ if(globalinit() == false)
 	fprintf(stderr, "failed to init globals\n");
 	exit(EXIT_FAILURE);
 	}
-
-
-
 
 processpackets(); 
 
