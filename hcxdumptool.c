@@ -110,6 +110,8 @@ static uint32_t myouista;
 static uint32_t mynicsta;
 
 static uint64_t timestamp;
+static uint64_t timestampstart;
+
 struct timeval tv;
 static uint64_t mytime;
 
@@ -242,6 +244,7 @@ if(fd_ippcapng > 0)
 
 if(fd_pcapng > 0)
 	{
+	writeisb(fd_pcapng, 0, timestampstart);
 	if(fsync(fd_pcapng) != 0)
 		{
 		perror("failed to sync pcapng file");
@@ -2203,6 +2206,7 @@ printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 printf("\n\n");
 gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+timestampstart = timestamp;
 set_channel();
 while(1)
 	{

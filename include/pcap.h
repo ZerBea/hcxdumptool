@@ -117,14 +117,33 @@ typedef struct name_resolution_block_s name_resolution_block_t;
 struct interface_statistics_block_s
 {
  uint32_t	block_type;		/* block type */
+#define	ISBID	0x00000005;
  uint32_t	total_length;		/* block length */
  uint32_t	interface_id;		/* the interface the stats refer to - identified by interface description block in current section */
  uint32_t	timestamp_high;		/* high bytes of timestamp */
  uint32_t	timestamp_low;		/* low bytes of timestamp */
+#define ISB_STARTTIME		2
+#define ISB_ENDTIME		3
+#define ISB_IFRECV		4
+#define ISB_IFDROP		5
+#define ISB_FILTERACCEPT	6
+#define ISB_OSDROP		7
+#define ISB_USRDELIV		8
+ uint16_t	code_start;
+ uint16_t	start_len;
+ uint32_t	start_timestamp_high;		/* high bytes of timestamp */
+ uint32_t	start_timestamp_low;		/* low bytes of timestamp */
+ uint16_t	code_end;
+ uint16_t	end_len;
+ uint32_t	end_timestamp_high;		/* high bytes of timestamp */
+ uint32_t	end_timestamp_low;		/* low bytes of timestamp */
+ uint16_t	code_eoo;
+ uint16_t	eoo_len;
+ uint32_t	total_length_dup;		/* block length */
+
 } __attribute__((__packed__));
 typedef struct interface_statistics_block_s interface_statistics_block_t;
 #define	ISB_SIZE (sizeof(interface_statistics_block_t))
-
 /*===========================================================================*/
 /* Enhanced Packet Block (EPB) - ID 0x00000006 */
 struct enhanced_packet_block_s
@@ -141,7 +160,13 @@ struct enhanced_packet_block_s
 typedef struct enhanced_packet_block_s enhanced_packet_block_t;
 #define	EPB_SIZE (sizeof(enhanced_packet_block_t))
 /*===========================================================================*/
-
-
-
-
+/* Option Field */
+struct optionfield_s
+{
+ uint16_t	code;
+ uint16_t	codelen;
+ uint8_t	data[1];
+} __attribute__((__packed__));
+typedef struct optionfield_s optionfield_t;
+#define	OPTIONFIELD_SIZE offsetof(optionfield_t, data)
+/*===========================================================================*/

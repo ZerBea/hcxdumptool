@@ -33,6 +33,45 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
+bool writeisb(int fd, uint32_t interfaceid, uint64_t starttimestamp)
+{
+int written;
+struct timeval tvend;
+uint64_t endtimestamp;
+
+interface_statistics_block_t *isbhdr;
+uint8_t isb[256];
+
+memset(&isb, 0, 256);
+isbhdr = (interface_statistics_block_t*)isb;
+isbhdr->block_type = ISBID;
+isbhdr->total_length = ISB_SIZE;
+isbhdr->interface_id = interfaceid;
+gettimeofday(&tvend, NULL);
+endtimestamp = (tvend.tv_sec * 1000000) + tvend.tv_usec;
+isbhdr->timestamp_high = endtimestamp >> 32;
+isbhdr->timestamp_low = (uint32_t)endtimestamp;
+isbhdr->code_start = ISB_STARTTIME;
+isbhdr->start_len = 8;
+isbhdr->start_timestamp_high = starttimestamp >> 32;
+isbhdr->start_timestamp_low = (uint32_t)starttimestamp;
+isbhdr->code_end = ISB_ENDTIME;
+isbhdr->end_len = 8;
+isbhdr->end_timestamp_high = endtimestamp >> 32;
+isbhdr->end_timestamp_low = (uint32_t)endtimestamp;
+isbhdr->code_eoo = 0;
+isbhdr->end_len = 0;
+isbhdr->total_length_dup = ISB_SIZE;
+
+written = write(fd, &isb, ISB_SIZE);
+if(written != ISB_SIZE)
+	{
+	close(fd);
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
 bool writeidb(int fd, uint8_t *macorig, char *interfacestr)
 {
 int idblen;
