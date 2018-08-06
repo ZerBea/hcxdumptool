@@ -220,6 +220,7 @@ if(fd_socket > 0)
 
 if(fd_weppcapng > 0)
 	{
+	writeisb(fd_weppcapng, 0, timestampstart);
 	if(fsync(fd_weppcapng) != 0)
 		{
 		perror("failed to sync wep pcapng file");
@@ -232,6 +233,7 @@ if(fd_weppcapng > 0)
 
 if(fd_ippcapng > 0)
 	{
+	writeisb(fd_ippcapng, 0, timestampstart);
 	if(fsync(fd_ippcapng) != 0)
 		{
 		perror("failed to sync ip pcapng file");
