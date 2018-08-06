@@ -86,8 +86,6 @@ isbhdr->code_eoo = 0;
 isbhdr->eoo_len = 0;
 isbhdr->total_length_dup = ISB_SIZE;
 
-printf("%d %d \n",isbhdr->total_length_dup, isbhdr->total_length);
-
 written = write(fd, &isb, ISB_SIZE);
 if(written != ISB_SIZE)
 	{
