@@ -92,9 +92,6 @@ static bool disassociationflag;
 static bool attackapflag;
 static bool attackclientflag;
 
-static bool attacknullframeflag;
-static bool waitforackflag;
-
 static int filtermode;
 static int eapoltimeout;
 static int deauthenticationintervall;
@@ -134,13 +131,11 @@ static char *filterlistname;
 
 static const uint8_t hdradiotap[] =
 {
-0x00, 0x00, /* radiotap version */
-0x0e, 0x00, /* radiotap length */
-0x02, 0xc0, 0x00, 0x00, /* bmap: flags, tx and rx flags */
-0x08, /* F_FRAG (fragment if required) */
-0x00,       /* padding */
-0x00, 0x00, /* RX and TX flags to indicate that */
-0x08, 0x00, /* this is the injected frame directly */
+/* now we are running hardware hanshake */
+0x00, 0x00,
+0x08, 0x00,
+0x00, 0x00,
+0x00, 0x00
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
@@ -561,37 +556,6 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline void send_acknowledgement()
-{
-mac_t *macftx;
-uint8_t packetout[1024];
-
-if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
-	{
-	return;
-	}
-if((filtermode == 2) && (checkfilterlistentry(macfrx->addr2) == false))
-	{
-	return;
-	}
-
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_ACK +1);
-memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetout +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_CTL;
-macftx->subtype = IEEE80211_STYPE_ACK;
-macftx->duration = 0x013a;
-memcpy(macftx->addr1, macfrx->addr2, 6);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_ACK, 0) < 0)
-	{
-	errorcount++;
-	outgoingcount--;
-	}
-fsync(fd_socket);
-outgoingcount++;
-return;
-}
-/*===========================================================================*/
 static inline void send_authenticationresponseopensystem()
 {
 static mac_t *macftx;
@@ -931,13 +895,6 @@ if(eapauth->type == EAPOL_KEY)
 			{
 			writeepb(fd_pcapng);
 			}
-		if(attackapflag == false)
-			{
-			if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
-				{
-				send_acknowledgement();
-				}
-			}
 		if(rc == rcrandom)
 			{
 			memcpy(&laststam1, macfrx->addr1, 6);
@@ -1023,9 +980,7 @@ if(eapauth->type == EAPOL_KEY)
 			{
 			if(disassociationflag == false)
 				{
-				send_acknowledgement();
 				send_disassociation(WLAN_REASON_DISASSOC_AP_BUSY);
-				attacknullframeflag = true;
 				if(statusflag == true)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1100,7 +1055,6 @@ if(eapauth->type == EAPOL_START)
 		}
 	if(attackclientflag == false)
 		{
-		send_acknowledgement();
 		send_requestidentity();
 		}
 	return;
@@ -1190,13 +1144,22 @@ if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
 	}
 outgoingcount++;
 fsync(fd_socket);
+macftx->retry = 1;
+if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
+	{
+	errorcount++;
+	outgoingcount--;
+	}
+outgoingcount++;
+fsync(fd_socket);
+
+
 return;
 }
 /*===========================================================================*/
 
 static inline void process80211reassociation_resp()
 {
-attacknullframeflag = false;
 if(statusflag == true)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1278,15 +1241,11 @@ static ietag_t *essidtag;
 static uint8_t *reassociationrequest_ptr;
 static int reassociationrequestlen;
 
-attacknullframeflag = false;
 if(attackclientflag == false)
 	{
-	send_acknowledgement();
 	send_reassociationresponse();
-	waitforackflag = true;
-	attacknullframeflag = true;
-	memcpy(&assocmacap, macfrx->addr1, 6);
-	memcpy(&assocmacsta, macfrx->addr2, 6);
+	usleep(10000);
+	send_m1(macfrx->addr2,macfrx->addr1);
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
@@ -1393,14 +1352,6 @@ return;
 /*===========================================================================*/
 static inline void process80211association_resp()
 {
-attacknullframeflag = false;
-if(attackapflag == false)
-	{
-	if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
-		{
-		send_acknowledgement(macfrx->addr2);
-		}
-	}
 if(statusflag == true)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1503,15 +1454,11 @@ static ietag_t *essidtag;
 static uint8_t *associationrequestptr;
 static int associationrequestlen;
 
-attacknullframeflag = false;
 if(attackclientflag == false)
 	{
-	send_acknowledgement();
 	send_associationresponse();
-	waitforackflag = true;
-	attacknullframeflag = true;
-	memcpy(&assocmacap, macfrx->addr1, 6);
-	memcpy(&assocmacsta, macfrx->addr2, 6);
+	usleep(10000);
+	send_m1(macfrx->addr2,macfrx->addr1);
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
@@ -1579,7 +1526,6 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 		{
 		if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 			{
-			send_acknowledgement(macfrx->addr2);
 			send_associationrequest();
 			}
 		}
@@ -1589,7 +1535,6 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 			{
 			if(memcmp(macfrx->addr2, mac_mysta, 6) != 0)
 				{
-				send_acknowledgement(macfrx->addr2);
 				send_authenticationresponseopensystem();
 				}
 			}
@@ -1728,7 +1673,6 @@ if(attackapflag == false)
 			{
 			if(checkpownedap(macfrx->addr2) == 0)
 				{
-				send_acknowledgement(macfrx->addr2);
 				send_authenticationrequestopensystem();
 				}
 			return;
@@ -1926,7 +1870,6 @@ if(essidtagptr == NULL)
 essidtag = (ietag_t*)essidtagptr;
 if(attackclientflag == false)
 	{
-	send_acknowledgement(macfrx->addr2);
 	if(memcmp(macfrx->addr1, &mac_broadcast, 6) != 0)
 		{
 		send_proberesponse(macfrx->addr1, essidtagptr);
@@ -2352,19 +2295,6 @@ while(1)
 		}
 	if(macfrx->type == IEEE80211_FTYPE_CTL)
 		{
-		if(macfrx->subtype == IEEE80211_STYPE_ACK)
-			{
-			if(waitforackflag == true)
-				{
-				if(memcmp(&assocmacap, macfrx->addr1, 6) == 0)
-					{
-					send_m1();
-					}
-				waitforackflag = false;
-				attacknullframeflag = false;
-				}
-			continue;
-			}
 		continue;
 		}
 	if(macfrx->type == IEEE80211_FTYPE_DATA)
@@ -2384,15 +2314,6 @@ while(1)
 			}
 		if( macfrx->subtype == IEEE80211_STYPE_NULLFUNC)
 			{
-			if(disassociationflag == false)
-				{
-				if(attacknullframeflag == true)
-					{
-					send_acknowledgement();
-					send_disassociation(WLAN_REASON_DISASSOC_AP_BUSY);
-					attacknullframeflag = false;
-					}
-				}
 			continue;
 			}
 		if(payload_len < (int)LLC_SIZE)
@@ -2569,9 +2490,6 @@ errorcount = 0;
 incommingcount = 0;
 droppedcount = 0;
 outgoingcount = 0;
-
-attacknullframeflag = false;
-waitforackflag = false;
 
 mydisassociationsequence = 0;
 mydeauthenticationsequence = 0;

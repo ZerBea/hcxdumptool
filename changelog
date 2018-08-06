@@ -1,3 +1,9 @@
+07.08.2018
+==========
+enabled hardware handshake instead of software handshake
+now ATHEROS driver should work as expected.
+
+
 06.08.2018
 ==========
 write ISB (Interface Statistic Block) at the end of a cpature
