@@ -33,7 +33,7 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
-bool writeisb(int fd, uint32_t interfaceid, uint64_t starttimestamp)
+bool writeisb(int fd, uint32_t interfaceid, uint64_t starttimestamp, uint64_t incomming)
 {
 int written;
 struct timeval tvend;
@@ -51,17 +51,42 @@ gettimeofday(&tvend, NULL);
 endtimestamp = (tvend.tv_sec * 1000000) + tvend.tv_usec;
 isbhdr->timestamp_high = endtimestamp >> 32;
 isbhdr->timestamp_low = (uint32_t)endtimestamp;
-isbhdr->code_start = ISB_STARTTIME;
-isbhdr->start_len = 8;
-isbhdr->start_timestamp_high = starttimestamp >> 32;
-isbhdr->start_timestamp_low = (uint32_t)starttimestamp;
-isbhdr->code_end = ISB_ENDTIME;
-isbhdr->end_len = 8;
-isbhdr->end_timestamp_high = endtimestamp >> 32;
-isbhdr->end_timestamp_low = (uint32_t)endtimestamp;
+
+isbhdr->code_starttime = ISB_STARTTIME;
+isbhdr->starttime_len = 8;
+isbhdr->starttime_timestamp_high = starttimestamp >> 32;
+isbhdr->starttime_timestamp_low = (uint32_t)starttimestamp;
+
+isbhdr->code_endtime = ISB_ENDTIME;
+isbhdr->endtime_len = 8;
+isbhdr->endtime_timestamp_high = endtimestamp >> 32;
+isbhdr->endtime_timestamp_low = (uint32_t)endtimestamp;
+
+isbhdr->code_recv = ISB_IFRECV;
+isbhdr->recv_len = 8;
+isbhdr->recv = incomming;
+
+isbhdr->code_ifdrop = ISB_IFDROP;
+isbhdr->ifdrop_len = 8;
+isbhdr->ifdrop = 0;
+
+isbhdr->code_filteraccept = ISB_FILTERACCEPT;
+isbhdr->filteraccept_len = 8;
+isbhdr->filteraccept = incomming;
+
+isbhdr->code_osdrop = ISB_OSDROP;
+isbhdr->osdrop_len = 8;
+isbhdr->osdrop = 0;
+
+isbhdr->code_usredliv = ISB_USRDELIV;
+isbhdr->usredliv_len = 8;
+isbhdr->usredliv = incomming;
+
 isbhdr->code_eoo = 0;
-isbhdr->end_len = 0;
+isbhdr->eoo_len = 0;
 isbhdr->total_length_dup = ISB_SIZE;
+
+printf("%d %d \n",isbhdr->total_length_dup, isbhdr->total_length);
 
 written = write(fd, &isb, ISB_SIZE);
 if(written != ISB_SIZE)

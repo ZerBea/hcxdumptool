@@ -129,18 +129,40 @@ struct interface_statistics_block_s
 #define ISB_FILTERACCEPT	6
 #define ISB_OSDROP		7
 #define ISB_USRDELIV		8
- uint16_t	code_start;
- uint16_t	start_len;
- uint32_t	start_timestamp_high;		/* high bytes of timestamp */
- uint32_t	start_timestamp_low;		/* low bytes of timestamp */
- uint16_t	code_end;
- uint16_t	end_len;
- uint32_t	end_timestamp_high;		/* high bytes of timestamp */
- uint32_t	end_timestamp_low;		/* low bytes of timestamp */
+ uint16_t	code_starttime;
+ uint16_t	starttime_len;
+ uint32_t	starttime_timestamp_high;	/* high bytes of timestamp */
+ uint32_t	starttime_timestamp_low;	/* low bytes of timestamp */
+
+ uint16_t	code_endtime;
+ uint16_t	endtime_len;
+ uint32_t	endtime_timestamp_high;	/* high bytes of timestamp */
+ uint32_t	endtime_timestamp_low;	/* low bytes of timestamp */
+
+ uint16_t	code_recv;
+ uint16_t	recv_len;
+ uint64_t	recv;
+
+ uint16_t	code_ifdrop;
+ uint16_t	ifdrop_len;
+ uint64_t	ifdrop;
+
+ uint16_t	code_filteraccept;
+ uint16_t	filteraccept_len;
+ uint64_t	filteraccept;
+
+ uint16_t	code_osdrop;
+ uint16_t	osdrop_len;
+ uint64_t	osdrop;
+
+ uint16_t	code_usredliv;
+ uint16_t	usredliv_len;
+ uint64_t	usredliv;
+
+
  uint16_t	code_eoo;
  uint16_t	eoo_len;
  uint32_t	total_length_dup;		/* block length */
-
 } __attribute__((__packed__));
 typedef struct interface_statistics_block_s interface_statistics_block_t;
 #define	ISB_SIZE (sizeof(interface_statistics_block_t))
