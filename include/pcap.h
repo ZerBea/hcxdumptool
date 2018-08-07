@@ -63,6 +63,16 @@ struct option_header_s
 typedef struct option_header_s option_header_t;
 #define	OH_SIZE (sizeof(option_header_t))
 /*===========================================================================*/
+/* Option Field */
+struct optionfield64_s
+{
+ uint16_t	option_code;
+ uint16_t	option_length;
+ uint64_t	option_value;
+} __attribute__((__packed__));
+typedef struct optionfield64_s optionfield64_t;
+#define	OPTIONFIELD64_SIZE offsetof(optionfield64_t, data)
+/*===========================================================================*/
 /* Interface Description Block (IDB) - ID 0x00000001 */
 struct interface_description_block_s
  {
@@ -159,7 +169,6 @@ struct interface_statistics_block_s
  uint16_t	usredliv_len;
  uint64_t	usredliv;
 
-
  uint16_t	code_eoo;
  uint16_t	eoo_len;
  uint32_t	total_length_dup;		/* block length */
@@ -181,14 +190,4 @@ struct enhanced_packet_block_s
 } __attribute__((__packed__));
 typedef struct enhanced_packet_block_s enhanced_packet_block_t;
 #define	EPB_SIZE (sizeof(enhanced_packet_block_t))
-/*===========================================================================*/
-/* Option Field */
-struct optionfield_s
-{
- uint16_t	code;
- uint16_t	codelen;
- uint8_t	data[1];
-} __attribute__((__packed__));
-typedef struct optionfield_s optionfield_t;
-#define	OPTIONFIELD_SIZE offsetof(optionfield_t, data)
 /*===========================================================================*/

@@ -371,11 +371,9 @@ static void writeepbm2(int fd)
 static int epblen;
 static int written;
 static uint16_t padding;
-
-static optionfield_t *of;
 static total_length_t *totallenght;
 
-static uint8_t aplesscomment[] = {"HANDSHAKE AP-LESS" };
+static char aplesscomment[] = {"HANDSHAKE AP-LESS" };
 #define APLESSCOMMENT_SIZE sizeof(aplesscomment)
 
 epbhdr = (enhanced_packet_block_t*)epb;
@@ -394,28 +392,9 @@ if((epbhdr->cap_len % 4))
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
-
-of = (optionfield_t*)(epb +epblen);
-of->code = SHB_COMMENT;
-of->codelen = APLESSCOMMENT_SIZE;
-memcpy(of->data, &aplesscomment, APLESSCOMMENT_SIZE);
-padding = 0;
-if((APLESSCOMMENT_SIZE % 4))
-	{
-	 padding = 4 -(APLESSCOMMENT_SIZE % 4);
-	}
-epblen += OPTIONFIELD_SIZE +APLESSCOMMENT_SIZE;
-memset(&epb[epblen], 0, padding);
-epblen += padding;
-of = (optionfield_t*)(epb +epblen);
-of->code = 62109;
-of->codelen = 32;
-memcpy(of->data, &anoncerandom, 32);
-epblen += OPTIONFIELD_SIZE +32;
-of = (optionfield_t*)(epb +epblen);
-of->code = 0;
-of->codelen = 0;
-epblen += OPTIONFIELD_SIZE;
+epblen += addoption(epb +epblen, SHB_COMMENT, APLESSCOMMENT_SIZE, aplesscomment);
+epblen += addoption(epb +epblen, 62109, 32, (char*)anoncerandom);
+epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
@@ -2756,7 +2735,7 @@ if(filterlistname != NULL)
 
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
@@ -2766,7 +2745,7 @@ if(pcapngoutname != NULL)
 
 if(weppcapngoutname != NULL)
 	{
-	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename);
+	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
 	if(fd_weppcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", weppcapngoutname);
@@ -2776,7 +2755,7 @@ if(weppcapngoutname != NULL)
 
 if(ippcapngoutname != NULL)
 	{
-	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename);
+	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
 	if(fd_ippcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", ippcapngoutname);

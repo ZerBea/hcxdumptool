@@ -40,7 +40,7 @@ struct timeval tvend;
 uint64_t endtimestamp;
 
 interface_statistics_block_t *isbhdr;
-uint8_t isb[256];
+uint8_t isb[1024];
 
 memset(&isb, 0, 256);
 isbhdr = (interface_statistics_block_t*)isb;
@@ -102,7 +102,7 @@ int written;
 interface_description_block_t *idbhdr;
 total_length_t *totallenght;
 char vendor[6];
-uint8_t idb[256];
+uint8_t idb[1024];
 
 memset(&idb, 0, 256);
 idblen = IDB_SIZE;
@@ -130,15 +130,17 @@ if(written != idblen)
 return true;
 }
 /*===========================================================================*/
-bool writeshb(int fd)
+bool writeshb(int fd, uint64_t rcrandom, uint8_t *anoncerandom)
 {
 int shblen;
 int written;
 section_header_block_t *shbhdr;
+optionfield64_t *of;
+
 total_length_t *totallenght;
 struct utsname unameData;
 char sysinfo[256];
-uint8_t shb[256];
+uint8_t shb[1024];
 
 memset(&shb, 0, 256);
 shblen = SHB_SIZE;
@@ -160,8 +162,18 @@ if(uname(&unameData) == 0)
 	shblen += addoption(shb +shblen, SHB_OS, strlen(sysinfo), sysinfo);
 	sprintf(sysinfo, "hcxdumptool %s", VERSION);
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
-	shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
 	}
+
+of = (optionfield64_t*)(shb +shblen);
+of->option_code = 62108;
+of->option_length = 8;
+of->option_value = rcrandom;
+shblen += 12;
+
+shblen += addoption(shb +shblen, 62109, 32, (char*)anoncerandom);
+
+
+shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
@@ -176,7 +188,7 @@ if(written != shblen)
 return true;
 }
 /*===========================================================================*/
-int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr)
+int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr, uint64_t rcrandom, uint8_t *anoncerandom)
 {
 int c;
 int fd;
@@ -198,7 +210,7 @@ if(fd == -1)
 	return -1;
 	}
 
-if(writeshb(fd) == false)
+if(writeshb(fd, rcrandom, anoncerandom) == false)
 	{
 	return -1;
 	}
