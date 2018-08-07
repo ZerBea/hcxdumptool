@@ -505,6 +505,7 @@ zeiger->timestamp = timestamp;
 zeiger->status |= status;
 memcpy(zeiger->addr1, pownedmacsta, 6);
 memcpy(zeiger->addr2, pownedmacap, 6);
+pownedcount++;
 qsort(pownedlist, c, MACMACLIST_SIZE, sort_macmaclist_by_time);
 return false;
 }
