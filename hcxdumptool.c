@@ -3082,11 +3082,6 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 			fprintf(stderr, "EAPOL timeout is to low\n");
 			exit (EXIT_FAILURE);
 			}
-		if(eapoltimeout > EAPOLTIMEOUT)
-			{
-			fprintf(stderr, "EAPOL timeout is to high\n");
-			exit (EXIT_FAILURE);
-			}
 		break;
 
 		case 'D':
