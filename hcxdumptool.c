@@ -2474,6 +2474,50 @@ while(1)
 return;
 }
 /*===========================================================================*/
+static inline void dotargetscan()
+{
+struct sockaddr_ll ll;
+socklen_t fromlen;
+static rth_t *rth;
+set_channel();
+while(1)
+	{
+	memset(&ll, 0, sizeof(ll));
+	fromlen = sizeof(ll);
+	packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
+		{
+		droppedcount++;
+		continue;
+		}
+	packet_ptr = &epb[EPB_SIZE];
+	rth = (rth_t*)packet_ptr;
+	ieee82011_ptr = packet_ptr +rth->it_len;
+	ieee82011_len = packet_len -rth->it_len;
+
+	macfrx = (mac_t*)ieee82011_ptr;
+	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
+		{
+		payload_ptr = ieee82011_ptr +MAC_SIZE_LONG;
+		payload_len = ieee82011_len -MAC_SIZE_LONG;
+		}
+	else
+		{
+		payload_ptr = ieee82011_ptr +MAC_SIZE_NORM;
+		payload_len = ieee82011_len -MAC_SIZE_NORM;
+		}
+
+	if(macfrx->type == IEEE80211_FTYPE_MGMT)
+		{
+		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
+			{
+//			process80211rcascan();
+			continue;
+			}
+		 }
+	}
+return;
+}
 /*===========================================================================*/
 static bool ischannelindefaultlist(int userchannel)
 {
