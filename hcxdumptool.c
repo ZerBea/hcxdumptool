@@ -132,11 +132,28 @@ static char *filterlistname;
 
 static const uint8_t hdradiotap[] =
 {
-/* now we are running hardware hanshake */
+/* now we are running hardware handshake
 0x00, 0x00,
 0x08, 0x00,
 0x00, 0x00,
 0x00, 0x00
+ */
+
+		0x00,
+		0x00, // <-- radiotap version
+		0x0c,
+		0x00, // <- radiotap header length
+		0x04,
+		0x80,
+		0x00,
+		0x00, // <-- bitmap
+		0x00, // <-- rate
+		0x00, // <-- padding for natural alignment
+		0x18,
+		0x00, // <-- TX flags
+
+
+
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
@@ -338,6 +355,10 @@ static inline void printid(uint16_t idlen, uint8_t *id)
 {
 static int p;
 
+if(id[0] == 0)
+	{
+	return;
+	}
 if(isasciistring(idlen, id) != false)
 	{
 	fprintf(stdout, " %.*s", idlen, id);
@@ -958,7 +979,14 @@ if(eapauth->type == EAPOL_KEY)
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
-					fprintf(stdout, " [FOUND PMKID]\n");
+					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
+						{
+						fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
+						}
+					else
+						{
+						fprintf(stdout, " [FOUND PMKID]\n");
+						}
 					}
 				}
 			}
@@ -1004,7 +1032,7 @@ if(eapauth->type == EAPOL_KEY)
 			if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 				{
 				printtimenet(macfrx->addr1, macfrx->addr2);
-				fprintf(stdout, " [FOUND AP-LESS HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+				fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 				pownedcount++;
 				}
 			memset(&laststam1, 0, 6);
