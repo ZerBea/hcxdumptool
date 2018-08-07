@@ -1,7 +1,11 @@
 07.08.2018
 ==========
+moved to 4.2.1
+added communication between hcxdumtool and hcxpcaptool via pcapng option fields:
+62108 for REPLAYCOUNT uint64_t
+62109 for ANONCE uint8_t[32]
+
 enabled hardware handshake instead of software handshake
-now ATHEROS driver should work as expected.
 changed beavior auf status:
 --enable_status=<digit>            : enables status messages
                                      bitmask:

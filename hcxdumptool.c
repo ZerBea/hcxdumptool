@@ -40,8 +40,6 @@
 #include "include/pcap.c"
 #include "include/strings.c"
 #include "include/hashops.c"
-
-
 /*===========================================================================*/
 /* global var */
 
@@ -132,18 +130,11 @@ static char *filterlistname;
 
 static const uint8_t hdradiotap[] =
 {
-/* now we are running hardware handshake
+/* now we are running hardware handshake */
 0x00, 0x00,
 0x08, 0x00,
 0x00, 0x00,
 0x00, 0x00
- */
-0x00, 0x00,
-0x0c, 0x00,
-0x04, 0x80, 0x00, 0x00,
-0x00, 0x00,
-0x18, 0x00
-
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
