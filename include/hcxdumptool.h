@@ -16,6 +16,7 @@
 #define PROBEREQUESTLIST_MAX 512
 #define PROBERESPONSELIST_MAX 512
 #define MYPROBERESPONSELIST_MAX 512
+#define POWNEDLIST_MAX 512
 
 #define OWNEDLIST_MAX 1024
 
@@ -23,6 +24,12 @@
 #define RX_M12		0b00000010
 #define RX_PMKID	0b00000100
 #define RX_M23		0b00001000
+
+#define STATUS_EAPOL		0b00000001
+#define STATUS_PROBES		0b00000010
+#define STATUS_AUTH		0b00000100
+#define STATUS_ASSOC		0b00001000
+
 
 #define HCXD_HELP			1
 #define HCXD_VERSION			2
@@ -64,7 +71,28 @@ else if(ia->timestamp > ib->timestamp)
 	return -1;
 return 0;
 }
-//*===========================================================================*/
+/*===========================================================================*/
+struct macmaclist_s
+{
+ uint64_t	timestamp;
+ uint8_t	status;
+ uint8_t	addr1[6];
+ uint8_t	addr2[6];
+};
+typedef struct macmaclist_s macmaclist_t;
+#define	MACMACLIST_SIZE (sizeof(macmaclist_t))
+
+static int sort_macmaclist_by_time(const void *a, const void *b)
+{
+const macmaclist_t *ia = (const macmaclist_t *)a;
+const macmaclist_t *ib = (const macmaclist_t *)b;
+if(ia->timestamp < ib->timestamp)
+	return 1;
+else if(ia->timestamp > ib->timestamp)
+	return -1;
+return 0;
+}
+/*===========================================================================*/
 struct macessidlist_s
 {
  uint64_t	timestamp;
