@@ -138,21 +138,11 @@ static const uint8_t hdradiotap[] =
 0x00, 0x00,
 0x00, 0x00
  */
-
-		0x00,
-		0x00, // <-- radiotap version
-		0x0c,
-		0x00, // <- radiotap header length
-		0x04,
-		0x80,
-		0x00,
-		0x00, // <-- bitmap
-		0x00, // <-- rate
-		0x00, // <-- padding for natural alignment
-		0x18,
-		0x00, // <-- TX flags
-
-
+0x00, 0x00,
+0x0c, 0x00,
+0x04, 0x80, 0x00, 0x00,
+0x00, 0x00,
+0x18, 0x00
 
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
@@ -375,6 +365,69 @@ else
 return;
 }
 /*===========================================================================*/
+/*===========================================================================*/
+static void writeepbm2(int fd)
+{
+static int epblen;
+static int written;
+static uint16_t padding;
+
+static optionfield_t *of;
+static total_length_t *totallenght;
+
+static uint8_t aplesscomment[] = {"HANDSHAKE AP-LESS" };
+#define APLESSCOMMENT_SIZE sizeof(aplesscomment)
+
+epbhdr = (enhanced_packet_block_t*)epb;
+epblen = EPB_SIZE;
+epbhdr->block_type = EPBBID;
+epbhdr->interface_id = 0;
+epbhdr->cap_len = packet_len;
+epbhdr->org_len = packet_len;
+epbhdr->timestamp_high = timestamp >> 32;
+epbhdr->timestamp_low = (uint32_t)timestamp;
+padding = 0;
+if((epbhdr->cap_len % 4))
+	{
+	 padding = 4 -(epbhdr->cap_len % 4);
+	}
+epblen += packet_len;
+memset(&epb[epblen], 0, padding);
+epblen += padding;
+
+of = (optionfield_t*)(epb +epblen);
+of->code = SHB_COMMENT;
+of->codelen = APLESSCOMMENT_SIZE;
+memcpy(of->data, &aplesscomment, APLESSCOMMENT_SIZE);
+padding = 0;
+if((APLESSCOMMENT_SIZE % 4))
+	{
+	 padding = 4 -(APLESSCOMMENT_SIZE % 4);
+	}
+epblen += OPTIONFIELD_SIZE +APLESSCOMMENT_SIZE;
+memset(&epb[epblen], 0, padding);
+epblen += padding;
+of = (optionfield_t*)(epb +epblen);
+of->code = 62109;
+of->codelen = 32;
+memcpy(of->data, &anoncerandom, 32);
+epblen += OPTIONFIELD_SIZE +32;
+of = (optionfield_t*)(epb +epblen);
+of->code = 0;
+of->codelen = 0;
+epblen += OPTIONFIELD_SIZE;
+totallenght = (total_length_t*)(epb +epblen);
+epblen += TOTAL_SIZE;
+epbhdr->total_length = epblen;
+totallenght->total_length = epblen;
+
+written = write(fd, &epb, epblen);
+if(written != epblen)
+	{
+	errorcount++;
+	}
+return;	
+}
 /*===========================================================================*/
 static void writeepb(int fd)
 {
@@ -945,7 +998,6 @@ int calceapoltimeout;
 static exteap_t *exteap;
 static uint16_t exteaplen;
 
-
 eapauthptr = payload_ptr +LLC_SIZE;
 eapauthlen = payload_len -LLC_SIZE;
 eapauth = (eapauth_t*)eapauthptr;
@@ -1022,13 +1074,13 @@ if(eapauth->type == EAPOL_KEY)
 		}
 	if(keyinfo == 2)
 		{
-		if(fd_pcapng != 0)
-			{
-			writeepb(fd_pcapng);
-			}
 		calceapoltimeout = timestamp -lasttimestampm1;
-		if((rc == rcrandom) && (memcmp(&laststam1,macfrx->addr2, 6) == 0) && (memcmp(&lastapm1, macfrx->addr1, 6) == 0))
+		if((rc == rcrandom) && (memcmp(&laststam1, macfrx->addr2, 6) == 0) && (memcmp(&lastapm1, macfrx->addr1, 6) == 0))
 			{
+			if(fd_pcapng != 0)
+				{
+				writeepbm2(fd_pcapng);
+				}
 			if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 				{
 				printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1040,6 +1092,10 @@ if(eapauth->type == EAPOL_KEY)
 			lastrcm1 = 0;
 			lasttimestampm1 = 0;
 			return;
+			}
+		if(fd_pcapng != 0)
+			{
+			writeepbm2(fd_pcapng);
 			}
 		memcpy(&laststam2, macfrx->addr2, 6);
 		memcpy(&lastapm2, macfrx->addr1, 6);
