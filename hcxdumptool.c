@@ -1650,7 +1650,7 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 		{
 		if(auth->authentication_seq == 1)
 			{
-			if(memcmp(macfrx->addr2, mac_mysta, 6) != 0)
+			if(memcmp(macfrx->addr2, &mac_mysta, 6) != 0)
 				{
 				send_authenticationresponseopensystem();
 				}
@@ -1789,7 +1789,6 @@ if(attackapflag == false)
 		if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
 			{
 			send_authenticationrequestopensystem();
-			return;
 			}
 		}
 	}
