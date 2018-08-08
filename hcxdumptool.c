@@ -2495,9 +2495,8 @@ while(1)
 		}
 	packet_ptr = &epb[EPB_SIZE];
 	rth = (rth_t*)packet_ptr;
-	ieee82011_ptr = packet_ptr +rth->it_len;
-	ieee82011_len = packet_len -rth->it_len;
-
+	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
+	ieee82011_len = packet_len -le16toh(rth->it_len);
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 		{
