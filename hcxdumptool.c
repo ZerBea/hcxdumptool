@@ -14,7 +14,14 @@
 #include <time.h>
 #include <signal.h>
 #include <unistd.h>
+#ifdef __ANDROID__
+#include <libgen.h>
+#define strdupa strdup
+#include "include/android-ifaddrs/ifaddrs.h"
+#include "include/android-ifaddrs/ifaddrs.c"
+#else
 #include <ifaddrs.h>
+#endif
 #include <net/if.h>
 #include <sys/types.h>
 #include <sys/time.h>

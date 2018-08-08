@@ -1,0 +1,3 @@
+[submodule "include/android-ifaddrs"]
+	path = include/android-ifaddrs
+	url = https://github.com/morristech/android-ifaddrs
