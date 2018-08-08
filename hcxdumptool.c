@@ -3077,6 +3077,8 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_DISABLE_DEAUTHENTICATIONS:
 		deauthenticationflag = true;
+		deauthenticationintervall = 0;
+		deauthenticationsmax = 0;
 		break;
 
 		case HCXD_GIVE_UP_DEAUTHENTICATIONS:
