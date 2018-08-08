@@ -1,7 +1,7 @@
 07.08.2018
 ==========
 moved to 4.2.1
-added communication between hcxdumtool and hcxpcaptool via pcapng option fields:
+added communication between hcxdumptool and hcxpcaptool via pcapng option fields:
 62108 for REPLAYCOUNT uint64_t
 62109 for ANONCE uint8_t[32]
 
@@ -10,7 +10,7 @@ changed beavior auf status:
 --enable_status=<digit>            : enables status messages
                                      bitmask:
                                      1: EAPOL
-                                     2: PROEBEREQUEST/PROBERESPONSE
+                                     2: PROBEREQUEST/PROBERESPONSE
                                      4: AUTHENTICATON
                                      8: ASSOCIATION
 Now we use a bitmask to deliver status messages.
@@ -70,12 +70,12 @@ options:
 -E <digit>     : EAPOL timeout
                  default: 100000 = 1 second
                  value depends on channel assignment
--D <digit>     : deauthentication intervall
+-D <digit>     : deauthentication interval
                  default: 20 (every 20 beacons)
-                 the target beacon intervall is used as trigger
--A <digit>     : ap attack intervall
+                 the target beacon interval is used as trigger
+-A <digit>     : ap attack interval
                  default: 20 (every 20 beacons)
-                 the target beacon intervall is used as trigger
+                 the target beacon interval is used as trigger
 -I             : show suitable wlan interfaces and quit
 -h             : show this help
 -v             : show version
@@ -139,7 +139,7 @@ hcxdumptool is complete refactored:
 - working on Alfa AWUS036ACH (driver: https://github.com/kimocoder/rtl8812au)
 - more channels allowed (depends on installed wireless regulatory domain)
 - simple usage: hcxdumptool -i <interface> -o dumpfile.pcap -t 5
-  interface (real interface - no monX) must be in monitor - all services/programms with access to the interface must be stopped! 
+  interface (real interface - no monX) must be in monitor - all services/programs with access to the interface must be stopped! 
 - new format of blacklist
 - and more...
 
