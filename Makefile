@@ -23,10 +23,10 @@ all: build
 
 build:
 ifeq ($(GPIOSUPPORT), on)
-	$(CC) $(CFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
 endif
 ifeq ($(HOSTOS), Linux)
-	$(CC) $(CFLAGS) -o hcxdumptool hcxdumptool.c -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c -lpthread $(LDFLAGS)
 endif
 
 
