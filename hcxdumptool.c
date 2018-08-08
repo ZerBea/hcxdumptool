@@ -2251,11 +2251,9 @@ printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"MAC CLIENT...............: %06x%06x (client)\n"
 	"MAC ACCESS POINT.........: %06x%06x (start NIC)\n"
 	"EAPOL TIMEOUT............: %d\n"
-	"DEAUTHENTICATIONINTERVALL: %d beacons\n"
-	"GIVE UP DEAUTHENTICATIONS: %d tries\n"
-	"REPLAYCOUNTER............: %llu\n"
+	"REPLAYCOUNT..............: %llu\n"
 	"ANONCE...................: ",
-	interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, deauthenticationintervall, deauthenticationsmax, rcrandom);
+	interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 	for(c = 0; c < 32; c++)
 		{
 		printf("%02x", anoncerandom[c]);
@@ -3077,8 +3075,6 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_DISABLE_DEAUTHENTICATIONS:
 		deauthenticationflag = true;
-		deauthenticationintervall = 0;
-		deauthenticationsmax = 0;
 		break;
 
 		case HCXD_GIVE_UP_DEAUTHENTICATIONS:
