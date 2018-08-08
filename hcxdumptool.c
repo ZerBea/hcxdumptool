@@ -2624,6 +2624,7 @@ for(c = 0; c < FILTERLIST_MAX; c++)
 		}
 	if(hex2bin(&linein[0x0], zeiger->addr, 6) == false)
 		{
+		printf("reading blacklist line %d failed: %s\n", c +1, linein);
 		fclose(fh_filter);
 		return 0;
 		}
