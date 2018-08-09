@@ -1806,7 +1806,6 @@ for(c = 0; c < PROBERESPONSELIST_MAX -1; c++)
 	{
 	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
 		{
-		c++;
 		break;
 		}
 	if((memcmp(zeiger->addr, macfrx->addr2, 6) == 0) && (zeiger->essid_len == essidtag->len) && (memcmp(zeiger->essid, essidtag->data, essidtag->len) == 0))
@@ -1840,7 +1839,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(essidtagptr);
-	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4, apchannel);
+	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", c, macfrx->sequence >> 4, apchannel);
 	}
 return;
 }
@@ -2014,7 +2013,6 @@ for(c = 0; c < PROBEREQUESTLIST_MAX -1; c++)
 	{
 	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
 		{
-		c++;
 		break;
 		}
 	if((memcmp(zeiger->addr, macfrx->addr1, 6) == 0) && (zeiger->essid_len == essidtag->len) && (memcmp(zeiger->essid, essidtag->data, essidtag->len) == 0))
@@ -2058,7 +2056,6 @@ for(c = 0; c < BEACONLIST_MAX -1; c++)
 	{
 	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
 		{
-		c++;
 		break;
 		}
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
