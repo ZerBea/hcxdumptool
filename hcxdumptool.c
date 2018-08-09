@@ -756,6 +756,8 @@ const uint8_t authenticationrequestdata[] =
 };
 #define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 
+uint8_t packetout[1024];
+
 if((filtermode == 1) && (checkfilterlistentry(macfrx->addr2) == true))
 	{
 	return;
@@ -769,7 +771,6 @@ if(checkpownedstaap(macfrx->addr1, macfrx->addr2) == true)
 	return;
 	}
 
-uint8_t packetout[1024];
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
