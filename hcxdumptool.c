@@ -1839,7 +1839,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(essidtagptr);
-	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", c, macfrx->sequence >> 4, apchannel);
+	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4, apchannel);
 	}
 return;
 }
