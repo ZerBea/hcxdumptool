@@ -1073,7 +1073,7 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(fd_pcapng != 0)
 			{
-			writeepbm2(fd_pcapng);
+			writeepb(fd_pcapng);
 			}
 		memcpy(&laststam2, macfrx->addr2, 6);
 		memcpy(&lastapm2, macfrx->addr1, 6);
