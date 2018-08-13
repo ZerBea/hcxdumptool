@@ -1,3 +1,14 @@
+13.08.2018
+==========
+increased some attack values:
+--give_up_deauthentications=<digit>: disable transmitting deauthentications after n tries
+                                     default: 100 tries (minimum: 4)
+                                     affected: connections between client an access point
+                                     deauthentication attacks will not work against protected management frames
+--give_up_ap_attacks=<digit>       : disable transmitting directed proberequests after n tries
+                                     default: 100 tries (minimum: 4)
+
+
 07.08.2018
 ==========
 moved to 4.2.1
