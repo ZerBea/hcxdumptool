@@ -1,3 +1,28 @@
+16.08.2018
+==========
+From now on we store open system authentications to pcapng
+only if they have have a vendor specific field.
+we are no longer interested in standard open system authentications (payload len = 6)
+
+
+changed some default values:
+
+-D <digit>     : deauthentication interval
+                 default: 10 (every 10 beacons)
+                 the target beacon interval is used as trigger
+-A <digit>     : ap attack interval
+                 default: 10 (every 10 beacons)
+--give_up_deauthentications=<digit>: disable transmitting deauthentications after n tries
+                                     default: 100 tries (minimum: 4)
+                                     affected: connections between client an access point
+                                     deauthentication attacks will not work against protected management frames
+--give_up_ap_attacks=<digit>       : disable transmitting directed proberequests after n tries
+                                     default: 100 tries (minimum: 4)
+                                     affected: client-less attack
+                                     deauthentication attacks will not work against protected management frames
+
+
+
 13.08.2018
 ==========
 increased some attack values:

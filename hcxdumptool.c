@@ -1645,6 +1645,10 @@ if(payload_len < (int)AUTHENTICATIONFRAME_SIZE)
 
 if(macfrx->protected == 1)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1670,6 +1674,13 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 				}
 			}
 		}
+	if(fd_pcapng != 0)
+		{
+		if(payload_len > 6)
+			{
+			writeepb(fd_pcapng);
+			}
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1678,6 +1689,10 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 	}
 else if(auth->authentication_algho == SHARED_KEY)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1686,6 +1701,10 @@ else if(auth->authentication_algho == SHARED_KEY)
 	}
 else if(auth->authentication_algho == FBT)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1694,6 +1713,10 @@ else if(auth->authentication_algho == FBT)
 	}
 else if(auth->authentication_algho == SAE)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1702,6 +1725,10 @@ else if(auth->authentication_algho == SAE)
 	}
 else if(auth->authentication_algho == FILS)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1710,6 +1737,10 @@ else if(auth->authentication_algho == FILS)
 	}
 else if(auth->authentication_algho == FILSPFS)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1718,17 +1749,24 @@ else if(auth->authentication_algho == FILSPFS)
 	}
 else if(auth->authentication_algho == FILSPK)
 	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
 		fprintf(stdout, " [AUTHENTICATION, FILS PK, STATUS %d]\n", auth->authentication_seq);
 		}
 	}
-
-if(fd_pcapng != 0)
+else
 	{
-	writeepb(fd_pcapng);
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	}
+
 return;
 }
 /*===========================================================================*/
