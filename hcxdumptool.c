@@ -297,6 +297,13 @@ if(poweroffflag == true)
 exit(EXIT_SUCCESS);
 }
 /*===========================================================================*/
+static inline void printtargets()
+{
+
+
+return;
+}
+/*===========================================================================*/
 static inline void printtimenet(uint8_t *mac_to, uint8_t *mac_from)
 {
 static int p;
@@ -752,7 +759,6 @@ static mac_t *macftx;
 const uint8_t authenticationrequestdata[] =
 {
 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-0x7f, 0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
 };
 #define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 
