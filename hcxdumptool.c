@@ -2051,9 +2051,8 @@ static inline void getnewmac(uint8_t *newapmac, uint8_t *essidtagptr)
 int c;
 static macessidlist_t *zeiger;
 static ietag_t *essidtag;
+
 essidtag = (ietag_t*)essidtagptr;
-
-
 zeiger = myproberesponselist;
 for(c = 0; c < MYPROBERESPONSELIST_MAX -1; c++)
 		{
@@ -2111,6 +2110,10 @@ if(essidtagptr == NULL)
 	}
 
 essidtag = (ietag_t*)essidtagptr;
+if((essidtag->len == 0) || (essidtag->data[0] == 0))
+	{
+	return;
+	}
 if(attackclientflag == false)
 	{
 	if(memcmp(macfrx->addr1, &mac_broadcast, 6) != 0)
@@ -2122,10 +2125,6 @@ if(attackclientflag == false)
 		getnewmac(sendmac, essidtagptr);
 		send_proberesponse(sendmac, essidtagptr);
 		}
-	}
-if((essidtag->len == 0) || (essidtag->data[0] == 0))
-	{
-	return;
 	}
 zeiger = proberequestlist;
 for(c = 0; c < PROBEREQUESTLIST_MAX -1; c++)
