@@ -564,7 +564,7 @@ zeiger->status |= status;
 memcpy(zeiger->addr1, pownedmacsta, 6);
 memcpy(zeiger->addr2, pownedmacap, 6);
 pownedcount++;
-qsort(pownedlist, c, MACMACLIST_SIZE, sort_macmaclist_by_time);
+qsort(pownedlist, c +1, MACMACLIST_SIZE, sort_macmaclist_by_time);
 return false;
 }
 /*===========================================================================*/
@@ -997,7 +997,7 @@ memcpy(zeiger->addr, macsta, 6);
 zeiger->essid_len = essidlen;
 memset(zeiger->essid, 0, 32);
 memcpy(zeiger->essid, essiddata, essidlen);
-qsort(proberequestlist, c, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(proberequestlist, c +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return false;
 }
 /*===========================================================================*/
@@ -1948,7 +1948,7 @@ if((rsnlen >= 20) && (rsnlen <= RSN_LEN_MAX))
 	memcpy(zeiger->rsn, rsntag->data, rsntag->len);
 	}
 
-qsort(proberesponselist, c, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(proberesponselist, c +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 
 if(fd_pcapng != 0)
 	{
@@ -2081,7 +2081,7 @@ memcpy(newapmac, zeiger->addr, 6);
 zeiger->essid_len = essidtag->len;
 memset(zeiger->essid, 0, ESSID_LEN_MAX);
 memcpy(zeiger->essid, essidtag->data, essidtag->len);
-qsort(myproberesponselist, c, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(myproberesponselist, c +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2145,7 +2145,7 @@ memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->essid_len = essidtag->len;
 memset(zeiger->essid, 0, 0xff);
 memcpy(zeiger->essid, essidtag->data, essidtag->len);
-qsort(proberequestlist, c, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
+qsort(proberequestlist, c +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 
 if(fd_pcapng != 0)
 	{
@@ -2219,7 +2219,7 @@ if(attackapflag == false)
 	send_directed_proberequest();
 	}
 memcpy(zeiger->addr, macfrx->addr2, 6);
-qsort(beaconlist, c, MACLIST_SIZE, sort_maclist_by_time);
+qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
 if(fd_pcapng != 0)
 	{
 	writeepb(fd_pcapng);
