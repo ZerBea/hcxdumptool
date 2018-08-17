@@ -1759,6 +1759,18 @@ else if(auth->authentication_algho == FILSPK)
 		fprintf(stdout, " [AUTHENTICATION, FILS PK, STATUS %d]\n", auth->authentication_seq);
 		}
 	}
+else if(auth->authentication_algho == NETWORKEAP)
+	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
+	if((statusout & STATUS_AUTH) == STATUS_AUTH)
+		{
+		printtimenet(macfrx->addr1, macfrx->addr2);
+		fprintf(stdout, " [AUTHENTICATION, NETWORK EAP, STATUS %d]\n", auth->authentication_seq);
+		}
+	}
 else
 	{
 	if(fd_pcapng != 0)
