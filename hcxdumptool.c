@@ -121,6 +121,7 @@ static uint64_t mytime;
 static int mydisassociationsequence;
 static int myidrequestsequence;
 static int mydeauthenticationsequence;
+static int mybeaconsequence;
 static int myproberequestsequence;
 static int myauthenticationrequestsequence;
 static int myauthenticationresponsesequence;
@@ -169,7 +170,6 @@ static uint8_t channelscanlist[128] =
 
 static uint8_t mac_orig[6];
 static uint8_t mac_mysta[6];
-static uint8_t mac_myap[6];
 static uint8_t mac_mybcap[6];
 
 static unsigned long long int rcrandom;
@@ -900,6 +900,69 @@ if(myproberequestsequence >= 4096)
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &undirectedproberequestdata, UNDIRECTEDPROBEREQUEST_SIZE);
 if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE, 0) < 0)
+	{
+	errorcount++;
+	outgoingcount--;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static void send_broadcastbeacon()
+{
+mac_t *macftx;
+capap_t *capap;
+
+const uint8_t broadcastbeacondata[] =
+{
+0x00, 0x00,
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+0x03, 0x01, 0x0d,
+0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
+0x2a, 0x01, 0x00,
+0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00, 
+0x3d, 0x16, 0x0d, 0x0f, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x4a, 0x0e, 0x14, 0x00, 0x0a, 0x00, 0x2c, 0x01, 0xc8, 0x00, 0x14, 0x00, 0x05, 0x00, 0x19, 0x00,
+0x7f, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
+0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
+0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
+0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01, 0x20
+};
+#define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
+
+uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, &mac_mybcap, 6);
+memcpy(macftx->addr3, &mac_mybcap, 6);
+macftx->sequence = mybeaconsequence++ << 4;
+if(mybeaconsequence >= 4096)
+	{
+	mybeaconsequence = 0;
+	}
+capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = 0x64;
+capap->capabilities = 0x431;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
+
+if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE, 0) < 0)
 	{
 	errorcount++;
 	outgoingcount--;
@@ -2107,6 +2170,11 @@ if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
 	return;
 	}
+if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
+	{
+	return;
+	}
+
 zeiger = beaconlist;
 for(c = 0; c < BEACONLIST_MAX -1; c++)
 	{
@@ -2219,6 +2287,7 @@ while(1)
 		{
 		if(activescanflag == false)
 			{
+			send_broadcastbeacon();
 			send_undirected_proberequest();
 			}
 		}
@@ -2302,6 +2371,7 @@ memset(&lastaddr2data, 0, 6);
 lastsequencedata = 0;
 if(activescanflag == false)
 	{
+	send_broadcastbeacon();
 	send_undirected_proberequest();
 	}
 
@@ -2706,6 +2776,7 @@ outgoingcount = 0;
 
 mydisassociationsequence = 0;
 mydeauthenticationsequence = 0;
+mybeaconsequence = 0;
 myproberequestsequence = 0;
 myauthenticationrequestsequence = 0;
 myauthenticationresponsesequence = 0;
@@ -2738,13 +2809,12 @@ setbuf(stdout, NULL);
 
 myouiap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
 mynicap = rand() & 0xffffff;
-mac_myap[5] = mynicap & 0xff;
-mac_myap[4] = (mynicap >> 8) &0xff;
-mac_myap[3] = (mynicap >> 16) &0xff;
-mac_myap[2] = myouiap & 0xff;
-mac_myap[1] = (myouiap >> 8) &0xff;
-mac_myap[0] = (myouiap >> 16) &0xff;
-memcpy(&mac_mybcap, &mac_myap, 6);
+mac_mybcap[5] = mynicap & 0xff;
+mac_mybcap[4] = (mynicap >> 8) & 0xff;
+mac_mybcap[3] = (mynicap >> 16) & 0xff;
+mac_mybcap[2] = myouiap & 0xff;
+mac_mybcap[1] = (myouiap >> 8) & 0xff;
+mac_mybcap[0] = (myouiap >> 16) & 0xff;
 
 myouista = myvendorsta[rand() %((MYVENDORSTA_SIZE /sizeof(int)))];
 mynicsta = rand() & 0xffffff;
