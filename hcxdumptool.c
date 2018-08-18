@@ -1089,19 +1089,24 @@ if(eapauth->type == EAPOL_KEY)
 	rc = byte_swap_64(wpak->replaycount);
 	if(keyinfo == 1)
 		{
-		if(fd_pcapng != 0)
-			{
-			writeepb(fd_pcapng);
-			}
 		if(rc == rcrandom)
 			{
+			if(fd_pcapng != 0)
+				{
+				writeepb(fd_pcapng);
+				}
 			memcpy(&laststam1, macfrx->addr1, 6);
 			memcpy(&lastapm1, macfrx->addr2, 6);
 			lastrcm1 = rc;
 			lasttimestampm1 = timestamp;
+			return;
 			}
 		if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
 			{
+			if(fd_pcapng != 0)
+				{
+				writeepb(fd_pcapng);
+				}
 			if(addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) == false)
 				{
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
@@ -1116,6 +1121,14 @@ if(eapauth->type == EAPOL_KEY)
 						fprintf(stdout, " [FOUND PMKID]\n");
 						}
 					}
+				}
+			return;
+			}
+		if(memcmp(&mac_mysta, macfrx->addr1, 6) != 0)
+			{
+			if(fd_pcapng != 0)
+				{
+				writeepb(fd_pcapng);
 				}
 			}
 		return;
@@ -1138,10 +1151,6 @@ if(eapauth->type == EAPOL_KEY)
 					}
 				}
 			}
-		memset(&laststam1, 0, 6);
-		memset(&lastapm1, 0, 6);
-		lastrcm1 = 0;
-		lasttimestampm1 = 0;
 		memset(&laststam2, 0, 6);
 		memset(&lastapm2, 0, 6);
 		lastrcm2 = 0;
@@ -1197,10 +1206,6 @@ if(eapauth->type == EAPOL_KEY)
 					}
 				}
 			}
-		memset(&laststam1, 0, 6);
-		memset(&lastapm1, 0, 6);
-		lastrcm1 = 0;
-		lasttimestampm1 = 0;
 		memset(&laststam2, 0, 6);
 		memset(&lastapm2, 0, 6);
 		lastrcm2 = 0;
@@ -1461,7 +1466,7 @@ static int reassociationrequestlen;
 if(attackclientflag == false)
 	{
 	send_reassociationresponse();
-	usleep(10000);
+	usleep(5000);
 	send_m1(macfrx->addr2,macfrx->addr1);
 	}
 
