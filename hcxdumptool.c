@@ -91,7 +91,9 @@ static unsigned long long int outgoingcount;
 static unsigned long long int droppedcount;
 static unsigned long long int pownedcount;
 
+static bool wantstopflag;
 static bool poweroffflag;
+static bool channelchangedflag;
 static bool activescanflag;
 static bool deauthenticationflag;
 static bool disassociationflag;
@@ -218,7 +220,6 @@ if(fd_socket > 0)
 		perror("failed to close rx socket");
 		}
 	}
-
 if(fd_weppcapng > 0)
 	{
 	writeisb(fd_weppcapng, 0, timestampstart, incommingcount);
@@ -231,7 +232,6 @@ if(fd_weppcapng > 0)
 		perror("failed to close wep pcapng file");
 		}
 	}
-
 if(fd_ippcapng > 0)
 	{
 	writeisb(fd_ippcapng, 0, timestampstart, incommingcount);
@@ -244,7 +244,6 @@ if(fd_ippcapng > 0)
 		perror("failed to close ip pcapng file");
 		}
 	}
-
 if(fd_pcapng > 0)
 	{
 	writeisb(fd_pcapng, 0, timestampstart, incommingcount);
@@ -2227,13 +2226,21 @@ if(fd_pcapng != 0)
 return;
 }
 /*===========================================================================*/
+static inline void programmende(int signum)
+{
+if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL))
+	{
+	wantstopflag = true;
+	}
+return;
+}
 /*===========================================================================*/
+#ifdef DOGPIOSUPPORT
 static inline void *rpiflashthread()
 {
 while(1)
 	{
 	sleep(5);
-#ifdef DOGPIOSUPPORT
 	if(digitalRead(7) == 1)
 		{
 		digitalWrite(0, HIGH);
@@ -2243,18 +2250,10 @@ while(1)
 	delay (25);
 	digitalWrite(0, LOW);
 	delay (25);
-#endif
-	if((statusout) > 0)
-		{
-		printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
-		}
-	if(errorcount >= maxerrorcount)
-		{
-		globalclose();
-		}
 	}
 return NULL;
 }
+#endif
 /*===========================================================================*/
 static bool set_channel()
 {
@@ -2277,23 +2276,7 @@ static void *channelswitchthread()
 while(1)
 	{
 	sleep(staytime);
-	cpa++;
-	if(channelscanlist[cpa] == 0)
-		{
-		cpa = 0;
-		}
-	if(set_channel() == true)
-		{
-		if(activescanflag == false)
-			{
-			send_broadcastbeacon();
-			send_undirected_proberequest();
-			}
-		}
-	else
-		{
-		errorcount++;
-		}
+	channelchangedflag = true;
 	}
 return NULL;
 }
@@ -2304,6 +2287,9 @@ int c;
 struct sockaddr_ll ll;
 socklen_t fromlen;
 static rth_t *rth;
+int fdnum;
+fd_set readfds;
+struct timeval tvfd;
 
 uint8_t lastaddr1proberequest[6];
 uint8_t lastaddr2proberequest[6];
@@ -2392,24 +2378,84 @@ gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
 set_channel();
+channelchangedflag = false;
+send_broadcastbeacon();
+send_undirected_proberequest();
+
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
 while(1)
 	{
-	memset(&ll, 0, sizeof(ll));
-	fromlen = sizeof(ll);
-	packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
-	if(packet_len < 0)
+	if(wantstopflag == true)
 		{
-		perror("\nfailed to read packet");
+		globalclose();
+		}
+	if(channelchangedflag == true)
+		{
+		cpa++;
+		if(channelscanlist[cpa] == 0)
+			{
+			cpa = 0;
+			}
+		if(set_channel() == true)
+			{
+			if(activescanflag == false)
+				{
+				send_broadcastbeacon();
+				send_undirected_proberequest();
+				}
+			}
+		else
+			{
+			errorcount++;
+			}
+		channelchangedflag = false;
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket, &readfds);
+	fdnum = select(fd_socket +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
+		{
 		errorcount++;
 		continue;
 		}
-	if(ll.sll_pkttype == PACKET_OUTGOING)
+	else if(fdnum > 0 && FD_ISSET(fd_socket, &readfds))
 		{
+		memset(&ll, 0, sizeof(ll));
+		fromlen = sizeof(ll);
+		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		if(packet_len < 0)
+			{
+			perror("\nfailed to read packet");
+			errorcount++;
+			continue;
+			}
+		if(ll.sll_pkttype == PACKET_OUTGOING)
+			{
+			continue;
+			}
+		if(ioctl(fd_socket, SIOCGSTAMP , &tv) < 0)
+			{
+			errorcount++;
+			continue;
+			}
+		timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+		incommingcount++;
+		}
+	else
+		{
+		tvfd.tv_sec = 5;
+		tvfd.tv_usec = 0;
+		if((statusout) > 0)
+			{
+			printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+			}
+		if(errorcount >= maxerrorcount)
+			{
+			globalclose();
+			}
 		continue;
 		}
-	gettimeofday(&tv, NULL);
-	timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
-	incommingcount++;
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
 		{
 		droppedcount++;
@@ -2762,7 +2808,10 @@ static inline bool globalinit()
 int c;
 static int ret;
 static pthread_t thread1;
+
+#ifdef DOGPIOSUPPORT
 static pthread_t thread2;
+#endif
 
 fd_pcapng = 0;
 fd_ippcapng = 0;
@@ -2846,12 +2895,14 @@ if(ret != 0)
 	return false;
 	}
 
+#ifdef DOGPIOSUPPORT
 ret = pthread_create(&thread2, NULL, &rpiflashthread, NULL);
 if(ret != 0)
 	{
 	printf("failed to create thread\n");
 	return false;
 	}
+#endif
 
 if((beaconlist = calloc((BEACONLIST_MAX), MACLIST_SIZE)) == NULL)
 	{
@@ -2923,8 +2974,8 @@ if(ippcapngoutname != NULL)
 		return false;
 		}
 	}
-
-signal(SIGINT, globalclose);
+wantstopflag = false;
+signal(SIGINT, programmende);
 return true;
 }
 /*===========================================================================*/
