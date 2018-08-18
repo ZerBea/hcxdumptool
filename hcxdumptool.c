@@ -298,8 +298,38 @@ exit(EXIT_SUCCESS);
 /*===========================================================================*/
 static inline void printtargets()
 {
+int c;
+maclist_t *zeiger;
 
+if(payload_len < (int)CAPABILITIESAP_SIZE)
+	{
+	return;
+	}
+if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
+	{
+	return;
+	}
 
+zeiger = beaconlist;
+for(c = 0; c < BEACONLIST_MAX -1; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
+		{
+		zeiger->count ++;
+		return;
+		}
+	zeiger++;
+	}
+
+zeiger->timestamp = timestamp;
+zeiger->status = 0;
+zeiger->count = 0;
+memcpy(zeiger->addr, macfrx->addr2, 6);
+qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2190,7 +2220,6 @@ for(c = 0; c < BEACONLIST_MAX -1; c++)
 				send_broadcast_deauthentication(WLAN_REASON_UNSPECIFIED);
 				}
 			}
-		zeiger->timestamp = timestamp;
 		if(((zeiger->count %apattacksintervall) == 0) && (zeiger->count < (apattacksmax *apattacksintervall)))
 			{
 		if(attackapflag == false)
@@ -2207,6 +2236,7 @@ for(c = 0; c < BEACONLIST_MAX -1; c++)
 zeiger->timestamp = timestamp;
 zeiger->status = 0;
 zeiger->count = 0;
+memcpy(zeiger->addr, macfrx->addr2, 6);
 if(deauthenticationflag == false)
 	{
 	send_broadcast_deauthentication(WLAN_REASON_UNSPECIFIED);
@@ -2217,7 +2247,6 @@ if(attackapflag == false)
 	{
 	send_directed_proberequest();
 	}
-memcpy(zeiger->addr, macfrx->addr2, 6);
 qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
 if(fd_pcapng != 0)
 	{
@@ -2655,15 +2684,82 @@ static inline void dotargetscan()
 struct sockaddr_ll ll;
 socklen_t fromlen;
 static rth_t *rth;
+int fdnum;
+fd_set readfds;
+struct timeval tvfd;
+
 set_channel();
 while(1)
 	{
-	memset(&ll, 0, sizeof(ll));
-	fromlen = sizeof(ll);
-	packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
+	if(channelchangedflag == true)
+		{
+		cpa++;
+		if(channelscanlist[cpa] == 0)
+			{
+			cpa = 0;
+			}
+		if(set_channel() == true)
+			{
+			if(activescanflag == false)
+				{
+				send_broadcastbeacon();
+				send_undirected_proberequest();
+				}
+			}
+		else
+			{
+			errorcount++;
+			}
+		channelchangedflag = false;
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket, &readfds);
+	fdnum = select(fd_socket +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
+		{
+		errorcount++;
+		continue;
+		}
+	else if(fdnum > 0 && FD_ISSET(fd_socket, &readfds))
+		{
+		memset(&ll, 0, sizeof(ll));
+		fromlen = sizeof(ll);
+		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		if(packet_len < 0)
+			{
+			perror("\nfailed to read packet");
+			errorcount++;
+			continue;
+			}
+		if(ll.sll_pkttype == PACKET_OUTGOING)
+			{
+			continue;
+			}
+		if(ioctl(fd_socket, SIOCGSTAMP , &tv) < 0)
+			{
+			errorcount++;
+			continue;
+			}
+		timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+		incommingcount++;
+		}
+	else
+		{
+		tvfd.tv_sec = 5;
+		tvfd.tv_usec = 0;
+		if(errorcount >= maxerrorcount)
+			{
+			fprintf(stderr, "\nmaximum number of errors is reached\n");
+			globalclose();
+			}
+		continue;
+		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
 		{
-		droppedcount++;
 		continue;
 		}
 	packet_ptr = &epb[EPB_SIZE];
@@ -2681,7 +2777,6 @@ while(1)
 		payload_ptr = ieee82011_ptr +MAC_SIZE_NORM;
 		payload_len = ieee82011_len -MAC_SIZE_NORM;
 		}
-
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
