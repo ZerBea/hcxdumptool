@@ -1172,10 +1172,6 @@ if(eapauth->type == EAPOL_KEY)
 				fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 				pownedcount++;
 				}
-			memset(&laststam1, 0, 6);
-			memset(&lastapm1, 0, 6);
-			lastrcm1 = 0;
-			lasttimestampm1 = 0;
 			return;
 			}
 		if(fd_pcapng != 0)
