@@ -2244,12 +2244,15 @@ while(1)
 	if(digitalRead(7) == 1)
 		{
 		digitalWrite(0, HIGH);
-		globalclose();
+		wantstopflag = true;
 		}
-	digitalWrite(0, HIGH);
-	delay (25);
-	digitalWrite(0, LOW);
-	delay (25);
+	if(wantstopflag == false)
+		{
+		digitalWrite(0, HIGH);
+		delay (25);
+		digitalWrite(0, LOW);
+		delay (25);
+		}
 	}
 return NULL;
 }
