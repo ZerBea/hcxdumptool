@@ -206,7 +206,7 @@ for(p = 0; p < len; p++)
 	{
 	printf("%02x", ptr[p]);
 	}
-printf("\n\n");
+printf("\n");
 return;
 }
 /*===========================================================================*/
@@ -330,6 +330,18 @@ zeiger->status = 0;
 zeiger->count = 0;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
+
+zeiger = beaconlist;
+printf("\e[1;1H\e[2J");
+for(c = 0; BEACONLIST_MAX; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	debugprint(6,zeiger->addr);
+	zeiger++;
+	}
 return;
 }
 /*===========================================================================*/
@@ -2782,7 +2794,7 @@ while(1)
 		{
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
-//			process80211rcascan();
+			printtargets();
 			continue;
 			}
 		 }
@@ -3538,7 +3550,7 @@ if(globalinit() == false)
 	}
 
 processpackets(); 
-
+//dotargetscan();
 
 
 return EXIT_SUCCESS;
