@@ -2455,7 +2455,7 @@ while(1)
 			}
 		if(errorcount >= maxerrorcount)
 			{
-			fprintf(stderr, "\nmaximal error count reached\n");
+			fprintf(stderr, "\nmaximum number of errors is reached\n");
 			globalclose();
 			}
 		continue;
