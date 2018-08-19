@@ -348,8 +348,7 @@ for(c = 0; RCASCANLIST_MAX; c++)
 		}
 	zeiger++;
 	}
-
-
+fprintf(stdout, "-----------------------------------------------------------------------------------\n");
 return;
 }
 /*===========================================================================*/
@@ -2879,7 +2878,6 @@ while(1)
 		{
 		tvfd.tv_sec = 5;
 		tvfd.tv_usec = 0;
-		printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
 		if(errorcount >= maxerrorcount)
 			{
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
