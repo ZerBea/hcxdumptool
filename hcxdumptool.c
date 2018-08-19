@@ -95,6 +95,7 @@ static bool wantstopflag;
 static bool poweroffflag;
 static bool channelchangedflag;
 static bool activescanflag;
+static bool rcascanflag;
 static bool deauthenticationflag;
 static bool disassociationflag;
 static bool attackapflag;
@@ -294,55 +295,6 @@ if(poweroffflag == true)
 		printf("can't power off\n");
 	}
 exit(EXIT_SUCCESS);
-}
-/*===========================================================================*/
-static inline void printtargets()
-{
-int c;
-maclist_t *zeiger;
-
-if(payload_len < (int)CAPABILITIESAP_SIZE)
-	{
-	return;
-	}
-if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
-
-zeiger = beaconlist;
-for(c = 0; c < BEACONLIST_MAX -1; c++)
-	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
-		{
-		break;
-		}
-	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
-		{
-		zeiger->count ++;
-		return;
-		}
-	zeiger++;
-	}
-
-zeiger->timestamp = timestamp;
-zeiger->status = 0;
-zeiger->count = 0;
-memcpy(zeiger->addr, macfrx->addr2, 6);
-qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
-
-zeiger = beaconlist;
-printf("\e[1;1H\e[2J");
-for(c = 0; BEACONLIST_MAX; c++)
-	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
-		{
-		break;
-		}
-	debugprint(6,zeiger->addr);
-	zeiger++;
-	}
-return;
 }
 /*===========================================================================*/
 static inline void printtimenet(uint8_t *mac_to, uint8_t *mac_from)
@@ -1101,12 +1053,12 @@ if(eapauth->type == EAPOL_KEY)
 	rc = byte_swap_64(wpak->replaycount);
 	if(keyinfo == 1)
 		{
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		if(rc == rcrandom)
 			{
-			if(fd_pcapng != 0)
-				{
-				writeepb(fd_pcapng);
-				}
 			memcpy(&laststam1, macfrx->addr1, 6);
 			memcpy(&lastapm1, macfrx->addr2, 6);
 			lastrcm1 = rc;
@@ -1115,10 +1067,6 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
 			{
-			if(fd_pcapng != 0)
-				{
-				writeepb(fd_pcapng);
-				}
 			if(addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) == false)
 				{
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
@@ -1133,14 +1081,6 @@ if(eapauth->type == EAPOL_KEY)
 						fprintf(stdout, " [FOUND PMKID]\n");
 						}
 					}
-				}
-			return;
-			}
-		if(memcmp(&mac_mysta, macfrx->addr1, 6) != 0)
-			{
-			if(fd_pcapng != 0)
-				{
-				writeepb(fd_pcapng);
 				}
 			}
 		return;
@@ -2202,6 +2142,55 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 return;
 }
 /*===========================================================================*/
+static inline void process80211beaconrcascan()
+{
+int c;
+maclist_t *zeiger;
+
+if(payload_len < (int)CAPABILITIESAP_SIZE)
+	{
+	return;
+	}
+if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
+	{
+	return;
+	}
+
+zeiger = beaconlist;
+for(c = 0; c < BEACONLIST_MAX -1; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
+		{
+		zeiger->count ++;
+		return;
+		}
+	zeiger++;
+	}
+
+zeiger->timestamp = timestamp;
+zeiger->status = 0;
+zeiger->count = 0;
+memcpy(zeiger->addr, macfrx->addr2, 6);
+qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
+
+zeiger = beaconlist;
+printf("\e[1;1H\e[2J");
+for(c = 0; BEACONLIST_MAX; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	debugprint(6,zeiger->addr);
+	zeiger++;
+	}
+return;
+}
+/*===========================================================================*/
 static inline void process80211beacon()
 {
 int c;
@@ -2692,7 +2681,7 @@ while(1)
 return;
 }
 /*===========================================================================*/
-static inline void dotargetscan()
+static inline void processrcascan()
 {
 struct sockaddr_ll ll;
 socklen_t fromlen;
@@ -2701,7 +2690,17 @@ int fdnum;
 fd_set readfds;
 struct timeval tvfd;
 
+gettimeofday(&tv, NULL);
+timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+timestampstart = timestamp;
 set_channel();
+channelchangedflag = false;
+send_broadcastbeacon();
+send_undirected_proberequest();
+
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+
 while(1)
 	{
 	if(wantstopflag == true)
@@ -2764,6 +2763,7 @@ while(1)
 		{
 		tvfd.tv_sec = 5;
 		tvfd.tv_usec = 0;
+		printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
 		if(errorcount >= maxerrorcount)
 			{
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -2794,7 +2794,7 @@ while(1)
 		{
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
-			printtargets();
+			process80211beaconrcascan();
 			continue;
 			}
 		 }
@@ -3270,6 +3270,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
 	"--disable_client_attacks           : disable attacks on single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
+	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
 	"--enable_status=<digit>            : enable status messages\n"
 	"                                     bitmask:\n"
 	"                                     1: EAPOL\n"
@@ -3307,6 +3308,7 @@ statusout = 0;
 
 poweroffflag = false;
 activescanflag = false;
+rcascanflag = false;
 deauthenticationflag = false;
 disassociationflag = false;
 attackapflag = false;
@@ -3330,6 +3332,7 @@ static const struct option long_options[] =
 	{"disable_ap_attacks",		no_argument,		NULL,	HCXD_DISABLE_AP_ATTACKS},
 	{"give_up_ap_attacks",		required_argument,	NULL,	HCXD_GIVE_UP_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
+	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
@@ -3398,6 +3401,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_DISABLE_CLIENT_ATTACKS:
 		attackclientflag = true;
+		break;
+
+		case HCXD_DO_RCASCAN:
+		rcascanflag = true;
 		break;
 
 		case HCXD_ENABLE_STATUS:
@@ -3549,8 +3556,15 @@ if(globalinit() == false)
 	exit(EXIT_FAILURE);
 	}
 
-processpackets(); 
-//dotargetscan();
+if(rcascanflag == false)
+	{
+	processpackets(); 
+	}
+else
+	{
+	printf("*** feature comming soon ***\n");
+//	processrcascan(); 
+	}
 
 
 return EXIT_SUCCESS;
