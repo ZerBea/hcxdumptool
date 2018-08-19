@@ -58,6 +58,8 @@ static int fd_weppcapng;
 static maclist_t *filterlist;
 static int filterlist_len;
 
+rcascanlist_t *rcascanlist;
+
 maclist_t *beaconlist;
 macessidlist_t *proberequestlist;
 macessidlist_t *proberesponselist;
@@ -288,6 +290,14 @@ if(pownedlist != NULL)
 	free(pownedlist);
 	}
 
+if(rcascanflag == true)
+	{
+	if(rcascanlist != NULL)
+		{
+		free(rcascanlist);
+		}
+	}
+
 printf("\nterminated...\e[?25h\n");
 if(poweroffflag == true)
 	{
@@ -295,6 +305,52 @@ if(poweroffflag == true)
 		printf("can't power off\n");
 	}
 exit(EXIT_SUCCESS);
+}
+/*===========================================================================*/
+static inline void printapinfo()
+{
+static int c, p;
+
+rcascanlist_t *zeiger;
+zeiger = rcascanlist;
+printf("\e[1;1H\e[2J");
+for(c = 0; RCASCANLIST_MAX; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	for(p = 0; p< 6; p++)
+		{
+		fprintf(stdout, "%02x", zeiger->addr[p]);
+		}
+
+	if(isasciistring(zeiger->essid_len, zeiger->essid) != false)
+		{
+		fprintf(stdout, " %.*s", zeiger->essid_len, zeiger->essid);
+		}
+	else
+		{
+		fprintf(stdout, " $HEX[");
+		for(p = 0; p < zeiger->essid_len; p++)
+			{
+			fprintf(stdout, "%02x", zeiger->essid[p]);
+			}
+		fprintf(stdout, "]");
+		}
+	if(zeiger->status == 1)
+		{
+		fprintf(stdout, " [CHANNEL %d, AP IN RANGE]\n", zeiger->channel);
+		}
+	else
+		{
+		fprintf(stdout, " [CHANNEL %d]\n", zeiger->channel);
+		}
+	zeiger++;
+	}
+
+
+return;
 }
 /*===========================================================================*/
 static inline void printtimenet(uint8_t *mac_to, uint8_t *mac_from)
@@ -2142,10 +2198,20 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 return;
 }
 /*===========================================================================*/
-static inline void process80211beaconrcascan()
+static inline void process80211rcascan()
 {
 int c;
-maclist_t *zeiger;
+static uint8_t *apinfoptr;
+static int apinfolen;
+
+static uint8_t *essidtagptr;
+static ietag_t *essidtag = NULL;
+
+static uint8_t *channeltagptr;
+static ietag_t *channeltag = NULL;
+int apchannel;
+
+rcascanlist_t *zeiger;
 
 if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
@@ -2156,8 +2222,8 @@ if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
 	return;
 	}
 
-zeiger = beaconlist;
-for(c = 0; c < BEACONLIST_MAX -1; c++)
+zeiger = rcascanlist;
+for(c = 0; c < RCASCANLIST_MAX -1; c++)
 	{
 	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
 		{
@@ -2165,29 +2231,69 @@ for(c = 0; c < BEACONLIST_MAX -1; c++)
 		}
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
 		{
-		zeiger->count ++;
+		if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
+			{
+			zeiger->status = 1;
+			}
 		return;
 		}
 	zeiger++;
 	}
 
-zeiger->timestamp = timestamp;
-zeiger->status = 0;
-zeiger->count = 0;
-memcpy(zeiger->addr, macfrx->addr2, 6);
-qsort(beaconlist, c +1, MACLIST_SIZE, sort_maclist_by_time);
-
-zeiger = beaconlist;
-printf("\e[1;1H\e[2J");
-for(c = 0; BEACONLIST_MAX; c++)
+if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
-		{
-		break;
-		}
-	debugprint(6,zeiger->addr);
-	zeiger++;
+	return;
 	}
+
+apinfoptr = payload_ptr +CAPABILITIESAP_SIZE;
+apinfolen = payload_len -CAPABILITIESAP_SIZE;
+
+if(apinfolen < (int)IETAG_SIZE)
+	{
+	return;
+	}
+
+essidtagptr = gettag(TAG_SSID, apinfoptr, apinfolen);
+if(essidtagptr == NULL)
+	{
+	return;
+	}
+essidtag = (ietag_t*)essidtagptr;
+if(essidtag->len > ESSID_LEN_MAX)
+	{
+	return;
+	}
+if((essidtag->len == 0) || (essidtag->data[0] == 0))
+	{
+	return;
+	}
+
+apchannel = channelscanlist[cpa];
+channeltagptr = gettag(TAG_CHAN, apinfoptr, apinfolen);
+if(channeltagptr != NULL)
+	{
+	channeltag = (ietag_t*)channeltagptr;
+	apchannel = channeltag->data[0];
+	}
+
+zeiger->timestamp = timestamp;
+if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
+	{
+	zeiger->status = 1;
+	}
+else
+	{
+	zeiger->status = 0;
+	}
+memcpy(zeiger->addr, macfrx->addr2, 6);
+zeiger->channel = apchannel;
+zeiger->essid_len = essidtag->len;
+memset(zeiger->essid, 0, ESSID_LEN_MAX);
+memcpy(zeiger->essid, essidtag->data, essidtag->len);
+qsort(rcascanlist, c +1, RCASCANLIST_SIZE, sort_rcascanlist_by_essid);
+printapinfo();
+
+send_directed_proberequest();
 return;
 }
 /*===========================================================================*/
@@ -2794,7 +2900,12 @@ while(1)
 		{
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
-			process80211beaconrcascan();
+			process80211rcascan();
+			continue;
+			}
+		if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
+			{
+			process80211rcascan();
 			continue;
 			}
 		 }
@@ -3041,6 +3152,16 @@ if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 	return false;
 	}
 
+if(rcascanflag == true)
+	{
+	pcapngoutname = NULL;
+	ippcapngoutname = NULL;
+	weppcapngoutname = NULL;
+	if((rcascanlist = calloc((RCASCANLIST_MAX), RCASCANLIST_SIZE)) == NULL)
+		{
+		return false;
+		}
+	}
 
 filterlist_len = 0;
 filterlist = NULL;
@@ -3562,8 +3683,7 @@ if(rcascanflag == false)
 	}
 else
 	{
-	printf("*** feature comming soon ***\n");
-//	processrcascan(); 
+	processrcascan(); 
 	}
 
 

@@ -12,13 +12,12 @@
 #define FILTERLIST_MAX 32
 #define FILTERLIST_LINE_LEN 256
 
+#define RCASCANLIST_MAX 256
 #define BEACONLIST_MAX 256
 #define PROBEREQUESTLIST_MAX 512
 #define PROBERESPONSELIST_MAX 512
 #define MYPROBERESPONSELIST_MAX 512
 #define POWNEDLIST_MAX 512
-
-#define OWNEDLIST_MAX 1024
 
 #define RX_M1		0b00000001
 #define RX_M12		0b00000010
@@ -112,6 +111,29 @@ const macessidlist_t *ib = (const macessidlist_t *)b;
 if(ia->timestamp < ib->timestamp)
 	return 1;
 else if(ia->timestamp > ib->timestamp)
+	return -1;
+return 0;
+}
+/*===========================================================================*/
+struct rcascanlist_s
+{
+ uint64_t	timestamp;
+ uint8_t	status;
+ int		channel;
+ uint8_t	addr[6];
+ uint8_t	essid_len;
+ uint8_t	essid[ESSID_LEN_MAX];
+};
+typedef struct rcascanlist_s rcascanlist_t;
+#define	RCASCANLIST_SIZE (sizeof(rcascanlist_t))
+
+static int sort_rcascanlist_by_essid(const void *a, const void *b)
+{
+const rcascanlist_t *ia = (const rcascanlist_t *)a;
+const rcascanlist_t *ib = (const rcascanlist_t *)b;
+if(memcmp(ia->essid, ib->essid, 32) > 0)
+	return 1;
+else if(memcmp(ia->essid, ib->essid, 32) < 0)
 	return -1;
 return 0;
 }
