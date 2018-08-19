@@ -2,7 +2,7 @@
 ==========
 added radio assignment scan
 --do_rcascan                       : show radio channel assignment (scan for target access points)
-
+--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated
 
 17.08.2018
 ==========

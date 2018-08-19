@@ -139,6 +139,7 @@ static char *pcapngoutname;
 static char *ippcapngoutname;
 static char *weppcapngoutname ;
 static char *filterlistname;
+static char *rcascanlistname;
 
 
 static const uint8_t hdradiotap[] =
@@ -210,6 +211,56 @@ for(p = 0; p < len; p++)
 	printf("%02x", ptr[p]);
 	}
 printf("\n");
+return;
+}
+/*===========================================================================*/
+static inline void saveapinfo()
+{
+static int c, p;
+rcascanlist_t *zeiger;
+FILE *fhrsl;
+
+if((fhrsl = fopen(rcascanlistname, "w+")) == NULL)
+	{
+	fprintf(stderr, "error opening file %s", rcascanlistname);
+	return;
+	}
+qsort(rcascanlist, c +1, RCASCANLIST_SIZE, sort_rcascanlist_by_essid);
+zeiger = rcascanlist;
+for(c = 0; RCASCANLIST_MAX; c++)
+	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+	for(p = 0; p< 6; p++)
+		{
+		fprintf(fhrsl, "%02x", zeiger->addr[p]);
+		}
+	if(isasciistring(zeiger->essid_len, zeiger->essid) != false)
+		{
+		fprintf(fhrsl, " %.*s", zeiger->essid_len, zeiger->essid);
+		}
+	else
+		{
+		fprintf(stdout, " $HEX[");
+		for(p = 0; p < zeiger->essid_len; p++)
+			{
+			fprintf(fhrsl, "%02x", zeiger->essid[p]);
+			}
+		fprintf(stdout, "]");
+		}
+	if(zeiger->status == 1)
+		{
+		fprintf(fhrsl, " [CHANNEL %d, AP IN RANGE]\n", zeiger->channel);
+		}
+	else
+		{
+		fprintf(fhrsl, " [CHANNEL %d]\n", zeiger->channel);
+		}
+	zeiger++;
+	}
+fclose(fhrsl);
 return;
 }
 /*===========================================================================*/
@@ -292,6 +343,10 @@ if(pownedlist != NULL)
 
 if(rcascanflag == true)
 	{
+	if(rcascanlistname != NULL)
+		{
+		saveapinfo();
+		}
 	if(rcascanlist != NULL)
 		{
 		free(rcascanlist);
@@ -310,8 +365,8 @@ exit(EXIT_SUCCESS);
 static inline void printapinfo()
 {
 static int c, p;
-
 rcascanlist_t *zeiger;
+
 zeiger = rcascanlist;
 printf("\e[1;1H\e[2J");
 for(c = 0; RCASCANLIST_MAX; c++)
@@ -324,7 +379,6 @@ for(c = 0; RCASCANLIST_MAX; c++)
 		{
 		fprintf(stdout, "%02x", zeiger->addr[p]);
 		}
-
 	if(isasciistring(zeiger->essid_len, zeiger->essid) != false)
 		{
 		fprintf(stdout, " %.*s", zeiger->essid_len, zeiger->essid);
@@ -3402,6 +3456,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
 	"                                     raw data (unfiltered) can be saved using option -o\n"
+	"                                     you should disable auto scrolling in your terminal settings\n"
+	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
 	"--enable_status=<digit>            : enable status messages\n"
 	"                                     bitmask:\n"
 	"                                     1: EAPOL\n"
@@ -3450,6 +3506,7 @@ pcapngoutname = NULL;
 ippcapngoutname = NULL;
 weppcapngoutname = NULL;
 filterlistname = NULL;
+rcascanlistname = NULL;
 
 static const char *short_options = "i:o:O:W:c:t:T:E:D:A:Ihv";
 static const struct option long_options[] =
@@ -3464,6 +3521,7 @@ static const struct option long_options[] =
 	{"give_up_ap_attacks",		required_argument,	NULL,	HCXD_GIVE_UP_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
+	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
@@ -3536,6 +3594,11 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_DO_RCASCAN:
 		rcascanflag = true;
+		break;
+
+		case HCXD_SAVE_RCASCAN:
+		rcascanflag = true;
+		rcascanlistname = optarg;
 		break;
 
 		case HCXD_ENABLE_STATUS:
