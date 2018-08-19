@@ -416,7 +416,10 @@ for(c = 0; RCASCANLIST_MAX; c++)
 		}
 	zeiger++;
 	}
-fprintf(stdout, "-----------------------------------------------------------------------------------\n");
+fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d\n"
+	"-----------------------------------------------------------------------------------\n"
+	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+
 return;
 }
 /*===========================================================================*/
@@ -2367,7 +2370,6 @@ zeiger->essid_len = essidtag->len;
 memset(zeiger->essid, 0, ESSID_LEN_MAX);
 memcpy(zeiger->essid, essidtag->data, essidtag->len);
 qsort(rcascanlist, c +1, RCASCANLIST_SIZE, sort_rcascanlist_by_essid);
-printapinfo();
 if(attackapflag == false)
 	{
 	send_directed_proberequest();
@@ -2951,6 +2953,7 @@ while(1)
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
 			globalclose();
 			}
+		printapinfo();
 		continue;
 		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
