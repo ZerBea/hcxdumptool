@@ -416,9 +416,9 @@ for(c = 0; RCASCANLIST_MAX; c++)
 		}
 	zeiger++;
 	}
-fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d\n"
+fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d\n"
 	"-----------------------------------------------------------------------------------\n"
-	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount);
 
 return;
 }
