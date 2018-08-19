@@ -2235,6 +2235,14 @@ for(c = 0; c < RCASCANLIST_MAX -1; c++)
 			{
 			zeiger->status = 1;
 			}
+		if(((zeiger->count %apattacksintervall) == 0) && (zeiger->count < (apattacksmax *apattacksintervall)))
+			{
+			if(attackapflag == false)
+				{
+				send_directed_proberequest();
+				}
+			}
+		zeiger->count++;
 		return;
 		}
 	zeiger++;
@@ -2285,6 +2293,7 @@ else
 	{
 	zeiger->status = 0;
 	}
+zeiger->count = 0;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = apchannel;
 zeiger->essid_len = essidtag->len;
@@ -2292,8 +2301,10 @@ memset(zeiger->essid, 0, ESSID_LEN_MAX);
 memcpy(zeiger->essid, essidtag->data, essidtag->len);
 qsort(rcascanlist, c +1, RCASCANLIST_SIZE, sort_rcascanlist_by_essid);
 printapinfo();
-
-send_directed_proberequest();
+if(attackapflag == false)
+	{
+	send_directed_proberequest();
+	}
 return;
 }
 /*===========================================================================*/
@@ -2824,7 +2835,6 @@ while(1)
 			{
 			if(activescanflag == false)
 				{
-				send_broadcastbeacon();
 				send_undirected_proberequest();
 				}
 			}
@@ -2901,14 +2911,16 @@ while(1)
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
 			process80211rcascan();
-			continue;
 			}
-		if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
+		else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
 			{
 			process80211rcascan();
-			continue;
 			}
 		 }
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
 	}
 return;
 }
@@ -3154,7 +3166,6 @@ if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 
 if(rcascanflag == true)
 	{
-	pcapngoutname = NULL;
 	ippcapngoutname = NULL;
 	weppcapngoutname = NULL;
 	if((rcascanlist = calloc((RCASCANLIST_MAX), RCASCANLIST_SIZE)) == NULL)
@@ -3392,6 +3403,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--disable_client_attacks           : disable attacks on single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
+	"                                     raw data (unfiltered) can be saved using option -o\n"
 	"--enable_status=<digit>            : enable status messages\n"
 	"                                     bitmask:\n"
 	"                                     1: EAPOL\n"

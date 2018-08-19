@@ -119,6 +119,7 @@ struct rcascanlist_s
 {
  uint64_t	timestamp;
  uint8_t	status;
+ int		count;
  int		channel;
  uint8_t	addr[6];
  uint8_t	essid_len;
