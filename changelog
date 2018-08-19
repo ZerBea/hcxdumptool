@@ -3,6 +3,10 @@
 added radio assignment scan
 --do_rcascan                       : show radio channel assignment (scan for target access points)
 --save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated
+--save_rcascan_raw=<file>          : output file in pcapngformat
+                                     unfiltered packets
+                                     including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)
+
 
 17.08.2018
 ==========

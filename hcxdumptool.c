@@ -54,6 +54,7 @@ static int fd_socket;
 static int fd_pcapng;
 static int fd_ippcapng;
 static int fd_weppcapng;
+static int fd_rcascanpcapng;
 
 static maclist_t *filterlist;
 static int filterlist_len;
@@ -140,6 +141,7 @@ static char *ippcapngoutname;
 static char *weppcapngoutname ;
 static char *filterlistname;
 static char *rcascanlistname;
+static char *rcascanpcapngname;
 
 
 static const uint8_t hdradiotap[] =
@@ -343,6 +345,18 @@ if(pownedlist != NULL)
 
 if(rcascanflag == true)
 	{
+	if(fd_rcascanpcapng > 0)
+		{
+		writeisb(fd_rcascanpcapng, 0, timestampstart, incommingcount);
+		if(fsync(fd_rcascanpcapng) != 0)
+			{
+			perror("failed to sync pcapng file");
+			}
+		if(close(fd_rcascanpcapng) != 0)
+			{
+			perror("failed to close pcapng file");
+			}
+		}
 	if(rcascanlistname != NULL)
 		{
 		saveapinfo();
@@ -2969,9 +2983,9 @@ while(1)
 			process80211rcascan();
 			}
 		 }
-	if(fd_pcapng != 0)
+	if(fd_rcascanpcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_rcascanpcapng);
 		}
 	}
 return;
@@ -3103,6 +3117,7 @@ static pthread_t thread2;
 fd_pcapng = 0;
 fd_ippcapng = 0;
 fd_weppcapng = 0;
+fd_rcascanpcapng = 0;
 
 errorcount = 0;
 incommingcount = 0;
@@ -3216,16 +3231,6 @@ if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 	return false;
 	}
 
-if(rcascanflag == true)
-	{
-	ippcapngoutname = NULL;
-	weppcapngoutname = NULL;
-	if((rcascanlist = calloc((RCASCANLIST_MAX), RCASCANLIST_SIZE)) == NULL)
-		{
-		return false;
-		}
-	}
-
 filterlist_len = 0;
 filterlist = NULL;
 if(filterlistname != NULL)
@@ -3241,6 +3246,25 @@ if(filterlistname != NULL)
 		}
 	}
 
+if(rcascanflag == true)
+	{
+	pcapngoutname = NULL;
+	ippcapngoutname = NULL;
+	weppcapngoutname = NULL;
+	if((rcascanlist = calloc((RCASCANLIST_MAX), RCASCANLIST_SIZE)) == NULL)
+		{
+		return false;
+		}
+	if(rcascanpcapngname != NULL)
+		{
+		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, rcrandom, anoncerandom);
+		if(fd_rcascanpcapng <= 0)
+			{
+			fprintf(stderr, "could not create dumpfile %s\n", rcascanpcapngname);
+			return false;
+			}
+		}
+	}
 if(pcapngoutname != NULL)
 	{
 	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
@@ -3455,9 +3479,11 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--disable_client_attacks           : disable attacks on single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
-	"                                     raw data (unfiltered) can be saved using option -o\n"
 	"                                     you should disable auto scrolling in your terminal settings\n"
 	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
+	"--save_rcascan_raw=<file>          : output file in pcapngformat\n"
+	"                                     unfiltered packets\n"
+	"                                     including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
 	"--enable_status=<digit>            : enable status messages\n"
 	"                                     bitmask:\n"
 	"                                     1: EAPOL\n"
@@ -3507,6 +3533,7 @@ ippcapngoutname = NULL;
 weppcapngoutname = NULL;
 filterlistname = NULL;
 rcascanlistname = NULL;
+rcascanpcapngname = NULL;
 
 static const char *short_options = "i:o:O:W:c:t:T:E:D:A:Ihv";
 static const struct option long_options[] =
@@ -3522,6 +3549,7 @@ static const struct option long_options[] =
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
+	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
@@ -3599,6 +3627,11 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		case HCXD_SAVE_RCASCAN:
 		rcascanflag = true;
 		rcascanlistname = optarg;
+		break;
+
+		case HCXD_SAVE_RCASCAN_RAW:
+		rcascanflag = true;
+		rcascanpcapngname = optarg;
 		break;
 
 		case HCXD_ENABLE_STATUS:
