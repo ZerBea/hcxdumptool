@@ -82,6 +82,9 @@ Supported adapters (strict)
 
 * USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
 
+* Bus 005 Device 011: ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
+  get driver from here: https://github.com/kimocoder/rtl8812au
+
 * Bus 001 Device 002: ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
 
 
