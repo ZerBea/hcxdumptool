@@ -1444,14 +1444,15 @@ if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
 	}
 outgoingcount++;
 fsync(fd_socket);
-
-
 return;
 }
 /*===========================================================================*/
-
 static inline void process80211reassociation_resp()
 {
+if(memcmp(&mac_mysta, macfrx->addr1, 6) != 0)
+	{
+	send_m1(macfrx->addr1, macfrx->addr2);
+	}
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1539,9 +1540,12 @@ static int reassociationrequestlen;
 
 if(attackclientflag == false)
 	{
-	send_reassociationresponse();
-	usleep(5000);
-	send_m1(macfrx->addr2,macfrx->addr1);
+	if(memcmp(&mac_mysta, macfrx->addr2, 6) != 0)
+		{
+		send_reassociationresponse();
+		usleep(M1WAITTIME);
+		send_m1(macfrx->addr2, macfrx->addr1);
+		}
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
@@ -1651,6 +1655,10 @@ return;
 /*===========================================================================*/
 static inline void process80211association_resp()
 {
+if(memcmp(&mac_mysta, macfrx->addr1, 6) != 0)
+	{
+	send_m1(macfrx->addr1, macfrx->addr2);
+	}
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
@@ -1758,9 +1766,12 @@ static int associationrequestlen;
 
 if(attackclientflag == false)
 	{
-	send_associationresponse();
-	usleep(10000);
-	send_m1(macfrx->addr2,macfrx->addr1);
+	if(memcmp(&mac_mysta, macfrx->addr2, 6) != 0)
+		{
+		send_associationresponse();
+		usleep(M1WAITTIME);
+		send_m1(macfrx->addr2, macfrx->addr1);
+		}
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
