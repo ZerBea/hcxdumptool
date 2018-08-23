@@ -2320,6 +2320,7 @@ for(c = 0; c < RCASCANLIST_MAX -1; c++)
 			{
 			if(attackapflag == false)
 				{
+				zeiger->status = 0;
 				send_directed_proberequest();
 				}
 			}
