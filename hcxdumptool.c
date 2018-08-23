@@ -2655,6 +2655,11 @@ while(1)
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
 		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		if(packet_len == 0)
+			{
+			fprintf(stderr, "\ninterface went down\n");
+			globalclose();
+			}
 		if(packet_len < 0)
 			{
 			perror("\nfailed to read packet");
@@ -2937,6 +2942,11 @@ while(1)
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
 		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		if(packet_len == 0)
+			{
+			fprintf(stderr, "\ninterface went down\n");
+			globalclose();
+			}
 		if(packet_len < 0)
 			{
 			perror("\nfailed to read packet");
