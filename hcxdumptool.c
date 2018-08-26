@@ -1834,7 +1834,7 @@ if(macfrx->protected == 1)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, SHARED KEY ENCRYPTED KEY INSIDE]\n");
+		fprintf(stdout, " [AUTHENTICATION, SHARED KEY ENCRYPTED KEY INSIDE], STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == OPEN_SYSTEM)
@@ -1866,7 +1866,27 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, OPEN SYSTEM, SEQUENCE %d, STATUS %d]\n", macfrx->sequence >> 4, auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, OPEN SYSTEM, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
+		}
+	}
+else if(auth->authentication_algho == SAE)
+	{
+	if(fd_pcapng != 0)
+		{
+		writeepb(fd_pcapng);
+		}
+	if((statusout & STATUS_AUTH) == STATUS_AUTH)
+		{
+		if(auth->authentication_seq == 1)
+			{
+			printtimenet(macfrx->addr1, macfrx->addr2);
+			fprintf(stdout, " [AUTHENTICATION, SAE COMMIT, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
+			}
+		else if(auth->authentication_seq == 2)
+			{
+			printtimenet(macfrx->addr1, macfrx->addr2);
+			fprintf(stdout, " [AUTHENTICATION, SAE CONFIRM, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
+			}
 		}
 	}
 else if(auth->authentication_algho == SHARED_KEY)
@@ -1878,7 +1898,7 @@ else if(auth->authentication_algho == SHARED_KEY)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, SHARED KEY, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, SHARED KEY, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == FBT)
@@ -1890,19 +1910,7 @@ else if(auth->authentication_algho == FBT)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, FAST TRANSITION, STATUS %d]\n", auth->authentication_seq);
-		}
-	}
-else if(auth->authentication_algho == SAE)
-	{
-	if(fd_pcapng != 0)
-		{
-		writeepb(fd_pcapng);
-		}
-	if((statusout & STATUS_AUTH) == STATUS_AUTH)
-		{
-		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, SAE, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, FAST TRANSITION, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == FILS)
@@ -1914,7 +1922,7 @@ else if(auth->authentication_algho == FILS)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, FILS, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, FILS, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == FILSPFS)
@@ -1926,7 +1934,7 @@ else if(auth->authentication_algho == FILSPFS)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, FILS PFS, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, FILS PFS, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == FILSPK)
@@ -1938,7 +1946,7 @@ else if(auth->authentication_algho == FILSPK)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, FILS PK, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, FILS PK, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else if(auth->authentication_algho == NETWORKEAP)
@@ -1950,7 +1958,7 @@ else if(auth->authentication_algho == NETWORKEAP)
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
 		printtimenet(macfrx->addr1, macfrx->addr2);
-		fprintf(stdout, " [AUTHENTICATION, NETWORK EAP, STATUS %d]\n", auth->authentication_seq);
+		fprintf(stdout, " [AUTHENTICATION, NETWORK EAP, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 		}
 	}
 else

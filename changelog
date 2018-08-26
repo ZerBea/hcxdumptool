@@ -1,5 +1,10 @@
 19.08.2018
 ==========
+parse SAE authentication
+
+
+19.08.2018
+==========
 added radio assignment scan
 --do_rcascan                       : show radio channel assignment (scan for target access points)
 --save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated

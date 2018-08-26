@@ -379,6 +379,25 @@ struct authentication_frame
 typedef struct authentication_frame authf_t;
 #define	AUTHENTICATIONFRAME_SIZE (sizeof(authf_t))
 /*===========================================================================*/
+struct sae_commit_authentication_frame
+{
+ uint16_t	group_id;
+ uint8_t	scalar[32];
+ uint8_t	commit_element_x[32];
+ uint8_t	commit_element_y[32];
+} __attribute__((__packed__));
+typedef struct sae_commit_authentication_frame saecommitauthf_t;
+#define	SAECOMMITAUTHENTICATIONFRAME_SIZE (sizeof(saecommitauthf_t))
+/*===========================================================================*/
+struct sae_confirm_authentication_frame
+{
+ uint16_t	send_cofirm;
+ uint8_t	confirm[32];
+} __attribute__((__packed__));
+typedef struct sae_confirm_authentication_frame saeconfirmauthf_t;
+#define	SAECONFIRMAUTHENTICATIONFRAME_SIZE (sizeof(saeconfirmauthf_t))
+/*===========================================================================*/
+
 struct association_resp_frame
 {
  uint16_t	capabilities;
