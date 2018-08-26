@@ -391,7 +391,7 @@ typedef struct sae_commit_authentication_frame saecommitauthf_t;
 /*===========================================================================*/
 struct sae_confirm_authentication_frame
 {
- uint16_t	send_cofirm;
+ uint16_t	send_confirm;
  uint8_t	confirm[32];
 } __attribute__((__packed__));
 typedef struct sae_confirm_authentication_frame saeconfirmauthf_t;
