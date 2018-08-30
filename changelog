@@ -1,3 +1,10 @@
+30.08.2018
+==========
+iw functionality added!
+now hcxdumptool will set monitor mode and bring up interface!
+previous interface settings will be restored, when hcxdumptool terminated
+
+
 19.08.2018
 ==========
 parse SAE authentication

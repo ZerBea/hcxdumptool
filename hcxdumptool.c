@@ -59,6 +59,9 @@ static int fd_rcascanpcapng;
 static maclist_t *filterlist;
 static int filterlist_len;
 
+static struct ifreq ifr_old;
+static struct iwreq iwr_old;
+
 rcascanlist_t *rcascanlist;
 
 maclist_t *beaconlist;
@@ -269,6 +272,14 @@ return;
 __attribute__ ((noreturn))
 static void globalclose()
 {
+static struct ifreq ifr;
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
+
 if(fd_socket > 0)
 	{
 	if(close(fd_socket) != 0)
@@ -3335,11 +3346,87 @@ return true;
 static inline bool opensocket()
 {
 static struct ifreq ifr;
+static struct iwreq iwr;
 static struct sockaddr_ll ll;
 
 if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
+	return false;
+	}
+
+memset(&ifr_old, 0, sizeof(ifr));
+strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
+	{
+	perror("failed to save current interface flags");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&iwr_old, 0, sizeof(iwr));
+strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
+if (ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
+	{
+	perror("failed to save current interface mode");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface down");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+iwr.u.mode = IW_MODE_MONITOR;
+if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
+	{
+	perror("failed to set monitor mode");
+	close(fd_socket);
+	return false;
+	}
+
+ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface up");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
+	{
+	perror("failed to get interface informations");
+	close(fd_socket);
+	return false;
+	}
+if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
+	{
+	fprintf(stderr, "interface is not in monitor mode\n");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface down");
+	close(fd_socket);
+	return false;
+	}
+if((ifr.ifr_flags & (IFF_UP | IFF_BROADCAST | IFF_RUNNING)) != (IFF_UP | IFF_BROADCAST | IFF_RUNNING))
+	{
+	fprintf(stderr, "interface is not up\n");
+	close(fd_socket);
 	return false;
 	}
 
@@ -3352,6 +3439,7 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	close(fd_socket);
 	return false;
 	}
+
 
 memset(&ll, 0, sizeof(ll));
 ll.sll_family = PF_PACKET;
@@ -3445,10 +3533,12 @@ static inline void usage(char *eigenname)
 {
 printf("%s %s (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
-	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status\n"
+	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status=3\n"
+	"         do not use hcxdumptool in combination with other 3rd party tools\n"
 	"\n"
 	"options:\n"
-	"-i <interface> : interface (monitor mode must be enabled)\n"
+	"-i <interface> : interface (monitor mode will be enabled by hcxdumptool)\n"
+	"                 can also be done manually:\n"
 	"                 ip link set <interface> down\n"
 	"                 iw dev <interface> set type monitor\n"
 	"                 ip link set <interface> up\n"
