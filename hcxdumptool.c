@@ -3440,7 +3440,6 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	return false;
 	}
 
-
 memset(&ll, 0, sizeof(ll));
 ll.sll_family = PF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
@@ -3489,14 +3488,14 @@ return false;
 /*===========================================================================*/
 static void show_wlaninterfaces()
 {
-struct ifaddrs *ifaddr=NULL;
+struct ifaddrs *ifaddr = NULL;
 struct ifaddrs *ifa = NULL;
 struct sockaddr_ll *sfda;
 static int i = 0;
 
 if(getifaddrs(&ifaddr) == -1)
 	{
-	perror("getifaddrs failed ");
+	perror("failed to get ifaddrs");
 	}
 else
 	{
@@ -3519,6 +3518,7 @@ else
 		}
 	freeifaddrs(ifaddr);
 	}
+return;
 }
 /*===========================================================================*/
 __attribute__ ((noreturn))
