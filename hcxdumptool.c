@@ -629,7 +629,7 @@ int c;
 macmaclist_t *zeiger;
 
 zeiger = pownedlist;
-for(c = 0; c < POWNEDLIST_MAX -1; c++)
+for(c = 0; c < POWNEDLIST_MAX; c++)
 	{
 	if(memcmp(zeiger->addr2, &mac_null, 6) == 0)
 		{
@@ -650,7 +650,7 @@ int c;
 macmaclist_t *zeiger;
 
 zeiger = pownedlist;
-for(c = 0; c < POWNEDLIST_MAX -1; c++)
+for(c = 0; c < POWNEDLIST_MAX; c++)
 	{
 	if(memcmp(zeiger->addr2, &mac_null, 6) == 0)
 		{
@@ -1190,10 +1190,6 @@ if(eapauth->type == EAPOL_KEY)
 	rc = byte_swap_64(wpak->replaycount);
 	if(keyinfo == 1)
 		{
-		if(fd_pcapng != 0)
-			{
-			writeepb(fd_pcapng);
-			}
 		if(rc == rcrandom)
 			{
 			memcpy(&laststam1, macfrx->addr1, 6);
@@ -1202,23 +1198,39 @@ if(eapauth->type == EAPOL_KEY)
 			lasttimestampm1 = timestamp;
 			return;
 			}
-		if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
+		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
 			{
-			if(addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) == false)
+			return;
+			}
+		if(authlen > 95)
+			{
+			if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
 				{
-				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
+				if(fd_pcapng != 0)
 					{
-					printtimenet(macfrx->addr1, macfrx->addr2);
-					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
+					writeepb(fd_pcapng);
+					}
+				if(addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) == false)
+					{
+					if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 						{
-						fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
-						}
-					else
-						{
-						fprintf(stdout, " [FOUND PMKID]\n");
+						printtimenet(macfrx->addr1, macfrx->addr2);
+						if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
+							{
+							fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
+							}
+						else
+							{
+							fprintf(stdout, " [FOUND PMKID]\n");
+							}
 						}
 					}
+				return;
 				}
+			}
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
 			}
 		return;
 		}
