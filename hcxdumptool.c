@@ -206,7 +206,6 @@ uint8_t assocmacsta[6];
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 /*===========================================================================*/
-/*===========================================================================*/
 static inline void debugprint(int len, uint8_t *ptr)
 {
 static int p;
@@ -216,6 +215,26 @@ for(p = 0; p < len; p++)
 	printf("%02x", ptr[p]);
 	}
 printf("\n");
+return;
+}
+/*===========================================================================*/
+static inline void debugprint2(int len, uint8_t *ptr, int len2, uint8_t *ptr2)
+{
+static int p;
+
+for(p = 0; p < len; p++)
+	{
+	printf("%02x", ptr[p]);
+	}
+printf(" ");
+
+for(p = 0; p < len2; p++)
+	{
+	printf("%02x", ptr2[p]);
+	}
+printf("\n");
+
+
 return;
 }
 /*===========================================================================*/
@@ -1192,6 +1211,10 @@ if(eapauth->type == EAPOL_KEY)
 		{
 		if(rc == rcrandom)
 			{
+			if(fd_pcapng != 0)
+				{
+				writeepb(fd_pcapng);
+				}
 			memcpy(&laststam1, macfrx->addr1, 6);
 			memcpy(&lastapm1, macfrx->addr2, 6);
 			lastrcm1 = rc;
