@@ -1209,30 +1209,26 @@ if(eapauth->type == EAPOL_KEY)
 	rc = byte_swap_64(wpak->replaycount);
 	if(keyinfo == 1)
 		{
+		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
+			{
+			return;
+			}
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
 		if(rc == rcrandom)
 			{
-			if(fd_pcapng != 0)
-				{
-				writeepb(fd_pcapng);
-				}
 			memcpy(&laststam1, macfrx->addr1, 6);
 			memcpy(&lastapm1, macfrx->addr2, 6);
 			lastrcm1 = rc;
 			lasttimestampm1 = timestamp;
 			return;
 			}
-		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
-			{
-			return;
-			}
 		if(authlen > 95)
 			{
 			if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
 				{
-				if(fd_pcapng != 0)
-					{
-					writeepb(fd_pcapng);
-					}
 				if(addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) == false)
 					{
 					if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
@@ -1250,10 +1246,6 @@ if(eapauth->type == EAPOL_KEY)
 					}
 				return;
 				}
-			}
-		if(fd_pcapng != 0)
-			{
-			writeepb(fd_pcapng);
 			}
 		return;
 		}
