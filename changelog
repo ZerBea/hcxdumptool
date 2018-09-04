@@ -1,3 +1,32 @@
+04.09.2018
+==========
+improved rcascan (show time and access points which hide their ESSID)
+prepare detection of PMF
+refactored access point handling
+handle 4096 access points simultaneously
+refactored client handling
+handle 4096 clients simultaneously
+speed up retrieving PMKIDs (< 1 minute)
+attack access points which hide their ESSID
+increased filter list line length
+increased filter list maximum entries
+added option to show beacons in status output:
+--enable_status=<digit>            : enable status messages
+                                     bitmask:
+                                      1: EAPOL
+                                      2: PROBEREQUEST/PROBERESPONSE
+                                      4: AUTHENTICATON
+                                      8: ASSOCIATION
+                                     16: BEACON
+
+added option to choose station chipset:
+--station_chipset<digit>           : use this chipset for station
+                                     0: transmit no chipset information (default)
+                                     1: Broadcom
+                                     2: Apple-Broadcom
+                                     3: Sonos
+
+
 30.08.2018
 ==========
 iw functionality added!
