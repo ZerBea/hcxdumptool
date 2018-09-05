@@ -2425,7 +2425,7 @@ if((myaplist_ptr -myaplist) >= MYAPLIST_MAX)
 
 memset(myaplist_ptr, 0, MYAPLIST_SIZE);
 myaplist_ptr->timestamp = timestamp;
-memcpy(myaplist_ptr->addr, macfrx->addr1, 0);
+memcpy(myaplist_ptr->addr, macfrx->addr1, 6);
 myaplist_ptr->essid_len = essidtag->len;
 memcpy(myaplist_ptr->essid, essidtag->data, essidtag->len);
 send_proberesponse(macfrx->addr2, myaplist_ptr->addr, myaplist_ptr->essid_len, myaplist_ptr->essid);
