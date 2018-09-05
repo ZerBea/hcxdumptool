@@ -3959,8 +3959,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--disable_client_attacks           : disable attacks on single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
-	"--station_chipset=<digit>          : use this chipset for station\n"
-	"                                     0: transmit no chipset information (default)\n"
+	"--station_vendor=<digit>           : use this VENDOR information for station\n"
+	"                                     0: transmit no VENDOR information (default)\n"
 	"                                     1: Broadcom\n"
 	"                                     2: Apple-Broadcom\n"
 	"                                     3: Sonos\n"
@@ -4036,7 +4036,7 @@ static const struct option long_options[] =
 	{"disable_ap_attacks",		no_argument,		NULL,	HCXD_DISABLE_AP_ATTACKS},
 	{"give_up_ap_attacks",		required_argument,	NULL,	HCXD_GIVE_UP_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
-	{"station_chipset",		required_argument,	NULL,	HCXD_STATION_CHIPSET},
+	{"station_vendor",		required_argument,	NULL,	HCXD_STATION_VENDOR},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
@@ -4110,11 +4110,11 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		attackclientflag = true;
 		break;
 
-		case HCXD_STATION_CHIPSET:
+		case HCXD_STATION_VENDOR:
 		stachipset = strtol(optarg, NULL, 10);
 		if(stachipset > CS_SONOS)
 			{
-			fprintf(stderr, "wrong station chipset\n");
+			fprintf(stderr, "wrong station VENDOR information\n");
 			exit(EXIT_FAILURE);
 			}
 		break;

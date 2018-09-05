@@ -19,9 +19,9 @@ added option to show beacons in status output:
                                       8: ASSOCIATION
                                      16: BEACON
 
-added option to choose station chipset:
---station_chipset<digit>           : use this chipset for station
-                                     0: transmit no chipset information (default)
+added option to choose station VENDOR information:
+--station_chipset=<digit>          : use this VENDOR information for station
+                                     0: transmit no VENDOR information (default)
                                      1: Broadcom
                                      2: Apple-Broadcom
                                      3: Sonos
