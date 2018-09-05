@@ -953,6 +953,19 @@ const uint8_t cssonos[] =
 };
 #define CSSONOS_SIZE sizeof(cssonos)
 
+const uint8_t csnetgearbroadcom[] =
+{
+0xdd, 0x06, 0x00, 0x14, 0x6c, 0x00, 0x00, 0x00,
+0xdd, 0x09, 0x00, 0x10, 0x18, 0x02, 0x04, 0x00, 0x1c, 0x00, 0x00
+};
+#define CSNETGEARBROADCOM_SIZE sizeof(csnetgearbroadcom)
+
+const uint8_t cswilibox[] =
+{
+0xdd, 0x0f, 0x00, 0x19, 0x3b, 0x02, 0x04, 0x08, 0x00, 0x00, 0x00, 0x03, 0x04, 0x01, 0x00, 0x00,
+0x00
+};
+#define CSWILIBOX_SIZE sizeof(cswilibox)
 
 uint8_t packetout[1024];
 
@@ -1000,6 +1013,16 @@ else if(stachipset == CS_SONOS)
 	{
 	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE], &cssonos, CSSONOS_SIZE);
 	cssize = CSSONOS_SIZE;
+	}
+else if(stachipset == CS_NETGEARBROADCOM)
+	{
+	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE], &csnetgearbroadcom, CSNETGEARBROADCOM_SIZE);
+	cssize = CSNETGEARBROADCOM_SIZE;
+	}
+else if(stachipset == CS_WILIBOX)
+	{
+	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE], &cswilibox, CSWILIBOX_SIZE);
+	cssize = CSWILIBOX_SIZE;
 	}
 else
 	{
@@ -3964,6 +3987,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     1: Broadcom\n"
 	"                                     2: Apple-Broadcom\n"
 	"                                     3: Sonos\n"
+	"                                     4: Netgear-Broadcom\n"
+	"                                     5: Wilibox Deliberant Group LLC\n"
 	"                                     you should disable auto scrolling in your terminal settings\n"
 	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
 	"--save_rcascan_raw=<file>          : output file in pcapngformat\n"
@@ -4112,7 +4137,7 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_STATION_VENDOR:
 		stachipset = strtol(optarg, NULL, 10);
-		if(stachipset > CS_SONOS)
+		if(stachipset >= CS_ENDE)
 			{
 			fprintf(stderr, "wrong station VENDOR information\n");
 			exit(EXIT_FAILURE);
