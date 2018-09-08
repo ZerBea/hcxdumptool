@@ -150,3 +150,11 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 * hcxdumptool is able to capture plainmasterkeys from the wlan traffic
 
 * hcxdumptool is able to capture usernames and identities from the wlan traffic
+
+* Do not use a logical interface and leave the physical interface in managed mode.
+
+* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which takes access to the interface.
+
+* Stop all services which takes access to the physical interface (NetworkManager, wpa_supplicant,...).
+
+* Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space.
