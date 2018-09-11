@@ -1,3 +1,16 @@
+11.09.2018
+==========
+You can “uncomment a line” in a configuration file
+by removing the # at the start of the line.
+Or, to “comment out” a line, add a # character
+to the start of the line. 
+
+001122334455 myap
+# aabbccddeeff ignore this mac
+112233445566 second ap
+# this is may comment
+
+
 05.09.2018
 ==========
 added Netgear Broadcom VENDOR information

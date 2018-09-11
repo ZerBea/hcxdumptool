@@ -3506,6 +3506,7 @@ static inline int readfilterlist(char *listname, maclist_t *zeiger)
 {
 int c;
 int len;
+int entries;
 static FILE *fh_filter;
 
 static char linein[FILTERLIST_LINE_LEN];
@@ -3517,11 +3518,20 @@ if((fh_filter = fopen(listname, "r")) == NULL)
 	}
 
 zeiger = filterlist;
+entries = 0;
 for(c = 0; c < FILTERLIST_MAX; c++)
 	{
 	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1)
 		{
 		break;
+		}
+	if(len < 12)
+		{
+		continue;
+		}
+	if(linein[0x0] == '#')
+		{
+		continue;
 		}
 	if(hex2bin(&linein[0x0], zeiger->addr, 6) == false)
 		{
@@ -3530,9 +3540,10 @@ for(c = 0; c < FILTERLIST_MAX; c++)
 		return 0;
 		}
 	zeiger++;
+	entries++;
 	}
 fclose(fh_filter);
-return c;
+return entries;
 }
 /*===========================================================================*/
 static inline bool globalinit()
