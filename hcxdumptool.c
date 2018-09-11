@@ -3504,9 +3504,8 @@ return len;
 /*===========================================================================*/
 static inline int readfilterlist(char *listname, maclist_t *zeiger)
 {
-int c;
 int len;
-int entries;
+int c, entries;
 static FILE *fh_filter;
 
 static char linein[FILTERLIST_LINE_LEN];
@@ -3519,7 +3518,8 @@ if((fh_filter = fopen(listname, "r")) == NULL)
 
 zeiger = filterlist;
 entries = 0;
-for(c = 0; c < FILTERLIST_MAX; c++)
+c = 1;
+while(entries < FILTERLIST_MAX)
 	{
 	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1)
 		{
@@ -3527,20 +3527,24 @@ for(c = 0; c < FILTERLIST_MAX; c++)
 		}
 	if(len < 12)
 		{
+		c++;
 		continue;
 		}
 	if(linein[0x0] == '#')
 		{
+		c++;
 		continue;
 		}
-	if(hex2bin(&linein[0x0], zeiger->addr, 6) == false)
+	if(hex2bin(&linein[0x0], zeiger->addr, 6) == true)
 		{
-		printf("reading blacklist line %d failed: %s\n", c +1, linein);
-		fclose(fh_filter);
-		return 0;
+		zeiger++;
+		entries++;
 		}
-	zeiger++;
-	entries++;
+	else
+		{
+		printf("reading blacklist line %d failed: %s\n", c, linein);
+		}
+	c++;
 	}
 fclose(fh_filter);
 return entries;
