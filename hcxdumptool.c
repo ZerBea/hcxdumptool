@@ -2979,8 +2979,8 @@ if(activescanflag == false)
 printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"INTERFACE:...............: %s\n"
 	"FILTERLIST...............: %d entries\n"
-	"MAC CLIENT...............: %06x%06x (client)\n"
-	"MAC ACCESS POINT.........: %06x%06x (start NIC)\n"
+	"MAC CLIENT...............: %06x%06x\n"
+	"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
 	"EAPOL TIMEOUT............: %d\n"
 	"REPLAYCOUNT..............: %llu\n"
 	"ANONCE...................: ",
