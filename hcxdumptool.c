@@ -1349,7 +1349,6 @@ if(eapauth->type == EAPOL_KEY)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
 					fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
-					pownedcount++;
 					}
 				}
 			return;
