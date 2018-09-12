@@ -1973,7 +1973,10 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 		{
 		if(payload_len > 6)
 			{
-			writeepb(fd_pcapng);
+			if(memcmp(macfrx->addr2, &mac_mysta, 6) != 0)
+				{
+				writeepb(fd_pcapng);
+				}
 			}
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
