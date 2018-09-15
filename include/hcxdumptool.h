@@ -25,7 +25,8 @@
 #define CS_SONOS 3
 #define CS_NETGEARBROADCOM 4
 #define CS_WILIBOX 5
-#define CS_ENDE 6
+#define CS_CISCO 6
+#define CS_ENDE 7
 
 #define RX_M1		0b00000001
 #define RX_M12		0b00000010

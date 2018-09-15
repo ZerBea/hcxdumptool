@@ -1,3 +1,16 @@
+15.09.2018
+==========
+added Cisco Systems, Inc VENDOR information
+--station_vendor=<digit>           : use this VENDOR information for station
+                                     0: transmit no VENDOR information (default)
+                                     1: Broadcom
+                                     2: Apple-Broadcom
+                                     3: Sonos
+                                     4: Netgear-Broadcom
+                                     5: Wilibox Deliberant Group LLC
+                                     6: Cisco Systems, Inc
+
+
 11.09.2018
 ==========
 You can “uncomment a line” in a configuration file

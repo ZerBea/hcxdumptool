@@ -967,6 +967,14 @@ const uint8_t cswilibox[] =
 };
 #define CSWILIBOX_SIZE sizeof(cswilibox)
 
+const uint8_t cscisco[] =
+{
+0xdd, 0x1d, 0x00, 0x40, 0x96, 0x0c, 0x01, 0xb2, 0xb1, 0x74, 0xea, 0x45, 0xc5, 0x65, 0x01, 0x00,
+0x00, 0xb9, 0x16, 0x00, 0x00, 0x00, 0x00, 0x1a, 0xc1, 0xdb, 0xf1, 0xf5, 0x05, 0xec, 0xed
+};
+#define CSCISCO_SIZE sizeof(cscisco)
+
+
 uint8_t packetout[1024];
 
 if((filtermode == 1) && (checkfilterlistentry(mac_ap) == true))
@@ -1023,6 +1031,11 @@ else if(stachipset == CS_WILIBOX)
 	{
 	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE], &cswilibox, CSWILIBOX_SIZE);
 	cssize = CSWILIBOX_SIZE;
+	}
+else if(stachipset == CS_CISCO)
+	{
+	memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE], &cscisco, CSCISCO_SIZE);
+	cssize = CSCISCO_SIZE;
 	}
 else
 	{
@@ -4006,6 +4019,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     3: Sonos\n"
 	"                                     4: Netgear-Broadcom\n"
 	"                                     5: Wilibox Deliberant Group LLC\n"
+	"                                     6: Cisco Systems, Inc\n"
 	"                                     you should disable auto scrolling in your terminal settings\n"
 	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
 	"--save_rcascan_raw=<file>          : output file in pcapngformat\n"
