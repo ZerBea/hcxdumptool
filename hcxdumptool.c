@@ -238,6 +238,36 @@ printf("\n");
 return;
 }
 /*===========================================================================*/
+static inline void checkunwanted(char *unwantedname)
+{
+FILE *fp;
+char pidline[1024];
+char *pidptr = NULL;
+
+memset(&pidline, 0, 1024);
+fp = popen(unwantedname,"r");
+if(fp)
+	{
+	pidptr = fgets(pidline, 1024, fp);
+	if(pidptr != NULL)
+		{
+		printf("warning: %s is running with pid %s", &unwantedname[6], pidline);
+		}
+	pclose(fp);
+	}
+return;
+}
+/*===========================================================================*/
+static inline void checkallunwanted()
+{
+char *networkmanager = "pidof NetworkManager";
+char *wpasupplicant = "pidof wpa_supplicant";
+
+checkunwanted(networkmanager);
+checkunwanted(wpasupplicant);
+return;
+}
+/*===========================================================================*/
 static inline void saveapinfo()
 {
 static int c, p;
@@ -3759,6 +3789,7 @@ static struct ifreq ifr;
 static struct iwreq iwr;
 static struct sockaddr_ll ll;
 
+checkallunwanted();
 if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
@@ -4310,6 +4341,7 @@ if(filterlistname == NULL)
 if(showinterfaces == true)
 	{
 	show_wlaninterfaces();
+	checkallunwanted();
 	return EXIT_SUCCESS;
 	}
 
