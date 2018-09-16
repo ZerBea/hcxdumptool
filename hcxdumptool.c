@@ -3909,7 +3909,7 @@ if(getifaddrs(&ifaddr) == -1)
 	}
 else
 	{
-	printf("suitable wlan interfaces:\n");
+	printf("wlan interfaces:\n");
 	for(ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
@@ -3917,12 +3917,11 @@ else
 			if(check_wlaninterface(ifa->ifa_name) == true)
 				{
 				sfda = (struct sockaddr_ll*)ifa->ifa_addr;
-				printf("INTERFACE: %s [", ifa->ifa_name);
 				for (i=0; i < sfda->sll_halen; i++)
 					{
 					printf("%02x", (sfda->sll_addr[i]));
 					}
-				printf("]\n");
+				printf(" %s (%d)\n", ifa->ifa_name, sfda->sll_ifindex);
 				}
 			}
 		}
