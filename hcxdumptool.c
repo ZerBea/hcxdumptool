@@ -3975,6 +3975,7 @@ static inline void usage(char *eigenname)
 printf("%s %s (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
 	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status=3\n"
+	"         do not run hcxdumptool on logical interfaces (monx, wlanxmon)\n"
 	"         do not use hcxdumptool in combination with other 3rd party tools\n"
 	"\n"
 	"options:\n"
