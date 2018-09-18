@@ -434,10 +434,6 @@ qsort(aplist, aplistcount, APLIST_SIZE, sort_aplist_by_essid);
 printf("\e[1;1H\e[2J");
 for(c = 0; c < aplistcount; c++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
-		{
-		break;
-		}
 	tvfd.tv_sec = zeiger->timestamp /1000000;
 	tvfd.tv_usec = 0;
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tvfd.tv_sec));
@@ -452,7 +448,7 @@ for(c = 0; c < aplistcount; c++)
 		}
 	else
 		{
-		if(isasciistring(zeiger->essid_len, zeiger->essid) != false)
+		if(isasciistring(zeiger->essid_len, zeiger->essid) == true)
 			{
 			fprintf(stdout, " %.*s", zeiger->essid_len, zeiger->essid);
 			}
@@ -474,11 +470,16 @@ for(c = 0; c < aplistcount; c++)
 		{
 		fprintf(stdout, " [CHANNEL %d]\n", zeiger->channel);
 		}
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
+
 	zeiger++;
 	}
-fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d\n"
+fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d %d\n"
 	"-----------------------------------------------------------------------------------\n"
-	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount);
+	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount);
 return;
 }
 /*===========================================================================*/
@@ -2500,6 +2501,10 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
+if(memcmp(macfrx->addr2, &mac_null, 6) == 0)
+	{
+	return;
+	}
 if(memcmp(&mac_myap, macfrx->addr2, 6) == 0)
 	{
 	return;
@@ -2634,6 +2639,10 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
+if(memcmp(macfrx->addr2, &mac_null, 6) == 0)
+	{
+	return;
+	}
 if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
 	{
 	return;
@@ -3177,6 +3186,10 @@ while(1)
 			memcpy(&lastaddr1proberequest, macfrx->addr1, 6);
 			memcpy(&lastaddr2proberequest, macfrx->addr2, 6);
 			if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0)
+				{
+				process80211probe_req();
+				}
+			else if(memcmp(macfrx->addr1, &mac_null, 6) == 0)
 				{
 				process80211probe_req();
 				}
