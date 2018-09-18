@@ -3790,7 +3790,7 @@ static struct iwreq iwr;
 static struct sockaddr_ll ll;
 
 checkallunwanted();
-if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
+if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
 	return false;
