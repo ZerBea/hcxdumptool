@@ -434,6 +434,10 @@ qsort(aplist, aplistcount, APLIST_SIZE, sort_aplist_by_essid);
 printf("\e[1;1H\e[2J");
 for(c = 0; c < aplistcount; c++)
 	{
+	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+		{
+		break;
+		}
 	tvfd.tv_sec = zeiger->timestamp /1000000;
 	tvfd.tv_usec = 0;
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tvfd.tv_sec));
@@ -470,11 +474,6 @@ for(c = 0; c < aplistcount; c++)
 		{
 		fprintf(stdout, " [CHANNEL %d]\n", zeiger->channel);
 		}
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
-		{
-		break;
-		}
-
 	zeiger++;
 	}
 fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d %d\n"
