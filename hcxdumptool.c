@@ -3084,7 +3084,7 @@ while(1)
 		{
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
-		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*)&ll, &fromlen);
 		if(packet_len == 0)
 			{
 			fprintf(stderr, "\ninterface went down\n");
@@ -3882,9 +3882,10 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	}
 
 memset(&ll, 0, sizeof(ll));
-ll.sll_family = PF_PACKET;
+ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
+ll.sll_pkttype = PACKET_OTHERHOST|PACKET_BROADCAST|PACKET_MULTICAST|PACKET_HOST;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
