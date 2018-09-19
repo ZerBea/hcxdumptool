@@ -683,7 +683,7 @@ macmaclist_t *zeiger;
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX; c++)
 	{
-	if(memcmp(zeiger->addr2, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		return 0;
 		}
@@ -704,7 +704,7 @@ macmaclist_t *zeiger;
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX; c++)
 	{
-	if(memcmp(zeiger->addr2, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		return 0;
 		}
