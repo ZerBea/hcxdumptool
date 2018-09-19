@@ -2173,7 +2173,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 			if(essidtagptr != NULL)
 				{
 				essidtag = (ietag_t*)essidtagptr;
-				if(essidtag->len < ESSID_LEN_MAX)
+				if(essidtag->len <= ESSID_LEN_MAX)
 					{
 					zeiger->essid_len = essidtag->len;
 					memcpy(zeiger->essid, essidtag->data, essidtag->len);
@@ -2225,7 +2225,7 @@ essidtagptr = gettag(TAG_SSID, apinfoptr, apinfolen);
 if(essidtagptr != NULL)
 	{
 	essidtag = (ietag_t*)essidtagptr;
-	if(essidtag->len < ESSID_LEN_MAX)
+	if(essidtag->len <= ESSID_LEN_MAX)
 		{
 		aplist_ptr->essid_len = essidtag->len;
 		memcpy(aplist_ptr->essid, essidtag->data, essidtag->len);
@@ -2259,7 +2259,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(aplist_ptr->essid_len, aplist_ptr->essid);
-	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4,aplist_ptr->channel);
+	fprintf(stdout, " [PROBERESPONSE, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4, aplist_ptr->channel);
 	}
 aplist_ptr++;
 return;
@@ -2312,7 +2312,6 @@ if(checkpownedstaap(macsta, macap) >= 3)
 	{
 	return;
 	}
-
 
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +ESSID_LEN_MAX +IETAG_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -2531,7 +2530,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 			if(essidtagptr != NULL)
 				{
 				essidtag = (ietag_t*)essidtagptr;
-				if(essidtag->len < ESSID_LEN_MAX)
+				if(essidtag->len <= ESSID_LEN_MAX)
 					{
 					zeiger->essid_len = essidtag->len;
 					memcpy(zeiger->essid, essidtag->data, essidtag->len);
@@ -2583,7 +2582,7 @@ essidtagptr = gettag(TAG_SSID, apinfoptr, apinfolen);
 if(essidtagptr != NULL)
 	{
 	essidtag = (ietag_t*)essidtagptr;
-	if(essidtag->len < ESSID_LEN_MAX)
+	if(essidtag->len <= ESSID_LEN_MAX)
 		{
 		aplist_ptr->essid_len = essidtag->len;
 		memcpy(aplist_ptr->essid, essidtag->data, essidtag->len);
@@ -2697,7 +2696,7 @@ essidtagptr = gettag(TAG_SSID, apinfoptr, apinfolen);
 if(essidtagptr != NULL)
 	{
 	essidtag = (ietag_t*)essidtagptr;
-	if(essidtag->len < ESSID_LEN_MAX)
+	if(essidtag->len <= ESSID_LEN_MAX)
 		{
 		aplist_ptr->essid_len = essidtag->len;
 		memcpy(aplist_ptr->essid, essidtag->data, essidtag->len);
@@ -2829,7 +2828,7 @@ essidtagptr = gettag(TAG_SSID, apinfoptr, apinfolen);
 if(essidtagptr != NULL)
 	{
 	essidtag = (ietag_t*)essidtagptr;
-	if(essidtag->len < ESSID_LEN_MAX)
+	if(essidtag->len <= ESSID_LEN_MAX)
 		{
 		aplist_ptr->essid_len = essidtag->len;
 		memcpy(aplist_ptr->essid, essidtag->data, essidtag->len);
