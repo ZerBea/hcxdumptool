@@ -283,7 +283,7 @@ qsort(aplist, aplist_ptr -aplist, APLIST_SIZE, sort_aplist_by_essid);
 zeiger = aplist;
 for(c = 0; APLIST_MAX; c++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		break;
 		}
@@ -434,7 +434,7 @@ qsort(aplist, aplistcount, APLIST_SIZE, sort_aplist_by_essid);
 printf("\e[1;1H\e[2J");
 for(c = 0; c < aplistcount; c++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		break;
 		}
@@ -725,7 +725,7 @@ macmaclist_t *zeiger;
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX -1; c++)
 	{
-	if(memcmp(zeiger->addr2, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		break;
 		}
@@ -1868,7 +1868,7 @@ if(checkpownedstaap(mac_mysta, macap) > 0)
 zeiger = aplist;
 for(c = 0; c < APLIST_MAX -1; c++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		return;
 		}
@@ -2159,7 +2159,7 @@ if(apinfolen < (int)IETAG_SIZE)
 
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		aplist_ptr = zeiger;
 		break;
@@ -2376,7 +2376,7 @@ if((essidtag->len == 0) || (essidtag->len > ESSID_LEN_MAX) || (essidtag->data[0]
 
 for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		myaplist_ptr = zeiger;
 		break;
@@ -2449,7 +2449,7 @@ if((essidtag->len == 0) || (essidtag->len > ESSID_LEN_MAX) || (essidtag->data[0]
 
 for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		myaplist_ptr = zeiger;
 		break;
@@ -2500,10 +2500,6 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
-if(memcmp(macfrx->addr2, &mac_null, 6) == 0)
-	{
-	return;
-	}
 if(memcmp(&mac_myap, macfrx->addr2, 6) == 0)
 	{
 	return;
@@ -2521,7 +2517,7 @@ if(apinfolen < (int)IETAG_SIZE)
 
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		aplist_ptr = zeiger;
 		break;
@@ -2638,14 +2634,6 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
-if(memcmp(macfrx->addr2, &mac_null, 6) == 0)
-	{
-	return;
-	}
-if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
 	return;
@@ -2659,7 +2647,7 @@ if(apinfolen < (int)IETAG_SIZE)
 
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		aplist_ptr = zeiger;
 		break;
@@ -2773,7 +2761,7 @@ if(apinfolen < (int)IETAG_SIZE)
 
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, &mac_null, 6) == 0)
+	if(zeiger->timestamp == 0)
 		{
 		aplist_ptr = zeiger;
 		break;
@@ -3154,16 +3142,6 @@ while(1)
 
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
-		if(memcmp(macfrx->addr1, &mac_null, 6) == 0)
-			{
-			droppedcount++;
-			continue;
-			}
-		if(memcmp(macfrx->addr2, &mac_null, 6) == 0)
-			{
-			droppedcount++;
-			continue;
-			}
 		if(memcmp(macfrx->addr2, &mac_broadcast, 6) == 0)
 			{
 			droppedcount++;
