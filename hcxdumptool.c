@@ -1257,10 +1257,7 @@ static inline bool detectpmkid(uint16_t authlen, uint8_t *authpacket)
 {
 pmkid_t *pmkid;
 
-uint8_t pmkidoui[] =
-{
-0x00, 0x0f, 0xac
-};
+uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
 #define PMKIDOUI_SIZE sizeof(pmkidoui)
 
 if(authlen < WPAKEY_SIZE +PMKID_SIZE)
@@ -1274,7 +1271,6 @@ if((pmkid->id != 0xdd) && (pmkid->id != 0x14))
 	return false;
 	}
 if(memcmp(&pmkidoui, pmkid->oui, PMKIDOUI_SIZE) != 0)
-//if((pmkid->oui[0] != 0x00) && (pmkid->oui[1] != 0x0f) && (pmkid->oui[2] != 0xac))
 	{
 	return false;
 	}
@@ -1282,7 +1278,6 @@ if(pmkid->type != 0x04)
 	{
 	return false;
 	}
-
 if(memcmp(pmkid->pmkid, &nulliv, 16) == 0)
 	{
 	return false;
