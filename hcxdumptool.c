@@ -4004,9 +4004,9 @@ else
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
+			memset(&drivername, 0, 32);
 			if(get_perm_addr(ifa->ifa_name, permaddr, drivername) == true)
 				{
-				memset(&drivername, 0, 32);
 				for (p = 0; p < 6; p++)
 					{
 					printf("%02x", (permaddr[p]));
