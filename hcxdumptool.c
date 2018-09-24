@@ -3960,7 +3960,6 @@ if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
 	close(fd_info);
 	return false;
 	}
-
 if(epmaddr->size != 6)
 	{
 	free(epmaddr);
