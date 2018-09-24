@@ -14,6 +14,9 @@
 #include <time.h>
 #include <signal.h>
 #include <unistd.h>
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
+
 #ifdef __ANDROID__
 #include <libgen.h>
 #define strdupa strdup
@@ -3778,6 +3781,7 @@ static inline bool opensocket()
 static struct ifreq ifr;
 static struct iwreq iwr;
 static struct sockaddr_ll ll;
+static struct ethtool_perm_addr *epmaddr;
 
 checkallunwanted();
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
@@ -3883,47 +3887,97 @@ if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	return false;
 	}
 
-if(ioctl(fd_socket, SIOCGIFHWADDR, &ifr) < 0)
+epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+if (!epmaddr)
 	{
-	perror("failed to get hardware address");
+	perror("failed to malloc memory for permanent hardware address");
 	close(fd_socket);
 	return false;
 	}
-else
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+epmaddr->cmd = ETHTOOL_GPERMADDR;
+epmaddr->size = 6;
+ifr.ifr_data = (char*)epmaddr;
+if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 	{
-	memset(&mac_orig, 0 ,6);
-	memcpy(&mac_orig, ifr.ifr_hwaddr.sa_data, 6);
+	perror("failed to get permanent hardware address");
+	free(epmaddr);
+	close(fd_socket);
+	return false;
 	}
+if(epmaddr->size != 6)
+	{
+	fprintf(stderr, "failed to get permanent hardware address length\n");
+	free(epmaddr);
+	close(fd_socket);
+	return false;
+	}
+memcpy(&mac_orig, epmaddr->data, 6);
+free(epmaddr);
 return true;
 }
 /*===========================================================================*/
-static bool check_wlaninterface(const char* ifname)
+static bool get_perm_addr(char *ifname, uint8_t *permaddr)
 {
 static int fd_info;
-struct iwreq fpwrq;
+static struct iwreq iwr;
+static struct ifreq ifr;
+static struct ethtool_perm_addr *epmaddr;
 
-memset(&fpwrq, 0, sizeof(fpwrq));
-strncpy(fpwrq.ifr_name, ifname, IFNAMSIZ -1);
 if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 	perror( "socket info failed" );
 	return false;
 	}
 
-if(ioctl(fd_info, SIOCGIWNAME, &fpwrq) != -1)
+memset(&iwr, 0, sizeof(iwr));
+strncpy(iwr.ifr_name, ifname, IFNAMSIZ -1);
+if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	{
-	return true;
+	close(fd_info);
+	return false;
 	}
+
+epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+if (!epmaddr)
+	{
+	close(fd_info);
+	perror("failed to malloc memory for permanent hardware address");
+	return false;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+epmaddr->cmd = ETHTOOL_GPERMADDR;
+epmaddr->size = 6;
+ifr.ifr_data = (char*)epmaddr;
+if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
+	{
+	perror("failed to get permanent hardware address");
+	free(epmaddr);
+	close(fd_info);
+	return false;
+	}
+
+if(epmaddr->size != 6)
+	{
+	free(epmaddr);
+	close(fd_info);
+	return false;
+	}
+memcpy(permaddr, epmaddr->data, 6);
+free(epmaddr);
 close(fd_info);
-return false;
+return true;
 }
 /*===========================================================================*/
 static void show_wlaninterfaces()
 {
-struct ifaddrs *ifaddr = NULL;
-struct ifaddrs *ifa = NULL;
-struct sockaddr_ll *sfda;
-static int i = 0;
+static int i;
+static struct ifaddrs *ifaddr = NULL;
+static struct ifaddrs *ifa = NULL;
+static uint8_t permaddr[6];
 
 if(getifaddrs(&ifaddr) == -1)
 	{
@@ -3936,14 +3990,13 @@ else
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
-			if(check_wlaninterface(ifa->ifa_name) == true)
+			if(get_perm_addr(ifa->ifa_name, permaddr) == true)
 				{
-				sfda = (struct sockaddr_ll*)ifa->ifa_addr;
-				for (i=0; i < sfda->sll_halen; i++)
+				for (i=0; i < 6; i++)
 					{
-					printf("%02x", (sfda->sll_addr[i]));
+					printf("%02x", (permaddr[i]));
 					}
-				printf(" %s (%d)\n", ifa->ifa_name, sfda->sll_ifindex);
+				printf(" %s\n", ifa->ifa_name);
 				}
 			}
 		}
