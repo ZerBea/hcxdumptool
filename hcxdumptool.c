@@ -3988,7 +3988,7 @@ return true;
 /*===========================================================================*/
 static void show_wlaninterfaces()
 {
-static int i;
+static int p;
 static struct ifaddrs *ifaddr = NULL;
 static struct ifaddrs *ifa = NULL;
 static uint8_t permaddr[6];
@@ -4008,9 +4008,9 @@ else
 			if(get_perm_addr(ifa->ifa_name, permaddr, drivername) == true)
 				{
 				memset(&drivername, 0, 32);
-				for (i=0; i < 6; i++)
+				for (p = 0; p < 6; p++)
 					{
-					printf("%02x", (permaddr[i]));
+					printf("%02x", (permaddr[p]));
 					}
 				printf(" %s (%s)\n", ifa->ifa_name, drivername);
 				}
