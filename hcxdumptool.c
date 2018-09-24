@@ -3918,12 +3918,13 @@ free(epmaddr);
 return true;
 }
 /*===========================================================================*/
-static bool get_perm_addr(char *ifname, uint8_t *permaddr)
+static bool get_perm_addr(char *ifname, uint8_t *permaddr, char *drivername)
 {
 static int fd_info;
 static struct iwreq iwr;
 static struct ifreq ifr;
 static struct ethtool_perm_addr *epmaddr;
+static struct ethtool_drvinfo drvinfo;
 
 if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
@@ -3967,6 +3968,19 @@ if(epmaddr->size != 6)
 	return false;
 	}
 memcpy(permaddr, epmaddr->data, 6);
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+drvinfo.cmd = ETHTOOL_GDRVINFO;
+ifr.ifr_data = (char*)&drvinfo;
+if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
+	{
+	perror("failed to get driver information");
+	free(epmaddr);
+	close(fd_info);
+	return false;
+	}
+memcpy(drivername, drvinfo.driver, 32);
 free(epmaddr);
 close(fd_info);
 return true;
@@ -3978,6 +3992,7 @@ static int i;
 static struct ifaddrs *ifaddr = NULL;
 static struct ifaddrs *ifa = NULL;
 static uint8_t permaddr[6];
+static char drivername[32];
 
 if(getifaddrs(&ifaddr) == -1)
 	{
@@ -3990,13 +4005,14 @@ else
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
-			if(get_perm_addr(ifa->ifa_name, permaddr) == true)
+			if(get_perm_addr(ifa->ifa_name, permaddr, drivername) == true)
 				{
+				memset(&drivername, 0, 32);
 				for (i=0; i < 6; i++)
 					{
 					printf("%02x", (permaddr[i]));
 					}
-				printf(" %s\n", ifa->ifa_name);
+				printf(" %s (%s)\n", ifa->ifa_name, drivername);
 				}
 			}
 		}
