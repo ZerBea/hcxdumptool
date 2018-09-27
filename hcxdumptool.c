@@ -54,6 +54,7 @@
 /* global var */
 
 static int fd_socket;
+static int fd_socket_gpsd;
 static int fd_pcapng;
 static int fd_ippcapng;
 static int fd_weppcapng;
@@ -90,6 +91,8 @@ static mpdu_t *mpdu;
 
 static uint8_t statusout;
 
+static int gpsd_len;
+
 static int errorcount;
 static int maxerrorcount;
 
@@ -100,6 +103,7 @@ static unsigned long long int pownedcount;
 
 static bool wantstopflag;
 static bool poweroffflag;
+static bool gpsdflag;
 static bool channelchangedflag;
 static bool activescanflag;
 static bool rcascanflag;
@@ -147,7 +151,6 @@ static char *weppcapngoutname ;
 static char *filterlistname;
 static char *rcascanlistname;
 static char *rcascanpcapngname;
-
 
 static const uint8_t hdradiotap[] =
 {
@@ -208,6 +211,8 @@ uint8_t assocmacap[6];
 uint8_t assocmacsta[6];
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
+static char gpsddata[GPSDDATA_MAX +1];
+
 /*===========================================================================*/
 static inline void debugprint(int len, uint8_t *ptr)
 {
@@ -236,8 +241,6 @@ for(p = 0; p < len2; p++)
 	printf("%02x", ptr2[p]);
 	}
 printf("\n");
-
-
 return;
 }
 /*===========================================================================*/
@@ -325,6 +328,7 @@ __attribute__ ((noreturn))
 static void globalclose()
 {
 static struct ifreq ifr;
+char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 memset(&ifr, 0, sizeof(ifr));
 strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
@@ -336,9 +340,24 @@ if(fd_socket > 0)
 	{
 	if(close(fd_socket) != 0)
 		{
-		perror("failed to close rx socket");
+		perror("failed to close raw socket");
 		}
 	}
+if(gpsdflag == true)
+	{
+	if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		{
+		perror("failed to terminate GPSD WATCH");
+		}
+	}
+if(fd_socket_gpsd > 0)
+	{
+	if(close(fd_socket_gpsd) != 0)
+		{
+		perror("failed to close gpsd socket");
+		}
+	}
+
 if(fd_weppcapng > 0)
 	{
 	writeisb(fd_weppcapng, 0, timestampstart, incommingcount);
@@ -562,9 +581,18 @@ static int epblen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
-
+int gpsdlen;
+char *gpsdptr;
+static long double lat = 0;
+static long double lon = 0;
+static long double alt = 0;
+char *gpsd_lat = "\"lat\":";
+char *gpsd_lon = "\"lon\":";
+char *gpsd_alt = "\"alt\":";
 static char aplesscomment[] = {"HANDSHAKE AP-LESS" };
 #define APLESSCOMMENT_SIZE sizeof(aplesscomment)
+
+char gpsdatabuffer[GPSDDATA_MAX];
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
@@ -582,8 +610,29 @@ if((epbhdr->cap_len % 4))
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
-epblen += addoption(epb +epblen, SHB_COMMENT, APLESSCOMMENT_SIZE, aplesscomment);
-epblen += addoption(epb +epblen, 62109, 32, (char*)anoncerandom);
+if(gpsdflag == false)
+	{
+	epblen += addoption(epb +epblen, SHB_COMMENT, APLESSCOMMENT_SIZE, aplesscomment);
+	}
+else
+	{
+	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lat);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lon);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &alt);
+		}
+	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf\n%s", lat, lon, alt, aplesscomment);
+	gpsdlen = strlen(gpsdatabuffer);
+	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
+	}
+epblen += addoption(epb +epblen, OPTIONCODE_ANONCE, 32, (char*)anoncerandom);
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
@@ -604,6 +653,16 @@ static int epblen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
+int gpsdlen;
+char *gpsdptr;
+static long double lat = 0;
+static long double lon = 0;
+static long double alt = 0;
+char *gpsd_lat = "\"lat\":";
+char *gpsd_lon = "\"lon\":";
+char *gpsd_alt = "\"alt\":";
+
+char gpsdatabuffer[GPSDDATA_MAX];
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
@@ -621,6 +680,24 @@ if((epbhdr->cap_len % 4))
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
+if(gpsdflag == true)
+	{
+	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lat);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lon);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &alt);
+		}
+	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf", lat, lon, alt);
+	gpsdlen = strlen(gpsdatabuffer);
+	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
+	}
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
@@ -2941,47 +3018,241 @@ while(1)
 return NULL;
 }
 /*===========================================================================*/
+static inline bool activate_gpsd()
+{
+int c;
+static struct sockaddr_in gpsd_addr;
+static int fdnum;
+static fd_set readfds;
+static struct timeval tvfd;
+static long double lat = 0;
+static long double lon = 0;
+static long double alt = 0;
+char *gpsdptr;
+char *gpsd_lat = "\"lat\":";
+char *gpsd_lon = "\"lon\":";
+char *gpsd_alt = "\"alt\":";
+char *gpsd_enable_json = "?WATCH={\"json\":true}";
+char *gpsd_disable = "?WATCH={\"enable\":false}";
+char *gpsd_version = "\"proto_major\":3";
+char *gpsd_json = "\"json\":true";
+char *gpsd_tpv = "\"class\":\"TPV\"";
+
+printf("connecting to GPSD...\n");
+gpsd_len = 0;
+memset(&gpsddata, 0, GPSDDATA_MAX +1);
+memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
+gpsd_addr.sin_family = AF_INET;
+gpsd_addr.sin_port = htons(2947);
+gpsd_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+if(connect(fd_socket_gpsd, (struct sockaddr*) &gpsd_addr, sizeof(gpsd_addr)) < 0)
+	{
+	perror("failed to connect to GPSD");
+	return false;
+	}
+
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+FD_ZERO(&readfds);
+FD_SET(fd_socket_gpsd, &readfds);
+fdnum = select(fd_socket_gpsd +1, &readfds, NULL, NULL, &tvfd);
+if(fdnum <= 0)
+	{
+	fprintf(stderr, "failed to selct GPS socket\n");
+	return false;
+	}
+if(FD_ISSET(fd_socket_gpsd, &readfds))
+	{
+	gpsd_len = read(fd_socket_gpsd, gpsddata, GPSDDATA_MAX);
+	if(gpsd_len <= 0)
+		{
+		fprintf(stderr ,"failed to get GPSD identification\n");
+		gpsd_len = 0;
+		return false;
+		}
+	gpsddata[gpsd_len] = 0;
+	if(strstr(gpsddata, gpsd_version) == NULL)
+		{
+		printf("unsupported GPSD version (not 3)\n");
+		gpsd_len = 0;
+		return false;
+		}
+	}
+
+if(send(fd_socket_gpsd, gpsd_enable_json, 20, 0) != 20)
+	{
+	perror("failed to activate GPSD WATCH");
+	gpsd_len = 0;
+	return false;
+	}
+
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+FD_ZERO(&readfds);
+FD_SET(fd_socket_gpsd, &readfds);
+fdnum = select(fd_socket_gpsd +1, &readfds, NULL, NULL, &tvfd);
+if(fdnum <= 0)
+	{
+	fprintf(stderr, "GPSD timeout\n");
+	if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		{
+		perror("failed to terminate GPSD WATCH");
+		}
+	gpsd_len = 0;
+	return false;
+	}
+if(FD_ISSET(fd_socket_gpsd, &readfds))
+	{
+	gpsd_len = read(fd_socket_gpsd, gpsddata, GPSDDATA_MAX);
+	if(gpsd_len <= 0)
+		{
+		fprintf(stderr, "failed to get GPSD protocol\n");
+		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+			{
+			perror("failed to terminate GPSD WATCH");
+			}
+		gpsd_len = 0;
+		return false;
+		}
+	gpsddata[gpsd_len] = 0;
+	if(strstr(gpsddata, gpsd_json) == NULL)
+		{
+		printf("unsupported GPSD protocol (not json)\n");
+		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+			{
+			perror("failed to terminate GPSD WATCH");
+			}
+		gpsd_len = 0;
+		return false;
+		}
+	}
+printf("waiting up to 5 seconds to retrieve first position\n");
+c = 0;
+while(c < 5)
+	{
+	tvfd.tv_sec = 5;
+	tvfd.tv_usec = 0;
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket_gpsd, &readfds);
+	fdnum = select(fd_socket_gpsd +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum <= 0)
+		{
+		fprintf(stderr, "failed to read initial GPSD position\n");
+		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+			{
+			perror("failed to terminate GPSD WATCH");
+			}
+		gpsd_len = 0;
+		return false;
+		}
+	if(FD_ISSET(fd_socket_gpsd, &readfds))
+		{
+		gpsd_len = read(fd_socket_gpsd, gpsddata, GPSDDATA_MAX);
+		if(gpsd_len <= 0)
+			{
+			perror("failed to get GPSD protocol");
+			if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+				{
+				perror("failed to terminate GPSD WATCH");
+				}
+			gpsd_len = 0;
+			return false;
+			}
+		gpsddata[gpsd_len] = 0;
+		if(strstr(gpsddata, gpsd_tpv) != NULL)
+			{
+			break;
+			}
+		}
+	c++;
+	}
+
+if(c < 5)
+	{
+	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lat);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &lon);
+		}
+	if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
+		{
+		sscanf(gpsdptr +6, "%Lf", &alt);
+		}
+	if((lat == 0) && (lon == 0))
+		{
+		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+			{
+			perror("failed to terminate GPSD WATCH");
+			gpsd_len = 0;
+			return false;
+			}
+		}
+	printf("GPSD activated\n");
+	return true;
+	}
+fprintf(stderr, "failed to get GPSD position\n");
+if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+	{
+	perror("failed to terminate GPSD WATCH");
+	}
+gpsd_len = 0;
+return false;
+}
+/*===========================================================================*/
 static inline void processpackets()
 {
 int c;
+int sa;
 struct sockaddr_ll ll;
 socklen_t fromlen;
+static long double lat = 0;
+static long double lon = 0;
+static long double alt = 0;
+
+char *gpsdptr;
+char *gpsd_lat = "\"lat\":";
+char *gpsd_lon = "\"lon\":";
+char *gpsd_alt = "\"alt\":";
+
 static rth_t *rth;
-int fdnum;
-fd_set readfds;
-struct timeval tvfd;
+static int fdnum;
+static fd_set readfds;
+static struct timeval tvfd;
 
-uint8_t lastaddr1proberequest[6];
-uint8_t lastaddr2proberequest[6];
-uint16_t lastsequenceproberequest;
+static uint8_t lastaddr1proberequest[6];
+static uint8_t lastaddr2proberequest[6];
+static uint16_t lastsequenceproberequest;
 
-uint8_t lastaddr1proberesponse[6];
-uint8_t lastaddr2proberesponse[6];
-uint16_t lastsequenceproberesponse;
+static uint8_t lastaddr1proberesponse[6];
+static uint8_t lastaddr2proberesponse[6];
+static uint16_t lastsequenceproberesponse;
 
-uint8_t lastaddr1authentication[6];
-uint8_t lastaddr2authentication[6];
-uint16_t lastsequenceauthentication;
+static uint8_t lastaddr1authentication[6];
+static uint8_t lastaddr2authentication[6];
+static uint16_t lastsequenceauthentication;
 
-uint8_t lastaddr1associationrequest[6];
-uint8_t lastaddr2associationrequest[6];
-uint16_t lastsequenceassociationrequest;
+static uint8_t lastaddr1associationrequest[6];
+static uint8_t lastaddr2associationrequest[6];
+static uint16_t lastsequenceassociationrequest;
 
-uint8_t lastaddr1associationresponse[6];
-uint8_t lastaddr2associationresponse[6];
-uint16_t lastsequenceassociationresponse;
+static uint8_t lastaddr1associationresponse[6];
+static uint8_t lastaddr2associationresponse[6];
+static uint16_t lastsequenceassociationresponse;
 
-uint8_t lastaddr1reassociationrequest[6];
-uint8_t lastaddr2reassociationrequest[6];
-uint16_t lastsequencereassociationrequest;
+static uint8_t lastaddr1reassociationrequest[6];
+static uint8_t lastaddr2reassociationrequest[6];
+static uint16_t lastsequencereassociationrequest;
 
-uint8_t lastaddr1reassociationresponse[6];
-uint8_t lastaddr2reassociationresponse[6];
-uint16_t lastsequencereassociationresponse;
+static uint8_t lastaddr1reassociationresponse[6];
+static uint8_t lastaddr2reassociationresponse[6];
+static uint16_t lastsequencereassociationresponse;
 
-uint8_t lastaddr1data[6];
-uint8_t lastaddr2data[6];
-uint16_t lastsequencedata;
+static uint8_t lastaddr1data[6];
+static uint8_t lastaddr2data[6];
+static uint16_t lastsequencedata;
 
 memset(&lastaddr1proberequest, 0, 6);
 memset(&lastaddr2proberequest, 0, 6);
@@ -3014,26 +3285,71 @@ lastsequencereassociationresponse = 0;
 memset(&lastaddr1data, 0, 6);
 memset(&lastaddr2data, 0, 6);
 lastsequencedata = 0;
+
+sa = 1;
+if(gpsdflag == true)
+	{
+	if(activate_gpsd() == false)
+		{
+		gpsdflag = false;
+		}
+	else
+		{
+		if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
+			{
+			sscanf(gpsdptr +6, "%Lf", &lat);
+			}
+		if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
+			{
+			sscanf(gpsdptr +6, "%Lf", &lon);
+			}
+		if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
+			{
+			sscanf(gpsdptr +6, "%Lf", &alt);
+			}
+		printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
+			"GPS LATITUDE.............: %Lf\n"
+			"GPS LONGITUDE............: %Lf\n"
+			"GPS ALTITUDE.............: %Lf\n"
+			"INTERFACE:...............: %s\n"
+			"FILTERLIST...............: %d entries\n"
+			"MAC CLIENT...............: %06x%06x\n"
+			"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
+			"EAPOL TIMEOUT............: %d\n"
+			"REPLAYCOUNT..............: %llu\n"
+			"ANONCE...................: ",
+			lat, lon, alt, interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+			for(c = 0; c < 32; c++)
+				{
+				printf("%02x", anoncerandom[c]);
+				}
+		printf("\n\n");
+		sa = 2;
+		}
+	}
+
 if(activescanflag == false)
 	{
 	send_broadcastbeacon();
 	send_undirected_proberequest();
 	}
-
-printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
-	"INTERFACE:...............: %s\n"
-	"FILTERLIST...............: %d entries\n"
-	"MAC CLIENT...............: %06x%06x\n"
-	"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
-	"EAPOL TIMEOUT............: %d\n"
-	"REPLAYCOUNT..............: %llu\n"
-	"ANONCE...................: ",
-	interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
-	for(c = 0; c < 32; c++)
-		{
-		printf("%02x", anoncerandom[c]);
-		}
-printf("\n\n");
+if(gpsdflag == false)
+	{
+	printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
+		"INTERFACE:...............: %s\n"
+		"FILTERLIST...............: %d entries\n"
+		"MAC CLIENT...............: %06x%06x\n"
+		"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
+		"EAPOL TIMEOUT............: %d\n"
+		"REPLAYCOUNT..............: %llu\n"
+		"ANONCE...................: ",
+		interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+		for(c = 0; c < 32; c++)
+			{
+			printf("%02x", anoncerandom[c]);
+			}
+	printf("\n\n");
+	}
 gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
@@ -3073,13 +3389,23 @@ while(1)
 		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
-	fdnum = select(fd_socket +1, &readfds, NULL, NULL, &tvfd);
+	FD_SET(fd_socket_gpsd, &readfds);
+	fdnum = select(fd_socket +sa, &readfds, NULL, NULL, &tvfd);
 	if(fdnum < 0)
 		{
 		errorcount++;
 		continue;
 		}
-	else if(fdnum > 0 && FD_ISSET(fd_socket, &readfds))
+	else if(FD_ISSET(fd_socket_gpsd, &readfds))
+		{
+		gpsd_len = read(fd_socket_gpsd, gpsddata, GPSDDATA_MAX);
+		if(gpsd_len >= 0)
+			{
+			gpsddata[gpsd_len] = 0;
+			}
+		continue;
+		}
+	else if(FD_ISSET(fd_socket, &readfds))
 		{
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
@@ -3330,12 +3656,12 @@ return;
 /*===========================================================================*/
 static inline void processrcascan()
 {
-struct sockaddr_ll ll;
-socklen_t fromlen;
+static struct sockaddr_ll ll;
+static socklen_t fromlen;
 static rth_t *rth;
-int fdnum;
-fd_set readfds;
-struct timeval tvfd;
+static int fdnum;
+static fd_set readfds;
+static struct timeval tvfd;
 
 gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
@@ -3699,7 +4025,6 @@ if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
 aplist_ptr = aplist;
 aplistcount = 0;
 
-
 if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
 	{
 	return false;
@@ -3734,7 +4059,7 @@ if(rcascanflag == true)
 	weppcapngoutname = NULL;
 	if(rcascanpcapngname != NULL)
 		{
-		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, rcrandom, anoncerandom);
+		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
 		if(fd_rcascanpcapng <= 0)
 			{
 			fprintf(stderr, "could not create dumpfile %s\n", rcascanpcapngname);
@@ -3744,27 +4069,25 @@ if(rcascanflag == true)
 	}
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
 		return false;
 		}
 	}
-
 if(weppcapngoutname != NULL)
 	{
-	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
+	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_weppcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", weppcapngoutname);
 		return false;
 		}
 	}
-
 if(ippcapngoutname != NULL)
 	{
-	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, rcrandom, anoncerandom);
+	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_ippcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", ippcapngoutname);
@@ -3784,6 +4107,7 @@ static struct sockaddr_ll ll;
 static struct ethtool_perm_addr *epmaddr;
 
 checkallunwanted();
+fd_socket = 0;
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
@@ -3915,6 +4239,13 @@ if(epmaddr->size != 6)
 	}
 memcpy(&mac_orig, epmaddr->data, 6);
 free(epmaddr);
+
+fd_socket_gpsd = 0;
+if((fd_socket_gpsd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+	perror( "gpsd socket failed");
+	gpsdflag = false;
+	}
 return true;
 }
 /*===========================================================================*/
@@ -4111,6 +4442,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     5: Wilibox Deliberant Group LLC\n"
 	"                                     6: Cisco Systems, Inc\n"
 	"                                     you should disable auto scrolling in your terminal settings\n"
+	"--use_gpsd                         : use GPSD to retrieve position\n"
+	"                                     add latitude, longitude and altitude to every pcapng frame\n"
 	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
 	"--save_rcascan_raw=<file>          : output file in pcapngformat\n"
 	"                                     unfiltered packets\n"
@@ -4156,6 +4489,7 @@ statusout = 0;
 stachipset = 0;
 
 poweroffflag = false;
+gpsdflag = false;
 activescanflag = false;
 rcascanflag = false;
 deauthenticationflag = false;
@@ -4182,6 +4516,7 @@ static const struct option long_options[] =
 	{"disable_ap_attacks",		no_argument,		NULL,	HCXD_DISABLE_AP_ATTACKS},
 	{"give_up_ap_attacks",		required_argument,	NULL,	HCXD_GIVE_UP_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
+	{"use_gpsd",			no_argument,		NULL,	HCXD_USE_GPSD},
 	{"station_vendor",		required_argument,	NULL,	HCXD_STATION_VENDOR},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
@@ -4263,6 +4598,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 			fprintf(stderr, "wrong station VENDOR information\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCXD_USE_GPSD:
+		gpsdflag = true;
 		break;
 
 		case HCXD_DO_RCASCAN:

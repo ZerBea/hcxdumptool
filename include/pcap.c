@@ -130,7 +130,7 @@ if(written != idblen)
 return true;
 }
 /*===========================================================================*/
-bool writeshb(int fd, uint64_t rcrandom, uint8_t *anoncerandom)
+bool writeshb(int fd, uint8_t *macmyap, uint64_t rcrandom, uint8_t *anoncerandom, uint8_t *macmysta)
 {
 int shblen;
 int written;
@@ -163,16 +163,14 @@ if(uname(&unameData) == 0)
 	sprintf(sysinfo, "hcxdumptool %s", VERSION);
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
 	}
-
+shblen += addoption(shb +shblen, OPTIONCODE_MACMYAP, 6, (char*)macmyap);
 of = (optionfield64_t*)(shb +shblen);
-of->option_code = 62108;
+of->option_code = OPTIONCODE_RC;
 of->option_length = 8;
 of->option_value = rcrandom;
 shblen += 12;
-
-shblen += addoption(shb +shblen, 62109, 32, (char*)anoncerandom);
-
-
+shblen += addoption(shb +shblen, OPTIONCODE_ANONCE, 32, (char*)anoncerandom);
+shblen += addoption(shb +shblen, OPTIONCODE_MACMYSTA, 6, (char*)macmysta);
 shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
@@ -188,7 +186,7 @@ if(written != shblen)
 return true;
 }
 /*===========================================================================*/
-int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr, uint64_t rcrandom, uint8_t *anoncerandom)
+int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr, uint8_t *macmyap, uint64_t rcrandom, uint8_t *anoncerandom, uint8_t *macmysta)
 {
 int c;
 int fd;
@@ -210,7 +208,7 @@ if(fd == -1)
 	return -1;
 	}
 
-if(writeshb(fd, rcrandom, anoncerandom) == false)
+if(writeshb(fd, macmyap, rcrandom, anoncerandom, macmysta) == false)
 	{
 	return -1;
 	}

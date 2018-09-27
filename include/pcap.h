@@ -1,15 +1,18 @@
-#define PCAPMAGICNUMBER 0xa1b2c3d4
-#define PCAPMAGICNUMBERBE 0xd4c3b2a1
+#define PCAPMAGICNUMBER		0xa1b2c3d4
+#define PCAPMAGICNUMBERBE	0xd4c3b2a1
 
+#define PCAPNGBLOCKTYPE		0x0a0d0d0a
+#define PCAPNGMAGICNUMBER	0x1a2b3c4d
+#define PCAPNGMAGICNUMBERBE	0x4d3c2b1a
 
-#define PCAPNGBLOCKTYPE 0x0a0d0d0a
-#define PCAPNGMAGICNUMBER 0x1a2b3c4d
-#define PCAPNGMAGICNUMBERBE 0x4d3c2b1a
+#define PCAPNG_MAJOR_VER	1
+#define PCAPNG_MINOR_VER	0
+#define PCAPNG_MAXSNAPLEN	0xffff
 
-#define PCAPNG_MAJOR_VER 1
-#define PCAPNG_MINOR_VER 0
-#define PCAPNG_MAXSNAPLEN 0xffff
-
+#define OPTIONCODE_MACMYAP	62107
+#define OPTIONCODE_RC		62108
+#define OPTIONCODE_ANONCE	62109
+#define OPTIONCODE_MACMYSTA	62110
 
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */

@@ -1,3 +1,25 @@
+27.09.2018
+==========
+added GPSD support (stored as comment in pcapng file)
+--use_gpsd                         : use GPSD to retrieve position
+                                     add latitude, longitude and altitude to every pcapng frame
+device must be supported by GPSD:
+http://www.catb.org/gpsd/hardware.html
+(tested using: AktivePilot JENTRO BT-GPS-8)
+
+Retrieve GPS information with:
+$ tshark -r filename.pcapng -Y frame.comment -T fields -E header=y -e frame.number -e frame.time -e wlan.sa -e frame.comment
+
+
+write mac_ap to pcapng SHB
+write mac_sta to pcapng SHB
+SHB optioncodes:
+#define OPTIONCODE_MACMYAP	62107
+#define OPTIONCODE_RC		62108
+#define OPTIONCODE_ANONCE	62109
+#define OPTIONCODE_MACMYSTA	62110
+
+
 16.09.2018
 ==========
 show warning if NetworkManager and/or wpa_supplicant is running
