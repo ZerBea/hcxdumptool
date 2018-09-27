@@ -3328,11 +3328,6 @@ if(gpsdflag == true)
 		}
 	}
 
-if(activescanflag == false)
-	{
-	send_broadcastbeacon();
-	send_undirected_proberequest();
-	}
 if(gpsdflag == false)
 	{
 	printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
@@ -3353,13 +3348,15 @@ if(gpsdflag == false)
 gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
-set_channel();
-channelchangedflag = false;
-send_broadcastbeacon();
-send_undirected_proberequest();
-
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
+set_channel();
+channelchangedflag = false;
+if(activescanflag == false)
+	{
+	send_broadcastbeacon();
+	send_undirected_proberequest();
+	}
 while(1)
 	{
 	if(wantstopflag == true)
@@ -3666,14 +3663,12 @@ static struct timeval tvfd;
 gettimeofday(&tv, NULL);
 timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
 set_channel();
 channelchangedflag = false;
 send_broadcastbeacon();
 send_undirected_proberequest();
-
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
-
 while(1)
 	{
 	if(wantstopflag == true)
