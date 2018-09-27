@@ -23,11 +23,7 @@ option_header_t *optionhdr;
 optionhdr = (option_header_t*)shb;
 optionhdr->option_code = optioncode;
 optionhdr->option_length = optionlen;
-padding = 0;
-if((optionlen % 4))
-	{
-	 padding = 4 -(optionlen % 4);
-	}
+padding = (4 -(optionlen %4)) %4;
 memset(optionhdr->option_data, 0, optionlen +padding); 
 memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;

@@ -602,11 +602,7 @@ epbhdr->cap_len = packet_len;
 epbhdr->org_len = packet_len;
 epbhdr->timestamp_high = timestamp >> 32;
 epbhdr->timestamp_low = (uint32_t)timestamp;
-padding = 0;
-if((epbhdr->cap_len % 4))
-	{
-	 padding = 4 -(epbhdr->cap_len % 4);
-	}
+ padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
@@ -672,11 +668,7 @@ epbhdr->cap_len = packet_len;
 epbhdr->org_len = packet_len;
 epbhdr->timestamp_high = timestamp >> 32;
 epbhdr->timestamp_low = (uint32_t)timestamp;
-padding = 0;
-if((epbhdr->cap_len % 4))
-	{
-	 padding = 4 -(epbhdr->cap_len % 4);
-	}
+padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
@@ -697,6 +689,7 @@ if(gpsdflag == true)
 	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf", lat, lon, alt);
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
+	epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 	}
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
