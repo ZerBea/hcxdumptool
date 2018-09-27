@@ -111,6 +111,7 @@ idblen += addoption(idb +idblen, IF_NAME, strlen(interfacestr), interfacestr);
 memset(&vendor, 0, 6);
 memcpy(&vendor, macorig, 3);
 idblen += addoption(idb +idblen, IF_MACADDR, 6, vendor);
+idblen += addoption(idb +idblen, SHB_EOC, 0, NULL);
 
 totallenght = (total_length_t*)(idb +idblen);
 idblen += TOTAL_SIZE;
