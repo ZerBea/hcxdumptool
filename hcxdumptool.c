@@ -2962,29 +2962,6 @@ if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL))
 return;
 }
 /*===========================================================================*/
-#ifdef DOGPIOSUPPORT
-static inline void *rpiflashthread()
-{
-while(1)
-	{
-	sleep(5);
-	if(digitalRead(7) == 1)
-		{
-		digitalWrite(0, HIGH);
-		wantstopflag = true;
-		}
-	if(wantstopflag == false)
-		{
-		digitalWrite(0, HIGH);
-		delay (25);
-		digitalWrite(0, LOW);
-		delay (25);
-		}
-	}
-return NULL;
-}
-#endif
-/*===========================================================================*/
 static bool set_channel()
 {
 static struct iwreq pwrq;
@@ -3399,7 +3376,7 @@ while(1)
 		{
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
-		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*)&ll, &fromlen);
+		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0, (struct sockaddr*)&ll, &fromlen);
 		if(packet_len == 0)
 			{
 			fprintf(stderr, "\ninterface went down\n");
@@ -3415,18 +3392,29 @@ while(1)
 			{
 			continue;
 			}
-		if(ioctl(fd_socket, SIOCGSTAMP , &tv) < 0)
+		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 			{
 			errorcount++;
 			continue;
 			}
-		timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
 		incommingcount++;
 		}
 	else
 		{
 		tvfd.tv_sec = 5;
 		tvfd.tv_usec = 0;
+		#ifdef DOGPIOSUPPORT
+		digitalWrite(0, HIGH);
+		delay(20);
+		digitalWrite(0, LOW);
+		delay(20);
+		if(digitalRead(7) == 1)
+			{
+			digitalWrite(0, HIGH);
+			wantstopflag = true;
+			}
+		#endif
 		if((statusout) > 0)
 			{
 			printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
@@ -3458,7 +3446,6 @@ while(1)
 		payload_ptr = ieee82011_ptr +MAC_SIZE_NORM;
 		payload_len = ieee82011_len -MAC_SIZE_NORM;
 		}
-
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
 		if(memcmp(macfrx->addr2, &mac_broadcast, 6) == 0)
@@ -3700,7 +3687,7 @@ while(1)
 		{
 		memset(&ll, 0, sizeof(ll));
 		fromlen = sizeof(ll);
-		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0 ,(struct sockaddr*) &ll, &fromlen);
+		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0,(struct sockaddr*) &ll, &fromlen);
 		if(packet_len == 0)
 			{
 			fprintf(stderr, "\ninterface went down\n");
@@ -3716,18 +3703,29 @@ while(1)
 			{
 			continue;
 			}
-		if(ioctl(fd_socket, SIOCGSTAMP , &tv) < 0)
+		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 			{
 			errorcount++;
 			continue;
 			}
-		timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
 		incommingcount++;
 		}
 	else
 		{
 		tvfd.tv_sec = 5;
 		tvfd.tv_usec = 0;
+		#ifdef DOGPIOSUPPORT
+		digitalWrite(0, HIGH);
+		delay(20);
+		digitalWrite(0, LOW);
+		delay(20);
+		if(digitalRead(7) == 1)
+			{
+			digitalWrite(0, HIGH);
+			wantstopflag = true;
+			}
+		#endif
 		if(errorcount >= maxerrorcount)
 			{
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -3904,13 +3902,9 @@ return entries;
 /*===========================================================================*/
 static inline bool globalinit()
 {
-int c;
+static int c;
 static int ret;
 static pthread_t thread1;
-
-#ifdef DOGPIOSUPPORT
-static pthread_t thread2;
-#endif
 
 fd_pcapng = 0;
 fd_ippcapng = 0;
@@ -3934,29 +3928,10 @@ myproberesponsesequence = 0;
 myidrequestsequence = 0;
 
 mytime = 0;
-
-#ifdef DOGPIOSUPPORT
-if(wiringPiSetup() == -1)
-	{
-	puts ("wiringPi failed!");
-	return false;
-	}
-pinMode(0, OUTPUT);
-pinMode(7, INPUT);
-for (c = 0; c < 5; c++)
-	{
-	digitalWrite(0 , HIGH);
-	delay (200);
-	digitalWrite(0, LOW);
-	delay (200);
-	}
-#endif
-
 srand(time(NULL));
 setbuf(stdout, NULL);
 
 myouiap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
-
 mynicap = rand() & 0xffffff;
 mac_mybcap[5] = mynicap & 0xff;
 mac_mybcap[4] = (mynicap >> 8) & 0xff;
@@ -3996,15 +3971,6 @@ if(ret != 0)
 	printf("failed to create thread\n");
 	return false;
 	}
-
-#ifdef DOGPIOSUPPORT
-ret = pthread_create(&thread2, NULL, &rpiflashthread, NULL);
-if(ret != 0)
-	{
-	printf("failed to create thread\n");
-	return false;
-	}
-#endif
 
 if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
 	{
@@ -4084,6 +4050,23 @@ if(ippcapngoutname != NULL)
 	}
 wantstopflag = false;
 signal(SIGINT, programmende);
+
+#ifdef DOGPIOSUPPORT
+if(wiringPiSetup() == -1)
+	{
+	puts ("wiringPi failed!");
+	return false;
+	}
+pinMode(0, OUTPUT);
+pinMode(7, INPUT);
+for (c = 0; c < 5; c++)
+	{
+	digitalWrite(0, HIGH);
+	delay(200);
+	digitalWrite(0, LOW);
+	delay(200);
+	}
+#endif
 return true;
 }
 /*===========================================================================*/
