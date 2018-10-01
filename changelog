@@ -1,3 +1,9 @@
+01.10.2018
+==========
+changed order of channels in default scan list:
+1, 9, 6, 3, 11, 7, 1, 10, 6, 8, 11, 4, 1, 12, 6, 2, 11, 5, 13
+
+
 27.09.2018
 ==========
 added GPSD support (stored as comment in pcapng file)
