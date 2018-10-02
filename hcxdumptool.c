@@ -104,7 +104,6 @@ static unsigned long long int pownedcount;
 static bool wantstopflag;
 static bool poweroffflag;
 static bool gpsdflag;
-static bool channelchangedflag;
 static bool activescanflag;
 static bool rcascanflag;
 static bool deauthenticationflag;
@@ -2978,16 +2977,6 @@ if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) == -1)
 return true;
 }
 /*===========================================================================*/
-static void *channelswitchthread()
-{
-while(1)
-	{
-	sleep(staytime);
-	channelchangedflag = true;
-	}
-return NULL;
-}
-/*===========================================================================*/
 static inline bool activate_gpsd()
 {
 int c;
@@ -3176,6 +3165,7 @@ static inline void processpackets()
 {
 int c;
 int sa;
+uint32_t statuscount;
 struct sockaddr_ll ll;
 socklen_t fromlen;
 static long double lat = 0;
@@ -3320,8 +3310,8 @@ timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
+statuscount = 1;
 set_channel();
-channelchangedflag = false;
 if(activescanflag == false)
 	{
 	send_broadcastbeacon();
@@ -3329,31 +3319,6 @@ if(activescanflag == false)
 	}
 while(1)
 	{
-	if(wantstopflag == true)
-		{
-		globalclose();
-		}
-	if(channelchangedflag == true)
-		{
-		cpa++;
-		if(channelscanlist[cpa] == 0)
-			{
-			cpa = 0;
-			}
-		if(set_channel() == true)
-			{
-			if(activescanflag == false)
-				{
-				send_broadcastbeacon();
-				send_undirected_proberequest();
-				}
-			}
-		else
-			{
-			errorcount++;
-			}
-		channelchangedflag = false;
-		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	FD_SET(fd_socket_gpsd, &readfds);
@@ -3402,28 +3367,55 @@ while(1)
 		}
 	else
 		{
-		tvfd.tv_sec = 5;
-		tvfd.tv_usec = 0;
-		#ifdef DOGPIOSUPPORT
-		digitalWrite(0, HIGH);
-		delay(20);
-		digitalWrite(0, LOW);
-		delay(20);
-		if(digitalRead(7) == 1)
-			{
-			digitalWrite(0, HIGH);
-			wantstopflag = true;
-			}
-		#endif
-		if((statusout) > 0)
-			{
-			printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
-			}
 		if(errorcount >= maxerrorcount)
 			{
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
 			globalclose();
 			}
+		if(wantstopflag == true)
+			{
+			globalclose();
+			}
+		if((statuscount %5) == 0)
+			{
+			#ifdef DOGPIOSUPPORT
+			digitalWrite(0, HIGH);
+			delay(20);
+			digitalWrite(0, LOW);
+			delay(20);
+			if(digitalRead(7) == 1)
+				{
+				digitalWrite(0, HIGH);
+				globalclose();
+				}
+			#endif
+			if((statusout) > 0)
+				{
+				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+				}
+			}
+		if((statuscount %staytime) == 0)
+			{
+			cpa++;
+			if(channelscanlist[cpa] == 0)
+				{
+				cpa = 0;
+				}
+			if(set_channel() == true)
+				{
+				if(activescanflag == false)
+					{
+					send_undirected_proberequest();
+					}
+				}
+			else
+				{
+				errorcount++;
+				}
+			}
+		tvfd.tv_sec = 1;
+		tvfd.tv_usec = 0;
+		statuscount++;
 		continue;
 		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
@@ -3633,10 +3625,11 @@ return;
 /*===========================================================================*/
 static inline void processrcascan()
 {
+static int fdnum;
+static uint32_t statuscount;
 static struct sockaddr_ll ll;
 static socklen_t fromlen;
 static rth_t *rth;
-static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
 
@@ -3645,36 +3638,12 @@ timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
+statuscount = 1;
 set_channel();
-channelchangedflag = false;
 send_broadcastbeacon();
 send_undirected_proberequest();
 while(1)
 	{
-	if(wantstopflag == true)
-		{
-		globalclose();
-		}
-	if(channelchangedflag == true)
-		{
-		cpa++;
-		if(channelscanlist[cpa] == 0)
-			{
-			cpa = 0;
-			}
-		if(set_channel() == true)
-			{
-			if(activescanflag == false)
-				{
-				send_undirected_proberequest();
-				}
-			}
-		else
-			{
-			errorcount++;
-			}
-		channelchangedflag = false;
-		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	fdnum = select(fd_socket +1, &readfds, NULL, NULL, &tvfd);
@@ -3713,25 +3682,51 @@ while(1)
 		}
 	else
 		{
-		tvfd.tv_sec = 5;
-		tvfd.tv_usec = 0;
-		#ifdef DOGPIOSUPPORT
-		digitalWrite(0, HIGH);
-		delay(20);
-		digitalWrite(0, LOW);
-		delay(20);
-		if(digitalRead(7) == 1)
-			{
-			digitalWrite(0, HIGH);
-			wantstopflag = true;
-			}
-		#endif
 		if(errorcount >= maxerrorcount)
 			{
 			fprintf(stderr, "\nmaximum number of errors is reached\n");
 			globalclose();
 			}
-		printapinfo();
+		if(wantstopflag == true)
+			{
+			globalclose();
+			}
+		if((statuscount %5) == 0)
+			{
+			#ifdef DOGPIOSUPPORT
+			digitalWrite(0, HIGH);
+			delay(20);
+			digitalWrite(0, LOW);
+			delay(20);
+			if(digitalRead(7) == 1)
+				{
+				digitalWrite(0, HIGH);
+				globalclose();
+				}
+			#endif
+			}
+		if((statuscount %staytime) == 0)
+			{
+			cpa++;
+			if(channelscanlist[cpa] == 0)
+				{
+				cpa = 0;
+				}
+			if(set_channel() == true)
+				{
+				if(activescanflag == false)
+					{
+					send_undirected_proberequest();
+					}
+				}
+			else
+				{
+				errorcount++;
+				}
+			}
+		tvfd.tv_sec = 1;
+		tvfd.tv_usec = 0;
+		statuscount++;
 		continue;
 		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
@@ -3903,8 +3898,6 @@ return entries;
 static inline bool globalinit()
 {
 static int c;
-static int ret;
-static pthread_t thread1;
 
 fd_pcapng = 0;
 fd_ippcapng = 0;
@@ -3963,13 +3956,6 @@ rcrandom = (rand()%0xfff) +0xf000;
 for(c = 0; c < 32; c++)
 	{
 	anoncerandom[c] = rand() %0xff;
-	}
-
-ret = pthread_create(&thread1, NULL, &channelswitchthread, NULL);
-if(ret != 0)
-	{
-	printf("failed to create thread\n");
-	return false;
 	}
 
 if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)

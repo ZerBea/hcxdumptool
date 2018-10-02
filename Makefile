@@ -26,7 +26,7 @@ ifeq ($(GPIOSUPPORT), on)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
 endif
 ifeq ($(HOSTOS), Linux)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c -lpthread $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS)
 endif
 
 
