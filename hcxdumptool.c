@@ -101,6 +101,11 @@ static unsigned long long int outgoingcount;
 static unsigned long long int droppedcount;
 static unsigned long long int pownedcount;
 
+static long double lat;
+static long double lon;
+static long double alt;
+
+
 static bool wantstopflag;
 static bool poweroffflag;
 static bool gpsdflag;
@@ -582,9 +587,6 @@ static uint16_t padding;
 static total_length_t *totallenght;
 int gpsdlen;
 char *gpsdptr;
-static long double lat = 0;
-static long double lon = 0;
-static long double alt = 0;
 char *gpsd_lat = "\"lat\":";
 char *gpsd_lon = "\"lon\":";
 char *gpsd_alt = "\"alt\":";
@@ -650,9 +652,6 @@ static uint16_t padding;
 static total_length_t *totallenght;
 int gpsdlen;
 char *gpsdptr;
-static long double lat = 0;
-static long double lon = 0;
-static long double alt = 0;
 char *gpsd_lat = "\"lat\":";
 char *gpsd_lon = "\"lon\":";
 char *gpsd_alt = "\"alt\":";
@@ -2984,9 +2983,6 @@ static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
-static long double lat = 0;
-static long double lon = 0;
-static long double alt = 0;
 char *gpsdptr;
 char *gpsd_lat = "\"lat\":";
 char *gpsd_lon = "\"lon\":";
@@ -3168,9 +3164,6 @@ int sa;
 uint32_t statuscount;
 struct sockaddr_ll ll;
 socklen_t fromlen;
-static long double lat = 0;
-static long double lon = 0;
-static long double alt = 0;
 
 char *gpsdptr;
 char *gpsd_lat = "\"lat\":";
@@ -3331,6 +3324,12 @@ while(1)
 	else if(FD_ISSET(fd_socket_gpsd, &readfds))
 		{
 		gpsd_len = read(fd_socket_gpsd, gpsddata, GPSDDATA_MAX);
+		if(gpsd_len < 0)
+			{
+			perror("\nfailed to read GPS data");
+			errorcount++;
+			continue;
+			}
 		if(gpsd_len >= 0)
 			{
 			gpsddata[gpsd_len] = 0;
@@ -3915,6 +3914,10 @@ errorcount = 0;
 incommingcount = 0;
 droppedcount = 0;
 outgoingcount = 0;
+
+lat = 0;
+lon = 0;
+alt = 0;
 
 mydisassociationsequence = 0;
 mydeauthenticationsequence = 0;
