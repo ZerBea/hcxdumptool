@@ -66,11 +66,11 @@ static int filterlist_len;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
-aplist_t *aplist, *aplist_ptr;
-int aplistcount;
+static aplist_t *aplist, *aplist_ptr;
+static int aplistcount;
 
-myaplist_t *myaplist, *myaplist_ptr;
-macmaclist_t *pownedlist;
+static myaplist_t *myaplist, *myaplist_ptr;
+static macmaclist_t *pownedlist;
 
 static enhanced_packet_block_t *epbhdr;
 
@@ -249,9 +249,9 @@ return;
 /*===========================================================================*/
 static inline void checkunwanted(char *unwantedname)
 {
-FILE *fp;
-char pidline[1024];
-char *pidptr = NULL;
+static FILE *fp;
+static char pidline[1024];
+static char *pidptr = NULL;
 
 memset(&pidline, 0, 1024);
 fp = popen(unwantedname,"r");
@@ -269,8 +269,8 @@ return;
 /*===========================================================================*/
 static inline void checkallunwanted()
 {
-char *networkmanager = "pidof NetworkManager";
-char *wpasupplicant = "pidof wpa_supplicant";
+static char *networkmanager = "pidof NetworkManager";
+static char *wpasupplicant = "pidof wpa_supplicant";
 
 checkunwanted(networkmanager);
 checkunwanted(wpasupplicant);
@@ -280,8 +280,8 @@ return;
 static inline void saveapinfo()
 {
 static int c, p;
-aplist_t *zeiger;
-FILE *fhrsl;
+static aplist_t *zeiger;
+static FILE *fhrsl;
 
 if((fhrsl = fopen(rcascanlistname, "w+")) == NULL)
 	{
@@ -450,7 +450,7 @@ exit(EXIT_SUCCESS);
 static inline void printapinfo()
 {
 static int c, p;
-aplist_t *zeiger;
+static aplist_t *zeiger;
 struct timeval tvfd;
 static char timestring[16];
 
@@ -584,15 +584,15 @@ static int epblen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
-int gpsdlen;
-char *gpsdptr;
-char *gpsd_lat = "\"lat\":";
-char *gpsd_lon = "\"lon\":";
-char *gpsd_alt = "\"alt\":";
+static int gpsdlen;
+static char *gpsdptr;
+static char *gpsd_lat = "\"lat\":";
+static char *gpsd_lon = "\"lon\":";
+static char *gpsd_alt = "\"alt\":";
 static char aplesscomment[] = {"HANDSHAKE AP-LESS" };
 #define APLESSCOMMENT_SIZE sizeof(aplesscomment)
 
-char gpsdatabuffer[GPSDDATA_MAX];
+static char gpsdatabuffer[GPSDDATA_MAX];
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
@@ -649,13 +649,13 @@ static int epblen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
-int gpsdlen;
-char *gpsdptr;
-char *gpsd_lat = "\"lat\":";
-char *gpsd_lon = "\"lon\":";
-char *gpsd_alt = "\"alt\":";
+static int gpsdlen;
+static char *gpsdptr;
+static char *gpsd_lat = "\"lat\":";
+static char *gpsd_lon = "\"lon\":";
+static char *gpsd_alt = "\"alt\":";
 
-char gpsdatabuffer[GPSDDATA_MAX];
+static char gpsdatabuffer[GPSDDATA_MAX];
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
@@ -731,7 +731,6 @@ static inline bool checkfilterlistentry(uint8_t *filtermac)
 static int c;
 static maclist_t * zeiger;
 
-
 zeiger = filterlist;
 for(c = 0; c < filterlist_len; c++)
 	{
@@ -747,8 +746,8 @@ return false;
 /*===========================================================================*/
 static inline int checkpownedap(uint8_t *macap)
 {
-int c;
-macmaclist_t *zeiger;
+static int c;
+static macmaclist_t *zeiger;
 
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX; c++)
@@ -768,8 +767,8 @@ return 0;
 /*===========================================================================*/
 static inline int checkpownedstaap(uint8_t *pownedmacsta, uint8_t *pownedmacap)
 {
-int c;
-macmaclist_t *zeiger;
+static int c;
+static macmaclist_t *zeiger;
 
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX; c++)
@@ -789,8 +788,8 @@ return 0;
 /*===========================================================================*/
 static inline int addpownedstaap(uint8_t *pownedmacsta, uint8_t *pownedmacap, uint8_t status)
 {
-int c;
-macmaclist_t *zeiger;
+static int c;
+static macmaclist_t *zeiger;
 
 zeiger = pownedlist;
 for(c = 0; c < POWNEDLIST_MAX -1; c++)
@@ -829,7 +828,7 @@ return 0;
 static void send_requestidentity(uint8_t *macsta, uint8_t *macap)
 {
 static mac_t *macftx;
-const uint8_t requestidentitydata[] =
+static const uint8_t requestidentitydata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x01, 0x00, 0x00, 0x0a, 0x01, 0x63, 0x00, 0x0a, 0x01, 0x68, 0x65, 0x6c, 0x6c, 0x6f
@@ -875,7 +874,7 @@ return;
 /*===========================================================================*/
 static void send_disassociation(uint8_t *macsta,  uint8_t *macap, uint8_t reason)
 {
-uint8_t retstatus;
+static uint8_t retstatus;
 static mac_t *macftx;
 
 static uint8_t packetout[1024];
@@ -925,7 +924,7 @@ return;
 /*===========================================================================*/
 static void send_broadcast_deauthentication(uint8_t *macap, uint8_t reason)
 {
-uint8_t retstatus;
+static uint8_t retstatus;
 static mac_t *macftx;
 
 static uint8_t packetout[1024];
@@ -977,13 +976,13 @@ static inline void send_authenticationresponseopensystem(uint8_t *macsta, uint8_
 {
 static mac_t *macftx;
 
-const uint8_t authenticationresponsedata[] =
+static const uint8_t authenticationresponsedata[] =
 {
 0x00, 0x00, 0x02, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 
-uint8_t packetout[1024];
+static uint8_t packetout[1024];
 
 if((filtermode == 1) && (checkfilterlistentry(macsta) == true))
 	{
@@ -1025,49 +1024,49 @@ return;
 /*===========================================================================*/
 static inline void send_authenticationrequestopensystem(uint8_t *mac_ap)
 {
-int cssize;
+static int cssize;
 static mac_t *macftx;
 
-const uint8_t authenticationrequestdata[] =
+static const uint8_t authenticationrequestdata[] =
 {
 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
 };
 #define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 
-const uint8_t csbroadcom[] =
+static const uint8_t csbroadcom[] =
 {
 0xdd, 0x09, 0x00, 0x10, 0x18, 0x02, 0x02, 0xf0, 0x05, 0x00, 0x00
 };
 #define CSBROADCOM_SIZE sizeof(csbroadcom)
 
-const uint8_t csapplebroadcom[] =
+static const uint8_t csapplebroadcom[] =
 {
 0xdd, 0x0b, 0x00, 0x17, 0xf2, 0x0a, 0x00, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00,
 0xdd, 0x09, 0x00, 0x10, 0x18, 0x02, 0x00, 0x00, 0x10, 0x00, 0x00
 };
 #define CSAPPLEBROADCOM_SIZE sizeof(csapplebroadcom)
 
-const uint8_t cssonos[] =
+static const uint8_t cssonos[] =
 {
 0xdd, 0x06, 0x00, 0x0e, 0x58, 0x02, 0x01, 0x01
 };
 #define CSSONOS_SIZE sizeof(cssonos)
 
-const uint8_t csnetgearbroadcom[] =
+static const uint8_t csnetgearbroadcom[] =
 {
 0xdd, 0x06, 0x00, 0x14, 0x6c, 0x00, 0x00, 0x00,
 0xdd, 0x09, 0x00, 0x10, 0x18, 0x02, 0x04, 0x00, 0x1c, 0x00, 0x00
 };
 #define CSNETGEARBROADCOM_SIZE sizeof(csnetgearbroadcom)
 
-const uint8_t cswilibox[] =
+static const uint8_t cswilibox[] =
 {
 0xdd, 0x0f, 0x00, 0x19, 0x3b, 0x02, 0x04, 0x08, 0x00, 0x00, 0x00, 0x03, 0x04, 0x01, 0x00, 0x00,
 0x00
 };
 #define CSWILIBOX_SIZE sizeof(cswilibox)
 
-const uint8_t cscisco[] =
+static const uint8_t cscisco[] =
 {
 0xdd, 0x1d, 0x00, 0x40, 0x96, 0x0c, 0x01, 0xb2, 0xb1, 0x74, 0xea, 0x45, 0xc5, 0x65, 0x01, 0x00,
 0x00, 0xb9, 0x16, 0x00, 0x00, 0x00, 0x00, 0x1a, 0xc1, 0xdb, 0xf1, 0xf5, 0x05, 0xec, 0xed
@@ -1075,7 +1074,7 @@ const uint8_t cscisco[] =
 #define CSCISCO_SIZE sizeof(cscisco)
 
 
-uint8_t packetout[1024];
+static uint8_t packetout[1024];
 
 if((filtermode == 1) && (checkfilterlistentry(mac_ap) == true))
 	{
@@ -1160,7 +1159,7 @@ static int beaconlen;
 static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 
-const uint8_t directedproberequestdata[] =
+static const uint8_t directedproberequestdata[] =
 {
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x92, 0x98, 0xa4,
 0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c
@@ -1226,7 +1225,7 @@ static inline void send_undirected_proberequest()
 {
 static mac_t *macftx;
 
-const uint8_t undirectedproberequestdata[] =
+static const uint8_t undirectedproberequestdata[] =
 {
 0x00, 0x00,
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x92, 0x98, 0xa4,
@@ -1262,10 +1261,10 @@ return;
 /*===========================================================================*/
 static void send_broadcastbeacon()
 {
-mac_t *macftx;
-capap_t *capap;
+static mac_t *macftx;
+static capap_t *capap;
 
-const uint8_t broadcastbeacondata[] =
+static const uint8_t broadcastbeacondata[] =
 {
 0x00, 0x00,
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -1290,7 +1289,7 @@ const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
 
 memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
@@ -1325,9 +1324,9 @@ return;
 /*===========================================================================*/
 static inline bool detectpmkid(uint16_t authlen, uint8_t *authpacket)
 {
-pmkid_t *pmkid;
+static pmkid_t *pmkid;
 
-uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
+static uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
 #define PMKIDOUI_SIZE sizeof(pmkidoui)
 
 if(authlen < WPAKEY_SIZE +PMKID_SIZE)
@@ -1364,7 +1363,7 @@ static uint16_t authlen;
 static wpakey_t *wpak;
 static uint16_t keyinfo;
 static unsigned long long int rc;
-int calceapoltimeout;
+static int calceapoltimeout;
 
 static exteap_t *exteap;
 static uint16_t exteaplen;
@@ -1601,7 +1600,7 @@ static void send_m1(uint8_t *macsta, uint8_t *macap)
 {
 static mac_t *macftx;
 
-static uint8_t anoncewpa2data[] =
+static const uint8_t anoncewpa2data[] =
 {
 0x88, 0x02, 0x3a, 0x01,
 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
@@ -1895,7 +1894,7 @@ return;
 /*===========================================================================*/
 static inline void send_associationrequest(uint8_t *macap)
 {
-int c;
+static int c;
 static mac_t *macftx;
 static aplist_t *zeiger;
 
@@ -2046,7 +2045,6 @@ static inline void process80211authentication()
 static authf_t *auth;
 
 auth = (authf_t*)payload_ptr;
-
 if(payload_len < (int)AUTHENTICATIONFRAME_SIZE)
 	{
 	return;
@@ -2203,7 +2201,7 @@ return;
 /*===========================================================================*/
 static inline void process80211probe_resp()
 {
-aplist_t *zeiger;
+static aplist_t *zeiger;
 static uint8_t *apinfoptr;
 static int apinfolen;
 static uint8_t *essidtagptr;
@@ -2560,7 +2558,7 @@ return;
 /*===========================================================================*/
 static inline void process80211rcascanproberesponse()
 {
-aplist_t *zeiger;
+static aplist_t *zeiger;
 static uint8_t *apinfoptr;
 static int apinfolen;
 static uint8_t *essidtagptr;
@@ -2694,7 +2692,7 @@ return;
 /*===========================================================================*/
 static inline void process80211rcascanbeacon()
 {
-aplist_t *zeiger;
+static aplist_t *zeiger;
 static uint8_t *apinfoptr;
 static int apinfolen;
 static uint8_t *essidtagptr;
@@ -2804,7 +2802,7 @@ return;
 /*===========================================================================*/
 static inline void process80211beacon()
 {
-aplist_t *zeiger;
+static aplist_t *zeiger;
 static uint8_t *apinfoptr;
 static int apinfolen;
 static uint8_t *essidtagptr;
@@ -2977,7 +2975,7 @@ return true;
 /*===========================================================================*/
 static inline bool activate_gpsd()
 {
-int c;
+static int c;
 static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
@@ -3158,16 +3156,17 @@ return false;
 /*===========================================================================*/
 static inline void processpackets()
 {
-int c;
-int sa;
-uint32_t statuscount;
-struct sockaddr_ll ll;
-socklen_t fromlen;
+static int c;
+static int sa;
+static uint32_t statuscount;
+static int channelerrorcount;
+static struct sockaddr_ll ll;
+static socklen_t fromlen;
 
-char *gpsdptr;
-char *gpsd_lat = "\"lat\":";
-char *gpsd_lon = "\"lon\":";
-char *gpsd_alt = "\"alt\":";
+static char *gpsdptr;
+static char *gpsd_lat = "\"lat\":";
+static char *gpsd_lon = "\"lon\":";
+static char *gpsd_alt = "\"alt\":";
 
 static rth_t *rth;
 static int fdnum;
@@ -3303,7 +3302,11 @@ timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
-set_channel();
+if(set_channel() == false)
+	{
+	fprintf(stderr, "failed to set channel\n");
+	globalclose();
+	}
 if(activescanflag == false)
 	{
 	send_broadcastbeacon();
@@ -3406,17 +3409,23 @@ while(1)
 				{
 				cpa = 0;
 				}
-			if(set_channel() == true)
+			channelerrorcount = 0;
+			while(set_channel() == false)
 				{
-				if(activescanflag == false)
+				cpa++;
+				if(channelscanlist[cpa] == 0)
 					{
-					send_undirected_proberequest();
+					cpa = 0;
+					}
+				channelerrorcount++;
+				if(channelerrorcount >128)
+					{
+					fprintf(stderr, "\nfailed to set channels\n");
+					globalclose();
 					}
 				}
-			else
-				{
-				errorcount++;
-				}
+			send_broadcastbeacon();
+			send_undirected_proberequest();
 			}
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
@@ -3632,6 +3641,7 @@ static inline void processrcascan()
 {
 static int fdnum;
 static uint32_t statuscount;
+static int channelerrorcount;
 static struct sockaddr_ll ll;
 static socklen_t fromlen;
 static rth_t *rth;
@@ -3644,8 +3654,11 @@ timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
-set_channel();
-send_broadcastbeacon();
+if(set_channel() == false)
+	{
+	fprintf(stderr, "\nfailed to set channel\n");
+	globalclose();
+	}
 send_undirected_proberequest();
 while(1)
 	{
@@ -3709,6 +3722,7 @@ while(1)
 				globalclose();
 				}
 			#endif
+			printapinfo();
 			}
 		if((statuscount %staytime) == 0)
 			{
@@ -3717,17 +3731,22 @@ while(1)
 				{
 				cpa = 0;
 				}
-			if(set_channel() == true)
+			channelerrorcount = 0;
+			while(set_channel() == false)
 				{
-				if(activescanflag == false)
+				cpa++;
+				if(channelscanlist[cpa] == 0)
 					{
-					send_undirected_proberequest();
+					cpa = 0;
+					}
+				channelerrorcount++;
+				if(channelerrorcount >128)
+					{
+					fprintf(stderr, "\nfailed to set channels\n");
+					globalclose();
 					}
 				}
-			else
-				{
-				errorcount++;
-				}
+			send_undirected_proberequest();
 			}
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
@@ -3774,7 +3793,7 @@ return;
 /*===========================================================================*/
 static bool ischannelindefaultlist(int userchannel)
 {
-int cpd = 0;
+static int cpd = 0;
 while(channeldefaultlist[cpd] != 0)
 	{
 	if(userchannel == channeldefaultlist[cpd])
@@ -3854,8 +3873,9 @@ return len;
 /*===========================================================================*/
 static inline int readfilterlist(char *listname, maclist_t *zeiger)
 {
-int len;
-int c, entries;
+static int len;
+static int c;
+static int entries;
 static FILE *fh_filter;
 
 static char linein[FILTERLIST_LINE_LEN];
