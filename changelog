@@ -2,8 +2,11 @@
 ==========
 show GPS position (if activated) in status line (refresh every 5 seconds)
 fixed broken status display on rcascan
+increased speed of rcascan
 fixed error handling if selected channels not supported by driver
-fixed many static var
+if option -t is not set, skip empty channels after one second 
+improved scan list
+fixed some static var
 
 
 01.10.2018

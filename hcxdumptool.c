@@ -108,6 +108,7 @@ static long double alt;
 
 static bool wantstopflag;
 static bool poweroffflag;
+static bool staytimeflag;
 static bool gpsdflag;
 static bool activescanflag;
 static bool rcascanflag;
@@ -177,11 +178,11 @@ static uint8_t channeldefaultlist[] =
 
 static uint8_t channelscanlist[128] =
 {
-1, 6, 11, 2, 1, 6, 11, 4, 1, 6, 11, 7, 1, 6, 11, 9,
-1, 6, 11, 12, 1, 6, 11, 13, 1, 6, 11, 10, 1, 6, 11, 8,
-1, 6, 11, 5, 1, 6, 11, 3, 1, 6, 11, 9, 1, 6, 11, 2,
-1, 6, 11, 7, 1, 6, 11, 4, 1, 6, 11, 12, 1, 6, 11, 5,
-1, 6, 11, 10, 1, 6, 11, 3, 1, 6, 11, 8, 1, 6, 11, 13,
+1, 6, 2, 11, 1, 13, 6, 11, 1, 6, 3, 11, 1, 12, 6, 11,
+1, 6, 4, 11, 1, 10, 6, 11, 1, 6, 11, 5, 1, 6, 11, 8,
+1, 9, 6, 11, 1, 6, 11, 7, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -501,7 +502,7 @@ for(c = 0; c < aplistcount; c++)
 		}
 	zeiger++;
 	}
-fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d %d\n"
+fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d\n"
 	"-----------------------------------------------------------------------------------\n"
 	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount);
 return;
@@ -2959,17 +2960,33 @@ return;
 /*===========================================================================*/
 static bool set_channel()
 {
+static int c;
+static int res;
 static struct iwreq pwrq;
 
-memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-pwrq.u.freq.e = 0;
-pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = channelscanlist[cpa];
-if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) == -1)
-	{
-	return false;
+res = 0;
+do 	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.e = 0;
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = channelscanlist[cpa];
+	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
+	if(res == -1)
+		{
+		cpa++;
+		if(channelscanlist[cpa] == 0)
+			{
+			cpa = 0;
+			}
+		}
+	c++;
+	if(c > 128)
+		{
+		return false;
+		}
 	}
+while(res == -1);
 return true;
 }
 /*===========================================================================*/
@@ -3159,7 +3176,7 @@ static inline void processpackets()
 static int c;
 static int sa;
 static uint32_t statuscount;
-static int channelerrorcount;
+static unsigned long long int oldincommingcount;
 static struct sockaddr_ll ll;
 static socklen_t fromlen;
 
@@ -3390,43 +3407,33 @@ while(1)
 				globalclose();
 				}
 			#endif
-			if((statusout) > 0)
+			if(gpsdflag == false)
 				{
-				if(gpsdflag == false)
-					{
-					printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
-					}
-				else
-					{
-					printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon);
-					}
+				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+				}
+			else
+				{
+				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon);
 				}
 			}
-		if((statuscount %staytime) == 0)
+		if(((statuscount %staytime) == 0) || ((staytimeflag != true) && (incommingcount == oldincommingcount)))
 			{
 			cpa++;
 			if(channelscanlist[cpa] == 0)
 				{
 				cpa = 0;
 				}
-			channelerrorcount = 0;
-			while(set_channel() == false)
+			if(set_channel() == true)
 				{
-				cpa++;
-				if(channelscanlist[cpa] == 0)
-					{
-					cpa = 0;
-					}
-				channelerrorcount++;
-				if(channelerrorcount >128)
-					{
-					fprintf(stderr, "\nfailed to set channels\n");
-					globalclose();
-					}
+				send_broadcastbeacon();
+				send_undirected_proberequest();
 				}
-			send_broadcastbeacon();
-			send_undirected_proberequest();
+			else
+				{
+				errorcount++;
+				}
 			}
+		oldincommingcount = incommingcount;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
 		statuscount++;
@@ -3632,7 +3639,6 @@ while(1)
 			continue;
 			}
 		}
-		continue;
 	}
 return;
 }
@@ -3641,7 +3647,6 @@ static inline void processrcascan()
 {
 static int fdnum;
 static uint32_t statuscount;
-static int channelerrorcount;
 static struct sockaddr_ll ll;
 static socklen_t fromlen;
 static rth_t *rth;
@@ -3709,7 +3714,7 @@ while(1)
 			{
 			globalclose();
 			}
-		if((statuscount %5) == 0)
+		if((statuscount %2) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
 			digitalWrite(0, HIGH);
@@ -3723,30 +3728,19 @@ while(1)
 				}
 			#endif
 			printapinfo();
-			}
-		if((statuscount %staytime) == 0)
-			{
 			cpa++;
 			if(channelscanlist[cpa] == 0)
 				{
 				cpa = 0;
 				}
-			channelerrorcount = 0;
-			while(set_channel() == false)
+			if(set_channel() == true)
 				{
-				cpa++;
-				if(channelscanlist[cpa] == 0)
-					{
-					cpa = 0;
-					}
-				channelerrorcount++;
-				if(channelerrorcount >128)
-					{
-					fprintf(stderr, "\nfailed to set channels\n");
-					globalclose();
-					}
+				send_undirected_proberequest();
 				}
-			send_undirected_proberequest();
+			else
+				{
+				errorcount++;
+				}
 			}
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
@@ -4476,6 +4470,7 @@ stachipset = 0;
 
 poweroffflag = false;
 gpsdflag = false;
+staytimeflag = false;
 activescanflag = false;
 rcascanflag = false;
 deauthenticationflag = false;
@@ -4660,11 +4655,12 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case 't':
 		staytime = strtol(optarg, NULL, 10);
-		if(staytime <= 1)
+		if(staytime < 1)
 			{
-			fprintf(stderr, "wrong hoptime\nsetting hoptime to 1\n");
+			fprintf(stderr, "wrong hoptime\nsetting hoptime to %d\n", TIME_INTERVAL);
 			staytime = TIME_INTERVAL;
 			}
+		staytimeflag = true;
 		break;
 
 		case 'E':
