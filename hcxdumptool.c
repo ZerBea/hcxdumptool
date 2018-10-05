@@ -4104,7 +4104,7 @@ static struct ethtool_perm_addr *epmaddr;
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true)
 	{
-	printf("warning: %s is probably monitor interface\n", interfacename);
+	printf("warning: %s is probably a monitor interface\n", interfacename);
 	}
 fd_socket = 0;
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
@@ -4347,7 +4347,7 @@ else
 					}
 				else
 					{
-					printf(" %s (%s)  warning: probably monitor interface!\n", ifa->ifa_name, drivername);
+					printf(" %s (%s)  warning: probably a monitor interface!\n", ifa->ifa_name, drivername);
 					}
 				}
 			}
