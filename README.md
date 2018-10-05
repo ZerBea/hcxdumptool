@@ -72,20 +72,22 @@ Requirements
 Supported adapters (strict)
 --------------
 
-* USB ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+* ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
 
-* USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
+* ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 
-* USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
+* ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 
-* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
+* ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
 
-* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
+* ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
 
-* Bus 005 Device 011: ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
+* ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
+
+* ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1)
+
+* ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
   get driver from here: https://github.com/kimocoder/rtl8812au
-
-* Bus 001 Device 002: ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
 
 
 Useful scripts
