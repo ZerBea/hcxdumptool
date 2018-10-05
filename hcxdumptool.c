@@ -268,6 +268,21 @@ if(fp)
 return;
 }
 /*===========================================================================*/
+static inline bool checkmonitorinterface(char *checkinterfacename)
+{
+static char *monstr = "mon";
+
+if(checkinterfacename == NULL)
+	{
+	return true;
+	}
+if(strstr(checkinterfacename, monstr) == NULL)
+	{
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
 static inline void checkallunwanted()
 {
 static char *networkmanager = "pidof NetworkManager";
@@ -4087,6 +4102,10 @@ static struct sockaddr_ll ll;
 static struct ethtool_perm_addr *epmaddr;
 
 checkallunwanted();
+if(checkmonitorinterface(interfacename) == true)
+	{
+	printf("warning: %s is probably monitor interface\n", interfacename);
+	}
 fd_socket = 0;
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
@@ -4322,7 +4341,14 @@ else
 					{
 					printf("%02x", (permaddr[p]));
 					}
-				printf(" %s (%s)\n", ifa->ifa_name, drivername);
+				if(checkmonitorinterface(ifa->ifa_name) == false)
+					{
+					printf(" %s (%s)\n", ifa->ifa_name, drivername);
+					}
+				else
+					{
+					printf(" %s (%s)  warning: probably monitor interface!\n", ifa->ifa_name, drivername);
+					}
 				}
 			}
 		}
