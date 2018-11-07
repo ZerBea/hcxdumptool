@@ -4,9 +4,6 @@ added new option filter mode 3:
 --filterlist=<file>                : mac filter list
                                      format: 112233445566 + comment
                                      maximum line lenght 255, maximum entries 64
-                                     important note:
-                                     only used in the transmission branch
-                                     the receiving branch remains untouched
 --filtermode=<digit>               : mode for filter list
                                      1: use filter list as protection list (default) in transmission branch
                                         receive everything, interact with all APs and CLIENTs in range,
