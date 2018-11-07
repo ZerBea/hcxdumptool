@@ -1514,7 +1514,6 @@ if(eapauth->type == EAPOL_KEY)
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
-					fprintf(stdout, " [EAPOL 4/4 - M4 RETRY ATTACK]\n");
 					}
 				}
 			}
@@ -4437,7 +4436,11 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     the receiving branch remains untouched\n"
 	"--filtermode=<digit>               : mode for filter list\n"
 	"                                     1: use filter list as protection list (default)\n"
+	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
+	"                                        except(!) the ones from the filter list\n"
 	"                                     2: use filter list as target list\n"
+	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
+	"                                        from the filter list\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"                                     do not transmit BROADCAST beacons\n"
 	"                                     affected: ap-less and client-less attacks\n"
