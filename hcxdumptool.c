@@ -3497,6 +3497,13 @@ while(1)
 			}
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
+			if(filtermode == 3)
+				{
+				if(checkfilterlistentry(macfrx->addr2) == false)
+					{
+					continue;
+					}
+				}
 			process80211beacon();
 			continue;
 			}
@@ -3510,6 +3517,13 @@ while(1)
 			lastsequenceproberequest = macfrx->sequence;
 			memcpy(&lastaddr1proberequest, macfrx->addr1, 6);
 			memcpy(&lastaddr2proberequest, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0)
 				{
 				process80211probe_req();
@@ -3534,6 +3548,13 @@ while(1)
 			lastsequenceproberesponse = macfrx->sequence;
 			memcpy(&lastaddr1proberesponse, macfrx->addr1, 6);
 			memcpy(&lastaddr2proberesponse, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211probe_resp();
 			continue;
 			}
@@ -3547,6 +3568,13 @@ while(1)
 			lastsequenceauthentication = macfrx->sequence;
 			memcpy(&lastaddr1authentication, macfrx->addr1, 6);
 			memcpy(&lastaddr2authentication, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211authentication();
 			continue;
 			}
@@ -3560,6 +3588,13 @@ while(1)
 			lastsequenceassociationrequest = macfrx->sequence;
 			memcpy(&lastaddr1associationrequest, macfrx->addr1, 6);
 			memcpy(&lastaddr2associationrequest, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211association_req();
 			continue;
 			}
@@ -3573,6 +3608,13 @@ while(1)
 			lastsequenceassociationresponse = macfrx->sequence;
 			memcpy(&lastaddr1associationresponse, macfrx->addr1, 6);
 			memcpy(&lastaddr2associationresponse, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211association_resp();
 			continue;
 			}
@@ -3586,6 +3628,13 @@ while(1)
 			lastsequencereassociationrequest = macfrx->sequence;
 			memcpy(&lastaddr1reassociationrequest, macfrx->addr1, 6);
 			memcpy(&lastaddr2reassociationrequest, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211reassociation_req();
 			continue;
 			}
@@ -3599,6 +3648,13 @@ while(1)
 			lastsequencereassociationresponse = macfrx->sequence;
 			memcpy(&lastaddr1reassociationresponse, macfrx->addr1, 6);
 			memcpy(&lastaddr2reassociationresponse, macfrx->addr2, 6);
+			if(filtermode == 3)
+				{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+					{
+					continue;
+					}
+				}
 			process80211reassociation_resp();
 			continue;
 			}
@@ -3633,6 +3689,13 @@ while(1)
 			}
 		llc_ptr = payload_ptr;
 		llc = (llc_t*)llc_ptr;
+		if(filtermode == 3)
+			{
+				if((checkfilterlistentry(macfrx->addr1) == false) && (checkfilterlistentry(macfrx->addr2) == false))
+				{
+				continue;
+				}
+			}
 		if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
 			{
 			process80211eap();
@@ -4435,11 +4498,14 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     only used in the transmission branch\n"
 	"                                     the receiving branch remains untouched\n"
 	"--filtermode=<digit>               : mode for filter list\n"
-	"                                     1: use filter list as protection list (default)\n"
+	"                                     1: use filter list as protection list (default) in transmission branch\n"
 	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
 	"                                        except(!) the ones from the filter list\n"
-	"                                     2: use filter list as target list\n"
+	"                                     2: use filter list as target list in transmission branch\n"
 	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
+	"                                        from the filter list\n"
+	"                                     3: use filter list as target list in receiving branch\n"
+	"                                        only receive APs and CLIENTs in range,\n"
 	"                                        from the filter list\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"                                     do not transmit BROADCAST beacons\n"
@@ -4576,7 +4642,7 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_FILTERMODE:
 		filtermode = strtol(optarg, NULL, 10);
-		if((filtermode < 1) || (filtermode > 2))
+		if((filtermode < 1) || (filtermode > 3))
 			{
 			fprintf(stderr, "wrong filtermode\n");
 			exit(EXIT_FAILURE);

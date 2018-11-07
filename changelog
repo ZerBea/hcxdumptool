@@ -1,3 +1,24 @@
+07.10.2018
+==========
+added new option filter mode 3:
+--filterlist=<file>                : mac filter list
+                                     format: 112233445566 + comment
+                                     maximum line lenght 255, maximum entries 64
+                                     important note:
+                                     only used in the transmission branch
+                                     the receiving branch remains untouched
+--filtermode=<digit>               : mode for filter list
+                                     1: use filter list as protection list (default) in transmission branch
+                                        receive everything, interact with all APs and CLIENTs in range,
+                                        except(!) the ones from the filter list
+                                     2: use filter list as target list in transmission branch
+                                        receive everything, only interact with APs and CLIENTs in range,
+                                        from the filter list
+                                     3: use filter list as target list in receiving branch
+                                        only receive APs and CLIENTs in range,
+                                        from the filter list
+
+
 30.10.2018
 ==========
 moved to version 5.0.0
