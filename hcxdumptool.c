@@ -1511,10 +1511,6 @@ if(eapauth->type == EAPOL_KEY)
 			if(disassociationflag == false)
 				{
 				send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
-				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
-					{
-					printtimenet(macfrx->addr1, macfrx->addr2);
-					}
 				}
 			}
 		memset(&laststam2, 0, 6);
