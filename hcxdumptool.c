@@ -34,7 +34,6 @@
 #include <arpa/inet.h>  
 #include <net/if.h>
 #include <arpa/inet.h>
-#include <net/ethernet.h>
 #include <netpacket/packet.h>
 #include <pthread.h>
 
