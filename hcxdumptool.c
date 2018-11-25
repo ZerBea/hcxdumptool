@@ -1403,7 +1403,7 @@ if(eapauth->type == EAPOL_KEY)
 	{
 	wpak = (wpakey_t*)(eapauthptr +EAPAUTH_SIZE);
 	keyinfo = (getkeyinfo(ntohs(wpak->keyinfo)));
-	rc = byte_swap_64(wpak->replaycount);
+	rc = be64toh(wpak->replaycount);
 	if(keyinfo == 1)
 		{
 		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
