@@ -1,3 +1,9 @@
+27.11.2018
+==========
+added new option:
+--poweroff                         : once hcxdumptool finished, power off system
+
+
 26.11.2018
 ==========
 several big endian fixes

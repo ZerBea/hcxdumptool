@@ -4542,6 +4542,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                      4: AUTHENTICATON\n"
 	"                                      8: ASSOCIATION\n"
 	"                                     16: BEACON\n"
+	"--poweroff                         : once hcxdumptool finished, power off system\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n",
@@ -4610,6 +4611,7 @@ static const struct option long_options[] =
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
+	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
 	{NULL,				0,			NULL,	0}
@@ -4708,6 +4710,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCXD_ENABLE_STATUS:
 		statusout |= strtol(optarg, NULL, 10);
+		break;
+
+		case HCXD_POWER_OFF:
+		poweroffflag = true;
 		break;
 
 		case HCXD_HELP:
