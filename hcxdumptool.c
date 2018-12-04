@@ -3570,7 +3570,7 @@ while(1)
 			else
 				{
 				printf("\nfailed to set channel\n");
-				errorcount++;
+				globalclose();
 				}
 			}
 		oldincommingcount = incommingcount;
@@ -3944,7 +3944,7 @@ while(1)
 			else
 				{
 				printf("\nfailed to set channel\n");
-				errorcount++;
+				globalclose();
 				}
 			}
 		tvfd.tv_sec = 1;
