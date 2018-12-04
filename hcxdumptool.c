@@ -3015,13 +3015,73 @@ while(res == -1);
 return true;
 }
 /*===========================================================================*/
+static bool test_channels()
+{
+static int c;
+static int res;
+static struct iwreq pwrq;
+static int frequency;
+static int testchannel = 0;
+
+c = 0;
+while(channelscanlist[c] != 0)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.e = 0;
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = channelscanlist[c];
+	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
+	if(res < 0)
+		{
+		printf("warning: unable to set channel %d\n", channelscanlist[c]); 
+		c++;
+		continue;
+		}
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.e = 0;
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
+	if(res < 0)
+		{
+		printf("warning: unable to set channel %d\n",  channelscanlist[c]); 
+		c++;
+		continue;
+		}
+	frequency = pwrq.u.freq.m;
+	if(frequency < 1000)
+		{
+		testchannel = frequency;
+		}
+	else if((frequency >= 2407) && (frequency <= 2474))
+		{
+		testchannel = (frequency -2407)/5;
+		}
+	else if((frequency >= 2481) && (frequency <= 2487))
+		{
+		testchannel = (frequency -2412)/5;
+		}
+	else if((frequency >= 5150) && (frequency <= 5875))
+		{
+		testchannel = (frequency -5000)/5;
+		}
+	if(testchannel != channelscanlist[c])
+		{
+		fprintf(stdout, "warning: unable to set channel %d\n",  channelscanlist[c]); 
+		}
+	c++;
+	}
+return true;
+}
+/*===========================================================================*/
 static void show_channels()
 {
 static int c;
 static int res;
 static struct iwreq pwrq;
-int frequency;
-int testchannel = 0;
+static int frequency;
+static int testchannel = 0;
 
 fprintf(stdout, "available channels:\n");
 for(c = 0; c < 256; c++)
@@ -4930,12 +4990,8 @@ if(showchannels == true)
 	show_channels();
 	return EXIT_SUCCESS;
 	}
-else
-	{
-	fprintf(stderr, "false\n");
-	return EXIT_SUCCESS;;
-	}
 
+test_channels();
 
 if(rcascanflag == false)
 	{
