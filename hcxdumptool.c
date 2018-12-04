@@ -169,9 +169,12 @@ static const uint8_t hdradiotap[] =
 static uint8_t channeldefaultlist[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-34, 36, 38, 40, 42, 44, 46, 48, 52, 56, 58, 60, 62, 64,
-100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 147, 149, 151, 153, 155, 157,
-161, 165, 167, 169, 184, 188, 192, 196, 200, 204, 208, 212, 216,
+32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68,
+96,
+100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128,
+132, 134, 136, 138, 140, 142, 144,
+149, 151, 153, 155, 157, 159, 161,
+161, 165, 169, 173,
 0
 };
 
@@ -3012,6 +3015,60 @@ while(res == -1);
 return true;
 }
 /*===========================================================================*/
+static void show_channels()
+{
+static int c;
+static int res;
+static struct iwreq pwrq;
+int frequency;
+int testchannel = 0;
+
+fprintf(stdout, "available channels:\n");
+for(c = 0; c < 256; c++)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.e = 0;
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
+	if(res >= 0)
+		{
+		memset(&pwrq, 0, sizeof(pwrq));
+		strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+		pwrq.u.freq.e = 0;
+		pwrq.u.freq.flags = IW_FREQ_FIXED;
+		res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
+		if(res >= 0)
+			{
+			frequency = pwrq.u.freq.m;
+			if(frequency < 1000)
+				{
+				testchannel = frequency;
+				}
+			else if((frequency >= 2407) && (frequency <= 2474))
+				{
+				testchannel = (frequency -2407)/5;
+				}
+			else if((frequency >= 2481) && (frequency <= 2487))
+				{
+				testchannel = (frequency -2412)/5;
+				}
+			else if((frequency >= 5150) && (frequency <= 5875))
+				{
+				testchannel = (frequency -5000)/5;
+				}
+			if(testchannel > 0)
+				{
+				fprintf(stdout, "%d,",testchannel);
+				}
+			}
+		}
+	}
+	fprintf(stdout, "\b \n");
+return;
+}
+/*===========================================================================*/
 static inline bool activate_gpsd()
 {
 static int c;
@@ -4483,6 +4540,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 default: %d (every %d beacons)\n"
 	"                 the target beacon interval is used as trigger\n"
 	"-I             : show wlan interfaces and quit\n"
+	"-C             : show available channels and quit\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n"
@@ -4565,6 +4623,8 @@ int main(int argc, char *argv[])
 static int auswahl;
 static int index;
 static bool showinterfaces = false;
+static bool showchannels = false;
+
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
 eapoltimeout = EAPOLTIMEOUT;
@@ -4593,7 +4653,7 @@ weppcapngoutname = NULL;
 filterlistname = NULL;
 rcascanpcapngname = NULL;
 
-static const char *short_options = "i:o:O:W:c:t:T:E:D:A:Ihv";
+static const char *short_options = "i:o:O:W:c:t:T:E:D:A:IChv";
 static const struct option long_options[] =
 {
 	{"filterlist",			required_argument,	NULL,	HCXD_FILTERLIST},
@@ -4811,6 +4871,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		showinterfaces = true;
 		break;
 
+		case 'C':
+		showchannels = true;
+		break;
+
 		case 'h':
 		usage(basename(argv[0]));
 		break;
@@ -4860,6 +4924,18 @@ if(globalinit() == false)
 	fprintf(stderr, "failed to init globals\n");
 	exit(EXIT_FAILURE);
 	}
+
+if(showchannels == true)
+	{
+	show_channels();
+	return EXIT_SUCCESS;
+	}
+else
+	{
+	fprintf(stderr, "false\n");
+	return EXIT_SUCCESS;;
+	}
+
 
 if(rcascanflag == false)
 	{
