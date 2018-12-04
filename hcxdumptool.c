@@ -4579,8 +4579,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"-W <dump file> : output file in pcapngformat\n"
 	"                 encrypted WEP frames\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"-c <digit>     : set scanlist  (1,2,3,...)\n"
-	"                 default scanlist: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12\n"
+	"-c <digit>     : set scan list  (1,2,3,...)\n"
+	"                 default scan list: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12\n"
 	"                 maximum entries: 127\n"
 	"                 allowed channels:\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
@@ -4994,7 +4994,7 @@ if(showchannels == true)
 test_channels();
 if(channelscanlist[0] == 0)
 	{
-	fprintf(stderr, "no available channel in scanlist\n");
+	fprintf(stderr, "no available channel found in scan list\n");
 	exit(EXIT_FAILURE);
 	}
 
