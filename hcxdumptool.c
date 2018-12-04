@@ -2984,40 +2984,37 @@ return;
 /*===========================================================================*/
 static bool set_channel()
 {
-static int c;
 static int res;
 static struct iwreq pwrq;
 
-c = 0;
 res = 0;
-do 	{
-	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-	pwrq.u.freq.e = 0;
-	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = channelscanlist[cpa];
-	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
-	if(res == -1)
-		{
-		cpa++;
-		if(channelscanlist[cpa] == 0)
-			{
-			cpa = 0;
-			}
-		}
-	c++;
-	if(c > 128)
-		{
-		return false;
-		}
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.m = channelscanlist[cpa];
+res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
+if(res < 0)
+	{
+	return false;
 	}
-while(res == -1);
 return true;
 }
 /*===========================================================================*/
-static bool test_channels()
+static void remove_channel_from_scanlist(uint8_t c)
 {
-static int c;
+while(channelscanlist[c +1] != 0)
+	{
+	channelscanlist[c] = channelscanlist[c +1];
+	c++;
+	}
+channelscanlist[c] = channelscanlist[c +1];
+return;
+}
+/*===========================================================================*/
+static void test_channels()
+{
+static uint8_t c;
 static int res;
 static struct iwreq pwrq;
 static int frequency;
@@ -3034,8 +3031,8 @@ while(channelscanlist[c] != 0)
 	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
 	if(res < 0)
 		{
-		printf("warning: unable to set channel %d\n", channelscanlist[c]); 
-		c++;
+		printf("warning: unable to set channel %d (removed this channel from scan list)\n", channelscanlist[c]); 
+		remove_channel_from_scanlist(c);
 		continue;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -3045,8 +3042,8 @@ while(channelscanlist[c] != 0)
 	res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
 	if(res < 0)
 		{
-		printf("warning: unable to set channel %d\n",  channelscanlist[c]); 
-		c++;
+		printf("warning: unable to set channel %d (removed this channel from scan list)\n",  channelscanlist[c]); 
+		remove_channel_from_scanlist(c);
 		continue;
 		}
 	frequency = pwrq.u.freq.m;
@@ -3068,11 +3065,13 @@ while(channelscanlist[c] != 0)
 		}
 	if(testchannel != channelscanlist[c])
 		{
-		fprintf(stdout, "warning: unable to set channel %d\n",  channelscanlist[c]); 
+		printf("warning: unable to set channel %d (removed this channel from scan list)\n",  channelscanlist[c]); 
+		remove_channel_from_scanlist(c);
+		continue;
 		}
 	c++;
 	}
-return true;
+return;
 }
 /*===========================================================================*/
 static void show_channels()
@@ -3991,9 +3990,10 @@ while(1)
 return;
 }
 /*===========================================================================*/
-static bool ischannelindefaultlist(int userchannel)
+static bool ischannelindefaultlist(uint8_t userchannel)
 {
-static int cpd = 0;
+static uint8_t cpd;
+cpd = 0;
 while(channeldefaultlist[cpd] != 0)
 	{
 	if(userchannel == channeldefaultlist[cpd])
@@ -4992,6 +4992,11 @@ if(showchannels == true)
 	}
 
 test_channels();
+if(channelscanlist[0] == 0)
+	{
+	fprintf(stderr, "no available channel in scanlist\n");
+	exit(EXIT_FAILURE);
+	}
 
 if(rcascanflag == false)
 	{
