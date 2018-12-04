@@ -3080,11 +3080,13 @@ static int c;
 static int res;
 static struct iwreq pwrq;
 static int frequency;
-static int testchannel = 0;
+static int testchannel;
 
 fprintf(stdout, "available channels:\n");
 for(c = 0; c < 256; c++)
 	{
+	testchannel = 0;
+	frequency = 0;
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
