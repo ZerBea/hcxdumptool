@@ -3018,11 +3018,13 @@ static uint8_t c;
 static int res;
 static struct iwreq pwrq;
 static int frequency;
-static int testchannel = 0;
+static int testchannel;
 
 c = 0;
 while(channelscanlist[c] != 0)
 	{
+	testchannel = 0;
+	frequency = 0;
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
