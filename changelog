@@ -1,3 +1,13 @@
+07.12.2018
+==========
+restore interface settings after -C
+improved help menu
+-more informations about monitor mode
+-more informations about packet injection
+monitor mode and packet injection must be supported by the driver,
+otherwise hcxdumptool will not work.
+
+
 05.12.2018
 ==========
 moved to v 5.1.0 (according to hashcat)

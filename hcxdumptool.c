@@ -4584,7 +4584,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 encrypted WEP frames\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
 	"-c <digit>     : set scan list  (1,2,3,...)\n"
-	"                 default scan list: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12\n"
+	"                 default scan list: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12, 13\n"
 	"                 maximum entries: 127\n"
 	"                 allowed channels:\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
@@ -4605,6 +4605,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 the target beacon interval is used as trigger\n"
 	"-I             : show wlan interfaces and quit\n"
 	"-C             : show available channels and quit\n"
+	"                 if no channels are available, interface is pobably in use or doesn't support monitor mode\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n"
@@ -4642,6 +4643,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--disable_client_attacks           : disable attacks on single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
+	"                                     this can be used to test if packet injection is working\n"
+	"                                     if no access point responds, packet injection is probably not working\n"
 	"--station_vendor=<digit>           : use this VENDOR information for station\n"
 	"                                     0: transmit no VENDOR information (default)\n"
 	"                                     1: Broadcom\n"
@@ -4992,14 +4995,14 @@ if(globalinit() == false)
 if(showchannels == true)
 	{
 	show_channels();
-	return EXIT_SUCCESS;
+	globalclose();
 	}
 
 test_channels();
 if(channelscanlist[0] == 0)
 	{
 	fprintf(stderr, "no available channel found in scan list\n");
-	exit(EXIT_FAILURE);
+	globalclose();
 	}
 
 if(rcascanflag == false)
