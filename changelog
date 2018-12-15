@@ -1,3 +1,9 @@
+15.12.2018
+==========
+improved random generator (now seeded with and adapter mac address) 
+Raspberry Pi: improved handling of GPIO switch
+
+
 07.12.2018
 ==========
 restore interface settings after -C

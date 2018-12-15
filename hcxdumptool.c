@@ -3547,7 +3547,7 @@ while(1)
 			if(digitalRead(7) == 1)
 				{
 				digitalWrite(0, HIGH);
-				globalclose();
+				wantstopflag = true;
 				}
 			#endif
 			if(gpsdflag == false)
@@ -3932,7 +3932,7 @@ while(1)
 			if(digitalRead(7) == 1)
 				{
 				digitalWrite(0, HIGH);
-				globalclose();
+				wantstopflag = true;
 				}
 			#endif
 			printapinfo();
@@ -4127,7 +4127,7 @@ return entries;
 static inline bool globalinit()
 {
 static int c;
-
+static int myseek;
 fd_pcapng = 0;
 fd_ippcapng = 0;
 fd_weppcapng = 0;
@@ -4154,11 +4154,18 @@ myproberesponsesequence = 0;
 myidrequestsequence = 0;
 
 mytime = 0;
-srand(time(NULL));
+gettimeofday(&tv, NULL);
+myseek = (mac_orig[3] << 16) + (mac_orig[4] << 8) + mac_orig[5] + tv.tv_sec + tv.tv_usec;
+mynicap = (mac_orig[3] << 16) + (mac_orig[4] << 8) + mac_orig[5];
+srand(myseek);
+myseek = mac_orig[2];
+for(myseek = 0; myseek < mac_orig[2]; myseek++)
+	{
+	mynicap += rand() & 0xffffff;
+	}
+mynicap &= 0xffffff;
 setbuf(stdout, NULL);
-
 myouiap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
-mynicap = rand() & 0xffffff;
 mac_mybcap[5] = mynicap & 0xff;
 mac_mybcap[4] = (mynicap >> 8) & 0xff;
 mac_mybcap[3] = (mynicap >> 16) & 0xff;
