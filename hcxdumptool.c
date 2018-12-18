@@ -4684,7 +4684,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                      4: AUTHENTICATON\n"
 	"                                      8: ASSOCIATION\n"
 	"                                     16: BEACON\n"
-	"--poweroff                         : once hcxdumptool finished, power off system\n"
+	"--poweroff                         : once hcxdumptool terminated, power off system\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n",
