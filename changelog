@@ -6,6 +6,13 @@ added new option to set station MAC address
                                      format = 112233000000  (to set only OUI)
                                      format = 445566 (to set only NIC)
 
+added new option to set access point MAC address
+--ap_mac=<mac_addr>                : use this MAC address for access point as start MAC
+                                     format = 112233445566
+                                     format = 112233000000  (to set only OUI)
+                                     format = 445566 (to set only NIC)
+                                     warning: do not use a MAC of an existing access point in your range
+
 
 15.12.2018
 ==========
