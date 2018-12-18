@@ -3313,6 +3313,29 @@ gpsd_len = 0;
 return false;
 }
 /*===========================================================================*/
+static inline bool restartinterface()
+{
+static struct ifreq ifr;
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface down");
+	close(fd_socket);
+	return false;
+	}
+
+ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface up");
+	close(fd_socket);
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
 static inline void processpackets()
 {
 static int c;
@@ -3471,8 +3494,25 @@ if(activescanflag == false)
 	send_broadcastbeacon();
 	send_undirected_proberequest();
 	}
+
 while(1)
 	{
+	#ifdef DOGPIOSUPPORT
+	if(digitalRead(7) == 1)
+		{
+		digitalWrite(0, HIGH);
+		globalclose();
+		}
+	#endif
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	FD_SET(fd_socket_gpsd, &readfds);
@@ -3513,8 +3553,9 @@ while(1)
 			errorcount++;
 			continue;
 			}
-		if(ll.sll_pkttype == PACKET_OUTGOING)
+		if(ll.sll_pkttype != PACKET_OTHERHOST)
 			{
+			errorcount++;
 			continue;
 			}
 		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
@@ -3524,19 +3565,9 @@ while(1)
 			continue;
 			}
 		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
-		incommingcount++;
 		}
 	else
 		{
-		if(errorcount >= maxerrorcount)
-			{
-			fprintf(stderr, "\nmaximum number of errors is reached\n");
-			globalclose();
-			}
-		if(wantstopflag == true)
-			{
-			globalclose();
-			}
 		if((statuscount %5) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
@@ -3544,11 +3575,6 @@ while(1)
 			delay(20);
 			digitalWrite(0, LOW);
 			delay(20);
-			if(digitalRead(7) == 1)
-				{
-				digitalWrite(0, HIGH);
-				wantstopflag = true;
-				}
 			#endif
 			if(gpsdflag == false)
 				{
@@ -3583,15 +3609,23 @@ while(1)
 		statuscount++;
 		continue;
 		}
+	packet_ptr = &epb[EPB_SIZE];
+	rth = (rth_t*)packet_ptr;
+	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
+	ieee82011_len = packet_len -le16toh(rth->it_len);
+	if((rth->it_present & 0x20) != 0)
+		{
+		incommingcount++;
+		}
+	else if(outgoingcount > (incommingcount +ERRORMAX))
+		{
+		errorcount++;
+		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
 		{
 		droppedcount++;
 		continue;
 		}
-	packet_ptr = &epb[EPB_SIZE];
-	rth = (rth_t*)packet_ptr;
-	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
-	ieee82011_len = packet_len -le16toh(rth->it_len);
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 		{
@@ -3874,6 +3908,22 @@ if(set_channel() == false)
 send_undirected_proberequest();
 while(1)
 	{
+	#ifdef DOGPIOSUPPORT
+	if(digitalRead(7) == 1)
+		{
+		digitalWrite(0, HIGH);
+		globalclose();
+		}
+	#endif
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	fdnum = select(fd_socket +1, &readfds, NULL, NULL, &tvfd);
@@ -3898,8 +3948,9 @@ while(1)
 			errorcount++;
 			continue;
 			}
-		if(ll.sll_pkttype == PACKET_OUTGOING)
+		if(ll.sll_pkttype != PACKET_OTHERHOST)
 			{
+			errorcount++;
 			continue;
 			}
 		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
@@ -3909,19 +3960,9 @@ while(1)
 			continue;
 			}
 		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
-		incommingcount++;
 		}
 	else
 		{
-		if(errorcount >= maxerrorcount)
-			{
-			fprintf(stderr, "\nmaximum number of errors is reached\n");
-			globalclose();
-			}
-		if(wantstopflag == true)
-			{
-			globalclose();
-			}
 		if((statuscount %2) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
@@ -3929,11 +3970,6 @@ while(1)
 			delay(20);
 			digitalWrite(0, LOW);
 			delay(20);
-			if(digitalRead(7) == 1)
-				{
-				digitalWrite(0, HIGH);
-				wantstopflag = true;
-				}
 			#endif
 			printapinfo();
 			cpa++;
@@ -3964,6 +4000,14 @@ while(1)
 	rth = (rth_t*)packet_ptr;
 	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
 	ieee82011_len = packet_len -le16toh(rth->it_len);
+	if((rth->it_present & 0x20) != 0)
+		{
+		incommingcount++;
+		}
+	else if(outgoingcount > (incommingcount +ERRORMAX))
+		{
+		errorcount++;
+		}
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 		{
@@ -4315,11 +4359,11 @@ for (c = 0; c < 5; c++)
 #endif
 return true;
 }
-/*===========================================================================*/
 static inline bool opensocket()
 {
 static struct ifreq ifr;
 static struct iwreq iwr;
+static struct packet_mreq mr;
 static struct sockaddr_ll ll;
 static struct ethtool_perm_addr *epmaddr;
 
@@ -4329,6 +4373,7 @@ if(checkmonitorinterface(interfacename) == true)
 	printf("warning: %s is probably a monitor interface\n", interfacename);
 	}
 fd_socket = 0;
+
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
@@ -4424,10 +4469,20 @@ memset(&ll, 0, sizeof(ll));
 ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
-ll.sll_pkttype = PACKET_OTHERHOST|PACKET_BROADCAST|PACKET_MULTICAST|PACKET_HOST;
+ll.sll_halen = ETH_ALEN;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
+	close(fd_socket);
+	return false;
+	}
+
+memset(&mr, 0, sizeof(mr));
+mr.mr_ifindex = ifr.ifr_ifindex;
+mr.mr_type = PACKET_MR_PROMISC;
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP,&mr, sizeof(mr)) < 0)
+	{
+	perror( "failed to ser promicuous mode" );
 	close(fd_socket);
 	return false;
 	}
@@ -5038,6 +5093,7 @@ if(getuid() != 0)
 	exit(EXIT_FAILURE);
 	}
 
+printf("initialization...\n");
 if(opensocket() == false)
 	{
 	fprintf(stderr, "failed to init socket\n");

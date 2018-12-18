@@ -13,6 +13,9 @@ added new option to set access point MAC address
                                      format = 445566 (to set only NIC)
                                      warning: do not use a MAC of an existing access point in your range
 
+improved detection of broken driver
+set ERRORMAX to 100
+
 
 15.12.2018
 ==========

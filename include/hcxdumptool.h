@@ -1,4 +1,4 @@
-#define ERRORMAX 100000
+#define ERRORMAX 100
 
 #define GPSDDATA_MAX 1536
 
