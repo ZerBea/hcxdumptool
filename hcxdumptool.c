@@ -3445,13 +3445,14 @@ if(gpsdflag == true)
 			"GPS LONGITUDE............: %Lf\n"
 			"GPS ALTITUDE.............: %Lf\n"
 			"INTERFACE:...............: %s\n"
+			"ERRORMAX.................: %d errors\n"
 			"FILTERLIST...............: %d entries\n"
 			"MAC CLIENT...............: %06x%06x\n"
 			"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
 			"ANONCE...................: ",
-			lat, lon, alt, interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+			lat, lon, alt, interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 			for(c = 0; c < 32; c++)
 				{
 				printf("%02x", anoncerandom[c]);
@@ -3465,13 +3466,14 @@ if(gpsdflag == false)
 	{
 	printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
 		"INTERFACE:...............: %s\n"
+		"ERRORMAX.................: %d errors\n"
 		"FILTERLIST...............: %d entries\n"
 		"MAC CLIENT...............: %06x%06x\n"
 		"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
 		"EAPOL TIMEOUT............: %d\n"
 		"REPLAYCOUNT..............: %llu\n"
 		"ANONCE...................: ",
-		interfacename, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+		interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 		for(c = 0; c < 32; c++)
 			{
 			printf("%02x", anoncerandom[c]);
@@ -3618,7 +3620,7 @@ while(1)
 		incommingcount++;
 		errorcount = 0;
 		}
-	else if(outgoingcount > (incommingcount +ERRORMAX +ERRORMAX +ERRORMAX))
+	else if(outgoingcount > (incommingcount +maxerrorcount +maxerrorcount +maxerrorcount))
 		{
 		errorcount++;
 		}
@@ -4006,7 +4008,7 @@ while(1)
 		errorcount = 0;
 		incommingcount++;
 		}
-	else if(outgoingcount > (incommingcount +ERRORMAX +ERRORMAX +ERRORMAX))
+	else if(outgoingcount > (incommingcount +maxerrorcount +maxerrorcount +maxerrorcount))
 		{
 		errorcount++;
 		}
@@ -4678,6 +4680,9 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 161, 165, 169, 173\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default: %d seconds\n"
+	"-T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)\n"
+	"                 errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)\n"
+	"                 default: %d errors\n"
 	"-E <digit>     : EAPOL timeout\n"
 	"                 default: %d = 1 second\n"
 	"                 value depends on channel assignment\n"
@@ -4764,7 +4769,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n",
-	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
+	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
 	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
 exit(EXIT_SUCCESS);

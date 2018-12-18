@@ -14,7 +14,13 @@ added new option to set access point MAC address
                                      warning: do not use a MAC of an existing access point in your range
 
 improved detection of broken driver
-set ERRORMAX to 100
+set default ERRORMAX to 100
+added option to set ERRORMAX
+-T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)
+                 default: 100 errors
+
+Remarks:
+errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)
 
 
 15.12.2018
