@@ -462,6 +462,10 @@ if(poweroffflag == true)
 	if(system("poweroff") != 0)
 		printf("can't power off\n");
 	}
+if(errorcount != 0)
+	{
+	exit(EXIT_FAILURE);
+	}
 exit(EXIT_SUCCESS);
 }
 /*===========================================================================*/
