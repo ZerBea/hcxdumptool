@@ -3616,8 +3616,9 @@ while(1)
 	if((rth->it_present & 0x20) != 0)
 		{
 		incommingcount++;
+		errorcount = 0;
 		}
-	else if(outgoingcount > (incommingcount +ERRORMAX))
+	else if(outgoingcount > (incommingcount +ERRORMAX +ERRORMAX +ERRORMAX))
 		{
 		errorcount++;
 		}
@@ -4002,9 +4003,10 @@ while(1)
 	ieee82011_len = packet_len -le16toh(rth->it_len);
 	if((rth->it_present & 0x20) != 0)
 		{
+		errorcount = 0;
 		incommingcount++;
 		}
-	else if(outgoingcount > (incommingcount +ERRORMAX))
+	else if(outgoingcount > (incommingcount +ERRORMAX +ERRORMAX +ERRORMAX))
 		{
 		errorcount++;
 		}
