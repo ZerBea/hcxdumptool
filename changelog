@@ -1,3 +1,12 @@
+18.12.2018
+==========
+added new option to set station MAC address
+--station_mac=<mac_addr>           : use this MAC address for station
+                                     format = 112233445566
+                                     format = 112233000000  (to set only OUI)
+                                     format = 445566 (to set only NIC)
+
+
 15.12.2018
 ==========
 improved random generator (now seeded with and adapter mac address) 

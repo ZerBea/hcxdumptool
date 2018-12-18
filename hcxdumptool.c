@@ -4174,8 +4174,14 @@ mac_mybcap[1] = (myouiap >> 8) & 0xff;
 mac_mybcap[0] = (myouiap >> 16) & 0xff;
 memcpy(&mac_myap, &mac_mybcap, 6);
 
-myouista = myvendorsta[rand() %((MYVENDORSTA_SIZE /sizeof(int)))];
-mynicsta = rand() & 0xffffff;
+if(myouista == 0)
+	{
+	myouista = myvendorsta[rand() %((MYVENDORSTA_SIZE /sizeof(int)))];
+	}
+if(mynicsta == 0)
+	{
+	mynicsta = rand() & 0xffffff;
+	}
 mac_mysta[5] = mynicsta &0xff;
 mac_mysta[4] = (mynicsta >> 8) &0xff;
 mac_mysta[3] = (mynicsta >> 16) &0xff;
@@ -4652,6 +4658,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
 	"                                     this can be used to test if packet injection is working\n"
 	"                                     if no access point responds, packet injection is probably not working\n"
+	"                                     you should disable auto scrolling in your terminal settings\n"
 	"--station_vendor=<digit>           : use this VENDOR information for station\n"
 	"                                     0: transmit no VENDOR information (default)\n"
 	"                                     1: Broadcom\n"
@@ -4660,7 +4667,10 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     4: Netgear-Broadcom\n"
 	"                                     5: Wilibox Deliberant Group LLC\n"
 	"                                     6: Cisco Systems, Inc\n"
-	"                                     you should disable auto scrolling in your terminal settings\n"
+	"--station_mac=<mac_addr>           : use this MAC address for station\n"
+	"                                     format = 112233445566\n"
+	"                                     format = 112233000000  (to set only OUI)\n"
+	"                                     format = 445566 (to set only NIC)\n"
 	"--use_gpsd                         : use GPSD to retrieve position\n"
 	"                                     add latitude, longitude and altitude to every pcapng frame\n"
 	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
@@ -4698,7 +4708,8 @@ static int auswahl;
 static int index;
 static bool showinterfaces = false;
 static bool showchannels = false;
-
+static unsigned long long int stationmac;
+ 
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
 eapoltimeout = EAPOLTIMEOUT;
@@ -4719,6 +4730,9 @@ deauthenticationflag = false;
 disassociationflag = false;
 attackapflag = false;
 attackclientflag = false;
+
+myouista = 0;
+mynicsta = 0;
 
 interfacename = NULL;
 pcapngoutname = NULL;
@@ -4741,6 +4755,7 @@ static const struct option long_options[] =
 	{"disable_client_attacks",	no_argument,		NULL,	HCXD_DISABLE_CLIENT_ATTACKS},
 	{"use_gpsd",			no_argument,		NULL,	HCXD_USE_GPSD},
 	{"station_vendor",		required_argument,	NULL,	HCXD_STATION_VENDOR},
+	{"station_mac",			required_argument,	NULL,	HCXD_STATION_MAC},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
@@ -4822,6 +4837,12 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 			fprintf(stderr, "wrong station VENDOR information\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCXD_STATION_MAC:
+		stationmac = strtoll(optarg, NULL, 16);
+		myouista = (stationmac &0xffffff000000) >>24; 
+		mynicsta = stationmac & 0xffffff;
 		break;
 
 		case HCXD_USE_GPSD:
