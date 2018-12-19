@@ -370,7 +370,7 @@ if(fd_socket > 0)
 	}
 if(gpsdflag == true)
 	{
-	if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+	if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 		{
 		perror("failed to terminate GPSD WATCH");
 		}
@@ -888,7 +888,7 @@ if(myidrequestsequence >= 4096)
 	myidrequestsequence = 0;
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &requestidentitydata, REQUESTIDENTITY_SIZE);
-if(send(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE, 0) < 0)
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE) < 0)
 	{
 	perror("\nfailed to transmit requestidentity");
 	errorcount++;
@@ -939,7 +939,7 @@ if(mydisassociationsequence >= 4096)
 	mydisassociationsequence = 0;
 	}
 packetout[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-if(send(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +2, 0) < 0)
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
 	{
 	perror("\nfailed to transmit deuthentication");
 	errorcount++;
@@ -990,7 +990,7 @@ if(mydeauthenticationsequence >= 4096)
 	mydeauthenticationsequence = 0;
 	}
 packetout[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-if(send(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +2, 0) < 0)
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
 	{
 	perror("\nfailed to transmit deauthentication to broadcast");
 	errorcount++;
@@ -1041,7 +1041,7 @@ if(myauthenticationrequestsequence >= 4096)
 	myauthenticationrequestsequence = 0;
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +AUTHENTICATIONRESPONSE_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +AUTHENTICATIONRESPONSE_SIZE) < 0)
 	{
 	perror("\nfailed to transmit authenticationresponse");
 	errorcount++;
@@ -1171,7 +1171,7 @@ else
 	cssize = 0;
 	}
 
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +cssize, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +cssize) < 0)
 	{
 	perror("\nfailed to transmit authenticationrequest");
 	errorcount++;
@@ -1242,7 +1242,7 @@ packetout[HDRRT_SIZE +MAC_SIZE_NORM] = 0;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +1] = essid_len;
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE], essid, essid_len);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len], &directedproberequestdata, DIRECTEDPROBEREQUEST_SIZE);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len +DIRECTEDPROBEREQUEST_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len +DIRECTEDPROBEREQUEST_SIZE) < 0)
 	{
 	perror("\nfailed to transmit directed proberequest");
 	errorcount++;
@@ -1281,7 +1281,7 @@ if(myproberequestsequence >= 4096)
 	myproberequestsequence= 0;
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &undirectedproberequestdata, UNDIRECTEDPROBEREQUEST_SIZE);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE) < 0)
 	{
 	perror("\nfailed to transmit undirected proberequest");
 	errorcount++;
@@ -1344,7 +1344,7 @@ capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &broadcastbeacondata, BROADCASTBEACON_SIZE);
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit broadcast beacon");
 	errorcount++;
@@ -1671,7 +1671,7 @@ memcpy(macftx->addr3, macap, 6);
 packetout[HDRRT_SIZE +ANONCEWPA2_SIZE +7] = rcrandom &0xff;
 packetout[HDRRT_SIZE +ANONCEWPA2_SIZE +6] = (rcrandom >> 8) &0xff;
 memcpy(&packetout[HDRRT_SIZE +ANONCEWPA2_SIZE +8], &anoncerandom, 32);
-if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +133) < 0)
 	{
 	perror("\nfailed to transmit M1");
 	errorcount++;
@@ -1680,7 +1680,7 @@ if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
 outgoingcount++;
 fsync(fd_socket);
 macftx->retry = 1;
-if(send(fd_socket, packetout, HDRRT_SIZE +133, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +133) < 0)
 	{
 	perror("\nfailed to retransmit M1");
 	errorcount++;
@@ -1766,7 +1766,7 @@ if(myassociationresponsesequence >= 4096)
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &associationid, ASSOCIATIONID_SIZE);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE], &associationresponsedata, ASSOCIATIONRESPONSE_SIZE);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE) < 0)
 	{
 	perror("\nfailed to transmit reassociationresponse");
 	errorcount++;
@@ -1893,7 +1893,7 @@ if(myassociationresponsesequence >= 4096)
 	}
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &associationid, ASSOCIATIONID_SIZE);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE], &associationresponsedata, ASSOCIATIONRESPONSE_SIZE);
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONID_SIZE +ASSOCIATIONRESPONSE_SIZE) < 0)
 	{
 	perror("\nfailed to transmit associationresponse");
 	errorcount++;
@@ -1996,7 +1996,7 @@ for(c = 0; c < APLIST_MAX -1; c++)
 		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE] = TAG_RSN;
 		packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1] = zeiger->rsn_len;
 		memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1], zeiger->rsn, zeiger->rsn_len);
-		if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1 +zeiger->rsn_len, 0) < 0)
+		if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essid_len +2 +ASSOCIATIONREQUEST_SIZE +1 +1 +zeiger->rsn_len) < 0)
 			{
 			perror("\nfailed to transmit associationrequest");
 			errorcount++;
@@ -2437,7 +2437,7 @@ packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = essid_len;
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], essid, essid_len);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len], &proberesponsedata, PROBERESPONSE_SIZE);
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len +0x0c] = channelscanlist[cpa];
-if(send(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len +PROBERESPONSE_SIZE, 0) < 0)
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len +PROBERESPONSE_SIZE) < 0)
 	{
 	perror("\nfailed to transmit proberesponse");
 	errorcount++;
@@ -3198,7 +3198,7 @@ if(FD_ISSET(fd_socket_gpsd, &readfds))
 		}
 	}
 
-if(send(fd_socket_gpsd, gpsd_enable_json, 20, 0) != 20)
+if(write(fd_socket_gpsd, gpsd_enable_json, 20) != 20)
 	{
 	perror("failed to activate GPSD WATCH");
 	gpsd_len = 0;
@@ -3213,7 +3213,7 @@ fdnum = select(fd_socket_gpsd +1, &readfds, NULL, NULL, &tvfd);
 if(fdnum <= 0)
 	{
 	fprintf(stderr, "GPSD timeout\n");
-	if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+	if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 		{
 		perror("failed to terminate GPSD WATCH");
 		}
@@ -3226,7 +3226,7 @@ if(FD_ISSET(fd_socket_gpsd, &readfds))
 	if(gpsd_len <= 0)
 		{
 		fprintf(stderr, "failed to get GPSD protocol\n");
-		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 			{
 			perror("failed to terminate GPSD WATCH");
 			}
@@ -3237,7 +3237,7 @@ if(FD_ISSET(fd_socket_gpsd, &readfds))
 	if(strstr(gpsddata, gpsd_json) == NULL)
 		{
 		printf("unsupported GPSD protocol (not json)\n");
-		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 			{
 			perror("failed to terminate GPSD WATCH");
 			}
@@ -3257,7 +3257,7 @@ while(c < 5)
 	if(fdnum <= 0)
 		{
 		fprintf(stderr, "failed to read initial GPSD position\n");
-		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 			{
 			perror("failed to terminate GPSD WATCH");
 			}
@@ -3270,7 +3270,7 @@ while(c < 5)
 		if(gpsd_len <= 0)
 			{
 			perror("failed to get GPSD protocol");
-			if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+			if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 				{
 				perror("failed to terminate GPSD WATCH");
 				}
@@ -3302,7 +3302,7 @@ if(c < 5)
 		}
 	if((lat == 0) && (lon == 0))
 		{
-		if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+		if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 			{
 			perror("failed to terminate GPSD WATCH");
 			gpsd_len = 0;
@@ -3313,35 +3313,12 @@ if(c < 5)
 	return true;
 	}
 fprintf(stderr, "failed to get GPSD position\n");
-if(send(fd_socket_gpsd, gpsd_disable, 23, 0) != 23)
+if(write(fd_socket_gpsd, gpsd_disable, 23) != 23)
 	{
 	perror("failed to terminate GPSD WATCH");
 	}
 gpsd_len = 0;
 return false;
-}
-/*===========================================================================*/
-static inline bool restartinterface()
-{
-static struct ifreq ifr;
-
-memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to set interface down");
-	close(fd_socket);
-	return false;
-	}
-
-ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
-if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to set interface up");
-	close(fd_socket);
-	return false;
-	}
-return true;
 }
 /*===========================================================================*/
 static inline void processpackets()
@@ -3350,8 +3327,6 @@ static int c;
 static int sa;
 static uint32_t statuscount;
 static unsigned long long int oldincommingcount;
-static struct sockaddr_ll ll;
-static socklen_t fromlen;
 
 static char *gpsdptr;
 static char *gpsd_lat = "\"lat\":";
@@ -3548,9 +3523,7 @@ while(1)
 		}
 	else if(FD_ISSET(fd_socket, &readfds))
 		{
-		memset(&ll, 0, sizeof(ll));
-		fromlen = sizeof(ll);
-		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0, (struct sockaddr*)&ll, &fromlen);
+		packet_len = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
 		if(packet_len == 0)
 			{
 			fprintf(stderr, "\ninterface went down\n");
@@ -3559,11 +3532,6 @@ while(1)
 		if(packet_len < 0)
 			{
 			perror("\nfailed to read packet");
-			errorcount++;
-			continue;
-			}
-		if(ll.sll_pkttype != PACKET_OTHERHOST)
-			{
 			errorcount++;
 			continue;
 			}
@@ -3898,8 +3866,6 @@ static inline void processrcascan()
 {
 static int fdnum;
 static uint32_t statuscount;
-static struct sockaddr_ll ll;
-static socklen_t fromlen;
 static rth_t *rth;
 static fd_set readfds;
 static struct timeval tvfd;
@@ -3943,9 +3909,7 @@ while(1)
 		}
 	else if(fdnum > 0 && FD_ISSET(fd_socket, &readfds))
 		{
-		memset(&ll, 0, sizeof(ll));
-		fromlen = sizeof(ll);
-		packet_len = recvfrom(fd_socket, &epb[EPB_SIZE], PCAPNG_MAXSNAPLEN, 0,(struct sockaddr*) &ll, &fromlen);
+		packet_len = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
 		if(packet_len == 0)
 			{
 			fprintf(stderr, "\ninterface went down\n");
@@ -3954,11 +3918,6 @@ while(1)
 		if(packet_len < 0)
 			{
 			perror("\nfailed to read packet");
-			errorcount++;
-			continue;
-			}
-		if(ll.sll_pkttype != PACKET_OTHERHOST)
-			{
 			errorcount++;
 			continue;
 			}
@@ -4369,6 +4328,7 @@ for (c = 0; c < 5; c++)
 #endif
 return true;
 }
+/*===========================================================================*/
 static inline bool opensocket()
 {
 static struct ifreq ifr;
@@ -4480,6 +4440,7 @@ ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
 ll.sll_halen = ETH_ALEN;
+ll.sll_pkttype = PACKET_OTHERHOST;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
