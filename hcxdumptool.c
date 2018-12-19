@@ -4331,7 +4331,6 @@ static inline bool opensocket()
 {
 static struct ifreq ifr;
 static struct iwreq iwr;
-static struct packet_mreq mr;
 static struct sockaddr_ll ll;
 static struct ethtool_perm_addr *epmaddr;
 
@@ -4431,19 +4430,9 @@ ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
 ll.sll_halen = ETH_ALEN;
-ll.sll_pkttype = PACKET_OTHERHOST;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
-	return false;
-	}
-
-memset(&mr, 0, sizeof(mr));
-mr.mr_ifindex = ifr.ifr_ifindex;
-mr.mr_type = PACKET_MR_PROMISC;
-if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP,&mr, sizeof(mr)) < 0)
-	{
-	perror( "failed to ser promicuous mode" );
 	return false;
 	}
 
