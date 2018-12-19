@@ -355,14 +355,13 @@ char *gpsd_disable = "?WATCH={\"enable\":false}";
 digitalWrite(0, HIGH);
 #endif
 
-memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
-ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
-ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
-
 if(fd_socket > 0)
 	{
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+	ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+	ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
 	if(close(fd_socket) != 0)
 		{
 		perror("failed to close raw socket");
@@ -382,7 +381,6 @@ if(fd_socket_gpsd > 0)
 		perror("failed to close gpsd socket");
 		}
 	}
-
 if(fd_weppcapng > 0)
 	{
 	writeisb(fd_weppcapng, 0, timestampstart, incommingcount);
@@ -4337,14 +4335,16 @@ static struct packet_mreq mr;
 static struct sockaddr_ll ll;
 static struct ethtool_perm_addr *epmaddr;
 
+fd_socket = 0;
+fd_socket_gpsd = 0;
+
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true)
 	{
 	printf("warning: %s is probably a monitor interface\n", interfacename);
 	}
-fd_socket = 0;
 
-if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
+if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror( "socket failed (do you have root priviledges?)");
 	return false;
@@ -4355,7 +4355,6 @@ strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
 	perror("failed to save current interface flags");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4364,7 +4363,6 @@ strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if (ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
 	perror("failed to save current interface mode");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4373,7 +4371,6 @@ strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to set interface down");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4383,15 +4380,6 @@ iwr.u.mode = IW_MODE_MONITOR;
 if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 	{
 	perror("failed to set monitor mode");
-	close(fd_socket);
-	return false;
-	}
-
-ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
-if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to set interface up");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4400,13 +4388,18 @@ strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 	{
 	perror("failed to get interface informations");
-	close(fd_socket);
 	return false;
 	}
 if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	fprintf(stderr, "interface is not in monitor mode\n");
-	close(fd_socket);
+	return false;
+	}
+
+ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("failed to set interface up");
 	return false;
 	}
 
@@ -4414,14 +4407,13 @@ memset(&iwr, 0, sizeof(iwr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	{
-	perror("failed to set interface down");
-	close(fd_socket);
+	perror("failed to get interface flags");
 	return false;
 	}
-if((ifr.ifr_flags & (IFF_UP | IFF_BROADCAST | IFF_RUNNING)) != (IFF_UP | IFF_BROADCAST | IFF_RUNNING))
+
+if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
 	{
 	fprintf(stderr, "interface is not up\n");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4431,7 +4423,6 @@ ifr.ifr_flags = 0;
 if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	{
 	perror("failed to get SIOCGIFINDEX");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4444,7 +4435,6 @@ ll.sll_pkttype = PACKET_OTHERHOST;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
-	close(fd_socket);
 	return false;
 	}
 
@@ -4454,7 +4444,6 @@ mr.mr_type = PACKET_MR_PROMISC;
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP,&mr, sizeof(mr)) < 0)
 	{
 	perror( "failed to ser promicuous mode" );
-	close(fd_socket);
 	return false;
 	}
 
@@ -4462,7 +4451,6 @@ epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
 if (!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
-	close(fd_socket);
 	return false;
 	}
 memset(&ifr, 0, sizeof(ifr));
@@ -4474,20 +4462,17 @@ if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 	{
 	perror("failed to get permanent hardware address");
 	free(epmaddr);
-	close(fd_socket);
 	return false;
 	}
 if(epmaddr->size != 6)
 	{
 	fprintf(stderr, "failed to get permanent hardware address length\n");
 	free(epmaddr);
-	close(fd_socket);
 	return false;
 	}
 memcpy(&mac_orig, epmaddr->data, 6);
 free(epmaddr);
 
-fd_socket_gpsd = 0;
 if((fd_socket_gpsd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 	perror( "gpsd socket failed");
@@ -4758,7 +4743,8 @@ static bool showinterfaces = false;
 static bool showchannels = false;
 static unsigned long long int apmac;
 static unsigned long long int stationmac;
- 
+static struct ifreq ifr;
+
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
 eapoltimeout = EAPOLTIMEOUT;
@@ -5071,12 +5057,38 @@ printf("initialization...\n");
 if(opensocket() == false)
 	{
 	fprintf(stderr, "failed to init socket\n");
+	if(fd_socket > 0)
+		{
+		memset(&ifr, 0, sizeof(ifr));
+		strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+		ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
+		close(fd_socket);
+		}
+	if(fd_socket_gpsd > 0)
+		{
+		close(fd_socket_gpsd);
+		}
 	exit(EXIT_FAILURE);
 	}
 
 if(globalinit() == false)
 	{
 	fprintf(stderr, "failed to init globals\n");
+	if(fd_socket > 0)
+		{
+		memset(&ifr, 0, sizeof(ifr));
+		strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+		ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
+		close(fd_socket);
+		}
+	if(fd_socket_gpsd > 0)
+		{
+		close(fd_socket_gpsd);
+		}
 	exit(EXIT_FAILURE);
 	}
 
