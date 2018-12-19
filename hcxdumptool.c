@@ -351,6 +351,10 @@ static void globalclose()
 static struct ifreq ifr;
 char *gpsd_disable = "?WATCH={\"enable\":false}";
 
+#ifdef DOGPIOSUPPORT
+digitalWrite(0, HIGH);
+#endif
+
 memset(&ifr, 0, sizeof(ifr));
 strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
@@ -3506,7 +3510,6 @@ while(1)
 	#ifdef DOGPIOSUPPORT
 	if(digitalRead(7) == 1)
 		{
-		digitalWrite(0, HIGH);
 		globalclose();
 		}
 	#endif
@@ -3918,7 +3921,6 @@ while(1)
 	#ifdef DOGPIOSUPPORT
 	if(digitalRead(7) == 1)
 		{
-		digitalWrite(0, HIGH);
 		globalclose();
 		}
 	#endif
