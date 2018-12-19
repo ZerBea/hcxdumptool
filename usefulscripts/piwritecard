@@ -7,9 +7,9 @@ read DEVICE
 printf "\033[0;31m o p n p 1 <ret> +100M t c n p 2 <ret> <ret> w \033[1;0m\n"
 sudo fdisk /dev/$DEVICE
 
-echo "build filesystem boot"
+echo "erstelle Filesystem boot"
 sudo mkfs.fat -F32 /dev/"$DEVICE"1
-echo "build filesystem root"
+echo "erstelle Filesystem root"
 sudo mkfs.ext4 /dev/"$DEVICE"2
 
 echo "mount boot"

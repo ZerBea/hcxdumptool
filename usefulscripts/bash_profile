@@ -8,7 +8,9 @@ then
 	ip link set $WLANDEV down
 	iw dev $WLANDEV set type monitor
 	ip link set $WLANDEV up
-	hcxdumptool -i $WLANDEV -o $ARCHIVNAME.pcapng -t 5
+	hcxdumptool -i $WLANDEV -o $ARCHIVNAME.pcapng --poweroff --filterlist=blacklistown --filtermode=1 --give_up_ap_attacks=100000 --give_up_deauthentications=100000
+#	hcxdumptool -i $WLANDEV -o $ARCHIVNAME.pcapng --poweroff --filterlist=blacklistown --filtermode=1 --disable_ap_attacks --disable_deauthentications -t 120
 fi
 hcxpioff &
 systemctl start dhcpcd@eth0.service
+systemctl start sshd.service

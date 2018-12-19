@@ -4,6 +4,9 @@ lsblk
 printf "\nchoose device: "
 read DEVICE
 
+sudo fsck /dev/"$DEVICE"1
+sudo fsck /dev/"$DEVICE"2
+
 if [ -f "rpiboot.tgz" ]
 then
 	rm -f rpiboot.tgz
