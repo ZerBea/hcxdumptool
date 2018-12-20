@@ -20,6 +20,18 @@ https://community.spiceworks.com/topic/2132263-ubuntu-16-04-wifi-disconnects-ran
 https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1750226
 https://www.raspberrypi.org/forums/viewtopic.php?t=206815
 
+workaround:
+1) get driver information
+$ hcxdumptool -I
+wlan interfaces:
+7cdd90xxxxxx wlp3s0f0u2 (rt2800usb)
+
+2) remove module
+$ modprobe -r rt2800usb
+
+3) load module
+$ modprobe rt2800usb
+
 
 18.12.2018
 ==========
