@@ -4395,14 +4395,16 @@ if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	return false;
 	}
 
-ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+ifr.ifr_flags = IFF_UP;
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to set interface up");
 	return false;
 	}
 
-memset(&iwr, 0, sizeof(iwr));
+memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	{
@@ -4410,7 +4412,7 @@ if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	return false;
 	}
 
-if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
+if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
 	{
 	fprintf(stderr, "interface is not up\n");
 	return false;
@@ -4424,7 +4426,6 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	perror("failed to get SIOCGIFINDEX");
 	return false;
 	}
-
 memset(&ll, 0, sizeof(ll));
 ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
