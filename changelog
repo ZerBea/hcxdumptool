@@ -14,6 +14,7 @@ or dmesg show this error:
 [67801.029527] ------------[ cut here ]------------
 
 it seems to be a kernel issue that hcxdumptool isn't able to handle, automaticly:
+https://bbs.archlinux.org/viewtopic.php?id=237028
 https://bugs.openwrt.org/index.php?do=details&task_id=929&opened=169&status%5B0%5D=
 https://community.spiceworks.com/topic/2132263-ubuntu-16-04-wifi-disconnects-randomly
 https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1750226
