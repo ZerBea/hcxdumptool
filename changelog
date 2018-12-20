@@ -1,3 +1,25 @@
+20.12.2018
+==========
+improved detection of broken driver
+from now on GPIO LED blinks twice
+- every 5 seconds if a possbile driver issue is detected
+- if no packets received during the last past 5 seconds
+
+another indicator is that the incomming packetcounter (rx=xxxx)
+doesn't increase
+
+or dmesg show this error:
+[65786.808078] ieee80211 phy2: rt2x00queue_flush_queue: Warning - Queue 14 failed to flush
+[65824.174119] ieee80211 phy2: rt2x00queue_flush_queue: Warning - Queue 14 failed to flush
+[67801.029527] ------------[ cut here ]------------
+
+it seems to be a kernel issue that hcxdumptool isn't able to handle, automaticly:
+https://bugs.openwrt.org/index.php?do=details&task_id=929&opened=169&status%5B0%5D=
+https://community.spiceworks.com/topic/2132263-ubuntu-16-04-wifi-disconnects-randomly
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1750226
+https://www.raspberrypi.org/forums/viewtopic.php?t=206815
+
+
 18.12.2018
 ==========
 added new option to set station MAC address

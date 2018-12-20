@@ -3323,7 +3323,7 @@ static inline void processpackets()
 {
 static int c;
 static int sa;
-static uint32_t statuscount;
+static unsigned long long int statuscount;
 static unsigned long long int oldincommingcount;
 
 static char *gpsdptr;
@@ -3467,6 +3467,8 @@ timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
+oldincommingcount = 0;
+
 if(set_channel() == false)
 	{
 	fprintf(stderr, "failed to set channel\n");
@@ -3550,6 +3552,13 @@ while(1)
 			delay(20);
 			digitalWrite(0, LOW);
 			delay(20);
+			if(incommingcount == oldincommingcount)
+				{
+				digitalWrite(0, HIGH);
+				delay(20);
+				digitalWrite(0, LOW);
+				delay(20);
+				}
 			#endif
 			if(gpsdflag == false)
 				{
@@ -3591,11 +3600,6 @@ while(1)
 	if((rth->it_present & 0x20) != 0)
 		{
 		incommingcount++;
-		errorcount = 0;
-		}
-	else if(outgoingcount > (incommingcount +maxerrorcount +maxerrorcount +maxerrorcount))
-		{
-		errorcount++;
 		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
 		{
@@ -3863,7 +3867,7 @@ return;
 static inline void processrcascan()
 {
 static int fdnum;
-static uint32_t statuscount;
+static long long int statuscount;
 static rth_t *rth;
 static fd_set readfds;
 static struct timeval tvfd;
@@ -3929,14 +3933,17 @@ while(1)
 		}
 	else
 		{
-		if((statuscount %2) == 0)
+		#ifdef DOGPIOSUPPORT
+		if((statuscount %5) == 0)
 			{
-			#ifdef DOGPIOSUPPORT
 			digitalWrite(0, HIGH);
 			delay(20);
 			digitalWrite(0, LOW);
 			delay(20);
-			#endif
+			}
+		#endif
+		if((statuscount %2) == 0)
+			{
 			printapinfo();
 			cpa++;
 			if(channelscanlist[cpa] == 0)
@@ -3968,12 +3975,7 @@ while(1)
 	ieee82011_len = packet_len -le16toh(rth->it_len);
 	if((rth->it_present & 0x20) != 0)
 		{
-		errorcount = 0;
 		incommingcount++;
-		}
-	else if(outgoingcount > (incommingcount +maxerrorcount +maxerrorcount +maxerrorcount))
-		{
-		errorcount++;
 		}
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -4403,7 +4405,6 @@ if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	perror("failed to set interface up");
 	return false;
 	}
-
 memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
@@ -4411,7 +4412,6 @@ if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	perror("failed to get interface flags");
 	return false;
 	}
-
 if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
 	{
 	fprintf(stderr, "interface is not up\n");
