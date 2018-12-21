@@ -1,8 +1,8 @@
 20.12.2018
 ==========
 improved detection of broken driver
-from now on GPIO LED blinks twice
-- every 5 seconds if a possbile driver issue is detected
+from now on GPIO LED blinks twice every 5 seconds
+- if a possbile driver issue is detected
 - if no packets received during the last past 5 seconds
 
 another indicator is that the incomming packetcounter (rx=xxxx)

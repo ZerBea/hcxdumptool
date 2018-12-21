@@ -3324,7 +3324,10 @@ static inline void processpackets()
 static int c;
 static int sa;
 static unsigned long long int statuscount;
-static unsigned long long int oldincommingcount;
+static unsigned long long int oldincommingcount1;
+#ifdef DOGPIOSUPPORT
+static unsigned long long int oldincommingcount5;
+#endif
 
 static char *gpsdptr;
 static char *gpsd_lat = "\"lat\":";
@@ -3467,7 +3470,10 @@ timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
-oldincommingcount = 0;
+oldincommingcount1 = 0;
+#ifdef DOGPIOSUPPORT
+oldincommingcount5 = 0;
+#endif
 
 if(set_channel() == false)
 	{
@@ -3552,13 +3558,14 @@ while(1)
 			delay(20);
 			digitalWrite(0, LOW);
 			delay(20);
-			if(incommingcount == oldincommingcount)
+			if(incommingcount == oldincommingcount5)
 				{
 				digitalWrite(0, HIGH);
 				delay(20);
 				digitalWrite(0, LOW);
 				delay(20);
 				}
+			oldincommingcount5 = incommingcount;
 			#endif
 			if(gpsdflag == false)
 				{
@@ -3569,7 +3576,7 @@ while(1)
 				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon);
 				}
 			}
-		if(((statuscount %staytime) == 0) || ((staytimeflag != true) && (incommingcount == oldincommingcount)))
+		if(((statuscount %staytime) == 0) || ((staytimeflag != true) && (incommingcount == oldincommingcount1)))
 			{
 			cpa++;
 			if(channelscanlist[cpa] == 0)
@@ -3587,7 +3594,7 @@ while(1)
 				globalclose();
 				}
 			}
-		oldincommingcount = incommingcount;
+		oldincommingcount1 = incommingcount;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
 		statuscount++;
