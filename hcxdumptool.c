@@ -4800,7 +4800,7 @@ index = 0;
 optind = 1;
 optopt = 0;
 
-while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) != -1)
+while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
 	switch (auswahl)
 		{
@@ -4914,19 +4914,6 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		version(basename(argv[0]));
 		break;
 
-		case '?':
-		usageerror(basename(argv[0]));
-		break;
-		}
-	}
-
-optind = 1;
-optopt = 0;
-index = 0;
-while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) != -1)
-	{
-	switch (auswahl)
-		{
 		case 'i':
 		interfacename = optarg;
 		if(interfacename == NULL)
