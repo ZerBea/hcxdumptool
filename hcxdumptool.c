@@ -4992,14 +4992,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		showchannels = true;
 		break;
 
-		case 'h':
-		usage(basename(argv[0]));
-		break;
-
-		case 'v':
-		version(basename(argv[0]));
-		break;
-
 		case '?':
 		usageerror(basename(argv[0]));
 		break;
