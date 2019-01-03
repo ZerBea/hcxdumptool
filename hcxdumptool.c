@@ -3474,7 +3474,6 @@ oldincommingcount1 = 0;
 #ifdef DOGPIOSUPPORT
 oldincommingcount5 = 0;
 #endif
-
 if(set_channel() == false)
 	{
 	fprintf(stderr, "failed to set channel\n");
@@ -3554,16 +3553,17 @@ while(1)
 		if((statuscount %5) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
-			digitalWrite(0, HIGH);
-			delay(20);
-			digitalWrite(0, LOW);
-			delay(20);
-			if(incommingcount == oldincommingcount5)
+			if(incommingcount != oldincommingcount5)
 				{
 				digitalWrite(0, HIGH);
 				delay(20);
 				digitalWrite(0, LOW);
-				delay(20);
+				}
+			else
+				{
+				digitalWrite(0, HIGH);
+				delay(100);
+				digitalWrite(0, LOW);
 				}
 			oldincommingcount5 = incommingcount;
 			#endif
@@ -3946,7 +3946,6 @@ while(1)
 			digitalWrite(0, HIGH);
 			delay(20);
 			digitalWrite(0, LOW);
-			delay(20);
 			}
 		#endif
 		if((statuscount %2) == 0)
