@@ -3604,6 +3604,10 @@ while(1)
 	rth = (rth_t*)packet_ptr;
 	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
 	ieee82011_len = packet_len -le16toh(rth->it_len);
+	if(rth->it_present == 0)
+		{
+		continue;
+		}
 	if((rth->it_present & 0x20) != 0)
 		{
 		incommingcount++;
@@ -3979,6 +3983,10 @@ while(1)
 	rth = (rth_t*)packet_ptr;
 	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
 	ieee82011_len = packet_len -le16toh(rth->it_len);
+	if(rth->it_present == 0)
+		{
+		continue;
+		}
 	if((rth->it_present & 0x20) != 0)
 		{
 		incommingcount++;

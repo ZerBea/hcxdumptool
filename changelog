@@ -1,8 +1,9 @@
 04.01.2019
 ==========
-hcxdumptool: changed flash time (again)
+hcxdumptool - changed flash time:
 LED flashes every 5 seconds = everything is fine
 LED stays on = no signal received during the last past five seconds
+hcxdumptool - ignore double outgoing packets (rth->it_present == 0)
 
 
 03.01.2019
