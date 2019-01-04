@@ -352,6 +352,12 @@ static struct ifreq ifr;
 char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 #ifdef DOGPIOSUPPORT
+digitalWrite(0, LOW);
+delay(200);
+digitalWrite(0, HIGH);
+delay(200);
+digitalWrite(0, LOW);
+delay(200);
 digitalWrite(0, HIGH);
 #endif
 
@@ -3553,16 +3559,10 @@ while(1)
 		if((statuscount %5) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
+			digitalWrite(0, HIGH);
 			if(incommingcount != oldincommingcount5)
 				{
-				digitalWrite(0, HIGH);
 				delay(20);
-				digitalWrite(0, LOW);
-				}
-			else
-				{
-				digitalWrite(0, HIGH);
-				delay(100);
 				digitalWrite(0, LOW);
 				}
 			oldincommingcount5 = incommingcount;

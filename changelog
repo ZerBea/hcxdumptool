@@ -1,3 +1,10 @@
+04.01.2019
+==========
+hcxdumptool: changed flash time (again)
+LED flashes every 5 seconds = everything is fine
+LED stays on = no signal received during the last past five seconds
+
+
 03.01.2019
 ==========
 hcxdumptool: changed flash time (5 times longer on ERROR)
