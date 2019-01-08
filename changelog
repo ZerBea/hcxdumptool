@@ -1,3 +1,39 @@
+08.01.2019
+==========
+hcxdudmptool and mac80211_hwsim
+mac80211_hwsim is a Linux kernel module that can be used to simulate
+arbitrary number of IEEE 802.11 radios for mac80211. It can be used to
+test hcxdumptool:
+load module:
+$ sudo modprobe mac80211_hwsim
+
+run hcxdumptool to retrieve informations about the interface:
+$ hcxdumptool -I
+wlan interfaces:
+020000000000 wlan0 (mac80211_hwsim)
+020000000100 wlan1 (mac80211_hwsim)
+
+bring monitor interface up:
+$ sudo sudo ip link set hwsim0 up
+
+run hcxdumptool:$ sudo hcxdumptool -i wlan0
+initialization...
+
+start capturing (stop with ctrl+c)
+INTERFACE:...............: wlan0
+ERRORMAX.................: 100 errors
+FILTERLIST...............: 0 entries
+MAC CLIENT...............: c8aacc9c01ec
+MAC ACCESS POINT.........: 580943000000 (incremented on every new client)
+EAPOL TIMEOUT............: 150000
+REPLAYCOUNT..............: 62263
+ANONCE...................: 513282ebb604e6e10c450d6c3eaa6428d118b54abeef4672be3ef700052305d5
+
+INFO: cha=11, rx=0, rx(dropped)=0, tx=120, powned=0, err=0
+
+run wireshark on wlan0 or hwsim0 to monitor hcxdumptool output.
+
+
 04.01.2019
 ==========
 hcxdumptool - changed flash time:
