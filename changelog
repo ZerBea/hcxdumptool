@@ -33,6 +33,9 @@ INFO: cha=11, rx=0, rx(dropped)=0, tx=120, powned=0, err=0
 
 run wireshark on wlan0 or hwsim0 to monitor hcxdumptool output.
 
+read more here:
+https://www.kernel.org/doc/readme/Documentation-networking-mac80211_hwsim-README
+
 
 04.01.2019
 ==========
