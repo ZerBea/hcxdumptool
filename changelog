@@ -16,7 +16,8 @@ wlan interfaces:
 bring monitor interface up:
 $ sudo sudo ip link set hwsim0 up
 
-run hcxdumptool:$ sudo hcxdumptool -i wlan0
+run hcxdumptool:
+$ sudo hcxdumptool -i wlan0
 initialization...
 
 start capturing (stop with ctrl+c)
