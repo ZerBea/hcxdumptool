@@ -88,6 +88,7 @@ Supported adapters (strict)
 
 * ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
   get driver from here: https://github.com/kimocoder/rtl8812au
+  driver broken on kernel >= 4.19!
 
 
 Useful scripts
