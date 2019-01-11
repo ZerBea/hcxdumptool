@@ -62,7 +62,7 @@ Requirements
 
 * Raspberry Pi: additionally libwiringpi and wiringpi dev installed (Raspberry Pi GPIO support)
 
-* Chipset must be able to run in monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (stable and fast)
+* Chipset must be able to run in monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (fast)
 
 * Raspberry Pi A, B, A+, B+ (Recommended: A+ = very low power consumption or B+), but notebooks and desktops could work, too.
 
@@ -84,7 +84,7 @@ Supported adapters (strict)
 
 * ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
 
-* ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1)
+* ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1, v2 and v3 doesn't support monitor mode)
 
 * ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
   get driver from here: https://github.com/aircrack-ng/rtl8812au
@@ -107,9 +107,11 @@ Hardware mod - see docs gpiowait.odg (hcxdumptool)
 
 LED flashes 5 times if hcxdumptool successfully started
 
-LED flashes every 5 seconds if everything is fine
+LED flashes every 5 seconds if everything is fine and signals are received
 
-Press push button at least > 5 seconds until LED turns on (LED turns on if hcxdumptool terminates)
+LED turns on, if no signal received during the last past 5 seconds
+
+Press push button at least > 5 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
 
 Green ACT LED flashes 10 times
 
@@ -121,9 +123,9 @@ Do not use hcxdumptool and hcxpioff together!
 Hardware mod - see docs gpiowait.odg (hcxpioff)
 --------------
 
-LED flashes every 10 seconds 2 times if hcxpioff successfully started
+LED flashes every 5 seconds 2 times if hcxpioff successfully started
 
-Press push button at least > 10 seconds until LED turns on (hcxpioff will shut down Raspberry Pi safely)
+Press push button at least > 5 seconds until LED turns on (hcxpioff will shut down Raspberry Pi safely)
 
 Green ACT LED flashes 10 times
 
