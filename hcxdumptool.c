@@ -1788,18 +1788,11 @@ static ietag_t *essidtag;
 static uint8_t *reassociationrequest_ptr;
 static int reassociationrequestlen;
 
-if(memcmp(&mac_mysta, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(attackclientflag == false)
 	{
-	if(memcmp(&mac_mysta, macfrx->addr2, 6) != 0)
-		{
-		send_reassociationresponse(macfrx->addr2, macfrx->addr1);
-		usleep(M1WAITTIME);
-		send_m1(macfrx->addr2, macfrx->addr1);
-		}
+	send_reassociationresponse(macfrx->addr2, macfrx->addr1);
+	usleep(M1WAITTIME);
+	send_m1(macfrx->addr2, macfrx->addr1);
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
@@ -2022,18 +2015,11 @@ static ietag_t *essidtag;
 static uint8_t *associationrequestptr;
 static int associationrequestlen;
 
-if(memcmp(&mac_mysta, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(attackclientflag == false)
 	{
-	if(memcmp(&mac_mysta, macfrx->addr2, 6) != 0)
-		{
-		send_associationresponse(macfrx->addr2, macfrx->addr1);
-		usleep(M1WAITTIME);
-		send_m1(macfrx->addr2, macfrx->addr1);
-		}
+	send_associationresponse(macfrx->addr2, macfrx->addr1);
+	usleep(M1WAITTIME);
+	send_m1(macfrx->addr2, macfrx->addr1);
 	}
 
 if(payload_len < (int)CAPABILITIESSTA_SIZE)
@@ -2247,10 +2233,6 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
-if(memcmp(&mac_myap, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
 	return;
@@ -2458,11 +2440,6 @@ static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 static myaplist_t *zeiger;
 
-if(memcmp(&mac_mysta, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
-
 if(payload_len < (int)IETAG_SIZE)
 	{
 	return;
@@ -2533,10 +2510,6 @@ static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 static myaplist_t *zeiger;
 
-if(memcmp(&mac_mysta, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(payload_len < (int)IETAG_SIZE)
 	{
 	return;
@@ -2605,10 +2578,6 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
-if(memcmp(&mac_myap, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
 	return;
@@ -2849,10 +2818,6 @@ static ietag_t *channeltag = NULL;
 static uint8_t *rsntagptr;
 static ietag_t *rsntag = NULL;
 
-if(memcmp(&mac_mybcap, macfrx->addr2, 6) == 0)
-	{
-	return;
-	}
 if(payload_len < (int)CAPABILITIESAP_SIZE)
 	{
 	return;
@@ -3630,6 +3595,10 @@ while(1)
 		}
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
+		if((rth->it_present & 0x20) == 0)
+			{
+			continue;
+			}
 		if(memcmp(macfrx->addr2, &mac_broadcast, 6) == 0)
 			{
 			droppedcount++;
@@ -3987,10 +3956,11 @@ while(1)
 		{
 		continue;
 		}
-	if((rth->it_present & 0x20) != 0)
+	if((rth->it_present & 0x20) == 0)
 		{
-		incommingcount++;
+		continue;
 		}
+	incommingcount++;
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 		{

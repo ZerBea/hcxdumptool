@@ -1,3 +1,10 @@
+11.01.2019
+==========
+hcxdudmptool:
+From now on, we assume that a packet is outgoing, if
+dBm Antenne Signal is absent.
+
+
 08.01.2019
 ==========
 hcxdudmptool and mac80211_hwsim
@@ -33,6 +40,7 @@ ANONCE...................: 513282ebb604e6e10c450d6c3eaa6428d118b54abeef4672be3ef
 INFO: cha=11, rx=0, rx(dropped)=0, tx=120, powned=0, err=0
 
 run wireshark on wlan0 or hwsim0 to monitor hcxdumptool output.
+do not forget to remove mac80211_hwsim if the module is not longer needed!
 
 read more here:
 https://www.kernel.org/doc/readme/Documentation-networking-mac80211_hwsim-README

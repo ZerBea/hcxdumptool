@@ -87,8 +87,7 @@ Supported adapters (strict)
 * ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1)
 
 * ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
-  get driver from here: https://github.com/kimocoder/rtl8812au
-  driver broken on kernel >= 4.19!
+  get driver from here: https://github.com/aircrack-ng/rtl8812au
 
 
 Useful scripts
