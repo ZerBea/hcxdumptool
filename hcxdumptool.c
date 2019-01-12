@@ -3511,6 +3511,12 @@ while(1)
 			errorcount++;
 			continue;
 			}
+		if(packet_len < (int)RTH_SIZE)
+			{
+			fprintf(stderr, "\ngot damged radiotap header\n");
+			errorcount++;
+			continue;
+			}
 		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 			{
 			perror("\nfailed to get time");
@@ -3900,6 +3906,12 @@ while(1)
 		if(packet_len < 0)
 			{
 			perror("\nfailed to read packet");
+			errorcount++;
+			continue;
+			}
+		if(packet_len < (int)RTH_SIZE)
+			{
+			fprintf(stderr, "\ngot damged radiotap header\n");
 			errorcount++;
 			continue;
 			}
