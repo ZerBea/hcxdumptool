@@ -1,3 +1,14 @@
+20.01.2019
+==========
+hcxdumptool:
+added new MT76 device: "TP-LINK Archer Archer T2U"
+working with kernel: 4.19, 4.20 (some issues), 5.0
+read more here:
+https://github.com/ZerBea/hcxdumptool/issues/42
+https://bugzilla.kernel.org/show_bug.cgi?id=202241
+https://bugzilla.kernel.org/show_bug.cgi?id=202243
+
+
 11.01.2019
 ==========
 hcxdudmptool:

@@ -72,6 +72,9 @@ Requirements
 Supported adapters (strict)
 --------------
 
+* ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter)
+  kernel >= 4.19 (see changelog 20:01.2019)
+
 * ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
 
 * ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
