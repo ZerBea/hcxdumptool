@@ -98,7 +98,7 @@ Supported adapters (strict)
 * USB ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
   get driver from here: https://github.com/aircrack-ng/rtl8812au
 
-* PCI 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter
+* PCIe 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter
 
 read how to identify a working adapter here: https://github.com/ZerBea/hcxdumptool/issues/42
 
