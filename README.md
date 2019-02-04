@@ -150,21 +150,28 @@ Do not use hcxdumptool or hcxpioff together!
 Warning
 --------------
 
-You must use hcxdumptool only on networks you have permission to do this, because
+You must use hcxdumptool only on networks you have permission to do this, because:
 
 * hcxdumptool is able to prevent complete wlan traffic
+  (depends on selected options)
 
 * hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
+  (use hcxpcaptool to save them to file)
 
 * hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
+  (use hcxpcaptool to save them to file)
 
 * hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
+  (use hcxpcaptool to save them to file)
 
 * hcxdumptool is able to capture passwords from the wlan traffic
+  (use hcxpcaptool -E to save them to file, together with networknames)
 
 * hcxdumptool is able to capture plainmasterkeys from the wlan traffic
+  (use hcxpcaptool -P to save them to file)
 
-* hcxdumptool is able to capture extended EAPOL (RADIUS, GSM-SIM, WPS)
+* hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS)
+  (hcxpcaptool will show you information about them)
 
 * hcxdumptool is able to capture identities from the wlan traffic
   (for example: request IMSI numbers from mobile phones - use hcxpcaptool -I to save them to file)
@@ -172,10 +179,10 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 * hcxdumptool is able to capture usernames from the wlan traffic
   (for example: user name of a server authentication - use hcxpcaptool -U to save them to file)
 
-* Do not use a logical interface and leave the physical interface in managed mode.
+* Do not use a logical interface and leave the physical interface in managed mode
 
-* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which takes access to the interface.
+* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which takes access to the interface
 
-* Stop all services which takes access to the physical interface (NetworkManager, wpa_supplicant,...).
+* Stop all services which takes access to the physical interface (NetworkManager, wpa_supplicant,...)
 
-* Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space.
+* Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
