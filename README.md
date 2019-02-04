@@ -160,13 +160,17 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 
 * hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
 
-* hcxdumptool is able to capture extended EAPOL (RADIUS, GSM-SIM, WPS)
-
 * hcxdumptool is able to capture passwords from the wlan traffic
 
 * hcxdumptool is able to capture plainmasterkeys from the wlan traffic
 
-* hcxdumptool is able to capture usernames and identities from the wlan traffic
+* hcxdumptool is able to capture extended EAPOL (RADIUS, GSM-SIM, WPS)
+
+* hcxdumptool is able to capture identities from the wlan traffic
+  (for example: request IMSI numbers from mobile phones - use hcxpcaptool -I to save them to file)
+
+* hcxdumptool is able to capture usernames from the wlan traffic
+  (for example: user name of a server authentication - use hcxpcaptool -U to save them to file)
 
 * Do not use a logical interface and leave the physical interface in managed mode.
 
