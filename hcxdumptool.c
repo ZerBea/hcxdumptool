@@ -4709,6 +4709,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
+	"\n"
+	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
