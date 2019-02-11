@@ -158,7 +158,6 @@ struct prism_header
 typedef struct prism_item prism_item_t;
 typedef struct prism_header prism_t;
 #define	PRISM_SIZE (sizeof(prism_t))
-
 /*===========================================================================*/
 struct avs_header
 {
@@ -220,7 +219,7 @@ typedef struct msnetmon_header msntm_t;
 struct fcs_frame
 {
  uint32_t	fcs;
-};
+} __attribute__((packed));
 typedef struct fcs_frame fcs_t;
 #define	FCS_SIZE (sizeof(fcs_t))
 /*===========================================================================*/
