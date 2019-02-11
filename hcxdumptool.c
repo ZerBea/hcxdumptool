@@ -4579,13 +4579,151 @@ return;
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
+#ifdef DOGPIOSUPPORT
+printf("%s %s (GPIO version) (C) %s ZeroBeat\n", eigenname, VERSION, VERSION_JAHR);
+#else
 printf("%s %s (C) %s ZeroBeat\n", eigenname, VERSION, VERSION_JAHR);
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
+#ifdef DOGPIOSUPPORT
+printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
+	"usage  : %s <options>\n"
+	"         press the switch to terminate hcxdumptool\n"
+	"         hardware modification is necessary, read more:\n"
+	"         https://github.com/ZerBea/hcxdumptool/tree/master/docs\n" 
+	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status=3\n"
+	"         do not run hcxdumptool on logical interfaces (monx, wlanxmon)\n"
+	"         do not use hcxdumptool in combination with other 3rd party tools, which take access to the interface\n"
+	"\n"
+	"options:\n"
+	"-i <interface> : interface (monitor mode will be enabled by hcxdumptool)\n"
+	"                 can also be done manually:\n"
+	"                 ip link set <interface> down\n"
+	"                 iw dev <interface> set type monitor\n"
+	"                 ip link set <interface> up\n"
+	"-o <dump file> : output file in pcapngformat\n"
+	"                 management frames and EAP/EAPOL frames\n"
+	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-O <dump file> : output file in pcapngformat\n"
+	"                 unencrypted IPv4 and IPv6 frames\n"
+	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-W <dump file> : output file in pcapngformat\n"
+	"                 encrypted WEP frames\n"
+	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"-c <digit>     : set scan list  (1,2,3,...)\n"
+	"                 default scan list: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12, 13\n"
+	"                 maximum entries: 127\n"
+	"                 allowed channels (depends on the device):\n"
+	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
+	"                 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68, 96\n"
+	"                 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128\n"
+	"                 132, 134, 136, 138, 140, 142, 144, 149, 151, 153, 155, 157, 159\n"
+	"                 161, 165, 169, 173\n"
+	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
+	"                 default: %d seconds\n"
+	"-T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)\n"
+	"                 errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)\n"
+	"                 default: %d errors\n"
+	"-E <digit>     : EAPOL timeout\n"
+	"                 default: %d = 1 second\n"
+	"                 value depends on channel assignment\n"
+	"-D <digit>     : deauthentication interval\n"
+	"                 default: %d (every %d beacons)\n"
+	"                 the target beacon interval is used as trigger\n"
+	"-A <digit>     : ap attack interval\n"
+	"                 default: %d (every %d beacons)\n"
+	"                 the target beacon interval is used as trigger\n"
+	"-I             : show wlan interfaces and quit\n"
+	"-C             : show available channels and quit\n"
+	"                 if no channels are available, interface is pobably in use or doesn't support monitor mode\n"
+	"-h             : show this help\n"
+	"-v             : show version\n"
+	"\n"
+	"--filterlist=<file>                : mac filter list\n"
+	"                                     format: 112233445566 + comment\n"
+	"                                     maximum line lenght %d, maximum entries %d\n"
+	"--filtermode=<digit>               : mode for filter list\n"
+	"                                     1: use filter list as protection list (default) in transmission branch\n"
+	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
+	"                                        except(!) the ones from the filter list\n"
+	"                                     2: use filter list as target list in transmission branch\n"
+	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
+	"                                        from the filter list\n"
+	"                                     3: use filter list as target list in receiving branch\n"
+	"                                        only receive APs and CLIENTs in range,\n"
+	"                                        from the filter list\n"
+	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
+	"                                     do not transmit BROADCAST beacons\n"
+	"                                     affected: ap-less and client-less attacks\n"
+	"--disable_deauthentications        : disable transmitting deauthentications\n"
+	"                                     affected: connections between client an access point\n"
+	"                                     deauthentication attacks will not work against protected management frames\n"
+	"--give_up_deauthentications=<digit>: disable transmitting deauthentications after n tries\n"
+	"                                     default: %d tries (minimum: 4)\n"
+	"                                     affected: connections between client an access point\n"
+	"                                     deauthentication attacks will not work against protected management frames\n"
+	"--disable_disassociations          : disable transmitting disassociations\n"
+	"                                     affected: retry (EAPOL 4/4 - M4) attack\n"
+	"--disable_ap_attacks               : disable attacks on single access points\n"
+	"                                     affected: client-less (PMKID) attack\n"
+	"--give_up_ap_attacks=<digit>       : disable transmitting directed proberequests after n tries\n"
+	"                                     default: %d tries (minimum: 4)\n"
+	"                                     affected: client-less attack\n"
+	"                                     deauthentication attacks will not work against protected management frames\n"
+	"--disable_client_attacks           : disable attacks on single clients\n"
+	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
+	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
+	"                                     this can be used to test if packet injection is working\n"
+	"                                     if no access point responds, packet injection is probably not working\n"
+	"                                     you should disable auto scrolling in your terminal settings\n"
+	"--ap_mac=<mac_addr>                : use this MAC address for access point as start MAC\n"
+	"                                     format = 112233445566\n"
+	"                                     format = 112233000000  (to set only OUI)\n"
+	"                                     format = 445566 (to set only NIC)\n"
+	"                                     warning: do not use a MAC of an existing access point in your range\n"
+	"--station_mac=<mac_addr>           : use this MAC address for station\n"
+	"                                     format = 112233445566\n"
+	"                                     format = 112233000000  (to set only OUI)\n"
+	"                                     format = 445566 (to set only NIC)\n"
+	"--station_vendor=<digit>           : use this VENDOR information for station\n"
+	"                                     0: transmit no VENDOR information (default)\n"
+	"                                     1: Broadcom\n"
+	"                                     2: Apple-Broadcom\n"
+	"                                     3: Sonos\n"
+	"                                     4: Netgear-Broadcom\n"
+	"                                     5: Wilibox Deliberant Group LLC\n"
+	"                                     6: Cisco Systems, Inc\n"
+	"--use_gpsd                         : use GPSD to retrieve position\n"
+	"                                     add latitude, longitude and altitude to every pcapng frame\n"
+	"                                     retrieve GPS information with hcxpcaptool (-g) or tshark:\n"
+	"                                     tshark -r capturefile.pcapng -Y frame.comment -T fields -E header=y -e frame.number -e frame.time -e wlan.sa -e frame.comment\n"
+	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
+	"--save_rcascan_raw=<file>          : output file in pcapng format\n"
+	"                                     unfiltered packets\n"
+	"                                     including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
+	"--enable_status=<digit>            : enable status messages\n"
+	"                                     bitmask:\n"
+	"                                      1: EAPOL\n"
+	"                                      2: PROBEREQUEST/PROBERESPONSE\n"
+	"                                      4: AUTHENTICATON\n"
+	"                                      8: ASSOCIATION\n"
+	"                                     16: BEACON\n"
+	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
+	"--poweroff                         : once hcxdumptool terminated, power off system\n"
+	"--help                             : show this help\n"
+	"--version                          : show version\n"
+	"\n"
+	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
+	"\n",
+	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
+	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
+	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
+#else
 printf("%s %s (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
 	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status=3\n"
@@ -4715,15 +4853,21 @@ printf("%s %s (C) %s ZeroBeat\n"
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
 	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
+#ifdef DOGPIOSUPPORT
+printf("%s %s (GPIO version) (C) %s by ZeroBeat\n"
+	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
+#else
 printf("%s %s (C) %s by ZeroBeat\n"
 	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
 exit(EXIT_FAILURE);
+#endif
 }
 /*===========================================================================*/
 int main(int argc, char *argv[])
