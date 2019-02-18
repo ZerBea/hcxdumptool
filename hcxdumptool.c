@@ -4872,8 +4872,8 @@ printf("%s %s (GPIO version) (C) %s by ZeroBeat\n"
 #else
 printf("%s %s (C) %s by ZeroBeat\n"
 	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
-exit(EXIT_FAILURE);
 #endif
+exit(EXIT_FAILURE);
 }
 /*===========================================================================*/
 int main(int argc, char *argv[])
