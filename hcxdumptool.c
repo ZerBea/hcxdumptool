@@ -2997,6 +2997,12 @@ static struct iwreq pwrq;
 static int frequency;
 static int testchannel;
 
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.m = 1;
+res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
 c = 0;
 while(channelscanlist[c] != 0)
 	{
@@ -5219,6 +5225,7 @@ if(showchannels == true)
 	}
 
 test_channels();
+
 if(channelscanlist[0] == 0)
 	{
 	fprintf(stderr, "no available channel found in scan list\n");
