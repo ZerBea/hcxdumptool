@@ -58,11 +58,9 @@ Requirements
 
 * Operatingsystem: Arch Linux (strict), Kernel >= 4.14 (strict). It should work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions). Don't use Kernel 4.4 (rt2x00 driver regression)
 
-* libpthread and pthread-dev installed
-
 * Raspberry Pi: additionally libwiringpi and wiringpi dev installed (Raspberry Pi GPIO support)
 
-* Chipset must be able to run in monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (fast)
+* Chipset must be able to run in monitor mode and driver must support monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (fast)
 
 * Raspberry Pi A, B, A+, B+ (Recommended: A+ = very low power consumption or B+), but notebooks and desktops could work, too.
 

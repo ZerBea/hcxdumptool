@@ -35,7 +35,6 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <netpacket/packet.h>
-#include <pthread.h>
 
 #ifdef DOGPIOSUPPORT
 #include <wiringPi.h>
