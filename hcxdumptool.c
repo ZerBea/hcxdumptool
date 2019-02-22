@@ -41,8 +41,8 @@
 #endif
 
 #include "include/version.h"
-#include "include/wireless-lite.h"
 #include "include/hcxdumptool.h"
+#include "include/wireless-lite.h"
 #include "include/byteops.c"
 #include "include/ieee80211.c"
 #include "include/pcap.c"

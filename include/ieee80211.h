@@ -103,19 +103,6 @@
 #define WPA_KEY_INFO_ERROR WBIT(10)
 #define WPA_KEY_INFO_REQUEST WBIT(11)
 #define WPA_KEY_INFO_ENCR_KEY_DATA WBIT(12) /* IEEE 802.11i/RSN only */
-
-#ifdef __BYTE_ORDER__
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define BIG_ENDIAN_HOST
-#endif
-#else
-#ifdef __OpenBSD__
-# include <endian.h>
-# if BYTE_ORDER == BIG_ENDIAN
-#   define BIG_ENDIAN_HOST
-# endif
-#endif
-#endif
 /*===========================================================================*/
 struct radiotap_header
 {
