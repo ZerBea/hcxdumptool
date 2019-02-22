@@ -106,13 +106,13 @@
 
 #ifdef __BYTE_ORDER__
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define BIG_ENDIAN_HOST 1
+#define BIG_ENDIAN_HOST
 #endif
 #else
 #ifdef __OpenBSD__
 # include <endian.h>
 # if BYTE_ORDER == BIG_ENDIAN
-#   define BIG_ENDIAN_HOST 1
+#   define BIG_ENDIAN_HOST
 # endif
 #endif
 #endif
@@ -261,7 +261,7 @@ typedef struct qos_frame qos_t;
  */
 struct mac_frame
 {
-#if BIG_ENDIAN_HOST
+#ifdef BIG_ENDIAN_HOST
  unsigned	subtype : 4;
  unsigned	type : 	2;
  unsigned	version : 2;
