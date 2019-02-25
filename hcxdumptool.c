@@ -479,10 +479,12 @@ exit(EXIT_SUCCESS);
 static inline void printapinfo()
 {
 static int c, p;
+static int rangecount;
 static aplist_t *zeiger;
 struct timeval tvfd;
 static char timestring[16];
 
+rangecount = 0;
 zeiger = aplist;
 qsort(aplist, aplistcount, APLIST_SIZE, sort_aplist_by_essid);
 printf("\e[1;1H\e[2J");
@@ -523,6 +525,7 @@ for(c = 0; c < aplistcount; c++)
 	if(zeiger->status == 1)
 		{
 		fprintf(stdout, " [CHANNEL %d, AP IN RANGE]\n", zeiger->channel);
+		rangecount++;
 		}
 	else
 		{
@@ -530,9 +533,9 @@ for(c = 0; c < aplistcount; c++)
 		}
 	zeiger++;
 	}
-fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d\n"
+fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d (%d in range)\n"
 	"-----------------------------------------------------------------------------------\n"
-	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount);
+	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount, rangecount);
 return;
 }
 /*===========================================================================*/
