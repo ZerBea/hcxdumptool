@@ -44,19 +44,19 @@ isbhdr->block_type = ISBID;
 isbhdr->total_length = ISB_SIZE;
 isbhdr->interface_id = interfaceid;
 gettimeofday(&tvend, NULL);
-endtimestamp = (tvend.tv_sec * 1000000) + tvend.tv_usec;
+endtimestamp = ((uint64_t)tvend.tv_sec * 1000000) + tvend.tv_usec;
 isbhdr->timestamp_high = endtimestamp >> 32;
-isbhdr->timestamp_low = (uint32_t)endtimestamp;
+isbhdr->timestamp_low = (uint32_t)endtimestamp &0xffffffff;
 
 isbhdr->code_starttime = ISB_STARTTIME;
 isbhdr->starttime_len = 8;
 isbhdr->starttime_timestamp_high = starttimestamp >> 32;
-isbhdr->starttime_timestamp_low = (uint32_t)starttimestamp;
+isbhdr->starttime_timestamp_low = (uint32_t)starttimestamp &0xffffffff;
 
 isbhdr->code_endtime = ISB_ENDTIME;
 isbhdr->endtime_len = 8;
 isbhdr->endtime_timestamp_high = endtimestamp >> 32;
-isbhdr->endtime_timestamp_low = (uint32_t)endtimestamp;
+isbhdr->endtime_timestamp_low = (uint32_t)endtimestamp &0xffffffff;
 
 isbhdr->code_recv = ISB_IFRECV;
 isbhdr->recv_len = 8;
@@ -218,5 +218,3 @@ if(writeidb(fd, macorig, interfacestr) == false)
 return fd;
 }
 /*===========================================================================*/
-
-

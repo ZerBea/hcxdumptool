@@ -633,7 +633,7 @@ epbhdr->interface_id = 0;
 epbhdr->cap_len = packet_len;
 epbhdr->org_len = packet_len;
 epbhdr->timestamp_high = timestamp >> 32;
-epbhdr->timestamp_low = (uint32_t)timestamp;
+epbhdr->timestamp_low = (uint32_t)timestamp &0xffffffff;
  padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
@@ -696,7 +696,7 @@ epbhdr->interface_id = 0;
 epbhdr->cap_len = packet_len;
 epbhdr->org_len = packet_len;
 epbhdr->timestamp_high = timestamp >> 32;
-epbhdr->timestamp_low = (uint32_t)timestamp;
+epbhdr->timestamp_low = (uint32_t)timestamp &0xffffffff;
 padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
@@ -3444,8 +3444,9 @@ if(gpsdflag == false)
 	printf("\n\n");
 	}
 gettimeofday(&tv, NULL);
-timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+timestamp = ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
+
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
@@ -3531,7 +3532,7 @@ while(1)
 			errorcount++;
 			continue;
 			}
-		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
+		timestamp = ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
 		}
 	else
 		{
@@ -3867,7 +3868,7 @@ static fd_set readfds;
 static struct timeval tvfd;
 
 gettimeofday(&tv, NULL);
-timestamp = (tv.tv_sec * 1000000) + tv.tv_usec;
+timestamp = ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
 timestampstart = timestamp;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
@@ -3929,7 +3930,7 @@ while(1)
 			errorcount++;
 			continue;
 			}
-		timestamp = (tv.tv_sec *1000000) +tv.tv_usec;
+		timestamp = ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
 		}
 	else
 		{
