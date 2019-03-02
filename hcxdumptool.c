@@ -90,6 +90,7 @@ static mpdu_t *mpdu;
 static uint8_t statusout;
 
 static int gpsd_len;
+static int txpower;
 
 static int errorcount;
 static int maxerrorcount;
@@ -197,23 +198,15 @@ static uint8_t mac_mybcap[6];
 static unsigned long long int rcrandom;
 static uint8_t anoncerandom[32];
 
-uint64_t lasttimestampm1;
-uint8_t laststam1[6];
-uint8_t lastapm1[6];
-uint64_t lastrcm1;
+static uint64_t lasttimestampm1;
+static uint8_t laststam1[6];
+static uint8_t lastapm1[6];
+static uint64_t lastrcm1;
 
-uint64_t lasttimestampm2;
-uint8_t laststam2[6];
-uint8_t lastapm2[6];
-uint64_t lastrcm2;
-
-uint64_t lasttimestampm2al;
-uint8_t laststam2al[6];
-uint8_t lastapm2al[6];
-uint64_t lastrcm2al;
-
-uint8_t assocmacap[6];
-uint8_t assocmacsta[6];
+static uint64_t lasttimestampm2;
+static uint8_t laststam2[6];
+static uint8_t lastapm2[6];
+static uint64_t lastrcm2;
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
@@ -3407,7 +3400,8 @@ if(gpsdflag == true)
 			"GPS LATITUDE.............: %Lf\n"
 			"GPS LONGITUDE............: %Lf\n"
 			"GPS ALTITUDE.............: %Lf\n"
-			"INTERFACE:...............: %s\n"
+			"INTERFACE................: %s\n"
+			"TX-POWER.................: %d dBm\n"
 			"ERRORMAX.................: %d errors\n"
 			"FILTERLIST...............: %d entries\n"
 			"MAC CLIENT...............: %06x%06x\n"
@@ -3415,7 +3409,7 @@ if(gpsdflag == true)
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
 			"ANONCE...................: ",
-			lat, lon, alt, interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+			lat, lon, alt, interfacename, txpower, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 			for(c = 0; c < 32; c++)
 				{
 				printf("%02x", anoncerandom[c]);
@@ -3428,7 +3422,8 @@ if(gpsdflag == true)
 if(gpsdflag == false)
 	{
 	printf("\e[?25l\nstart capturing (stop with ctrl+c)\n"
-		"INTERFACE:...............: %s\n"
+		"INTERFACE................: %s\n"
+		"TX-POWER.................: %d dBm\n"
 		"ERRORMAX.................: %d errors\n"
 		"FILTERLIST...............: %d entries\n"
 		"MAC CLIENT...............: %06x%06x\n"
@@ -3436,7 +3431,7 @@ if(gpsdflag == false)
 		"EAPOL TIMEOUT............: %d\n"
 		"REPLAYCOUNT..............: %llu\n"
 		"ANONCE...................: ",
-		interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+		interfacename, txpower, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 		for(c = 0; c < 32; c++)
 			{
 			printf("%02x", anoncerandom[c]);
@@ -4343,6 +4338,7 @@ static struct ethtool_perm_addr *epmaddr;
 
 fd_socket = 0;
 fd_socket_gpsd = 0;
+txpower = 0;
 
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true)
@@ -4421,6 +4417,21 @@ if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUN
 	{
 	fprintf(stderr, "interface is not up\n");
 	return false;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+iwr.u.txpower.value = -1;
+iwr.u.txpower.fixed = 1;
+iwr.u.txpower.disabled = 0;
+iwr.u.txpower.flags = IW_TXPOW_DBM;
+if(ioctl(fd_socket, SIOCGIWTXPOW, &iwr) < 0)
+	{
+	txpower = 0;
+	}
+else
+	{
+	txpower = iwr.u.txpower.value;
 	}
 
 memset(&ifr, 0, sizeof(ifr));
