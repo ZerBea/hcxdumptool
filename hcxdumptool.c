@@ -3108,13 +3108,13 @@ for(c = 0; c < 256; c++)
 				pwrq.u.txpower.flags = IW_TXPOW_DBM;
 				if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0)
 					{
-					fprintf(stdout, " %d\n",testchannel);
+					fprintf(stdout, " %3d\n",testchannel);
 					}
 				else
 					{
 					if(pwrq.u.txpower.value > 0)
 						{
-						fprintf(stdout, "%d (%d dBm)\n",testchannel, pwrq.u.txpower.value);
+						fprintf(stdout, "%3d (%2d dBm)\n",testchannel, pwrq.u.txpower.value);
 						}
 					}
 
