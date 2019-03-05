@@ -1,6 +1,6 @@
 05.03.2019
 ==========
-hcxdumptool: removed genral info about tx-power - now we use tx-power/channel
+hcxdumptool: removed general info about tx-power - now we use iw style to show tx-power/channel
 hcxdumptool -i <interface> -C
 initialization...
 available channels:
