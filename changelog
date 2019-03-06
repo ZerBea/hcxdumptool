@@ -23,7 +23,7 @@ EAPOL TIMEOUT............: 150000
 REPLAYCOUNT..............: 61455
 ANONCE...................: 182972399cd2e65deb7941601cca14b644681c092dcf6f704935c7f3d2eaceea
 
-INFO: cha=11, rx=7080, rx(dropped)=1676, tx=408, powned=10, err=0, lat=49.126342, lon=5.626268, gpsdate=06.03.2019, gpstime=22:01:55^C
+INFO: cha=11, rx=7080, rx(dropped)=1676, tx=408, powned=10, err=0, lat=49.126342, lon=5.626268, alt=129.500000, gpsdate=06.03.2019, gpstime=22:01:55^C
 terminated...
 
 
