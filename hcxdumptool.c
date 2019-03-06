@@ -99,10 +99,16 @@ static unsigned long long int outgoingcount;
 static unsigned long long int droppedcount;
 static unsigned long long int pownedcount;
 
+static int day;
+static int month;
+static int year;
+static int hour;
+static int minute;
+static int second;
+
 static long double lat;
 static long double lon;
 static long double alt;
-
 
 static bool wantstopflag;
 static bool poweroffflag;
@@ -610,6 +616,7 @@ static uint16_t padding;
 static total_length_t *totallenght;
 static int gpsdlen;
 static char *gpsdptr;
+static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
 static char *gpsd_lon = "\"lon\":";
 static char *gpsd_alt = "\"alt\":";
@@ -636,6 +643,10 @@ if(gpsdflag == false)
 	}
 else
 	{
+	if((gpsdptr = strstr(gpsddata, gpsd_time)) != NULL)
+		{
+		sscanf(gpsdptr +8, "%d-%d-%dT%d:%d:%d;", &year, &month, &day, &hour, &minute, &second);
+		}
 	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
 		{
 		sscanf(gpsdptr +6, "%Lf", &lat);
@@ -648,7 +659,7 @@ else
 		{
 		sscanf(gpsdptr +6, "%Lf", &alt);
 		}
-	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf\n%s", lat, lon, alt, aplesscomment);
+	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d\n%s", lat, lon, alt,day, month, year, hour, minute, second, aplesscomment);
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
 	}
@@ -675,6 +686,7 @@ static uint16_t padding;
 static total_length_t *totallenght;
 static int gpsdlen;
 static char *gpsdptr;
+static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
 static char *gpsd_lon = "\"lon\":";
 static char *gpsd_alt = "\"alt\":";
@@ -695,6 +707,10 @@ memset(&epb[epblen], 0, padding);
 epblen += padding;
 if(gpsdflag == true)
 	{
+	if((gpsdptr = strstr(gpsddata, gpsd_time)) != NULL)
+		{
+		sscanf(gpsdptr +8, "%d-%d-%dT%d:%d:%d;", &year, &month, &day, &hour, &minute, &second);
+		}
 	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
 		{
 		sscanf(gpsdptr +6, "%Lf", &lat);
@@ -707,7 +723,7 @@ if(gpsdflag == true)
 		{
 		sscanf(gpsdptr +6, "%Lf", &alt);
 		}
-	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf", lat, lon, alt);
+	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d", lat, lon, alt,day, month, year, hour, minute, second);
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
@@ -3317,6 +3333,7 @@ static unsigned long long int oldincommingcount5;
 #endif
 
 static char *gpsdptr;
+static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
 static char *gpsd_lon = "\"lon\":";
 static char *gpsd_alt = "\"alt\":";
@@ -3399,6 +3416,10 @@ if(gpsdflag == true)
 		}
 	else
 		{
+		if((gpsdptr = strstr(gpsddata, gpsd_time)) != NULL)
+			{
+			sscanf(gpsdptr +8, "%d-%d-%dT%d:%d:%d;", &year, &month, &day, &hour, &minute, &second);
+			}
 		if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
 			{
 			sscanf(gpsdptr +6, "%Lf", &lat);
@@ -3415,6 +3436,8 @@ if(gpsdflag == true)
 			"GPS LATITUDE.............: %Lf\n"
 			"GPS LONGITUDE............: %Lf\n"
 			"GPS ALTITUDE.............: %Lf\n"
+			"GPS DATE.................: %02d.%02d.%04d\n"
+			"GPS TIME.................: %02d:%02d:%02d\n"
 			"INTERFACE................: %s\n"
 			"ERRORMAX.................: %d errors\n"
 			"FILTERLIST...............: %d entries\n"
@@ -3423,7 +3446,7 @@ if(gpsdflag == true)
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
 			"ANONCE...................: ",
-			lat, lon, alt, interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+			lat, lon, alt, day, month, year, hour, minute, second, interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 			for(c = 0; c < 32; c++)
 				{
 				printf("%02x", anoncerandom[c]);
@@ -3561,7 +3584,24 @@ while(1)
 				}
 			else
 				{
-				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon);
+				if((gpsdptr = strstr(gpsddata, gpsd_time)) != NULL)
+					{
+					sscanf(gpsdptr +8, "%d-%d-%dT%d:%d:%d;", &year, &month, &day, &hour, &minute, &second);
+					}
+				if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
+					{
+					sscanf(gpsdptr +6, "%Lf", &lat);
+					}
+				if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
+					{
+					sscanf(gpsdptr +6, "%Lf", &lon);
+					}
+				if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
+					{
+					sscanf(gpsdptr +6, "%Lf", &alt);
+					}
+
+				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf, gpsdate=%02d.%02d.%04d, gpstime=%02d:%02d:%02d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon, day, month, year, hour, minute, second);
 				}
 			}
 		if(((statuscount %staytime) == 0) || ((staytimeflag != true) && (incommingcount == oldincommingcount1)))
@@ -4163,6 +4203,13 @@ errorcount = 0;
 incommingcount = 0;
 droppedcount = 0;
 outgoingcount = 0;
+
+day = 0;
+month = 0;
+year = 0;
+hour = 0;
+minute = 0;
+second = 0;
 
 lat = 0;
 lon = 0;

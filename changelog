@@ -1,3 +1,37 @@
+06.03.2019
+==========
+hcxdumptool: added GPS date and GPS time to status and pcapng comment field.
+
+$ sudo hcxdumptool -i wlp3s0f0u1 --use_gpsd -o tes.pcapng
+initialization...
+connecting to GPSD...
+waiting up to 5 seconds to retrieve first position
+GPSD activated
+
+start capturing (stop with ctrl+c)
+GPS LATITUDE.............: 49.126403
+GPS LONGITUDE............: 5.626175
+GPS ALTITUDE.............: 129.500000
+GPS DATE.................: 06.03.2019
+GPS TIME.................: 21:52:41
+INTERFACE................: wlp3s0f0u1
+ERRORMAX.................: 100 errors
+FILTERLIST...............: 0 entries
+MAC CLIENT...............: f04f7c89dabb
+MAC ACCESS POINT.........: 980ee432604d (incremented on every new client)
+EAPOL TIMEOUT............: 150000
+REPLAYCOUNT..............: 61455
+ANONCE...................: 182972399cd2e65deb7941601cca14b644681c092dcf6f704935c7f3d2eaceea
+
+INFO: cha=11, rx=7080, rx(dropped)=1676, tx=408, powned=10, err=0, lat=49.126342, lon=5.626268, gpsdate=06.03.2019, gpstime=22:01:55^C
+terminated...
+
+
+$ tshark -r test.pcapng-0 -Y frame.comment -T fields -E header=y -e frame.number -e frame.time -e wlan.sa -e frame.comment
+172	Mar  6, 2019 23:01:48.793212000 CET	1a:f8:7c:91:24:a3	lat:49.126337,lon:5.626268,alt:129.500000,date:06.03.2019,time:22:01:48
+
+
+
 05.03.2019
 ==========
 hcxdumptool: removed general info about tx-power - now we use iw style to show tx-power/channel
