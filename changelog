@@ -5,7 +5,7 @@ to print raw GPS data, received from GPSD:
 /*
 			printf("\ndebug: %s\n", gpsddata);
 */
-uncomment this before you run mak to retrieve this values.
+uncomment this before you run make to retrieve this values.
 
 
 06.03.2019
