@@ -3534,6 +3534,9 @@ while(1)
 		if(gpsd_len >= 0)
 			{
 			gpsddata[gpsd_len] = 0;
+/*
+			printf("\ndebug: %s\n", gpsddata);
+*/
 			}
 		continue;
 		}
