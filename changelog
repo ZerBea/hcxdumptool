@@ -1,3 +1,15 @@
+09.03.2019
+==========
+hcxdumptool: added improved warning message
+Now hcxdumptool print the error message received from the driver inside the brackets
+$ hcxdumptool -i wlp3s0f0u1 -c 14
+initialization...
+warning: unable to set channel 14 (Invalid argument) - removed this channel from scan list
+
+In this case the user tried to set channel 14. The driver doesn't support this
+and responds with Invalid argument 
+
+
 07.03.2019
 ==========
 hcxdumptool: added debug code in main packet loop [processpackets()]

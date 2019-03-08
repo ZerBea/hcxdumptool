@@ -3026,7 +3026,7 @@ while(channelscanlist[c] != 0)
 	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
 	if(res < 0)
 		{
-		printf("warning: unable to set channel %d (removed this channel from scan list)\n", channelscanlist[c]); 
+		printf("warning: unable to set channel %d (%s) - removed this channel from scan list\n", channelscanlist[c], strerror(errno)); 
 		remove_channel_from_scanlist(c);
 		continue;
 		}
@@ -3037,7 +3037,7 @@ while(channelscanlist[c] != 0)
 	res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
 	if(res < 0)
 		{
-		printf("warning: unable to set channel %d (removed this channel from scan list)\n",  channelscanlist[c]); 
+		printf("warning: unable to set channel %d (%s) - removed this channel from scan list\n", channelscanlist[c], strerror(errno)); 
 		remove_channel_from_scanlist(c);
 		continue;
 		}
