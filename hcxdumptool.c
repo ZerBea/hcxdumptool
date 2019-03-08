@@ -3178,7 +3178,7 @@ FD_SET(fd_socket_gpsd, &readfds);
 fdnum = select(fd_socket_gpsd +1, &readfds, NULL, NULL, &tvfd);
 if(fdnum <= 0)
 	{
-	fprintf(stderr, "failed to selct GPS socket\n");
+	fprintf(stderr, "failed to select GPS socket\n");
 	return false;
 	}
 if(FD_ISSET(fd_socket_gpsd, &readfds))
