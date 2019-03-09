@@ -543,9 +543,7 @@ static int p;
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-
 fprintf(stdout, "\33[2K\r[%s - %03d] ", timestring, channelscanlist[cpa]);
-
 for(p = 0; p< 6; p++)
 	{
 	fprintf(stdout, "%02x", mac_from[p]);
@@ -606,7 +604,6 @@ else
 	}
 return;
 }
-/*===========================================================================*/
 /*===========================================================================*/
 static void writeepbm2(int fd)
 {
@@ -740,7 +737,6 @@ if(written != epblen)
 	}
 return;	
 }
-/*===========================================================================*/
 /*===========================================================================*/
 static inline uint8_t *gettag(uint8_t tag, uint8_t *tagptr, int restlen)
 {
