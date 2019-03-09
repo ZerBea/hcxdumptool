@@ -3038,7 +3038,12 @@ while(channelscanlist[c] != 0)
 		remove_channel_from_scanlist(c);
 		continue;
 		}
+
 	frequency = pwrq.u.freq.m;
+	if(frequency > 100000)
+		{
+			frequency /= 100000;
+		}
 	if(frequency < 1000)
 		{
 		testchannel = frequency;
@@ -3057,7 +3062,14 @@ while(channelscanlist[c] != 0)
 		}
 	if(testchannel != channelscanlist[c])
 		{
-		printf("warning: unable to set channel %d (%d) - removed this channel from scan list\n",  channelscanlist[c], frequency); 
+		if(testchannel == frequency)
+			{
+			printf("warning: failed to set channel %d - removed this channel from scan list\n",  channelscanlist[c]); 
+			}
+		else
+			{
+			printf("warning: failed to set channel %d (%dMHz) - removed this channel from scan list\n",  channelscanlist[c], frequency); 
+			}
 		remove_channel_from_scanlist(c);
 		continue;
 		}
@@ -3095,6 +3107,10 @@ for(c = 0; c < 256; c++)
 		if(res >= 0)
 			{
 			frequency = pwrq.u.freq.m;
+			if(frequency > 100000)
+				{
+				frequency /= 100000;
+				}
 			if(frequency < 1000)
 				{
 				testchannel = frequency;
@@ -3121,13 +3137,27 @@ for(c = 0; c < 256; c++)
 				pwrq.u.txpower.flags = IW_TXPOW_DBM;
 				if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0)
 					{
-					fprintf(stdout, " %3d\n",testchannel);
+					if(testchannel == frequency)
+						{
+						fprintf(stdout, " %3d\n", testchannel);
+						}
+					else
+						{
+						fprintf(stdout, " %3d / %4dMHz\n", testchannel, frequency);
+						}
 					}
 				else
 					{
 					if(pwrq.u.txpower.value > 0)
 						{
-						fprintf(stdout, "%3d (%2d dBm)\n",testchannel, pwrq.u.txpower.value);
+						if(testchannel == frequency)
+							{
+							fprintf(stdout, "%3d (%2d dBm)\n",testchannel, pwrq.u.txpower.value);
+							}
+						else
+							{
+							fprintf(stdout, "%3d / %4dMHz (%2d dBm)\n",testchannel, frequency, pwrq.u.txpower.value);
+							}
 						}
 					}
 
