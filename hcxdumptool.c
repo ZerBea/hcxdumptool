@@ -4478,14 +4478,22 @@ if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	perror("failed to get interface flags");
 	return false;
 	}
-if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
+
+if(ignorewarningflag == false)
 	{
-	if(ignorewarningflag == false)
+	if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
 		{
 		fprintf(stderr, "interface is not up\n");
 		return false;
 		}
-	fprintf(stderr, "interface is possible in use by another service\n");
+	}
+else
+	{
+	if((ifr.ifr_flags & (IFF_UP | IFF_BROADCAST)) != (IFF_UP | IFF_BROADCAST))
+		{
+		fprintf(stderr, "interface is not up\n");
+		return false;
+		}
 	}
 
 memset(&ifr, 0, sizeof(ifr));
