@@ -3057,7 +3057,7 @@ while(channelscanlist[c] != 0)
 		}
 	if(testchannel != channelscanlist[c])
 		{
-		printf("warning: unable to set channel %d (removed this channel from scan list)\n",  channelscanlist[c]); 
+		printf("warning: unable to set channel %d (%d) - removed this channel from scan list\n",  channelscanlist[c], frequency); 
 		remove_channel_from_scanlist(c);
 		continue;
 		}
