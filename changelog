@@ -1,5 +1,16 @@
 09.03.2019
 ==========
+hcxdumptool: added new option:
+--ignore_warning                   : hcxdumptool will not terminate if other services take access on the device
+                                   : warning: expect problems if hcxdumptool tries to change channels
+
+From now on, hcxdumptool will not terminate during the initalization
+if another service take access on the interface.
+Expect problems and do not report issues related to this option!!!!
+
+
+09.03.2019
+==========
 hcxdumptool: added improved warning message
 Now hcxdumptool print the error message received from the driver inside the brackets
 $ hcxdumptool -i wlp3s0f0u1 -c 14

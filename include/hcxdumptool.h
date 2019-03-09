@@ -58,7 +58,8 @@
 #define HCXD_SAVE_RCASCAN		15
 #define HCXD_SAVE_RCASCAN_RAW		16
 #define HCXD_ENABLE_STATUS		17
-#define HCXD_POWER_OFF			18
+#define HCXD_IGNORE_WARNING		18
+#define HCXD_POWER_OFF			19
 
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'

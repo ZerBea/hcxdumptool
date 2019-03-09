@@ -111,6 +111,7 @@ static long double lon;
 static long double alt;
 
 static bool wantstopflag;
+static bool ignorewarningflag;
 static bool poweroffflag;
 static bool staytimeflag;
 static bool gpsdflag;
@@ -4448,12 +4449,18 @@ strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 	{
 	perror("failed to get interface informations");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
 if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	fprintf(stderr, "interface is not in monitor mode\n");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
 
 memset(&ifr, 0, sizeof(ifr));
@@ -4473,8 +4480,12 @@ if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	}
 if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
 	{
-	fprintf(stderr, "interface is not up\n");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		fprintf(stderr, "interface is not up\n");
+		return false;
+		}
+	fprintf(stderr, "interface is possible used by another service\n");
 	}
 
 memset(&ifr, 0, sizeof(ifr));
@@ -4908,6 +4919,8 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
+	"--ignore_warning                   : hcxdumptool will not terminate if other services take access on the device\n"
+	"                                   : warning: expect problems if hcxdumptool tries to change channels\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -4954,6 +4967,7 @@ filtermode = 0;
 statusout = 0;
 stachipset = 0;
 
+ignorewarningflag = false;
 poweroffflag = false;
 gpsdflag = false;
 staytimeflag = false;
@@ -4997,6 +5011,7 @@ static const struct option long_options[] =
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
+	{"ignore_warning",		no_argument,		NULL,	HCXD_IGNORE_WARNING},
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
@@ -5108,6 +5123,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_ENABLE_STATUS:
 		statusout |= strtol(optarg, NULL, 10);
+		break;
+
+		case HCXD_IGNORE_WARNING:
+		ignorewarningflag = true;
 		break;
 
 		case HCXD_POWER_OFF:
