@@ -4485,7 +4485,7 @@ if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUN
 		fprintf(stderr, "interface is not up\n");
 		return false;
 		}
-	fprintf(stderr, "interface is possible used by another service\n");
+	fprintf(stderr, "interface is possible in use by another service\n");
 	}
 
 memset(&ifr, 0, sizeof(ifr));
