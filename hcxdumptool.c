@@ -3038,11 +3038,10 @@ while(channelscanlist[c] != 0)
 		remove_channel_from_scanlist(c);
 		continue;
 		}
-
 	frequency = pwrq.u.freq.m;
 	if(frequency > 100000)
 		{
-			frequency /= 100000;
+		frequency /= 100000;
 		}
 	if(frequency < 1000)
 		{
