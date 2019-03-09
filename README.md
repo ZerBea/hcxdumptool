@@ -98,6 +98,10 @@ Supported adapters (strict)
 
 * PCIe 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter
 
+no support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
+
+no support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
+ 
 read how to identify a working adapter here: https://github.com/ZerBea/hcxdumptool/issues/42
 
 
