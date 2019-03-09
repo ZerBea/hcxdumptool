@@ -1,5 +1,7 @@
 09.03.2019
 ==========
+hcxdumptool moved to v 5.1.4
+
 hcxdumptool: added new option:
 --ignore_warning                   : hcxdumptool will not terminate if other services take access on the device
                                    : warning: expect problems if hcxdumptool tries to change channels
@@ -7,6 +9,21 @@ hcxdumptool: added new option:
 From now on, hcxdumptool will not terminate during the initalization
 if another service take access on the interface.
 Expect problems and do not report issues related to this option!!!!
+
+From now on, hcxdumptool will also show channel and frequency (when running option -C)
+  1 / 2412MHz (20 dBm)
+  2 / 2417MHz (20 dBm)
+  3 / 2422MHz (20 dBm)
+  4 / 2427MHz (20 dBm)
+  5 / 2432MHz (20 dBm)
+  6 / 2437MHz (20 dBm)
+  7 / 2442MHz (20 dBm)
+  8 / 2447MHz (20 dBm)
+  9 / 2452MHz (20 dBm)
+ 10 / 2457MHz (20 dBm)
+ 11 / 2462MHz (20 dBm)
+ 12 / 2467MHz (20 dBm)
+ 13 / 2472MHz (20 dBm)
 
 
 09.03.2019
@@ -59,10 +76,8 @@ ANONCE...................: 182972399cd2e65deb7941601cca14b644681c092dcf6f704935c
 INFO: cha=11, rx=7080, rx(dropped)=1676, tx=408, powned=10, err=0, lat=49.126342, lon=4.626268, alt=129.500000, gpsdate=06.03.2019, gpstime=22:01:55^C
 terminated...
 
-
 $ tshark -r test.pcapng-0 -Y frame.comment -T fields -E header=y -e frame.number -e frame.time -e wlan.sa -e frame.comment
 172	Mar  6, 2019 23:01:48.793212000 CET	1a:f8:7c:91:24:a3	lat:49.126337,lon:4.626268,alt:129.500000,date:06.03.2019,time:22:01:48
-
 
 
 05.03.2019
