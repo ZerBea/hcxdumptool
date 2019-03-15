@@ -4436,7 +4436,7 @@ if(checkmonitorinterface(interfacename) == true)
 
 if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
-	perror( "socket failed (do you have root priviledges?)");
+	perror( "socket failed (do you have root privileges?)");
 	return false;
 	}
 
@@ -4477,7 +4477,7 @@ memset(&iwr, 0, sizeof(iwr));
 strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 	{
-	perror("failed to get interface informations");
+	perror("failed to get interface information");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4737,7 +4737,7 @@ printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
 	"                 161, 165, 169, 173\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default: %d seconds\n"
-	"-T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)\n"
+	"-T <digit>     : set maximum ERROR count (hcxdumptool terminates when the value is reached)\n"
 	"                 errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)\n"
 	"                 default: %d errors\n"
 	"-E <digit>     : EAPOL timeout\n"
@@ -4757,7 +4757,7 @@ printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
 	"\n"
 	"--filterlist=<file>                : mac filter list\n"
 	"                                     format: 112233445566 + comment\n"
-	"                                     maximum line lenght %d, maximum entries %d\n"
+	"                                     maximum line length %d, maximum entries %d\n"
 	"--filtermode=<digit>               : mode for filter list\n"
 	"                                     1: use filter list as protection list (default) in transmission branch\n"
 	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
@@ -4867,7 +4867,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"                 161, 165, 169, 173\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default: %d seconds\n"
-	"-T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)\n"
+	"-T <digit>     : set maximum ERROR count (hcxdumptool terminates when the value is reached)\n"
 	"                 errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)\n"
 	"                 default: %d errors\n"
 	"-E <digit>     : EAPOL timeout\n"
@@ -4887,7 +4887,7 @@ printf("%s %s (C) %s ZeroBeat\n"
 	"\n"
 	"--filterlist=<file>                : mac filter list\n"
 	"                                     format: 112233445566 + comment\n"
-	"                                     maximum line lenght %d, maximum entries %d\n"
+	"                                     maximum line length %d, maximum entries %d\n"
 	"--filtermode=<digit>               : mode for filter list\n"
 	"                                     1: use filter list as protection list (default) in transmission branch\n"
 	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
