@@ -1,6 +1,10 @@
 16.03.2019
 ==========
 added man page hcxdumptool.1
+removed device from list: 
+USB ID 7392:a812 Edimax Technology Co., Ltd (Edimax AC600 USB / Manufacturer: Realtek)
+because the driver from here: https://github.com/aircrack-ng/rtl8812au
+is no longer working on kernel 5.0
 
 
 09.03.2019
