@@ -1,3 +1,25 @@
+19.03.2019
+==========
+hcxpioff: refactored - GPIO pins are no longer hard coded!
+hcxpioff -h
+hcxpioff 5.1.4 (wpi version) (C) 2019 ZeroBeat
+usage  : hcxpioff <options>
+         press the button to power off
+         hardware modification is necessary, read more:
+         https://github.com/ZerBea/hcxdumptool/tree/master/docs
+
+options:
+-h       : show this help
+-v       : show version
+
+--wpi_button=<digit>    : wiringPi number of of button (0...31, Raspberry Pi A and B: 0 .. 16)
+                          default = 7
+--wpi_statusled=<digit> : wiringPi number of status LED (0...31, Raspberry Pi A and B: 0 .. 16)
+                          default = 0
+--help                  : show this help
+--version               : show version
+
+
 16.03.2019
 ==========
 added man page hcxdumptool.1
