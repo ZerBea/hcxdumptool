@@ -48,6 +48,7 @@
 #include "include/pcap.c"
 #include "include/strings.c"
 #include "include/hashops.c"
+
 /*===========================================================================*/
 /* global var */
 
@@ -131,6 +132,11 @@ static int apattacksmax;
 static int staytime;
 static int stachipset;
 static uint8_t cpa;
+
+#ifdef DOGPIOSUPPORT
+static int wpistatusled;
+static int wpibutton;
+#endif
 
 static uint32_t myouiap;
 static uint32_t mynicap;
@@ -354,13 +360,13 @@ static struct ifreq ifr;
 char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 #ifdef DOGPIOSUPPORT
-digitalWrite(0, LOW);
+digitalWrite(wpistatusled, LOW);
 delay(200);
-digitalWrite(0, HIGH);
+digitalWrite(wpistatusled, HIGH);
 delay(200);
-digitalWrite(0, LOW);
+digitalWrite(wpistatusled, LOW);
 delay(200);
-digitalWrite(0, HIGH);
+digitalWrite(wpistatusled, HIGH);
 #endif
 
 if(fd_socket > 0)
@@ -3529,7 +3535,7 @@ if(activescanflag == false)
 while(1)
 	{
 	#ifdef DOGPIOSUPPORT
-	if(digitalRead(7) == 1)
+	if(digitalRead(wpibutton) == HIGH)
 		{
 		globalclose();
 		}
@@ -3603,11 +3609,11 @@ while(1)
 		if((statuscount %5) == 0)
 			{
 			#ifdef DOGPIOSUPPORT
-			digitalWrite(0, HIGH);
+			digitalWrite(wpistatusled, HIGH);
 			if(incommingcount != oldincommingcount5)
 				{
 				delay(20);
-				digitalWrite(0, LOW);
+				digitalWrite(wpistatusled, LOW);
 				}
 			oldincommingcount5 = incommingcount;
 			#endif
@@ -3963,7 +3969,7 @@ send_undirected_proberequest();
 while(1)
 	{
 	#ifdef DOGPIOSUPPORT
-	if(digitalRead(7) == 1)
+	if(digitalRead(wpibutton) == HIGH)
 		{
 		globalclose();
 		}
@@ -4018,9 +4024,9 @@ while(1)
 		#ifdef DOGPIOSUPPORT
 		if((statuscount %5) == 0)
 			{
-			digitalWrite(0, HIGH);
+			digitalWrite(wpistatusled, HIGH);
 			delay(20);
-			digitalWrite(0, LOW);
+			digitalWrite(wpistatusled, LOW);
 			}
 		#endif
 		if((statuscount %2) == 0)
@@ -4409,13 +4415,13 @@ if(wiringPiSetup() == -1)
 	puts ("wiringPi failed!");
 	return false;
 	}
-pinMode(0, OUTPUT);
-pinMode(7, INPUT);
+pinMode(wpistatusled, OUTPUT);
+pinMode(wpibutton, INPUT);
 for (c = 0; c < 5; c++)
 	{
-	digitalWrite(0, HIGH);
+	digitalWrite(wpistatusled, HIGH);
 	delay(200);
-	digitalWrite(0, LOW);
+	digitalWrite(wpistatusled, LOW);
 	delay(200);
 	}
 #endif
@@ -4830,9 +4836,17 @@ printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
+	"--wpi_button=<digit>               : wiringPi number of of button (0...31)\n"
+	"                                     Raspberry Pi A and B (0...16)\n"
+	"                                     default = 7\n"
+	"--wpi_statusled=<digit>            : wiringPi number of status LED (0...31)\n"
+	"                                     Raspberry Pi A and B (0...16)\n"
+	"                                     default = 0\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
+	"run gpio readall to print a table of all accessable pins and their numbers\n"
+	"(wiringPi, BCM_GPIO and physical pin numbers)\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
@@ -5054,6 +5068,10 @@ static const struct option long_options[] =
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"ignore_warning",		no_argument,		NULL,	HCXD_IGNORE_WARNING},
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
+#ifdef DOGPIOSUPPORT
+	{"wpi_button",			required_argument,	NULL,	HCXD_WPI_BUTTON},
+	{"wpi_statusled",		required_argument,	NULL,	HCXD_WPI_STATUSLED},
+#endif
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
 	{NULL,				0,			NULL,	0}
@@ -5063,6 +5081,11 @@ auswahl = -1;
 index = 0;
 optind = 1;
 optopt = 0;
+
+#ifdef DOGPIOSUPPORT
+wpistatusled = DEFAULTWPISTATUSLED;
+wpibutton = DEFAULTWPIBUTTON;
+#endif
 
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
@@ -5165,6 +5188,26 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCXD_ENABLE_STATUS:
 		statusout |= strtol(optarg, NULL, 10);
 		break;
+
+#ifdef DOGPIOSUPPORT
+		case HCXD_WPI_BUTTON:
+		wpibutton = strtoll(optarg, NULL, 10);
+		if((wpibutton < 0) || (wpibutton > 31))
+			{
+			fprintf(stderr, "only 0...31 allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCXD_WPI_STATUSLED:
+		wpistatusled = strtoll(optarg, NULL, 10);
+		if((wpistatusled < 0) || (wpistatusled > 31))
+			{
+			fprintf(stderr, "only 0...31 allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+#endif
 
 		case HCXD_IGNORE_WARNING:
 		ignorewarningflag = true;

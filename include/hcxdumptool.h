@@ -60,6 +60,10 @@
 #define HCXD_ENABLE_STATUS		17
 #define HCXD_IGNORE_WARNING		18
 #define HCXD_POWER_OFF			19
+#ifdef DOGPIOSUPPORT
+#define HCXD_WPI_BUTTON			20
+#define HCXD_WPI_STATUSLED		21
+#endif
 
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
@@ -76,6 +80,12 @@
 # endif
 #endif
 #endif
+
+#ifdef DOGPIOSUPPORT
+#define DEFAULTWPISTATUSLED	0
+#define DEFAULTWPIBUTTON	7
+#endif
+
 /*===========================================================================*/
 struct aplist_s
 {
