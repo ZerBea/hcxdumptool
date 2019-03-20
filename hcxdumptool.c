@@ -218,6 +218,7 @@ static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
 
 /*===========================================================================*/
+/*
 static inline void debugprint(int len, uint8_t *ptr)
 {
 static int p;
@@ -229,7 +230,9 @@ for(p = 0; p < len; p++)
 printf("\n");
 return;
 }
+*/
 /*===========================================================================*/
+/*
 static inline void debugprint2(int len, uint8_t *ptr, int len2, uint8_t *ptr2)
 {
 static int p;
@@ -247,6 +250,7 @@ for(p = 0; p < len2; p++)
 printf("\n");
 return;
 }
+*/
 /*===========================================================================*/
 static inline void checkunwanted(char *unwantedname)
 {
