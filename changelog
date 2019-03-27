@@ -18,7 +18,7 @@ hcxpioff: changed options wiringPi options to GPIO options
 
 The GPIO is disabled on default. If you like to activate GPIO support you must do
 the hardware modifactions as described here: doc/gpiowait.odg
-and set the options according to your midification.
+and set the options according to your modification.
 You can choose every GPIO pin, as long as you use a pull down resistor to ground. 
 Raspberry model should be detected by automatic and according to the revision we use:
 GPIO mem 0x20000000 for A, B, A+, B+, and Zero, Zero W(H)
