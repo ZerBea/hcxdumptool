@@ -4234,9 +4234,10 @@ static bool initgpio(int gpioperi)
 {
 static int fd_mem;
 
-if((fd_mem = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+fd_mem = open("/dev/mem", O_RDWR|O_SYNC);
+if(fd_mem < 0)
 	{
-	fprintf(stderr, "failed get device memory\n");
+	fprintf(stderr, "failed to get device memory\n");
 	return false;
 	}
 
