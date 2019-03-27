@@ -1,3 +1,31 @@
+27.03.2019
+==========
+removed wiringPi dependency
+now we are running "bare metal" - complete GPIO stuff moved to hcxdumptool and hcxpioff
+do not use wiringPi in combination with hcxdumptool and/or hcxpioff
+Makefile: removed DOGPIOSUPPORT
+hcxdumptool: changed options wiringPi options to GPIO options
+--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)
+                                     default = GPIO not in use
+--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)
+                                     default = GPIO not in use
+
+hcxpioff: changed options wiringPi options to GPIO options
+--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)
+                                     default = GPIO not in use
+--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)
+                                     default = GPIO not in use
+
+The GPIO is disabled on default. If you like to activate GPIO support you must do
+the hardware modifactions as described here: doc/gpiowait.odg
+and set the options according to your midification.
+You can choose every GPIO pin, as long as you use a pull down resistor to ground. 
+Raspberry model should be detected by automatic and according to the revision we use:
+GPIO mem 0x20000000 for A, B, A+, B+, and Zero, Zero W(H)
+GPIO mem 0x3F000000 for 2B, 3B, 3A+, 3B+
+compute modules (CMx) are not supported.
+
+
 20.03.2019
 ==========
 hcxdumptool: GPIO pins are no longer hard coded!

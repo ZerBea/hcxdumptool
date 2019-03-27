@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <ctype.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 #include <ifaddrs.h>
 #endif
 #include <net/if.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -36,18 +38,16 @@
 #include <arpa/inet.h>
 #include <netpacket/packet.h>
 
-#ifdef DOGPIOSUPPORT
-#include <wiringPi.h>
-#endif
-
 #include "include/version.h"
 #include "include/hcxdumptool.h"
+#include "include/rpigpio.h"
 #include "include/wireless-lite.h"
 #include "include/byteops.c"
 #include "include/ieee80211.c"
 #include "include/pcap.c"
 #include "include/strings.c"
 #include "include/hashops.c"
+
 
 /*===========================================================================*/
 /* global var */
@@ -133,10 +133,8 @@ static int staytime;
 static int stachipset;
 static uint8_t cpa;
 
-#ifdef DOGPIOSUPPORT
-static int wpistatusled;
-static int wpibutton;
-#endif
+static int gpiostatusled;
+static int gpiobutton;
 
 static uint32_t myouiap;
 static uint32_t mynicap;
@@ -359,15 +357,17 @@ static void globalclose()
 static struct ifreq ifr;
 char *gpsd_disable = "?WATCH={\"enable\":false}";
 
-#ifdef DOGPIOSUPPORT
-digitalWrite(wpistatusled, LOW);
-delay(200);
-digitalWrite(wpistatusled, HIGH);
-delay(200);
-digitalWrite(wpistatusled, LOW);
-delay(200);
-digitalWrite(wpistatusled, HIGH);
-#endif
+if(gpiostatusled > 0)
+	{
+	GPIO_CLR = 1 << gpiostatusled;
+	usleep(GPIO_DELAY);
+	GPIO_SET = 1 << gpiostatusled;
+	usleep(GPIO_DELAY);
+	GPIO_CLR = 1 << gpiostatusled;
+	usleep(GPIO_DELAY);
+	GPIO_SET = 1 << gpiostatusled;
+	usleep(GPIO_DELAY);
+	}
 
 if(fd_socket > 0)
 	{
@@ -3364,9 +3364,8 @@ static int c;
 static int sa;
 static unsigned long long int statuscount;
 static unsigned long long int oldincommingcount1;
-#ifdef DOGPIOSUPPORT
 static unsigned long long int oldincommingcount5;
-#endif
+
 
 static char *gpsdptr;
 static char *gpsd_time = "\"time\":";
@@ -3518,9 +3517,8 @@ tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 statuscount = 1;
 oldincommingcount1 = 0;
-#ifdef DOGPIOSUPPORT
 oldincommingcount5 = 0;
-#endif
+
 if(set_channel() == false)
 	{
 	fprintf(stderr, "failed to set channel\n");
@@ -3534,12 +3532,13 @@ if(activescanflag == false)
 
 while(1)
 	{
-	#ifdef DOGPIOSUPPORT
-	if(digitalRead(wpibutton) == HIGH)
+	if(gpiobutton > 0)
 		{
-		globalclose();
+		if(GET_GPIO(gpiobutton) > 0)
+			{
+			globalclose();
+			}
 		}
-	#endif
 	if(wantstopflag == true)
 		{
 		globalclose();
@@ -3608,15 +3607,16 @@ while(1)
 		{
 		if((statuscount %5) == 0)
 			{
-			#ifdef DOGPIOSUPPORT
-			digitalWrite(wpistatusled, HIGH);
-			if(incommingcount != oldincommingcount5)
+			if(gpiostatusled > 0)
 				{
-				delay(20);
-				digitalWrite(wpistatusled, LOW);
+				GPIO_SET = 1 << gpiostatusled;
+				if(incommingcount != oldincommingcount5)
+					{
+					usleep(GPIO_DELAY);
+					GPIO_CLR = 1 << gpiostatusled;
+					}
+				oldincommingcount5 = incommingcount;
 				}
-			oldincommingcount5 = incommingcount;
-			#endif
 			if(gpsdflag == false)
 				{
 				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
@@ -3968,12 +3968,13 @@ if(set_channel() == false)
 send_undirected_proberequest();
 while(1)
 	{
-	#ifdef DOGPIOSUPPORT
-	if(digitalRead(wpibutton) == HIGH)
+	if(gpiobutton > 0)
 		{
-		globalclose();
+		if(GET_GPIO(gpiobutton) > 0)
+			{
+			globalclose();
+			}
 		}
-	#endif
 	if(wantstopflag == true)
 		{
 		globalclose();
@@ -4021,14 +4022,15 @@ while(1)
 		}
 	else
 		{
-		#ifdef DOGPIOSUPPORT
 		if((statuscount %5) == 0)
 			{
-			digitalWrite(wpistatusled, HIGH);
-			delay(20);
-			digitalWrite(wpistatusled, LOW);
+			if(gpiostatusled > 0)
+				{
+				GPIO_SET = 1 << gpiostatusled;
+				usleep(GPIO_DELAY);
+				GPIO_CLR = 1 << gpiostatusled;
+				}
 			}
-		#endif
 		if((statuscount %2) == 0)
 			{
 			printapinfo();
@@ -4142,7 +4144,6 @@ cpa = 0;
 return true;
 }
 /*===========================================================================*/
-/*===========================================================================*/
 static inline size_t chop(char *buffer, size_t len)
 {
 static char *ptr;
@@ -4191,7 +4192,7 @@ static char linein[FILTERLIST_LINE_LEN];
 
 if((fh_filter = fopen(listname, "r")) == NULL)
 	{
-	printf("opening blacklist failed %s\n", listname);
+	fprintf(stderr, "opening blacklist failed %s\n", listname);
 	return 0;
 	}
 
@@ -4221,7 +4222,7 @@ while(entries < FILTERLIST_MAX)
 		}
 	else
 		{
-		printf("reading blacklist line %d failed: %s\n", c, linein);
+		fprintf(stderr, "reading blacklist line %d failed: %s\n", c, linein);
 		}
 	c++;
 	}
@@ -4229,10 +4230,135 @@ fclose(fh_filter);
 return entries;
 }
 /*===========================================================================*/
+static bool initgpio(int gpioperi)
+{
+static int fd_mem;
+
+if((fd_mem = open("/dev/mem", O_RDWR|O_SYNC)) < 0)
+	{
+	fprintf(stderr, "failed get device memory\n");
+	return false;
+	}
+
+gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_mem, GPIO_BASE +gpioperi);
+close(fd_mem);
+
+if(gpio_map == MAP_FAILED)
+	{
+	fprintf(stderr, "failed to map GPIO memory\n");
+	return false;
+	}
+
+gpio = (volatile unsigned *)gpio_map;
+
+return true;
+}
+/*===========================================================================*/
+static int getrpirev()
+{
+static FILE *fh_rpi;
+static int len;
+static int rpi = 0;
+static int rev = 0;
+static int gpioperibase = 0;
+static char *revptr = NULL;
+static char *revstr = "Revision";
+static char *hwstr = "Hardware";
+static char *snstr = "Serial";
+static char linein[128];
+
+fh_rpi = fopen("/proc/cpuinfo", "r");
+if(fh_rpi == NULL)
+	{
+	perror("failed to retrieve cpuinfo");
+	return gpioperibase;
+	}
+
+while(1)
+	{
+	if((len = fgetline(fh_rpi, 128, linein)) == -1)
+		{
+		break;
+		}
+	if(len < 15)
+		{
+		continue;
+		}
+	if(memcmp(&linein, hwstr, 8) == 0)
+		{
+		rpi |= 1;
+		continue;
+		}
+	if(memcmp(&linein, revstr, 8) == 0)
+		{
+		rpirevision = strtol(&linein[len -6], &revptr, 16);
+		if((revptr - linein) == len)
+			{
+			rev = (rpirevision >> 4) &0xff;
+			if(rev <= 3)
+				{
+				gpioperibase = GPIO_PERI_BASE_OLD;
+				rpi |= 2;
+				continue;
+				}
+			if(rev == 0x9)
+				{
+				gpioperibase = GPIO_PERI_BASE_OLD;
+				rpi |= 2;
+				continue;
+				}
+			if(rev == 0xc)
+				{
+				gpioperibase = GPIO_PERI_BASE_OLD;
+				rpi |= 2;
+				continue;
+				}
+			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d)  || (rev == 0x00e))
+				{
+				gpioperibase = GPIO_PERI_BASE_NEW;
+				rpi |= 2;
+				continue;
+				}
+			continue;
+			}
+		rpirevision = strtol(&linein[len -4], &revptr, 16);
+		if((revptr - linein) == len)
+			{
+			if((rpirevision < 0x02) || (rpirevision > 0x15))
+				{
+				continue;
+				}
+			if((rpirevision == 0x11) || (rpirevision == 0x14))
+				{
+				continue;
+				}
+			gpioperibase = GPIO_PERI_BASE_OLD;
+			rpi |= 2;
+			}
+		continue;
+		}
+	if(memcmp(&linein, snstr, 6) == 0)
+		{
+		rpi |= 4;
+		continue;
+		}
+	}
+fclose(fh_rpi);
+
+if(rpi < 0x7)
+	{
+	return 0;
+	}
+return gpioperibase;
+}
+/*===========================================================================*/
 static inline bool globalinit()
 {
 static int c;
 static int myseek;
+static int gpiobasemem = 0;
+
+rpirevision = 0;
 fd_pcapng = 0;
 fd_ippcapng = 0;
 fd_weppcapng = 0;
@@ -4343,7 +4469,6 @@ if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
 	}
 myaplist_ptr = myaplist;
 
-
 if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 	{
 	return false;
@@ -4409,22 +4534,45 @@ if(ippcapngoutname != NULL)
 wantstopflag = false;
 signal(SIGINT, programmende);
 
-#ifdef DOGPIOSUPPORT
-if(wiringPiSetup() == -1)
+if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
-	puts ("wiringPi failed!");
-	return false;
+	if(gpiobutton == gpiostatusled)
+		{
+		fprintf(stderr, "same value for wpi_button and wpi_statusled is not allowed\n");
+		return false;
+		}
+	gpiobasemem = getrpirev();
+	if(gpiobasemem == 0)
+		{
+		fprintf(stderr, "failed to locate GPIO\n");
+		return false;
+		}
+	if(initgpio(gpiobasemem) == false)
+		{
+		fprintf(stderr, "failed to init GPIO\n");
+		return false;
+		}
+	if(gpiostatusled > 0)
+		{
+		INP_GPIO(gpiostatusled);
+		OUT_GPIO(gpiostatusled);
+		}
+	if(gpiobutton > 0)
+		{
+		INP_GPIO(gpiobutton);
+		}
 	}
-pinMode(wpistatusled, OUTPUT);
-pinMode(wpibutton, INPUT);
-for (c = 0; c < 5; c++)
+
+if(gpiostatusled > 0)
 	{
-	digitalWrite(wpistatusled, HIGH);
-	delay(200);
-	digitalWrite(wpistatusled, LOW);
-	delay(200);
+	for (c = 0; c < 5; c++)
+		{
+		GPIO_SET = 1 << gpiostatusled;
+		usleep(GPIO_DELAY);
+		GPIO_CLR = 1 << gpiostatusled;
+		usleep(GPIO_DELAY);
+		}
 	}
-#endif
 return true;
 }
 /*===========================================================================*/
@@ -4700,19 +4848,14 @@ return;
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
-#ifdef DOGPIOSUPPORT
-printf("%s %s (GPIO version) (C) %s ZeroBeat\n", eigenname, VERSION, VERSION_JAHR);
-#else
 printf("%s %s (C) %s ZeroBeat\n", eigenname, VERSION, VERSION_JAHR);
-#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
-#ifdef DOGPIOSUPPORT
-printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
+printf("%s %s  (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
 	"         press the switch to terminate hcxdumptool\n"
 	"         hardware modification is necessary, read more:\n"
@@ -4836,146 +4979,10 @@ printf("%s %s (GPIO version) (C) %s ZeroBeat\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
-	"--wpi_button=<digit>               : wiringPi number of of button (0...31)\n"
-	"                                     Raspberry Pi A and B (0...16)\n"
-	"                                     default = 7\n"
-	"--wpi_statusled=<digit>            : wiringPi number of status LED (0...31)\n"
-	"                                     Raspberry Pi A and B (0...16)\n"
-	"                                     default = 0\n"
-	"--help                             : show this help\n"
-	"--version                          : show version\n"
-	"\n"
-	"run gpio readall to print a table of all accessable pins and their numbers\n"
-	"(wiringPi, BCM_GPIO and physical pin numbers)\n"
-	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
-	"\n",
-	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
-	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
-	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
-#else
-printf("%s %s (C) %s ZeroBeat\n"
-	"usage  : %s <options>\n"
-	"example: %s -o output.pcapng -i wlp39s0f3u4u5 -t 5 --enable_status=3\n"
-	"         do not run hcxdumptool on logical interfaces (monx, wlanxmon)\n"
-	"         do not use hcxdumptool in combination with other 3rd party tools, which take access to the interface\n"
-	"\n"
-	"options:\n"
-	"-i <interface> : interface (monitor mode will be enabled by hcxdumptool)\n"
-	"                 can also be done manually:\n"
-	"                 ip link set <interface> down\n"
-	"                 iw dev <interface> set type monitor\n"
-	"                 ip link set <interface> up\n"
-	"-o <dump file> : output file in pcapng format\n"
-	"                 management frames and EAP/EAPOL frames\n"
-	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"-O <dump file> : output file in pcapng format\n"
-	"                 unencrypted IPv4 and IPv6 frames\n"
-	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"-W <dump file> : output file in pcapng format\n"
-	"                 encrypted WEP frames\n"
-	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"-c <digit>     : set scan list  (1,2,3,...)\n"
-	"                 default scan list: 1, 3, 5, 7, 9, 11, 13, 2, 4, 6, 8, 10, 12, 13\n"
-	"                 maximum entries: 127\n"
-	"                 allowed channels (depends on the device):\n"
-	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
-	"                 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68, 96\n"
-	"                 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128\n"
-	"                 132, 134, 136, 138, 140, 142, 144, 149, 151, 153, 155, 157, 159\n"
-	"                 161, 165, 169, 173\n"
-	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
-	"                 default: %d seconds\n"
-	"-T <digit>     : set maximum ERROR count (hcxdumptool terminates when the value is reached)\n"
-	"                 errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)\n"
-	"                 default: %d errors\n"
-	"-E <digit>     : EAPOL timeout\n"
-	"                 default: %d = 1 second\n"
-	"                 value depends on channel assignment\n"
-	"-D <digit>     : deauthentication interval\n"
-	"                 default: %d (every %d beacons)\n"
-	"                 the target beacon interval is used as trigger\n"
-	"-A <digit>     : ap attack interval\n"
-	"                 default: %d (every %d beacons)\n"
-	"                 the target beacon interval is used as trigger\n"
-	"-I             : show wlan interfaces and quit\n"
-	"-C             : show available channels and quit\n"
-	"                 if no channels are available, interface is pobably in use or doesn't support monitor mode\n"
-	"-h             : show this help\n"
-	"-v             : show version\n"
-	"\n"
-	"--filterlist=<file>                : mac filter list\n"
-	"                                     format: 112233445566 + comment\n"
-	"                                     maximum line length %d, maximum entries %d\n"
-	"--filtermode=<digit>               : mode for filter list\n"
-	"                                     1: use filter list as protection list (default) in transmission branch\n"
-	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
-	"                                        except(!) the ones from the filter list\n"
-	"                                     2: use filter list as target list in transmission branch\n"
-	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
-	"                                        from the filter list\n"
-	"                                     3: use filter list as target list in receiving branch\n"
-	"                                        only receive APs and CLIENTs in range,\n"
-	"                                        from the filter list\n"
-	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
-	"                                     do not transmit BROADCAST beacons\n"
-	"                                     affected: ap-less and client-less attacks\n"
-	"--disable_deauthentications        : disable transmitting deauthentications\n"
-	"                                     affected: connections between client an access point\n"
-	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--give_up_deauthentications=<digit>: disable transmitting deauthentications after n tries\n"
-	"                                     default: %d tries (minimum: 4)\n"
-	"                                     affected: connections between client an access point\n"
-	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--disable_disassociations          : disable transmitting disassociations\n"
-	"                                     affected: retry (EAPOL 4/4 - M4) attack\n"
-	"--disable_ap_attacks               : disable attacks on single access points\n"
-	"                                     affected: client-less (PMKID) attack\n"
-	"--give_up_ap_attacks=<digit>       : disable transmitting directed proberequests after n tries\n"
-	"                                     default: %d tries (minimum: 4)\n"
-	"                                     affected: client-less attack\n"
-	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--disable_client_attacks           : disable attacks on single clients\n"
-	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
-	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
-	"                                     this can be used to test if packet injection is working\n"
-	"                                     if no access point responds, packet injection is probably not working\n"
-	"                                     you should disable auto scrolling in your terminal settings\n"
-	"--ap_mac=<mac_addr>                : use this MAC address for access point as start MAC\n"
-	"                                     format = 112233445566\n"
-	"                                     format = 112233000000  (to set only OUI)\n"
-	"                                     format = 445566 (to set only NIC)\n"
-	"                                     warning: do not use a MAC of an existing access point in your range\n"
-	"--station_mac=<mac_addr>           : use this MAC address for station\n"
-	"                                     format = 112233445566\n"
-	"                                     format = 112233000000  (to set only OUI)\n"
-	"                                     format = 445566 (to set only NIC)\n"
-	"--station_vendor=<digit>           : use this VENDOR information for station\n"
-	"                                     0: transmit no VENDOR information (default)\n"
-	"                                     1: Broadcom\n"
-	"                                     2: Apple-Broadcom\n"
-	"                                     3: Sonos\n"
-	"                                     4: Netgear-Broadcom\n"
-	"                                     5: Wilibox Deliberant Group LLC\n"
-	"                                     6: Cisco Systems, Inc\n"
-	"--use_gpsd                         : use GPSD to retrieve position\n"
-	"                                     add latitude, longitude and altitude to every pcapng frame\n"
-	"                                     retrieve GPS information with hcxpcaptool (-g) or tshark:\n"
-	"                                     tshark -r capturefile.pcapng -Y frame.comment -T fields -E header=y -e frame.number -e frame.time -e wlan.sa -e frame.comment\n"
-	"--save_rcascan=<file>              : output rca scan list to file when hcxdumptool terminated\n"
-	"--save_rcascan_raw=<file>          : output file in pcapng format\n"
-	"                                     unfiltered packets\n"
-	"                                     including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
-	"--enable_status=<digit>            : enable status messages\n"
-	"                                     bitmask:\n"
-	"                                      1: EAPOL\n"
-	"                                      2: PROBEREQUEST/PROBERESPONSE\n"
-	"                                      4: AUTHENTICATON\n"
-	"                                      8: ASSOCIATION\n"
-	"                                     16: BEACON\n"
-	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
-	"--poweroff                         : once hcxdumptool terminated, power off system\n"
-	"--ignore_warning                   : hcxdumptool will not terminate if other services take access on the device\n"
-	"                                   : warning: expect problems if hcxdumptool tries to change channels\n"
+	"--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)\n"
+	"                                     default = GPIO not in use\n"
+	"--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)\n"
+	"                                     default = GPIO not in use\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -4984,20 +4991,15 @@ printf("%s %s (C) %s ZeroBeat\n"
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
 	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
-#endif
+
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
-#ifdef DOGPIOSUPPORT
-printf("%s %s (GPIO version) (C) %s by ZeroBeat\n"
-	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
-#else
 printf("%s %s (C) %s by ZeroBeat\n"
 	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
-#endif
 exit(EXIT_FAILURE);
 }
 /*===========================================================================*/
@@ -5068,10 +5070,8 @@ static const struct option long_options[] =
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"ignore_warning",		no_argument,		NULL,	HCXD_IGNORE_WARNING},
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
-#ifdef DOGPIOSUPPORT
-	{"wpi_button",			required_argument,	NULL,	HCXD_WPI_BUTTON},
-	{"wpi_statusled",		required_argument,	NULL,	HCXD_WPI_STATUSLED},
-#endif
+	{"gpio_button",			required_argument,	NULL,	HCXD_GPIO_BUTTON},
+	{"gpio_statusled",		required_argument,	NULL,	HCXD_GPIO_STATUSLED},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
 	{NULL,				0,			NULL,	0}
@@ -5082,10 +5082,8 @@ index = 0;
 optind = 1;
 optopt = 0;
 
-#ifdef DOGPIOSUPPORT
-wpistatusled = DEFAULTWPISTATUSLED;
-wpibutton = DEFAULTWPIBUTTON;
-#endif
+gpiostatusled = 0;
+gpiobutton = 0;
 
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
@@ -5189,25 +5187,23 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		statusout |= strtol(optarg, NULL, 10);
 		break;
 
-#ifdef DOGPIOSUPPORT
-		case HCXD_WPI_BUTTON:
-		wpibutton = strtoll(optarg, NULL, 10);
-		if((wpibutton < 0) || (wpibutton > 31))
+		case HCXD_GPIO_BUTTON:
+		gpiobutton = strtoll(optarg, NULL, 10);
+		if((gpiobutton < 2) || (gpiobutton > 27))
 			{
-			fprintf(stderr, "only 0...31 allowed\n");
+			fprintf(stderr, "only 2...27 allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
 
-		case HCXD_WPI_STATUSLED:
-		wpistatusled = strtoll(optarg, NULL, 10);
-		if((wpistatusled < 0) || (wpistatusled > 31))
+		case HCXD_GPIO_STATUSLED:
+		gpiostatusled = strtoll(optarg, NULL, 10);
+		if((gpiostatusled < 2) || (gpiostatusled > 27))
 			{
-			fprintf(stderr, "only 0...31 allowed\n");
+			fprintf(stderr, "only 2...27 allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
-#endif
 
 		case HCXD_IGNORE_WARNING:
 		ignorewarningflag = true;

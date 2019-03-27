@@ -60,10 +60,8 @@
 #define HCXD_ENABLE_STATUS		17
 #define HCXD_IGNORE_WARNING		18
 #define HCXD_POWER_OFF			19
-#ifdef DOGPIOSUPPORT
-#define HCXD_WPI_BUTTON			20
-#define HCXD_WPI_STATUSLED		21
-#endif
+#define HCXD_GPIO_BUTTON		20
+#define HCXD_GPIO_STATUSLED		21
 
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
@@ -79,11 +77,6 @@
 #   define BIG_ENDIAN_HOST
 # endif
 #endif
-#endif
-
-#ifdef DOGPIOSUPPORT
-#define DEFAULTWPISTATUSLED	0
-#define DEFAULTWPIBUTTON	7
 #endif
 
 /*===========================================================================*/

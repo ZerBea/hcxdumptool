@@ -13,54 +13,38 @@ ifeq ($(HOSTOS), Linux)
 INSTFLAGS += -D
 endif
 
-ifeq ($(GPIOSUPPORT), on)
-CFLAGS	+= -DDOGPIOSUPPORT
-LDFLAGS	+= -lwiringPi
-endif
-
-
 all: build
 
 build:
-ifeq ($(GPIOSUPPORT), on)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
-endif
 ifeq ($(HOSTOS), Linux)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS)
 endif
 
 
 install: build
-ifeq ($(GPIOSUPPORT), on)
-	install $(INSTFLAGS) hcxpioff $(INSTALLDIR)/hcxpioff
-endif
 ifeq ($(HOSTOS), Linux)
+	install $(INSTFLAGS) hcxpioff $(INSTALLDIR)/hcxpioff
 	install $(INSTFLAGS) hcxdumptool $(INSTALLDIR)/hcxdumptool
 endif
 
-ifeq ($(GPIOSUPPORT), on)
-	rm -f hcxpioff
-endif
 ifeq ($(HOSTOS), Linux)
+	rm -f hcxpioff
 	rm -f hcxdumptool
 endif
 	rm -f *.o *~
 
 
 clean:
-ifeq ($(GPIOSUPPORT), on)
-	rm -f hcxpioff
-endif
 ifeq ($(HOSTOS), Linux)
+	rm -f hcxpioff
 	rm -f hcxdumptool
 endif
 	rm -f *.o *~
 
 
 uninstall:
-ifeq ($(GPIOSUPPORT), on)
-	rm -f $(INSTALLDIR)/hcxpioff
-endif
 ifeq ($(HOSTOS), Linux)
+	rm -f $(INSTALLDIR)/hcxpioff
 	rm -f $(INSTALLDIR)/hcxdumptool
 endif
