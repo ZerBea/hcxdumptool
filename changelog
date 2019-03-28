@@ -1,3 +1,11 @@
+28.03.2019
+==========
+removed devices from "known working" list:
+* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter (ALFA AWUS036H)
+* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
+because they are not working running kernel 5.0
+
+
 27.03.2019
 ==========
 removed wiringPi dependency

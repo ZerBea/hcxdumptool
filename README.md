@@ -71,10 +71,6 @@ Supported adapters (strict)
 
 * USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 
-* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter (ALFA AWUS036H)
-
-* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
-
 * USB ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
 
 * USB ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1, v2 and v3 doesn't support monitor mode)
