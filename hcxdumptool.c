@@ -4571,7 +4571,7 @@ if(gpiostatusled > 0)
 		GPIO_SET = 1 << gpiostatusled;
 		usleep(GPIO_DELAY);
 		GPIO_CLR = 1 << gpiostatusled;
-		usleep(GPIO_DELAY);
+		usleep(GPIO_DELAY +GPIO_DELAY);
 		}
 	}
 return true;
