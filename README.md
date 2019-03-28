@@ -34,12 +34,6 @@ make
 make install (as super user)
 ```
 
-or (with GPIO support - hardware mods required)
-
-```
-make GPIOSUPPORT=on
-make GPIOSUPPORT=on install (as super user)
-```
 
 Compile for Android
 --------------
