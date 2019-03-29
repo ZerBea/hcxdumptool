@@ -67,7 +67,7 @@ Supported adapters (strict)
 
 * USB ID 7392:7710 Edimax Technology Co., Ltd (Edimax EW-7711UAn v2)
 
-* USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter (ALFA AWUS036NH, TENDA W311U+)
+* USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter (TENDA W311U+)
 
 * USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 

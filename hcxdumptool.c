@@ -221,40 +221,22 @@ static uint64_t lastrcm2;
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
 
+#ifdef DEBUG
 /*===========================================================================*/
-/*
 static inline void debugprint(int len, uint8_t *ptr)
 {
 static int p;
 
-for(p = 0; p < len; p++)
-	{
-	printf("%02x", ptr[p]);
-	}
-printf("\n");
-return;
-}
-*/
-/*===========================================================================*/
-/*
-static inline void debugprint2(int len, uint8_t *ptr, int len2, uint8_t *ptr2)
-{
-static int p;
+fprintf(stdout, "\nRAW: "); 
 
 for(p = 0; p < len; p++)
 	{
-	printf("%02x", ptr[p]);
+	fprintf(stdout, "%02x", ptr[p]);
 	}
-printf(" ");
-
-for(p = 0; p < len2; p++)
-	{
-	printf("%02x", ptr2[p]);
-	}
-printf("\n");
+fprintf(stdout, "\n");
 return;
 }
-*/
+#endif
 /*===========================================================================*/
 static inline void checkunwanted(char *unwantedname)
 {
@@ -3014,30 +2996,20 @@ static struct iwreq pwrq;
 static int frequency;
 static int testchannel;
 
+usleep(10000);
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
-res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
-
-memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-pwrq.u.freq.e = 0;
-pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = 1;
+pwrq.u.freq.m = 2;
 res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
-
-memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-pwrq.u.freq.e = 0;
-pwrq.u.freq.flags = IW_FREQ_FIXED;
-res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
 
 c = 0;
 while(channelscanlist[c] != 0)
 	{
 	testchannel = 0;
 	frequency = 0;
+	usleep(10000);
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
@@ -3050,6 +3022,7 @@ while(channelscanlist[c] != 0)
 		remove_channel_from_scanlist(c);
 		continue;
 		}
+	usleep(10000);
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
@@ -3582,9 +3555,9 @@ while(1)
 		if(gpsd_len >= 0)
 			{
 			gpsddata[gpsd_len] = 0;
-/*
-			printf("\ndebug: %s\n", gpsddata);
-*/
+#ifdef DEBUG
+			fprintf(stdout, "\nGPS: %s\n", gpsddata);
+#endif
 			}
 		continue;
 		}
@@ -3602,6 +3575,9 @@ while(1)
 			errorcount++;
 			continue;
 			}
+#ifdef DEBUG
+			debugprint(packet_len, &epb[EPB_SIZE]);
+#endif
 		if(packet_len < (int)RTH_SIZE)
 			{
 			fprintf(stderr, "\ngot damged radiotap header\n");

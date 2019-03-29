@@ -1,3 +1,12 @@
+29.03.2019
+==========
+added cflag DEBUG
+if compiled with DEBUG, hcxdumptool show raw packets and raw GSP data, directly received from the device
+
+removed ALFA AWUS036NH from the "known as workinging list", because the device doesn't work
+any longer, running kernel 5.0.
+
+
 28.03.2019
 ==========
 removed devices from "known working" list:
