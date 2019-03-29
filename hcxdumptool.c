@@ -3018,8 +3018,21 @@ memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
+res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = 1;
 res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
+
 c = 0;
 while(channelscanlist[c] != 0)
 	{
