@@ -1347,6 +1347,7 @@ capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &broadcastbeacondata, BROADCASTBEACON_SIZE);
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
+
 if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit broadcast beacon");
@@ -3628,7 +3629,6 @@ while(1)
 					{
 					sscanf(gpsdptr +6, "%Lf", &alt);
 					}
-
 				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf, alt=%Lf, gpsdate=%02d.%02d.%04d, gpstime=%02d:%02d:%02d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon, alt, day, month, year, hour, minute, second);
 				}
 			}
@@ -3641,8 +3641,11 @@ while(1)
 				}
 			if(set_channel() == true)
 				{
-				send_broadcastbeacon();
-				send_undirected_proberequest();
+				if(activescanflag == false)
+					{
+					send_broadcastbeacon();
+					send_undirected_proberequest();
+					}
 				}
 			else
 				{
@@ -4911,6 +4914,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     3: use filter list as target list in receiving branch\n"
 	"                                        only receive APs and CLIENTs in range,\n"
 	"                                        from the filter list\n"
+	"--silent                           : do not transmit!\n"
+	"                                     hcxdumptool is acting like a passive dumper\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"                                     do not transmit BROADCAST beacons\n"
 	"                                     affected: ap-less and client-less attacks\n"
@@ -5043,6 +5048,7 @@ static const struct option long_options[] =
 {
 	{"filterlist",			required_argument,	NULL,	HCXD_FILTERLIST},
 	{"filtermode",			required_argument,	NULL,	HCXD_FILTERMODE},
+	{"silent",			no_argument,		NULL,	HCXD_SILENT},
 	{"disable_active_scan",		no_argument,		NULL,	HCXD_DISABLE_ACTIVE_SCAN},
 	{"disable_deauthentications",	no_argument,		NULL,	HCXD_DISABLE_DEAUTHENTICATIONS},
 	{"give_up_deauthentications",	required_argument,	NULL,	HCXD_GIVE_UP_DEAUTHENTICATIONS},
@@ -5094,6 +5100,14 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "wrong filtermode\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCXD_SILENT:
+		activescanflag = true;
+		deauthenticationflag = true;
+		disassociationflag = true;
+		attackapflag = true;
+		attackclientflag = true;
 		break;
 
 		case HCXD_DISABLE_ACTIVE_SCAN:

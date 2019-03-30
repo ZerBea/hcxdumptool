@@ -1,5 +1,9 @@
 30.03.2019
 ==========
+hcxdumptool: added new option --silent
+--silent : do not transmit!
+           hcxdumptool is acting like a passive dumper
+
 added RTL8187. Removed the wron devices from the list (only RT3070 ia affected)
 * USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter (ALFA AWUS036H)
 * USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
