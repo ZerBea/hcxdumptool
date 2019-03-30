@@ -75,6 +75,10 @@ Supported adapters (strict)
 
 * USB ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n (TP-LINK TL-WN722N v1, v2 and v3 doesn't support monitor mode)
 
+* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter (ALFA AWUS036H)
+
+* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
+
 * USB ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
   kernel >= 4.19 (see changelog 20:01.2019 and issues https://github.com/ZerBea/hcxdumptool/issues/42)
 
