@@ -222,8 +222,8 @@ static uint64_t lastrcm2;
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
 
-#ifdef DEBUG
 /*===========================================================================*/
+#ifdef DEBUG
 static inline void debugprint(int len, uint8_t *ptr)
 {
 static int p;
@@ -338,7 +338,7 @@ __attribute__ ((noreturn))
 static void globalclose()
 {
 static struct ifreq ifr;
-char *gpsd_disable = "?WATCH={\"enable\":false}";
+static char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 if(gpiostatusled > 0)
 	{
@@ -1215,7 +1215,7 @@ if(checkpownedstaap(mac_mysta, macap) != 0)
 	{
 	return;
 	}
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +DIRECTEDPROBEREQUEST_SIZE +1);
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +ESSID_LEN_MAX +DIRECTEDPROBEREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1271,7 +1271,7 @@ static const uint8_t undirectedproberequestdata[] =
 
 static uint8_t packetout[1024];
 
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE +1);
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +ESSID_LEN_MAX +UNDIRECTEDPROBEREQUEST_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
