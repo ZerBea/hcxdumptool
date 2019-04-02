@@ -1,3 +1,27 @@
+02.04.2019
+==========
+hcxdumptool now use this radiotap header:
+
+static const uint8_t hdradiotap[] =
+{
+0x00, 0x00, // radiotap version + pad byte
+0x0e, 0x00, // radiotap header length
+0x04, 0x8c, 0x00, 0x00, // bitmap
+0x02, // rate
+0x14, // tx power
+0x01, // antenna
+0x00,
+0x08, 0x00 // tx flags
+#define HDRRT_SIZE sizeof(hdradiotap)
+};
+
+header is working with:
+ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
+
+removed "USB ID 7392:a812 Edimax Technology Co., Ltd" from "known as working device list"
+because this driver is not working with the radio tap header.
+
+
 30.03.2019
 ==========
 hcxdumptool: added new option --silent

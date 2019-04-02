@@ -85,9 +85,6 @@ Supported adapters (strict)
 * USB ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter)
   kernel >= 4.19 (see changelog 20:01.2019 and issues https://github.com/ZerBea/hcxdumptool/issues/42)
 
-* USB ID 7392:a812 Edimax Technology Co., Ltd
-  get driver from here: https://github.com/aircrack-ng/rtl8812au
-
 * PCIe 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter
 
 no support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
