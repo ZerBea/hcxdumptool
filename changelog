@@ -15,11 +15,15 @@ static const uint8_t hdradiotap[] =
 #define HDRRT_SIZE sizeof(hdradiotap)
 };
 
+read more about radiotap header here:
+https://www.kernel.org/doc/Documentation/networking/mac80211-injection.txt
+
+
 header is working with:
 ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
 
 removed "USB ID 7392:a812 Edimax Technology Co., Ltd" from "known as working device list"
-because this driver is not working with the radio tap header.
+because this driver is not working with the radiotap header.
 
 
 30.03.2019
