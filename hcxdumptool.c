@@ -461,7 +461,9 @@ printf("\nterminated...\e[?25h\n");
 if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
+		{
 		printf("can't power off\n");
+		}
 	}
 if(errorcount != 0)
 	{
@@ -3864,10 +3866,12 @@ while(1)
 			process80211reassociation_resp();
 			continue;
 			}
+		droppedcount++;
 		continue;
 		}
 	if(macfrx->type == IEEE80211_FTYPE_CTL)
 		{
+		droppedcount++;
 		continue;
 		}
 	if(macfrx->type == IEEE80211_FTYPE_DATA)
@@ -3936,6 +3940,7 @@ while(1)
 				}
 			continue;
 			}
+		droppedcount++;
 		}
 	}
 return;
@@ -4049,7 +4054,7 @@ while(1)
 		statuscount++;
 		continue;
 		}
-	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
+	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_NORM)
 		{
 		continue;
 		}
