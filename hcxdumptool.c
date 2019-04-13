@@ -3674,7 +3674,7 @@ while(1)
 		{
 		incommingcount++;
 		}
-	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_ACK)
+	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_NORM)
 		{
 		droppedcount++;
 		continue;
