@@ -1,3 +1,19 @@
+14.04.2019
+==========
+removed all device names from README.md, because VENDORS often change chipsets or driver errors occur:
+v1 of a device is working fine, while v2 doesn't work
+device A, running driver A is working fine, while device B running driver A doesn't work
+driver doesn't support monitor mode
+driver support monitor mode, but doesn't support packet injection
+Examples here:
+https://bugzilla.kernel.org/show_bug.cgi?id=202241
+https://bugzilla.kernel.org/show_bug.cgi?id=202243
+https://bugzilla.kernel.org/show_bug.cgi?id=202541
+
+To find a working device, I recommend to read wikidevi:
+https://wikidevi.com/
+
+
 02.04.2019
 ==========
 hcxdumptool now use this radiotap header:
