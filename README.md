@@ -59,42 +59,16 @@ Requirements
 * GPIO hardware mod recommended
  
 
-Supported adapters (strict)
+Adapters
 --------------
 
+* Due continuous further development of hardware components (chipsets) by VENDORs and several kernel issues (kernel >= 4.20), I decided to remove all device names (read changelog 14.04.2019).
 
-* USB ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+* I recommend to study wikidevi if you consider to buy a device, to make sure driver supports monitor mode and packet injection: https://wikidevi.com
 
-* USB ID 7392:7710 Edimax Technology Co., Ltd
+* no support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
 
-* USB ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
-  issues on some devices: https://bugzilla.kernel.org/show_bug.cgi?id=202541
-
-* USB ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
-
-* USB ID 148f:2573 Ralink Technology, Corp. RT2501/RT2573 Wireless Adapter
-
-* USB ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n
-
-* USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
-
-* USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
-
-* USB ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
-  kernel >= 4.19 (see changelog 20:01.2019 and issues https://github.com/ZerBea/hcxdumptool/issues/42)
-
-* USB ID 148f:761a Ralink Technology, Corp. MT7610U
-  kernel >= 4.19 (see changelog 20:01.2019 and issues https://github.com/ZerBea/hcxdumptool/issues/42)
-
-* PCIe 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter
-
-no support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
-
-no support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
- 
-read how to identify a working adapter here: https://github.com/ZerBea/hcxdumptool/issues/42
-
-get driver information from here: https://wikidevi.com
+* no support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
 
 
 Useful scripts
