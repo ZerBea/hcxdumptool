@@ -907,7 +907,7 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static void send_disassociation(uint8_t *macsta,  uint8_t *macap, uint8_t reason)
+static void send_disassociation(uint8_t *macsta, uint8_t *macap, uint8_t reason)
 {
 static uint8_t retstatus;
 static mac_t *macftx;
@@ -948,6 +948,65 @@ if(mydisassociationsequence >= 4096)
 	}
 packetout[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
 if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
+	{
+	perror("\nfailed to transmit deuthentication");
+	errorcount++;
+	outgoingcount--;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static void send_saefailure(uint8_t *macsta, uint8_t *macap, uint16_t saesequence)
+{
+static uint8_t retstatus;
+static mac_t *macftx;
+
+static const uint8_t saeerrordata[] =
+{
+0x03, 0x00, 0x02, 0x00, 0x01, 0x00
+};
+#define SEAERROR_SIZE sizeof(saeerrordata)
+
+
+static uint8_t packetout[1024];
+
+if((filtermode == 1) && (checkfilterlistentry(macap) == true))
+	{
+	return;
+	}
+if((filtermode == 2) && (checkfilterlistentry(macap) == false))
+	{
+	return;
+	}
+retstatus = checkpownedstaap(macsta, macap);
+if((retstatus &RX_PMKID) == RX_PMKID)
+	{
+	return;
+	}
+if((retstatus &RX_M23) == RX_M23)
+	{
+	return;
+	}
+
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +2 +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_AUTH;
+memcpy(macftx->addr1, macsta, 6);
+memcpy(macftx->addr2, macap, 6);
+memcpy(macftx->addr3, macap, 6);
+macftx->duration = 0x013a;
+saesequence++;
+if(saesequence >= 4096)
+	{
+	saesequence = 0;
+	}
+macftx->sequence = saesequence << 4;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM], &saeerrordata, SEAERROR_SIZE);
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_NORM +SEAERROR_SIZE) < 0)
 	{
 	perror("\nfailed to transmit deuthentication");
 	errorcount++;
@@ -2139,6 +2198,7 @@ else if(auth->authentication_algho == SAE)
 			}
 		else if(auth->authentication_seq == 2)
 			{
+			send_saefailure(macfrx->addr2, macfrx->addr1, macfrx->sequence >> 4);
 			printtimenet(macfrx->addr1, macfrx->addr2);
 			fprintf(stdout, " [AUTHENTICATION, SAE CONFIRM, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 			}
@@ -3692,6 +3752,7 @@ while(1)
 		payload_ptr = ieee82011_ptr +MAC_SIZE_NORM;
 		payload_len = ieee82011_len -MAC_SIZE_NORM;
 		}
+
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
 		if((rth->it_present & 0x20) == 0)
