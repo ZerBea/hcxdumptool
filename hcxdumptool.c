@@ -2198,7 +2198,10 @@ else if(auth->authentication_algho == SAE)
 			}
 		else if(auth->authentication_seq == 2)
 			{
-			send_saefailure(macfrx->addr2, macfrx->addr1, macfrx->sequence >> 4);
+			if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0)
+				{
+				send_saefailure(macfrx->addr2, macfrx->addr1, macfrx->sequence >> 4);
+				}
 			printtimenet(macfrx->addr1, macfrx->addr2);
 			fprintf(stdout, " [AUTHENTICATION, SAE CONFIRM, STATUS %d, SEQUENCE %d]\n", auth->statuscode, macfrx->sequence >> 4);
 			}
