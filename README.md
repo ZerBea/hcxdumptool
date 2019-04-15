@@ -64,7 +64,7 @@ Adapters
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.com
 
-Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)ersion.
+Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
