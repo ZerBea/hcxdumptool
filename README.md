@@ -11,8 +11,8 @@ and check if wlan-key or plainmasterkey was transmitted unencrypted.
 Brief description
 --------------
 
-Stand-alone binary - designed to run on Raspberry Pi's with installed Arch Linux.
-It should work on other Linux systems (notebooks, desktops) and distributions, too.
+Stand-alone binaries - designed to run on Raspberry Pi's with installed Arch Linux.
+It may work on other Linux systems (notebooks, desktops) and distributions, too.
 
 
 Detailed description
@@ -21,7 +21,7 @@ Detailed description
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | hcxdumptool    | Tool to run several tests to determine if access points or clients are vulnerable                      |
-| pioff          | Turns Raspberry Pi off via GPIO switch                                                                 |
+| hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
 Compile
@@ -50,38 +50,38 @@ Copy it to your phone and enjoy.
 Requirements
 --------------
 
-* Operatingsystem: Arch Linux (strict), Kernel >= 4.14 (strict). It should work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions). Don't use Kernel 4.4 (rt2x00 driver regression)
+* Operatingsystem: Arch Linux (strict), Kernel >= 4.14 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions). Don't use Kernel 4.4 (rt2x00 driver regression)
 
-* Chipset must be able to run in monitor mode and driver must support monitor mode (strict by: ip and iw). Recommended: RALINK chipset (good receiver sensitivity), rt2x00 driver (fast)
+* Chipset must be able to run in monitor mode and driver must support monitor mode (strict by: ip and iw). Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
 
-* Raspberry Pi A, B, A+, B+ (Recommended: Zero (WH) or A+ = very low power consumption or B+), but notebooks and desktops could work, too.
+* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops may work, too.
 
-* GPIO hardware mod recommended
+* GPIO hardware mod recommended (push button and LED).
  
 
 Adapters
 --------------
 
-Get information about model, chipset and driver here: https://wikidevi.com
+Get information about VENDOR, model, chipset and driver here: https://wikidevi.com
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)ersion.
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
-| VENDOR MODEL | ID |
-| --- | --- |
-| EDIMAX EW-7711UAN | ID 7392:7710 Edimax Technology Co., Ltd |
-| ALLNET ALL-WA0150N | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter |
-| TENDA W311U+ | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
-| LogiLink WL0151 | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter |
+| VENDOR MODEL       | ID                                                                   |
+| ------------------ | -------------------------------------------------------------------- |
+| EDIMAX EW-7711UAN  | ID 7392:7710 Edimax Technology Co., Ltd                              |
+| ALLNET ALL-WA0150N | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter       |
+| TENDA W311U+       | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
+| LogiLink WL0151    | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter        |
 
-* Always verify the actual chipset with 'lsusb' and/or 'lspci'!
+Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
-* Due to a bug in xhci subsystem other devices may not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
+Due to a bug in xhci subsystem other devices may not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
 
-* No support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
+No support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
 
-* No support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
+No support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
 
 
 Useful scripts
@@ -114,16 +114,16 @@ Raspberry Pi turned off and can be disconnected from power supply
 Do not use hcxdumptool and hcxpioff together!
 
 
-Hardware mod - see docs gpiowait.odg (hcxpioff)
+Hardware mod - see docs gpiowait.odg
 --------------
 
 LED flashes every 5 seconds 2 times if hcxpioff successfully started
 
-Press push button at least > 5 seconds until LED turns on (hcxpioff will shut down Raspberry Pi safely)
+Press push button at least > 5 seconds until LED turns on
 
 Green ACT LED flashes 10 times
 
-Raspberry Pi turned off and can be disconnected from power supply
+Raspberry Pi turned off safely and can be disconnected from power supply
 
 Do not use hcxdumptool or hcxpioff together!
 
