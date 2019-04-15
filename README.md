@@ -84,6 +84,17 @@ No support for a third party driver which is not part of the official kernel (ht
 No support for a driver which doesn't support monitor and packet injection, native - if you need this features, do a request on www.kernel.org
 
 
+Antennas
+--------------
+
+| VENDOR MODEL           |
+| ---------------------- |
+| TP-LINK TL-ANT2414 A/B |
+| TP-LINK TL-ANT2409 A   |
+| LevelOne WAN-1112      |
+| DELOCK 88806           |
+
+
 Useful scripts
 --------------
 
