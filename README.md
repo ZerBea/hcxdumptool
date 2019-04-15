@@ -62,11 +62,22 @@ Requirements
 Adapters
 --------------
 
-* Due to a bug in xhci subsystem many devices do not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
+Get information about model, chipset and driver here: https://wikidevi.com
 
-* Due to continuous further development of hardware components (chipsets) by VENDORs and several kernel issues (kernel >= 4.20), I decided to remove all device names (read changelog 14.04.2019).
+Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)ersion.
 
-* I recommend to study wikidevi if you consider to buy a device, to make sure driver supports monitor mode and packet injection: https://wikidevi.com
+This list is for information purposes only and should not be regarded as a binding presentation of the products:
+
+| VENDOR MODEL | ID |
+| --- | --- |
+| EDIMAX EW-7711UAN | ID 7392:7710 Edimax Technology Co., Ltd |
+| ALLNET ALL-WA0150N | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter |
+| TENDA W311U+ | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
+| LogiLink WL0151 | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter |
+
+* Always verify the actual chipset with 'lsusb' and/or 'lspci'!
+
+* Due to a bug in xhci subsystem other devices may not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
 
 * No support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
 
