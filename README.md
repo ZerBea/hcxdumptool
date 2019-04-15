@@ -62,6 +62,8 @@ Requirements
 Adapters
 --------------
 
+* Due to abug in xhci subsystem many devices do not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
+
 * Due to continuous further development of hardware components (chipsets) by VENDORs and several kernel issues (kernel >= 4.20), I decided to remove all device names (read changelog 14.04.2019).
 
 * I recommend to study wikidevi if you consider to buy a device, to make sure driver supports monitor mode and packet injection: https://wikidevi.com
