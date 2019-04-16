@@ -88,12 +88,13 @@ No support for a driver which doesn't support monitor and packet injection, nati
 Antennas
 --------------
 
-| VENDOR MODEL           |
-| ---------------------- |
-| TP-LINK TL-ANT2414 A/B |
-| TP-LINK TL-ANT2409 A   |
-| LevelOne WAN-1112      |
-| DELOCK 88806           |
+| VENDOR MODEL           | TYPE            |
+| ---------------------- | --------------- | 
+| LOGILINK WL0097        | grid parabolic  |
+| TP-LINK TL-ANT2414 A/B | panel           |
+| LevelOne WAN-1112      | panel           |
+| DELOCK 88806           | panel           |
+| TP-LINK TL-ANT2409 A   | panel           |
 
 
 Useful scripts
