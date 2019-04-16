@@ -26,6 +26,7 @@
 #else
 #include <ifaddrs.h>
 #endif
+
 #include <net/if.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -34,8 +35,6 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>  
-#include <net/if.h>
-#include <arpa/inet.h>
 #include <netpacket/packet.h>
 
 #include "include/version.h"
