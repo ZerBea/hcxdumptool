@@ -88,8 +88,10 @@ No support for a driver which doesn't support monitor and packet injection, nati
 Antennas
 --------------
 
+The best high frequency amplifier is a good antenna!
+
 | VENDOR MODEL           | TYPE            |
-| ---------------------- | --------------- | 
+| ---------------------- | --------------- |
 | LOGILINK WL0097        | grid parabolic  |
 | TP-LINK TL-ANT2414 A/B | panel           |
 | LevelOne WAN-1112      | panel           |
