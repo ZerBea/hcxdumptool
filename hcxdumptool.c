@@ -4484,7 +4484,7 @@ mac_mybcap[4] = (mynicap >> 8) & 0xff;
 mac_mybcap[3] = (mynicap >> 16) & 0xff;
 mac_mybcap[2] = myouiap & 0xff;
 mac_mybcap[1] = (myouiap >> 8) & 0xff;
-mac_mybcap[0] = (myouiap >> 16) & 0xff;
+mac_mybcap[0] = (myouiap >> 16) & 0xfc;
 memcpy(&mac_myap, &mac_mybcap, 6);
 
 if(myouista == 0)
