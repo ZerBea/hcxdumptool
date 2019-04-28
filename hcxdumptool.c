@@ -4477,14 +4477,14 @@ if(mynicap == 0)
 		}
 	}
 
-myouiap &= 0xffffff;
+myouiap &= 0xfcffff;
 mynicap &= 0xffffff;
 mac_mybcap[5] = mynicap & 0xff;
 mac_mybcap[4] = (mynicap >> 8) & 0xff;
 mac_mybcap[3] = (mynicap >> 16) & 0xff;
 mac_mybcap[2] = myouiap & 0xff;
 mac_mybcap[1] = (myouiap >> 8) & 0xff;
-mac_mybcap[0] = (myouiap >> 16) & 0xfc;
+mac_mybcap[0] = (myouiap >> 16) & 0xff;
 memcpy(&mac_myap, &mac_mybcap, 6);
 
 if(myouista == 0)
@@ -5223,7 +5223,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_AP_MAC:
 		apmac = strtoll(optarg, NULL, 16);
-		myouiap = (apmac &0xffffff000000) >>24; 
+		myouiap = (apmac &0xfcffff000000) >>24; 
 		mynicap = apmac & 0xffffff;
 		break;
 
