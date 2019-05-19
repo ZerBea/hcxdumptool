@@ -109,7 +109,6 @@ Useful scripts
 | piwritecard  | Restore a Pi SD card                                     |
 | makemonnb    | Example script to activate monitor mode                  |
 | killmonnb    | Example script to deactivate monitor mode                |
-| hcxgrep.py   | Extract records from hccapx/pmkid file based on regexp   |
 
 
 Hardware mod - see docs gpiowait.odg (hcxdumptool)
