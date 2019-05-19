@@ -341,6 +341,8 @@ static void globalclose()
 static struct ifreq ifr;
 static char *gpsd_disable = "?WATCH={\"enable\":false}";
 
+sync();
+
 if(gpiostatusled > 0)
 	{
 	GPIO_CLR = 1 << gpiostatusled;
@@ -5052,6 +5054,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default = GPIO not in use\n"
 	"--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                                     default = GPIO not in use\n"
+	"--ignore_warning                   : ignore warnings\n"
+	"                                     try this if yo get some driver warnings\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
