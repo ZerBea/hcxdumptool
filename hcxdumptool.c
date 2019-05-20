@@ -360,7 +360,10 @@ if(fd_socket > 0)
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
-	ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+	if(ignorewarningflag == false)
+		{
+		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		}
 	ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
 	if(close(fd_socket) != 0)
 		{
