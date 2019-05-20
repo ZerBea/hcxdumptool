@@ -2,7 +2,8 @@
 ==========
 hcxdumptool: activated option --ignore warning
 --ignore_warning                   : ignore warnings
-                                     try this if yo get some driver warnings
+                                     try this if you get some driver warnings
+                                     do not report issues
 
 
 16.04.2019
