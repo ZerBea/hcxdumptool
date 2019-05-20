@@ -4700,7 +4700,10 @@ iwr.u.mode = IW_MODE_MONITOR;
 if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 	{
 	perror("failed to set monitor mode");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
 
 memset(&iwr, 0, sizeof(iwr));
