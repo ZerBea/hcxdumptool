@@ -4674,10 +4674,13 @@ if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 
 memset(&iwr_old, 0, sizeof(iwr));
 strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
-if (ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
+if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
 	perror("failed to save current interface mode");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
 
 memset(&ifr, 0, sizeof(ifr));
