@@ -4835,10 +4835,10 @@ if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	}
 
 epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
-if (!epmaddr)
+if(!epmaddr)
 	{
-	close(fd_info);
 	perror("failed to malloc memory for permanent hardware address");
+	close(fd_info);
 	return false;
 	}
 
