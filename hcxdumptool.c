@@ -4829,7 +4829,10 @@ memset(&iwr, 0, sizeof(iwr));
 strncpy(iwr.ifr_name, ifname, IFNAMSIZ -1);
 if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	{
-	perror("failed to get interface name");
+#ifdef DEBUG
+	printf("testing %s %s\n", ifname, drivername);
+	perror("not a wireless interface");
+#endif
 	close(fd_info);
 	return false;
 	}
