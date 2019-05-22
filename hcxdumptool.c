@@ -4829,6 +4829,7 @@ memset(&iwr, 0, sizeof(iwr));
 strncpy(iwr.ifr_name, ifname, IFNAMSIZ -1);
 if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	{
+	perror("failed to get interface name");
 	close(fd_info);
 	return false;
 	}
