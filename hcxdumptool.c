@@ -5464,7 +5464,7 @@ if(getuid() != 0)
 
 if(testinterface() == false)
 	{
-	fprintf(stderr, "interface is not useable\n");
+	fprintf(stderr, "interface is not suitable\n");
 	exit(EXIT_FAILURE);
 	}
 
