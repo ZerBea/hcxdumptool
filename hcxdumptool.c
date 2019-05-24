@@ -253,7 +253,7 @@ if(fp)
 	pidptr = fgets(pidline, 1024, fp);
 	if(pidptr != NULL)
 		{
-		printf("warning: %s is running with pid %s", &unwantedname[6], pidline);
+		fprintf(stderr, "warning: %s is running with pid %s", &unwantedname[6], pidline);
 		}
 	pclose(fp);
 	}
@@ -4658,14 +4658,16 @@ fd_socket_gpsd = 0;
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true)
 	{
-	printf("warning: %s is probably a monitor interface\n", interfacename);
+	fprintf(stderr, "warning: %s is probably a monitor interface\n", interfacename);
 	}
 
 if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
-	perror( "socket failed (do you have root privileges?)");
+	perror("socket failed (do you have root privileges?)");
 	return false;
 	}
+
+
 
 memset(&ifr_old, 0, sizeof(ifr));
 strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
@@ -4809,6 +4811,35 @@ if((fd_socket_gpsd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	gpsdflag = false;
 	}
 return true;
+}
+/*===========================================================================*/
+static bool testinterface()
+{
+static struct ifaddrs *ifaddr = NULL;
+static struct ifaddrs *ifa = NULL;
+
+if(getifaddrs(&ifaddr) == -1)
+	{
+	perror("failed to get ifaddrs");
+	return false;
+	}
+else
+	{
+	for(ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+		{
+		if(ifa->ifa_addr)
+			{
+			if(strncmp(ifa->ifa_name, interfacename, IFNAMSIZ) == 0)
+				{
+				if(ifa->ifa_addr->sa_family == AF_PACKET)
+					{
+					return true;
+					}
+				}
+			}
+		}
+	}
+return false;
 }
 /*===========================================================================*/
 static bool get_perm_addr(char *ifname, uint8_t *permaddr, char *drivername)
@@ -5428,6 +5459,12 @@ if(interfacename == NULL)
 if(getuid() != 0)
 	{
 	fprintf(stderr, "this program requires root privileges\n");
+	exit(EXIT_FAILURE);
+	}
+
+if(testinterface() == false)
+	{
+	fprintf(stderr, "interface is not useable\n");
 	exit(EXIT_FAILURE);
 	}
 
