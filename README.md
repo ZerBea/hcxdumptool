@@ -73,8 +73,8 @@ This list is for information purposes only and should not be regarded as a bindi
 | EDIMAX EW-7711UAN    | ID 7392:7710 Edimax Technology Co., Ltd                              |
 | ALLNET ALL-WA0150N   | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter       |
 | TENDA W311U+         | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
-| LogiLink WL0151      | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter        |
 | TP-LINK TL-WN722N v1 | ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n          |
+| ALFA AWUS036H        | ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter    |
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
