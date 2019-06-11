@@ -3536,7 +3536,7 @@ if(gpsdflag == true)
 			"ERRORMAX.................: %d errors\n"
 			"FILTERLIST...............: %d entries\n"
 			"MAC CLIENT...............: %06x%06x\n"
-			"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
+			"MAC ACCESS POINT.........: %06x%06x (incremented on every new ESSID)\n"
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
 			"ANONCE...................: ",
