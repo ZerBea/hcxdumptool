@@ -5470,7 +5470,7 @@ if(testinterface() == false)
 
 if(ignorewarningflag == true)
 	{
-	printf("warnings are ignored - do not report issues!\n");
+	printf("warnings are ignored - interface may not work as expected - do not report issues!\n");
 	}
 
 printf("initialization...\n");
