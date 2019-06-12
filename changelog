@@ -1,3 +1,9 @@
+12:06.2019
+==========
+hcxdumptool: ignore more warnings if --ignore_warning is selcted
+             do not report issues if you run this option!!!
+
+
 29.05.2019
 ==========
 hcxdumptool moved to v 5.1.5
