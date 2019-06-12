@@ -4667,13 +4667,11 @@ if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	return false;
 	}
 
-
-
 memset(&ifr_old, 0, sizeof(ifr));
 strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
-	perror("failed to save current interface flags");
+	perror("failed to get current interface flags");
 	return false;
 	}
 
@@ -4693,7 +4691,10 @@ strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to set interface down");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
 
 memset(&iwr, 0, sizeof(iwr));
@@ -4733,29 +4734,28 @@ ifr.ifr_flags = IFF_UP;
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to set interface up");
-	return false;
+	if(ignorewarningflag == false)
+		{
+		return false;
+		}
 	}
+
 memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to get interface flags");
-	return false;
-	}
-
-if(ignorewarningflag == false)
-	{
-	if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
+	if(ignorewarningflag == false)
 		{
-		fprintf(stderr, "interface is not up\n");
 		return false;
 		}
 	}
-else
+
+if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
 	{
-	if((ifr.ifr_flags & (IFF_UP | IFF_BROADCAST)) != (IFF_UP | IFF_BROADCAST))
+	fprintf(stderr, "interface may not be operational\n");
+	if(ignorewarningflag == false)
 		{
-		fprintf(stderr, "interface is not up\n");
 		return false;
 		}
 	}
@@ -5466,6 +5466,11 @@ if(testinterface() == false)
 	{
 	fprintf(stderr, "interface is not suitable\n");
 	exit(EXIT_FAILURE);
+	}
+
+if(ignorewarningflag == true)
+	{
+	printf("warnings are ignored - do not report issues!\n");
 	}
 
 printf("initialization...\n");
