@@ -5464,7 +5464,7 @@ if(getuid() != 0)
 
 if(testinterface() == false)
 	{
-	fprintf(stderr, "interface is not suitable\n");
+	fprintf(stderr, "interface is not suitable\nhcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter\nthat is not the case\n");
 	exit(EXIT_FAILURE);
 	}
 
@@ -5476,7 +5476,7 @@ if(ignorewarningflag == true)
 printf("initialization...\n");
 if(opensocket() == false)
 	{
-	fprintf(stderr, "failed to init socket\n");
+	fprintf(stderr, "failed to init socket\nhcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter\nthat is not the case\n");
 	if(fd_socket > 0)
 		{
 		memset(&ifr, 0, sizeof(ifr));
@@ -5495,7 +5495,7 @@ if(opensocket() == false)
 
 if(globalinit() == false)
 	{
-	fprintf(stderr, "failed to init globals\n");
+	fprintf(stderr, "failed to init globals\nhcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter\nthat is not the case\n");
 	if(fd_socket > 0)
 		{
 		memset(&ifr, 0, sizeof(ifr));
