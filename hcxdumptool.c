@@ -725,8 +725,8 @@ if(gpsdflag == true)
 	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d", lat, lon, alt,day, month, year, hour, minute, second);
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
-	epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 	}
+epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
