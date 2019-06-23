@@ -1,4 +1,11 @@
-12:06.2019
+23.06.2019
+==========
+moved to v 5.1.7
+hcxdumptool: improved help
+             fixed pcpng option header
+
+
+12.06.2019
 ==========
 hcxdumptool: ignore more warnings if --ignore_warning is selcted
              do not report issues if you run this option!!!
