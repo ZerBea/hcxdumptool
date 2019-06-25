@@ -4369,19 +4369,19 @@ while(1)
 				rpi |= 2;
 				continue;
 				}
-			if(rev == 0x9)
+			if(rev == 0x09)
 				{
 				gpioperibase = GPIO_PERI_BASE_OLD;
 				rpi |= 2;
 				continue;
 				}
-			if(rev == 0xc)
+			if(rev == 0x0c)
 				{
 				gpioperibase = GPIO_PERI_BASE_OLD;
 				rpi |= 2;
 				continue;
 				}
-			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d)  || (rev == 0x00e))
+			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d) || (rev == 0x0e) || (rev == 0x11))
 				{
 				gpioperibase = GPIO_PERI_BASE_NEW;
 				rpi |= 2;
