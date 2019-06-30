@@ -1,3 +1,9 @@
+30.06.2019
+==========
+increased maximum filter list entries from 64 up to 255
+this will have a price tag, because hcxdumptool's respond time increases.
+
+
 25.06.2019
 ==========
 detect Raspberry Pi 4
