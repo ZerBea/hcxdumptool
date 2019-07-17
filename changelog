@@ -1,3 +1,10 @@
+17.07.2019
+==========
+added some additional information which ioctl() command isn't supported by driver
+added warning on option --do_rcascan if packet injection fails (driver doesn't support
+full packet injection) after 20 seconds
+
+
 30.06.2019
 ==========
 increased maximum filter list entries from 64 up to 255
