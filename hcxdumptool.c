@@ -4670,7 +4670,7 @@ memset(&ifr_old, 0, sizeof(ifr));
 strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
-	perror("failed to get current interface flags");
+	perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 	return false;
 	}
 
@@ -4678,7 +4678,7 @@ memset(&iwr_old, 0, sizeof(iwr));
 strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
-	perror("failed to save current interface mode");
+	perror("failed to save current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4689,7 +4689,7 @@ memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
-	perror("failed to set interface down");
+	perror("failed to set interface down, ioctl(SIOCSIFFLAGS) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4701,7 +4701,7 @@ strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
 iwr.u.mode = IW_MODE_MONITOR;
 if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 	{
-	perror("failed to set monitor mode");
+	perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4712,7 +4712,7 @@ memset(&iwr, 0, sizeof(iwr));
 strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 	{
-	perror("failed to get interface information");
+	perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4732,7 +4732,7 @@ strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ifr.ifr_flags = IFF_UP;
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
-	perror("failed to set interface up");
+	perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4743,7 +4743,7 @@ memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 	{
-	perror("failed to get interface flags");
+	perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 	if(ignorewarningflag == false)
 		{
 		return false;
@@ -4764,7 +4764,7 @@ strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ifr.ifr_flags = 0;
 if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	{
-	perror("failed to get SIOCGIFINDEX");
+	perror("failed to get SIOCGIFINDEX, ioctl(SIOCGIFINDEX) not supported by driver");
 	return false;
 	}
 memset(&ll, 0, sizeof(ll));
@@ -4791,7 +4791,7 @@ epmaddr->size = 6;
 ifr.ifr_data = (char*)epmaddr;
 if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 	{
-	perror("failed to get permanent hardware address");
+	perror("failed to get permanent hardware address, ioctl(SIOCETHTOOL) not supported by driver");
 	free(epmaddr);
 	return false;
 	}
@@ -4882,7 +4882,7 @@ epmaddr->size = 6;
 ifr.ifr_data = (char*)epmaddr;
 if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
 	{
-	perror("failed to get permanent hardware address");
+	perror("failed to get permanent hardware address, ioctl(SIOCETHTOOL) not supported by driver");
 	free(epmaddr);
 	close(fd_info);
 	return false;
@@ -4901,7 +4901,7 @@ drvinfo.cmd = ETHTOOL_GDRVINFO;
 ifr.ifr_data = (char*)&drvinfo;
 if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
 	{
-	perror("failed to get driver information");
+	perror("failed to get driver information, ioctl(SIOCETHTOOL) not supported by driver");
 	free(epmaddr);
 	close(fd_info);
 	return false;
