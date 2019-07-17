@@ -92,6 +92,7 @@ static int gpsd_len;
 
 static int errorcount;
 static int maxerrorcount;
+static int injectioncount;
 
 static unsigned long long int incommingcount;
 static unsigned long long int outgoingcount;
@@ -532,9 +533,19 @@ for(c = 0; c < aplistcount; c++)
 		}
 	zeiger++;
 	}
-fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d (%d in range)\n"
-	"-----------------------------------------------------------------------------------\n"
-	, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount, rangecount);
+injectioncount++;
+if((injectioncount >= 20) && (rangecount == 0))
+	{
+	fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d (%d in range, WARNING: packet injection possible not working)\n"
+			"------------------------------------------------------------------------------------------------------------------------------\n"
+			, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount, rangecount);
+	}
+else
+	{
+	fprintf(stdout, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, err=%d, aps=%d (%d in range)\n"
+			"------------------------------------------------------------------------------\n"
+			, channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, errorcount, aplistcount, rangecount);
+	}
 return;
 }
 /*===========================================================================*/
@@ -618,7 +629,7 @@ static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
 static char *gpsd_lon = "\"lon\":";
 static char *gpsd_alt = "\"alt\":";
-static char aplesscomment[] = {"HANDSHAKE AP-LESS" };
+static char aplesscomment[] = {"HANDSHAKE AP-LESS"};
 #define APLESSCOMMENT_SIZE sizeof(aplesscomment)
 
 static char gpsdatabuffer[GPSDDATA_MAX];
@@ -4434,6 +4445,7 @@ fd_rcascanpcapng = 0;
 
 errorcount = 0;
 incommingcount = 0;
+injectioncount = 0;
 droppedcount = 0;
 outgoingcount = 0;
 
