@@ -4,6 +4,14 @@ added some additional information which ioctl() command isn't supported by drive
 added warning on option --do_rcascan if packet injection fails (driver doesn't support
 full packet injection) after 20 seconds
 
+Remarks:
+nl80211/cfg80211/mac80211 doesn't use use ioctl() calls, they use netlink.
+hcxdumptool use ioctl() calls and will not work on netlink.
+That is the case, if ioctl(SIOCGIWMODE) or ioctl(SIOCSIWMODE) calls failed!
+
+Read more here:
+https://www.quora.com/What-are-the-differences-between-netlink-sockets-and-ioctl-calls
+
 
 30.06.2019
 ==========

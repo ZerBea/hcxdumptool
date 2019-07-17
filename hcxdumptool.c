@@ -4844,12 +4844,14 @@ else
 				{
 				if(ifa->ifa_addr->sa_family == AF_PACKET)
 					{
+					freeifaddrs(ifaddr);
 					return true;
 					}
 				}
 			}
 		}
 	}
+freeifaddrs(ifaddr);
 return false;
 }
 /*===========================================================================*/
@@ -4991,6 +4993,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 ip link set <interface> down\n"
 	"                 iw dev <interface> set type monitor\n"
 	"                 ip link set <interface> up\n"
+	"                 WARNING: iw use netlink (libnl) and hcxdumptool will not work on netlink interfaces\n"
 	"-o <dump file> : output file in pcapng format\n"
 	"                 management frames and EAP/EAPOL frames\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
