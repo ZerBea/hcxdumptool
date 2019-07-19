@@ -64,6 +64,8 @@ Adapters
 
 hcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter! Otherwise it will not start!
 
+The driver must support monitor mode and full packet injection, as well as ioctl() calls!
+
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.com
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
