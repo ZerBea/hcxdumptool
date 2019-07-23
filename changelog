@@ -1,3 +1,9 @@
+23.07.2019
+==========
+hcxdumptool: moved from usleep() to nanosleep()
+hcxpioff: moved from usleep() to nanosleep()
+
+
 17.07.2019
 ==========
 added some additional information which ioctl() command isn't supported by driver
