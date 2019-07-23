@@ -134,6 +134,8 @@ static uint8_t cpa;
 
 static int gpiostatusled;
 static int gpiobutton;
+static struct timespec sleepled;
+static struct timespec sleepled2;
 
 static uint32_t myouiap;
 static uint32_t mynicap;
@@ -145,6 +147,9 @@ static uint64_t timestampstart;
 
 struct timeval tv;
 static uint64_t mytime;
+
+static struct timespec sleepm1;
+static struct timespec sleepch;
 
 static int mydisassociationsequence;
 static int myidrequestsequence;
@@ -346,13 +351,13 @@ sync();
 if(gpiostatusled > 0)
 	{
 	GPIO_CLR = 1 << gpiostatusled;
-	usleep(GPIO_DELAY);
+	nanosleep(&sleepled, NULL);
 	GPIO_SET = 1 << gpiostatusled;
-	usleep(GPIO_DELAY);
+	nanosleep(&sleepled, NULL);
 	GPIO_CLR = 1 << gpiostatusled;
-	usleep(GPIO_DELAY);
+	nanosleep(&sleepled, NULL);
 	GPIO_SET = 1 << gpiostatusled;
-	usleep(GPIO_DELAY);
+	nanosleep(&sleepled, NULL);
 	}
 
 if(fd_socket > 0)
@@ -1869,7 +1874,7 @@ static int reassociationrequestlen;
 if(attackclientflag == false)
 	{
 	send_reassociationresponse(macfrx->addr2, macfrx->addr1);
-	usleep(M1WAITTIME);
+	nanosleep(&sleepm1, NULL);
 	send_m1(macfrx->addr2, macfrx->addr1);
 	}
 
@@ -2096,7 +2101,7 @@ static int associationrequestlen;
 if(attackclientflag == false)
 	{
 	send_associationresponse(macfrx->addr2, macfrx->addr1);
-	usleep(M1WAITTIME);
+	nanosleep(&sleepm1, NULL);
 	send_m1(macfrx->addr2, macfrx->addr1);
 	}
 
@@ -3079,7 +3084,7 @@ static struct iwreq pwrq;
 static int frequency;
 static int testchannel;
 
-usleep(10000);
+nanosleep(&sleepch, NULL);
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
@@ -3092,7 +3097,7 @@ while(channelscanlist[c] != 0)
 	{
 	testchannel = 0;
 	frequency = 0;
-	usleep(10000);
+	nanosleep(&sleepch, NULL);
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
@@ -3105,7 +3110,7 @@ while(channelscanlist[c] != 0)
 		remove_channel_from_scanlist(c);
 		continue;
 		}
-	usleep(10000);
+	nanosleep(&sleepch, NULL);
 	memset(&pwrq, 0, sizeof(pwrq));
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.e = 0;
@@ -3684,7 +3689,7 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				if(incommingcount != oldincommingcount5)
 					{
-					usleep(GPIO_DELAY);
+					nanosleep(&sleepled, NULL);
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				oldincommingcount5 = incommingcount;
@@ -4105,7 +4110,7 @@ while(1)
 			if(gpiostatusled > 0)
 				{
 				GPIO_SET = 1 << gpiostatusled;
-				usleep(GPIO_DELAY);
+				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
 				}
 			}
@@ -4614,6 +4619,16 @@ if(ippcapngoutname != NULL)
 wantstopflag = false;
 signal(SIGINT, programmende);
 
+sleepm1.tv_sec = 0;
+sleepm1.tv_nsec = M1WAITTIME;
+
+sleepch.tv_sec = 0;
+sleepch.tv_nsec = CHWAITTIME;
+
+sleepled.tv_sec = 0;
+sleepled.tv_nsec = GPIO_LED_DELAY;
+sleepled2.tv_sec = 0;
+sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -4648,9 +4663,9 @@ if(gpiostatusled > 0)
 	for (c = 0; c < 5; c++)
 		{
 		GPIO_SET = 1 << gpiostatusled;
-		usleep(GPIO_DELAY);
+		nanosleep(&sleepled, NULL);
 		GPIO_CLR = 1 << gpiostatusled;
-		usleep(GPIO_DELAY +GPIO_DELAY);
+		nanosleep(&sleepled2, NULL);
 		}
 	}
 return true;

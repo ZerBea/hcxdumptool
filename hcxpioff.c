@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,6 +28,7 @@
 
 static int gpiostatusled;
 static int gpiobutton;
+static struct timespec sleepled;
 /*===========================================================================*/
 static inline size_t chop(char *buffer, size_t len)
 {
@@ -191,6 +193,9 @@ static bool globalinit()
 {
 static int gpiobasemem = 0;
 
+sleepled.tv_sec = 0;
+sleepled.tv_nsec = GPIO_LED_DELAY;
+
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -229,14 +234,15 @@ if(gpiostatusled == 0)
 	{
 	return;
 	}
+
 GPIO_SET = 1 << gpiostatusled;
-usleep(GPIO_DELAY);
+nanosleep(&sleepled, NULL);
 GPIO_CLR = 1 << gpiostatusled;
-usleep(GPIO_DELAY);
+nanosleep(&sleepled, NULL);
 GPIO_SET = 1 << gpiostatusled;
-usleep(GPIO_DELAY);
+nanosleep(&sleepled, NULL);
 GPIO_CLR = 1 << gpiostatusled;
-usleep(GPIO_DELAY);
+nanosleep(&sleepled, NULL);
 return;
 }
 /*===========================================================================*/
@@ -245,6 +251,7 @@ static void waitloop()
 {
 static int ret = 0;
 static int count = 0;
+
 while(1)
 	{
 	if(GET_GPIO(gpiobutton) > 0)
@@ -254,13 +261,13 @@ while(1)
 			if(gpiostatusled > 0)
 				{
 				GPIO_CLR = 1 << gpiostatusled;
-				usleep(GPIO_DELAY);
+				nanosleep(&sleepled, NULL);
 				GPIO_SET = 1 << gpiostatusled;
-				usleep(GPIO_DELAY);
+				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				usleep(GPIO_DELAY);
+				nanosleep(&sleepled, NULL);
 				GPIO_SET = 1 << gpiostatusled;
-				usleep(GPIO_DELAY);
+				nanosleep(&sleepled, NULL);
 				}
 			ret = system("poweroff");
 			if(ret != 0)
