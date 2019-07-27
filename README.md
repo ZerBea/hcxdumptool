@@ -52,7 +52,7 @@ Requirements
 
 * Operatingsystem: Arch Linux (strict), Kernel >= 4.19 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems). Don't use Kernel 4.4 (rt2x00 driver regression)
 
-* Chipset must be able to run in monitor mode and driver must support monitor mode (strict by: ip and iw). Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
+* Chipset must be able to run in monitor mode and driver must support monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
 
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops may work, too.
 
@@ -65,6 +65,8 @@ Adapters
 hcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter! Otherwise it will not start!
 
 The driver must support monitor mode and full packet injection, as well as ioctl() calls!
+
+Netlink (libnl) interfaces are not supported!
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.com
 
