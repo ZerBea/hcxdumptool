@@ -145,7 +145,21 @@ Green ACT LED flashes 10 times
 
 Raspberry Pi turned off safely and can be disconnected from power supply
 
-Do not use hcxdumptool or hcxpioff together!
+Do not use hcxdumptool and hcxpioff together!
+
+
+Procedure
+--------------
+
+first run hcxdumptool -i interface --do_rcascan at least for 30 seconds
+
+to determine that the driver support monitor mode and required ioctl() calls,
+
+to determine that the driver support full packet injection,
+
+to retrieve information about access points and
+
+to determine which access points are in attack range.
 
 
 Warning
@@ -154,7 +168,7 @@ Warning
 You must use hcxdumptool only on networks you have permission to do this, because:
 
 * hcxdumptool is able to prevent complete wlan traffic
-  (depends on selected options)
+  (depend on selected options)
 
 * hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
   (use hcxpcaptool to save them to file)
@@ -182,8 +196,8 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 
 * Do not use a logical interface and leave the physical interface in managed mode
 
-* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which takes access to the interface
+* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which take access to the interface
 
-* Stop all services which takes access to the physical interface (NetworkManager, wpa_supplicant,...)
+* Stop all services which take access to the physical interface (NetworkManager, wpa_supplicant,...)
 
 * Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
