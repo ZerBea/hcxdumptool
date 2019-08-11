@@ -5208,7 +5208,7 @@ apattacksmax = APPATTACKS_MAX;
 filtermode = 0;
 statusout = 0;
 stachipset = 0;
-tvtot.tv_sec = 9223372036854775807L;
+tvtot.tv_sec = 4294967295;
 tvtot.tv_usec = 0;
 
 ignorewarningflag = false;
