@@ -61,9 +61,11 @@
 #define HCXD_SAVE_RCASCAN_RAW		17
 #define HCXD_ENABLE_STATUS		18
 #define HCXD_IGNORE_WARNING		19
-#define HCXD_POWER_OFF			20
-#define HCXD_GPIO_BUTTON		21
-#define HCXD_GPIO_STATUSLED		22
+#define HCXD_TOT			20
+#define HCXD_REBOOT			21
+#define HCXD_POWER_OFF			22
+#define HCXD_GPIO_BUTTON		23
+#define HCXD_GPIO_STATUSLED		24
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
 

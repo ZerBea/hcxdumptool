@@ -112,6 +112,7 @@ static long double alt;
 
 static bool wantstopflag;
 static bool ignorewarningflag;
+static bool rebootflag;
 static bool poweroffflag;
 static bool staytimeflag;
 static bool gpsdflag;
@@ -147,6 +148,8 @@ static uint64_t timestampstart;
 
 struct timeval tv;
 static uint64_t mytime;
+
+struct timeval tvtot;
 
 static struct timespec sleepm1;
 static struct timespec sleepch;
@@ -467,13 +470,23 @@ if(rcascanflag == true)
 	}
 
 printf("\nterminated...\e[?25h\n");
+if(rebootflag == true)
+	{
+	if(system("reboot") != 0)
+		{
+		printf("can't reboot\n");
+		exit(EXIT_FAILURE);
+		}
+	}
 if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
 		{
 		printf("can't power off\n");
+		exit(EXIT_FAILURE);
 		}
 	}
+
 if(errorcount != 0)
 	{
 	exit(EXIT_FAILURE);
@@ -3451,6 +3464,7 @@ static rth_t *rth;
 static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
+static struct timeval tvakt;
 
 static uint8_t lastaddr1proberequest[6];
 static uint8_t lastaddr2proberequest[6];
@@ -3684,6 +3698,13 @@ while(1)
 		{
 		if((statuscount %5) == 0)
 			{
+			gettimeofday(&tvakt, NULL);
+				{
+				if(tvakt.tv_sec > tvtot.tv_sec)
+					{
+					globalclose();
+					}
+				}
 			if(gpiostatusled > 0)
 				{
 				GPIO_SET = 1 << gpiostatusled;
@@ -4036,6 +4057,7 @@ static long long int statuscount;
 static rth_t *rth;
 static fd_set readfds;
 static struct timeval tvfd;
+static struct timeval tvakt;
 
 gettimeofday(&tv, NULL);
 timestamp = ((uint64_t)tv.tv_sec * 1000000) + tv.tv_usec;
@@ -4112,6 +4134,13 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
+				}
+			gettimeofday(&tvakt, NULL);
+				{
+				if(tvakt.tv_sec > tvtot.tv_sec)
+					{
+					globalclose();
+					}
 				}
 			}
 		if((statuscount %2) == 0)
@@ -4629,6 +4658,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 sleepled2.tv_sec = 0;
 sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
+
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -5122,6 +5152,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      8: ASSOCIATION\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
+	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 5 minutes)\n"
+	"                                   : hcxdumptool will terminate if tot reached\n"
+	"                                   : can be used in combination with reboot or poweroff\n"
+	"--reboot                           : once hcxdumptool terminated, reboot system\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
 	"--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)\n"
 	"                                     default = GPIO not in use\n"
@@ -5162,6 +5196,7 @@ static bool showchannels = false;
 static unsigned long long int apmac;
 static unsigned long long int stationmac;
 static struct ifreq ifr;
+static long int totvalue;
 
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
@@ -5173,8 +5208,11 @@ apattacksmax = APPATTACKS_MAX;
 filtermode = 0;
 statusout = 0;
 stachipset = 0;
+tvtot.tv_sec = 9223372036854775807L;
+tvtot.tv_usec = 0;
 
 ignorewarningflag = false;
+rebootflag = false;
 poweroffflag = false;
 gpsdflag = false;
 staytimeflag = false;
@@ -5220,6 +5258,8 @@ static const struct option long_options[] =
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
 	{"ignore_warning",		no_argument,		NULL,	HCXD_IGNORE_WARNING},
+	{"tot",				required_argument,	NULL,	HCXD_TOT},
+	{"reboot",			no_argument,		NULL,	HCXD_REBOOT},
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
 	{"gpio_button",			required_argument,	NULL,	HCXD_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCXD_GPIO_STATUSLED},
@@ -5368,6 +5408,22 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		ignorewarningflag = true;
 		break;
 
+
+		case HCXD_TOT:
+		totvalue = strtoll(optarg, NULL, 16);
+		if(totvalue < 5)
+			{
+			fprintf(stderr, "tot must be >= 5 (minutes)\n");
+			exit(EXIT_FAILURE);
+			}
+		gettimeofday(&tvtot, NULL);
+		tvtot.tv_sec += totvalue *60;
+		break;
+
+		case HCXD_REBOOT:
+		rebootflag = true;
+		break;
+
 		case HCXD_POWER_OFF:
 		poweroffflag = true;
 		break;
@@ -5468,6 +5524,12 @@ if(argc < 2)
 	{
 	fprintf(stderr, "no option selected\n");
 	return EXIT_SUCCESS;
+	}
+
+if((rebootflag == true) && (poweroffflag == true))
+	{
+	fprintf(stderr, "setting poweroff and reboot together is not allowed\n");
+	return EXIT_FAILURE;
 	}
 
 if(filterlistname == NULL)
