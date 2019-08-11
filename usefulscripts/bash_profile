@@ -14,8 +14,9 @@ then
 	if [ $hcxret -eq 2 ]
 	then
 		reboot
+	else
+		poweroff
 	fi
-	poweroff
 fi
 hcxpioff --gpio_button=4 --gpio_statusled=17 &
 systemctl start dhcpcd@eth0.service
