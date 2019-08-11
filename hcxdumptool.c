@@ -112,6 +112,7 @@ static long double alt;
 
 static bool wantstopflag;
 static bool ignorewarningflag;
+static bool totflag;
 static bool rebootflag;
 static bool poweroffflag;
 static bool staytimeflag;
@@ -470,14 +471,6 @@ if(rcascanflag == true)
 	}
 
 printf("\nterminated...\e[?25h\n");
-if(rebootflag == true)
-	{
-	if(system("reboot") != 0)
-		{
-		printf("can't reboot\n");
-		exit(EXIT_FAILURE);
-		}
-	}
 if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
@@ -487,9 +480,23 @@ if(poweroffflag == true)
 		}
 	}
 
+if(rebootflag == true)
+	{
+	if(system("reboot") != 0)
+		{
+		printf("can't reboot\n");
+		exit(EXIT_FAILURE);
+		}
+	}
+
 if(errorcount != 0)
 	{
 	exit(EXIT_FAILURE);
+	}
+
+if(totflag == true)
+	{
+	exit(USER_EXIT_TOT);
 	}
 exit(EXIT_SUCCESS);
 }
@@ -3702,6 +3709,7 @@ while(1)
 				{
 				if(tvakt.tv_sec > tvtot.tv_sec)
 					{
+					totflag = true;
 					globalclose();
 					}
 				}
@@ -4139,6 +4147,7 @@ while(1)
 				{
 				if(tvakt.tv_sec > tvtot.tv_sec)
 					{
+					totflag = true;
 					globalclose();
 					}
 				}
@@ -5152,9 +5161,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      8: ASSOCIATION\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE\n"
-	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 5 minutes)\n"
-	"                                   : hcxdumptool will terminate if tot reached\n"
-	"                                   : can be used in combination with reboot or poweroff\n"
+	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
+	"                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
 	"--reboot                           : once hcxdumptool terminated, reboot system\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
 	"--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)\n"
@@ -5212,6 +5220,7 @@ tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
 
 ignorewarningflag = false;
+totflag = false;
 rebootflag = false;
 poweroffflag = false;
 gpsdflag = false;
@@ -5411,9 +5420,9 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_TOT:
 		totvalue = strtoll(optarg, NULL, 16);
-		if(totvalue < 5)
+		if(totvalue < 2)
 			{
-			fprintf(stderr, "tot must be >= 5 (minutes)\n");
+			fprintf(stderr, "tot must be >= 2 (minutes)\n");
 			exit(EXIT_FAILURE);
 			}
 		gettimeofday(&tvtot, NULL);

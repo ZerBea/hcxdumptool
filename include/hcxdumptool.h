@@ -1,5 +1,7 @@
 #define ERRORMAX 100
 
+#define USER_EXIT_TOT 2
+
 #define GPSDDATA_MAX 1536
 
 #define ESSID_LEN_MAX 32
