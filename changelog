@@ -1,10 +1,14 @@
 11.08.2019
 ==========
 hcxdumptool: added new options --tot and --reboot  
---tot=<digit>                      : enable timeout timer in minutes (minumum = 5 minutes)
-                                   : hcxdumptool will terminate if tot reached
-                                   : can be used in combination with reboot or poweroff
+--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)
+                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)
 --reboot                           : once hcxdumptool terminated, reboot system
+
+hcxdumptool return values:
+0 = every thing is fine
+1 = error occured
+2 = tot reached
 
 
 23.07.2019
