@@ -4313,7 +4313,7 @@ static char linein[FILTERLIST_LINE_LEN];
 
 if((fh_filter = fopen(listname, "r")) == NULL)
 	{
-	fprintf(stderr, "opening blacklist failed %s\n", listname);
+	fprintf(stderr, "failed to open filter list failed %s\n", listname);
 	return 0;
 	}
 
@@ -4343,7 +4343,7 @@ while(entries < FILTERLIST_MAX)
 		}
 	else
 		{
-		fprintf(stderr, "reading blacklist line %d failed: %s\n", c, linein);
+		fprintf(stderr, "failed to read filter list line %d: %s\n", c, linein);
 		}
 	c++;
 	}
@@ -4603,12 +4603,15 @@ if(filterlistname != NULL)
 	{
 	if((filterlist = calloc((FILTERLIST_MAX), MACLIST_SIZE)) == NULL)
 		{
-		return false;
+		printf("warning: couldn't allocate memory for filter list entries\n");
 		}
-	filterlist_len = readfilterlist(filterlistname, filterlist);
-	if(filterlist_len == 0)
+	else
 		{
-		return false;
+		filterlist_len = readfilterlist(filterlistname, filterlist);
+		if(filterlist_len == 0)
+			{
+			printf("warning: no filter list entries\n");
+			}
 		}
 	}
 
