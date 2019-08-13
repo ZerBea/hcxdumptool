@@ -1,3 +1,33 @@
+13.08.2019
+==========
+hcxdumptool: added new option --check_driver
+--check_driver      : run several tests to determine that driver support all(!) required system calls
+
+If everything is fine, result should look like this:
+$ sudo hcxdumptool -i wlp3s0f0u10u4 --check_driver
+driver tests passed - all required ioctl() system calls are supported by driver
+
+If not, hcxdumptool will show which test failed:
+$ sudo hcxdumptool -i wlp3s0f0u10u5 --check_driver
+ioctl(SIOCGIFFLAGS) failed: No such device
+ioctl(SIOCGIWMODE) failed: No such device
+ioctl(SIOCSIFFLAGS) failed: No such device
+ioctl(SIOCSIWMODE) - IW_MODE_MONITOR failed: No such device
+ioctl(SIOCGIWMODE) failed: No such device
+ioctl(SIOCGIWMODE) - IW_MODE_MONITOR failed
+ioctl(SIOCSIFFLAGS) -IFF_UP failed: No such device
+ioctl(SIOCGIFFLAGS) failed: No such device
+ioctl(SIOCGIFFLAGS) - IFF_UP | IFF_RUNNING | IFF_BROADCAST failed
+ioctl(SIOCGIFINDEX) failed: No such device
+ioctl(SIOCETHTOOL) - ETHTOOL_GPERMADDR failed: No such device
+ioctl(SIOCSIWFREQ) - IW_FREQ_FIXED failed: No such device
+it looks like this interface/driver isn't suitable for hcxdumptool
+possible reasons:
+wrong interface selected
+interface is blocked by another tool
+driver doesn't support required ioctl() system calls
+
+
 12.08.2019
 ==========
 hcxdumptool: a crappy filter list is not longer a reason to terminate initialization

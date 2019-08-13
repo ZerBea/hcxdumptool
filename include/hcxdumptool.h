@@ -68,6 +68,7 @@
 #define HCXD_POWER_OFF			22
 #define HCXD_GPIO_BUTTON		23
 #define HCXD_GPIO_STATUSLED		24
+#define HCXD_CHECK_DRIVER		25
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
 

@@ -3068,17 +3068,14 @@ return;
 /*===========================================================================*/
 static bool set_channel()
 {
-static int res;
 static struct iwreq pwrq;
 
-res = 0;
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
-res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
-if(res < 0)
+if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	{
 	return false;
 	}
@@ -4881,6 +4878,191 @@ if((fd_socket_gpsd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 return true;
 }
 /*===========================================================================*/
+static inline void testdriver()
+{
+static struct ifreq ifr;
+static struct iwreq iwr;
+static struct sockaddr_ll ll;
+static struct ethtool_perm_addr *epmaddr;
+static struct ifaddrs *ifaddr = NULL;
+static struct ifaddrs *ifa = NULL;
+static struct iwreq pwrq;
+
+static bool drivererrorflag = false;
+
+fd_socket = 0;
+fd_socket_gpsd = 0;
+
+if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
+	{
+	perror("socket failed (do you have root privileges?)");
+	return;
+	}
+
+memset(&ifr_old, 0, sizeof(ifr));
+strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
+	{
+	perror("ioctl(SIOCGIFFLAGS) failed");
+	drivererrorflag = true;
+	}
+
+memset(&iwr_old, 0, sizeof(iwr));
+strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
+	{
+	perror("ioctl(SIOCGIWMODE) failed");
+	drivererrorflag = true;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("ioctl(SIOCSIFFLAGS) failed");
+	drivererrorflag = true;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+iwr.u.mode = IW_MODE_MONITOR;
+if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
+	{
+	perror("ioctl(SIOCSIWMODE) - IW_MODE_MONITOR failed");
+	drivererrorflag = true;
+	}
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
+	{
+	perror("ioctl(SIOCGIWMODE) failed");
+	drivererrorflag = true;
+	}
+if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
+	{
+	fprintf(stderr, "ioctl(SIOCGIWMODE) - IW_MODE_MONITOR failed\n");
+	drivererrorflag = true;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+ifr.ifr_flags = IFF_UP;
+if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+	{
+	perror("ioctl(SIOCSIFFLAGS) -IFF_UP failed");
+	drivererrorflag = true;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+	{
+	perror("ioctl(SIOCGIFFLAGS) failed");
+	drivererrorflag = true;
+	}
+
+if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
+	{
+	fprintf(stderr, "ioctl(SIOCGIFFLAGS) - IFF_UP | IFF_RUNNING | IFF_BROADCAST failed\n");
+	drivererrorflag = true;
+	}
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+ifr.ifr_flags = 0;
+if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
+	{
+	perror("ioctl(SIOCGIFINDEX) failed");
+	drivererrorflag = true;
+	}
+memset(&ll, 0, sizeof(ll));
+ll.sll_family = AF_PACKET;
+ll.sll_ifindex = ifr.ifr_ifindex;
+ll.sll_protocol = htons(ETH_P_ALL);
+ll.sll_halen = ETH_ALEN;
+if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
+	{
+	perror("bind socket failed");
+	drivererrorflag = true;
+	}
+
+epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+if(epmaddr != NULL)
+	{
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	epmaddr->cmd = ETHTOOL_GPERMADDR;
+	epmaddr->size = 6;
+	ifr.ifr_data = (char*)epmaddr;
+	if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
+		{
+		perror("ioctl(SIOCETHTOOL) - ETHTOOL_GPERMADDR failed");
+		free(epmaddr);
+		drivererrorflag = true;
+		}
+	}
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.m = channelscanlist[cpa];
+if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+	{
+	perror("ioctl(SIOCSIWFREQ) - IW_FREQ_FIXED failed");
+	drivererrorflag = true;
+	}
+
+if(getifaddrs(&ifaddr) == -1)
+	{
+	perror("getifaddrs() failed");
+	drivererrorflag = true;
+	}
+else
+	{
+	for(ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+		{
+		if(ifa->ifa_addr)
+			{
+			if(strncmp(ifa->ifa_name, interfacename, IFNAMSIZ) == 0)
+				{
+				if(ifa->ifa_addr->sa_family != AF_PACKET)
+					{
+					printf("getifaddrs() - ifa_name failed");
+					drivererrorflag = true;
+					}
+				}
+			}
+		}
+	freeifaddrs(ifaddr);
+	}
+
+if(drivererrorflag == false)
+	{
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+	if(ignorewarningflag == false)
+		{
+		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		}
+	ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
+	printf("driver tests passed - all required ioctl() system calls are supported by driver\n");
+	}
+else
+	{
+	printf( "it looks like this interface/driver isn't suitable for hcxdumptool\n"
+		"possible reasons:\n"
+		"wrong interface selected\n"
+		"interface is blocked by another tool\n"
+		"driver doesn't support required ioctl() system calls\n");
+	}
+
+close(fd_socket);
+return;
+}
+/*===========================================================================*/
 static bool testinterface()
 {
 static struct ifaddrs *ifaddr = NULL;
@@ -5175,6 +5357,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--ignore_warning                   : ignore warnings\n"
 	"                                     try this if you get some driver warnings\n"
 	"                                     do not report issues\n"
+	"--check_driver                     : run several tests to determine that driver support all(!) required system calls\n" 
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -5208,6 +5391,7 @@ static unsigned long long int apmac;
 static unsigned long long int stationmac;
 static struct ifreq ifr;
 static long int totvalue;
+static bool checkdriver = false;
 
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
@@ -5275,6 +5459,7 @@ static const struct option long_options[] =
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
 	{"gpio_button",			required_argument,	NULL,	HCXD_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCXD_GPIO_STATUSLED},
+	{"check_driver",		no_argument,		NULL,	HCXD_CHECK_DRIVER},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
 	{NULL,				0,			NULL,	0}
@@ -5440,6 +5625,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		poweroffflag = true;
 		break;
 
+		case HCXD_CHECK_DRIVER:
+		checkdriver = true;
+		break;
+
 		case HCXD_HELP:
 		usage(basename(argv[0]));
 		break;
@@ -5566,6 +5755,12 @@ if(getuid() != 0)
 	{
 	fprintf(stderr, "this program requires root privileges\n");
 	exit(EXIT_FAILURE);
+	}
+
+if(checkdriver == true)
+	{
+	testdriver();
+	exit(EXIT_SUCCESS);
 	}
 
 if(testinterface() == false)
