@@ -4887,8 +4887,9 @@ static struct ethtool_perm_addr *epmaddr;
 static struct ifaddrs *ifaddr = NULL;
 static struct ifaddrs *ifa = NULL;
 static struct iwreq pwrq;
-
 static bool drivererrorflag = false;
+static int frequency;
+static int testchannel;
 
 fd_socket = 0;
 fd_socket_gpsd = 0;
@@ -5007,11 +5008,50 @@ memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = channelscanlist[cpa];
+pwrq.u.freq.m = 1;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	{
 	perror("ioctl(SIOCSIWFREQ) - IW_FREQ_FIXED failed");
 	drivererrorflag = true;
+	}
+nanosleep(&sleepch, NULL);
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
+	{
+	perror("ioctl(SIOCGIWFREQ) - IW_FREQ_FIXED failed");
+	drivererrorflag = true;
+	}
+else
+	{
+	frequency = pwrq.u.freq.m;
+	if(frequency > 100000)
+		{
+		frequency /= 100000;
+		}
+	if(frequency < 1000)
+		{
+		testchannel = frequency;
+		}
+	else if((frequency >= 2407) && (frequency <= 2474))
+		{
+		testchannel = (frequency -2407)/5;
+		}
+	else if((frequency >= 2481) && (frequency <= 2487))
+		{
+		testchannel = (frequency -2412)/5;
+		}
+	else if((frequency >= 5150) && (frequency <= 5875))
+		{
+		testchannel = (frequency -5000)/5;
+		}
+	if(testchannel != 1)
+		{
+		printf("ioctl(SIOCSIWFREQ) - IW_FREQ_FIXED channel 1 (%dMHz) failed\n", frequency);
+		drivererrorflag = true;
+		}
 	}
 
 if(getifaddrs(&ifaddr) == -1)
