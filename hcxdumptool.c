@@ -5026,6 +5026,7 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
 	}
 else
 	{
+	testchannel = 0;
 	frequency = pwrq.u.freq.m;
 	if(frequency > 100000)
 		{
