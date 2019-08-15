@@ -1,3 +1,7 @@
+#define MCHOST "224.0.0.255"
+#define MCPORT 60123
+#define SERVERSTATUSSIZE 255
+
 #define ERRORMAX 100
 
 #define USER_EXIT_TOT 2
@@ -69,6 +73,8 @@
 #define HCXD_GPIO_BUTTON		23
 #define HCXD_GPIO_STATUSLED		24
 #define HCXD_CHECK_DRIVER		25
+#define HCXD_SERVER_PORT		26
+#define HCXD_CLIENT_PORT		27
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
 

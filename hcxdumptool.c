@@ -57,6 +57,16 @@ static int fd_ippcapng;
 static int fd_weppcapng;
 static int fd_rcascanpcapng;
 
+static int fd_socket_mcsrv;
+static struct sockaddr_in mcsrvaddress;
+static int mcsrvport;
+
+static int fd_socket_mccli;
+static struct sockaddr_in mccliaddress;
+static int mccliport;
+static struct ip_mreq cmd;
+
+
 static maclist_t *filterlist;
 static int filterlist_len;
 
@@ -123,6 +133,8 @@ static bool deauthenticationflag;
 static bool disassociationflag;
 static bool attackapflag;
 static bool attackclientflag;
+static bool mcserverflag;
+static bool mcclientflag;
 
 static int filtermode;
 static int eapoltimeout;
@@ -427,6 +439,26 @@ if(fd_pcapng > 0)
 	if(close(fd_pcapng) != 0)
 		{
 		perror("failed to close pcapng file");
+		}
+	}
+
+if(fd_socket_mcsrv > 0)
+	{
+	if(close(fd_socket_mcsrv) != 0)
+		{
+		perror("failed to close servr socket");
+		}
+	}
+
+if(fd_socket_mccli > 0)
+	{
+	if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_DROP_MEMBERSHIP, &cmd, sizeof(cmd)) < 0)
+		{
+		perror("failed to drop ip-membership");
+		}
+	if(close(fd_socket_mccli) != 0)
+		{
+		perror("failed to close client socket");
 		}
 	}
 
@@ -3534,6 +3566,8 @@ memset(&lastaddr1data, 0, 6);
 memset(&lastaddr2data, 0, 6);
 lastsequencedata = 0;
 
+char serverstatus[SERVERSTATUSSIZE];
+
 sa = 1;
 if(gpsdflag == true)
 	{
@@ -3723,6 +3757,11 @@ while(1)
 			if(gpsdflag == false)
 				{
 				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+				if(mcserverflag == true)
+					{
+					snprintf(serverstatus, SERVERSTATUSSIZE, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount);
+					sendto(fd_socket_mcsrv, serverstatus, strlen(serverstatus)+1, 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+					}
 				}
 			else
 				{
@@ -3743,6 +3782,11 @@ while(1)
 					sscanf(gpsdptr +6, "%Lf", &alt);
 					}
 				printf("\33[2K\rINFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf, alt=%Lf, gpsdate=%02d.%02d.%04d, gpstime=%02d:%02d:%02d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon, alt, day, month, year, hour, minute, second);
+				if(mcserverflag == true)
+					{
+					snprintf(serverstatus, SERVERSTATUSSIZE, "INFO: cha=%d, rx=%llu, rx(dropped)=%llu, tx=%llu, powned=%llu, err=%d, lat=%Lf, lon=%Lf, alt=%Lf, gpsdate=%02d.%02d.%04d, gpstime=%02d:%02d:%02d", channelscanlist[cpa], incommingcount, droppedcount, outgoingcount, pownedcount, errorcount, lat, lon, alt, day, month, year, hour, minute, second);
+					sendto(fd_socket_mcsrv, serverstatus, strlen(serverstatus)+1, 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+					}
 				}
 			}
 		if(((statuscount %staytime) == 0) || ((staytimeflag != true) && (incommingcount == oldincommingcount1)))
@@ -4710,6 +4754,130 @@ if(gpiostatusled > 0)
 return true;
 }
 /*===========================================================================*/
+static inline void processclient()
+{
+static fd_set readfds;
+static struct timeval tvfd;
+static int fdnum;
+
+static char serverstatus[SERVERSTATUSSIZE];
+
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+while(1)
+	{
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0)
+			{
+			globalclose();
+			}
+		}
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket_mccli, &readfds);
+	fdnum = select(fd_socket_mccli +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
+		{
+		continue;
+		}
+	if(FD_ISSET(fd_socket_mccli, &readfds))
+		{
+		read(fd_socket_mccli, serverstatus, SERVERSTATUSSIZE);
+		printf("%s\n", serverstatus);
+		}
+	else
+		{
+		if(gpiostatusled > 0)
+			{
+			GPIO_SET = 1 << gpiostatusled;
+			nanosleep(&sleepled, NULL);
+			GPIO_CLR = 1 << gpiostatusled;
+			}
+		tvfd.tv_sec = 1;
+		tvfd.tv_usec = 0;
+		}
+	}
+return;
+}
+/*===========================================================================*/
+static bool openmcclisocket()
+{
+static int loop;
+
+fd_socket_mccli = 0;
+if((fd_socket_mccli = socket(PF_INET, SOCK_DGRAM, 0)) < 0)
+	{
+	perror ("client socket failed");
+	return false;
+	}
+
+memset (&mccliaddress, 0, sizeof(mccliaddress));
+mccliaddress.sin_family = AF_INET;
+mccliaddress.sin_addr.s_addr = htonl(INADDR_ANY);
+mccliaddress.sin_port = htons(mccliport);
+
+loop = 1;
+if(setsockopt(fd_socket_mccli, SOL_SOCKET, SO_REUSEADDR, &loop, sizeof (loop)) < 0)
+	{
+	perror("setsockopt() SO_REUSEADDR failed");
+	return false;
+	}
+if(bind(fd_socket_mccli, (struct sockaddr*)&mccliaddress, sizeof(mccliaddress)) < 0)
+	{
+	perror ("bind client failed");
+	return false;
+	}
+loop = 1;
+if (setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+	{
+	perror ("setsockopt() IP_MULTICAST_LOOP failed");
+	return false;
+	}
+
+memset(&cmd, 0, sizeof(cmd));
+cmd.imr_multiaddr.s_addr = inet_addr(MCHOST);
+cmd.imr_interface.s_addr = htonl(INADDR_ANY);
+if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_ADD_MEMBERSHIP, &cmd, sizeof(cmd)) < 0)
+	{
+	perror ("setsockopt() IP_ADD_MEMBERSHIP failed");
+	return false;
+	}
+wantstopflag = false;
+signal(SIGINT, programmende);
+return true;
+}
+/*===========================================================================*/
+static inline void openmcsrvsocket()
+{
+fd_socket_mcsrv = 0;
+
+if((fd_socket_mcsrv = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
+	{
+	perror("server socket failed");
+	return;
+	}
+
+
+memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
+mcsrvaddress.sin_family = AF_INET;
+mcsrvaddress.sin_addr.s_addr = inet_addr (MCHOST);
+mcsrvaddress.sin_port = htons(mcsrvport);
+ 
+if(sendto(fd_socket_mcsrv, "hello clients", sizeof ("hello clients"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress)) < 0)
+	{
+	perror("server socket failed");
+	close(fd_socket_mcsrv);
+	return;
+	}
+
+mcserverflag = true;
+return;
+}
+/*===========================================================================*/
 static inline bool opensocket()
 {
 static struct ifreq ifr;
@@ -5398,6 +5566,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--ignore_warning                   : ignore warnings\n"
 	"                                     try this if you get some driver warnings\n"
 	"                                     do not report issues\n"
+	"--server_port=<digit>              : define port for server status output (1...65535)\n"
+	"                                   : default IP: %s\n"
+	"--client_port=<digit>              : define port for client status read (1...65535)\n"
+	"                                   : default IP: %s\n"
 	"--check_driver                     : run several tests to determine that driver support all(!) required system calls\n" 
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
@@ -5409,7 +5581,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
-	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX);
+	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, MCHOST, MCHOST);
 
 exit(EXIT_SUCCESS);
 }
@@ -5446,6 +5618,8 @@ statusout = 0;
 stachipset = 0;
 tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
+mcsrvport = MCPORT;
+mccliport = MCPORT;
 
 ignorewarningflag = false;
 totflag = false;
@@ -5459,6 +5633,8 @@ deauthenticationflag = false;
 disassociationflag = false;
 attackapflag = false;
 attackclientflag = false;
+mcserverflag = false;
+mcclientflag = false;
 
 myouiap = 0;
 mynicap = 0;
@@ -5501,6 +5677,8 @@ static const struct option long_options[] =
 	{"gpio_button",			required_argument,	NULL,	HCXD_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCXD_GPIO_STATUSLED},
 	{"check_driver",		no_argument,		NULL,	HCXD_CHECK_DRIVER},
+	{"server_port",			required_argument,	NULL,	HCXD_SERVER_PORT},
+	{"client_port",			required_argument,	NULL,	HCXD_CLIENT_PORT},
 	{"version",			no_argument,		NULL,	HCXD_VERSION},
 	{"help",			no_argument,		NULL,	HCXD_HELP},
 	{NULL,				0,			NULL,	0}
@@ -5670,6 +5848,26 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		checkdriver = true;
 		break;
 
+		case HCXD_SERVER_PORT:
+		mcsrvport = strtol(optarg, NULL, 10);
+		if((mcsrvport < 1) || (mcsrvport > 65535))
+			{
+			fprintf(stderr, "port must be 1...65535\n");
+			exit(EXIT_FAILURE);
+			}
+		mcserverflag = true;
+		break;
+
+		case HCXD_CLIENT_PORT:
+		mccliport = strtol(optarg, NULL, 10);
+		if((mccliport < 1) || (mccliport > 65535))
+			{
+			fprintf(stderr, "port must be 1...65535\n");
+			exit(EXIT_FAILURE);
+			}
+		mcclientflag = true;
+		break;
+
 		case HCXD_HELP:
 		usage(basename(argv[0]));
 		break;
@@ -5765,6 +5963,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 if(argc < 2)
 	{
 	fprintf(stderr, "no option selected\n");
+	return EXIT_SUCCESS;
+	}
+
+if(mcclientflag == true)
+	{
+	if(openmcclisocket() == true)
+		{
+		processclient();
+		}
 	return EXIT_SUCCESS;
 	}
 
@@ -5866,6 +6073,11 @@ if(channelscanlist[0] == 0)
 	{
 	fprintf(stderr, "no available channel found in scan list\n");
 	globalclose();
+	}
+
+if(mcserverflag == true)
+	{
+	openmcsrvsocket();
 	}
 
 if(rcascanflag == false)
