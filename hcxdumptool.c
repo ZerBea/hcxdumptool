@@ -3811,9 +3811,9 @@ while(1)
 				}
 			}
 		oldincommingcount1 = incommingcount;
+		statuscount++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
-		statuscount++;
 		continue;
 		}
 	packet_ptr = &epb[EPB_SIZE];
@@ -4211,9 +4211,9 @@ while(1)
 				globalclose();
 				}
 			}
+		statuscount++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
-		statuscount++;
 		continue;
 		}
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_NORM)
@@ -4759,9 +4759,11 @@ static inline void processclient()
 static fd_set readfds;
 static struct timeval tvfd;
 static int fdnum;
+static unsigned long long int statuscount;
 
 static char serverstatus[SERVERSTATUSSIZE];
 
+statuscount = 1;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 while(1)
@@ -4791,12 +4793,16 @@ while(1)
 		}
 	else
 		{
-		if(gpiostatusled > 0)
+		if((statuscount %5) == 0)
 			{
-			GPIO_SET = 1 << gpiostatusled;
-			nanosleep(&sleepled, NULL);
-			GPIO_CLR = 1 << gpiostatusled;
+			if(gpiostatusled > 0)
+				{
+				GPIO_SET = 1 << gpiostatusled;
+				nanosleep(&sleepled, NULL);
+				GPIO_CLR = 1 << gpiostatusled;
+				}
 			}
+		statuscount++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
 		}
