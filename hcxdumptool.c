@@ -5832,7 +5832,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 
 		case HCXD_TOT:
-		totvalue = strtoll(optarg, NULL, 16);
+		totvalue = strtol(optarg, NULL, 10);
 		if(totvalue < 2)
 			{
 			fprintf(stderr, "tot must be >= 2 (minutes)\n");
