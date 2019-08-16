@@ -5809,7 +5809,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCXD_GPIO_BUTTON:
-		gpiobutton = strtoll(optarg, NULL, 10);
+		gpiobutton = strtol(optarg, NULL, 10);
 		if((gpiobutton < 2) || (gpiobutton > 27))
 			{
 			fprintf(stderr, "only 2...27 allowed\n");
@@ -5818,7 +5818,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCXD_GPIO_STATUSLED:
-		gpiostatusled = strtoll(optarg, NULL, 10);
+		gpiostatusled = strtol(optarg, NULL, 10);
 		if((gpiostatusled < 2) || (gpiostatusled > 27))
 			{
 			fprintf(stderr, "only 2...27 allowed\n");
