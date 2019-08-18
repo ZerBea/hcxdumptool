@@ -5275,7 +5275,7 @@ else
 				{
 				if(ifa->ifa_addr->sa_family != AF_PACKET)
 					{
-					printf("getifaddrs() - ifa_name failed");
+					printf("getifaddrs() - ifa_name failed\n");
 					drivererrorflag = true;
 					}
 				}
