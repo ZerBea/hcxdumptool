@@ -891,6 +891,21 @@ for(c = 0; c < POWNEDLIST_MAX; c++)
 return 0;
 }
 /*===========================================================================*/
+static inline struct aplist_s *getessid(uint8_t *macap)
+{
+static aplist_t *zeiger;
+
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macap, 6) == 0)
+		{
+		return zeiger;
+		}
+	}
+
+return NULL;
+}
+/*===========================================================================*/
 static inline int addpownedstaap(uint8_t *pownedmacsta, uint8_t *pownedmacap, uint8_t status)
 {
 static int c;
@@ -1536,6 +1551,7 @@ static wpakey_t *wpak;
 static uint16_t keyinfo;
 static unsigned long long int rc;
 static int calceapoltimeout;
+static aplist_t *apzeiger;
 
 static exteap_t *exteap;
 static uint16_t exteaplen;
@@ -1581,6 +1597,11 @@ if(eapauth->type == EAPOL_KEY)
 					if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 						{
 						printtimenet(macfrx->addr1, macfrx->addr2);
+						apzeiger = getessid(macfrx->addr2);
+						if(apzeiger != NULL)
+							{
+							printessid(apzeiger->essid_len, apzeiger->essid);
+							}
 						if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 							{
 							fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
@@ -1610,6 +1631,11 @@ if(eapauth->type == EAPOL_KEY)
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
+					apzeiger = getessid(macfrx->addr2);
+					if(apzeiger != NULL)
+						{
+						printessid(apzeiger->essid_len, apzeiger->essid);
+						}
 					fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 					}
 				}
@@ -1633,7 +1659,12 @@ if(eapauth->type == EAPOL_KEY)
 				{
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
-					printtimenet(macfrx->addr1, macfrx->addr2);
+					printtimenet(macfrx->addr1, macfrx->addr1);
+					apzeiger = getessid(macfrx->addr1);
+					if(apzeiger != NULL)
+						{
+						printessid(apzeiger->essid_len, apzeiger->essid);
+						}
 					fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 					}
 				}
@@ -3083,7 +3114,7 @@ if((statusout & STATUS_BEACON) == STATUS_BEACON)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(aplist_ptr->essid_len, aplist_ptr->essid);
-	fprintf(stdout, " [BEACON, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4,aplist_ptr->channel);
+	fprintf(stdout, " [BEACON, SEQUENCE %d, AP CHANNEL %d]\n", macfrx->sequence >> 4, aplist_ptr->channel);
 	}
 aplist_ptr++;
 return;
