@@ -380,12 +380,21 @@ if(fd_socket > 0)
 	{
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-	ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to set interface down");
+		}
 	if(ignorewarningflag == false)
 		{
-		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0)
+			{
+			perror("failed to restore old SIOCSIWMODE");
+			}
 		}
-	ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0)
+		{
+		perror("failed to restore old SIOCSIFFLAGS int bring interface up");
+		}
 	if(close(fd_socket) != 0)
 		{
 		perror("failed to close raw socket");
@@ -446,7 +455,7 @@ if(fd_socket_mcsrv > 0)
 	{
 	if(close(fd_socket_mcsrv) != 0)
 		{
-		perror("failed to close servr socket");
+		perror("failed to close server socket");
 		}
 	}
 
@@ -5000,7 +5009,7 @@ if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 
 memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-ifr.ifr_flags = IFF_UP;
+ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
@@ -5153,7 +5162,7 @@ if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 
 memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-ifr.ifr_flags = IFF_UP;
+ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
 if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 	{
 	perror("ioctl(SIOCSIFFLAGS) -IFF_UP failed");
