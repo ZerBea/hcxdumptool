@@ -5014,6 +5014,10 @@ if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		return false;
 		}
 	}
+else
+	{
+	fprintf(stderr, "interface is already in monitor mode\n");
+	}
 
 memset(&ifr, 0, sizeof(ifr));
 strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
