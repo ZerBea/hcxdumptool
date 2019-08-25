@@ -121,7 +121,6 @@ static long double lon;
 static long double alt;
 
 static bool wantstopflag;
-static bool ignorewarningflag;
 static bool totflag;
 static bool rebootflag;
 static bool poweroffflag;
@@ -384,16 +383,13 @@ if(fd_socket > 0)
 		{
 		perror("failed to set interface down");
 		}
-	if(ignorewarningflag == false)
+	if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0)
 		{
-		if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0)
-			{
-			perror("failed to restore old SIOCSIWMODE");
-			}
+		perror("failed to restore old SIOCSIWMODE");
 		}
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0)
 		{
-		perror("failed to restore old SIOCSIFFLAGS int bring interface up");
+		perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
 		}
 	if(close(fd_socket) != 0)
 		{
@@ -4959,82 +4955,62 @@ strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
 	perror("failed to save current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
-	if(ignorewarningflag == false)
-		{
-		return false;
-		}
+	return false;
 	}
 
-memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to set interface down, ioctl(SIOCSIFFLAGS) not supported by driver");
-	if(ignorewarningflag == false)
-		{
-		return false;
-		}
-	}
-
-memset(&iwr, 0, sizeof(iwr));
-strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
-iwr.u.mode = IW_MODE_MONITOR;
-if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
-	{
-	perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
-	if(ignorewarningflag == false)
-		{
-		return false;
-		}
-	}
-
-memset(&iwr, 0, sizeof(iwr));
-strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
-if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
-	{
-	perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
-	if(ignorewarningflag == false)
-		{
-		return false;
-		}
-	}
 if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
-	fprintf(stderr, "interface is not in monitor mode\n");
-	if(ignorewarningflag == false)
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
+		perror("failed to set interface down, ioctl(SIOCSIFFLAGS) not supported by driver");
 		return false;
 		}
-	}
 
-memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
-if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
-	if(ignorewarningflag == false)
+	memset(&iwr, 0, sizeof(iwr));
+	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	iwr.u.mode = IW_MODE_MONITOR;
+	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 		{
+		perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
 		return false;
 		}
-	}
 
-memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
-	{
-	perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
-	if(ignorewarningflag == false)
+	memset(&iwr, 0, sizeof(iwr));
+	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
+		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
 		return false;
 		}
-	}
 
-if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
-	{
-	fprintf(stderr, "interface may not be operational\n");
-	if(ignorewarningflag == false)
+	if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		{
+		fprintf(stderr, "interface is not in monitor mode\n");
+		return false;
+		}
+
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
+		return false;
+		}
+
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
+		return false;
+		}
+
+	if((ifr.ifr_flags & (IFF_UP | IFF_RUNNING | IFF_BROADCAST)) != (IFF_UP | IFF_RUNNING | IFF_BROADCAST))
+		{
+		fprintf(stderr, "interface may not be operational\n");
 		return false;
 		}
 	}
@@ -5295,15 +5271,22 @@ else
 
 if(drivererrorflag == false)
 	{
+	printf("driver tests passed - all required ioctl() system calls are supported by driver\n");
+	printf("restoring old driver settings\n");
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-	ioctl(fd_socket, SIOCSIFFLAGS, &ifr);
-	if(ignorewarningflag == false)
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
-		ioctl(fd_socket, SIOCSIWMODE, &iwr_old);
+		perror("failed to set interface down");
 		}
-	ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old);
-	printf("driver tests passed - all required ioctl() system calls are supported by driver\n");
+	if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0)
+		{
+		perror("failed to restore old SIOCSIWMODE");
+		}
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0)
+		{
+		perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
+		}
 	}
 else
 	{
@@ -5611,9 +5594,6 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default = GPIO not in use\n"
 	"--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                                     default = GPIO not in use\n"
-	"--ignore_warning                   : ignore warnings\n"
-	"                                     try this if you get some driver warnings\n"
-	"                                     do not report issues\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
 	"--client_port=<digit>              : define port for client status read (1...65535)\n"
@@ -5668,7 +5648,6 @@ tvtot.tv_usec = 0;
 mcsrvport = MCPORT;
 mccliport = MCPORT;
 
-ignorewarningflag = false;
 totflag = false;
 rebootflag = false;
 poweroffflag = false;
@@ -5717,7 +5696,6 @@ static const struct option long_options[] =
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
 	{"enable_status",		required_argument,	NULL,	HCXD_ENABLE_STATUS},
-	{"ignore_warning",		no_argument,		NULL,	HCXD_IGNORE_WARNING},
 	{"tot",				required_argument,	NULL,	HCXD_TOT},
 	{"reboot",			no_argument,		NULL,	HCXD_REBOOT},
 	{"poweroff",			no_argument,		NULL,	HCXD_POWER_OFF},
@@ -5866,11 +5844,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			exit(EXIT_FAILURE);
 			}
 		break;
-
-		case HCXD_IGNORE_WARNING:
-		ignorewarningflag = true;
-		break;
-
 
 		case HCXD_TOT:
 		totvalue = strtol(optarg, NULL, 10);
@@ -6064,15 +6037,12 @@ if(testinterface() == false)
 	exit(EXIT_FAILURE);
 	}
 
-if(ignorewarningflag == true)
-	{
-	printf("warnings are ignored - interface may not work as expected - do not report issues!\n");
-	}
-
 printf("initialization...\n");
 if(opensocket() == false)
 	{
-	fprintf(stderr, "failed to init socket\nhcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter\nthat is not the case\n");
+	fprintf(stderr, "failed to init socket\nhcxdumptool need full and exclusive access to the adapter\nthat is not the case\n"
+			"try to use ip link to bring interface down/up\n"
+			"and iw to set monitor mode\n");
 	if(fd_socket > 0)
 		{
 		memset(&ifr, 0, sizeof(ifr));

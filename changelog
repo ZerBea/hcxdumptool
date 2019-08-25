@@ -1,3 +1,24 @@
+25.08.2019
+==========
+hcxdumptool: removed option --ignore_warning (no longer needed)
+             hcxdumptool forces to set monitormode running ioctl(SIOCGIWMODE) IW_MODE_MONITOR
+             if that doesn't work on first try, try it agaon and/or
+             do monitor mode manually:
+             ip link set <interface> down
+             iw dev <interface> set type monitor
+             ip link set <interface> up
+
+warning:     on some drivers rtlXXXX netlink will not notice that we use forced ioctl() system calls
+             in that case iw dev wlp3s0f0u11u4 will show you that the "netlink part" is still managed
+             Interface wlp3s0f0u11u4
+             ifindex 11
+             wdev 0x800000001
+             addr 70:f1:1c:27:ae:ec
+             type managed
+             wiphy 8
+             txpower 13.00 dBm
+
+
 19.08.2019
 ==========
 move to v5.2.0
