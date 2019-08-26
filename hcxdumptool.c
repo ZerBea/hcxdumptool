@@ -378,7 +378,12 @@ if(gpiostatusled > 0)
 if(fd_socket > 0)
 	{
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to get interface information");
+		}
+	ifr.ifr_flags = 0;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to set interface down");
@@ -4946,7 +4951,7 @@ memset(&ifr_old, 0, sizeof(ifr));
 strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
-	perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
+	perror("failed to backup current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 	return false;
 	}
 
@@ -4954,7 +4959,7 @@ memset(&iwr_old, 0, sizeof(iwr));
 strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
-	perror("failed to save current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
+	perror("failed to backup  current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
 	return false;
 	}
 
@@ -4962,18 +4967,15 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
+		return false;
+		}
+	ifr.ifr_flags = 0;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to set interface down, ioctl(SIOCSIFFLAGS) not supported by driver");
-		return false;
-		}
-
-	memset(&iwr, 0, sizeof(iwr));
-	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
-	iwr.u.mode = IW_MODE_MONITOR;
-	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
-		{
-		perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
 		return false;
 		}
 
@@ -4984,22 +4986,31 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
 		return false;
 		}
-
+	iwr.u.mode = IW_MODE_MONITOR;
+	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
+		{
+		perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
+		return false;
+		}
+	memset(&iwr, 0, sizeof(iwr));
+	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
+		{
+		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
+		return false;
+		}
 	if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		{
 		fprintf(stderr, "interface is not in monitor mode\n");
 		return false;
 		}
 
-	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
 		return false;
 		}
-
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
@@ -5007,7 +5018,6 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 		return false;
 		}
-
 	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
 		{
 		fprintf(stderr, "interface may not be operational\n");
@@ -5088,6 +5098,7 @@ static int testchannel;
 fd_socket = 0;
 fd_socket_gpsd = 0;
 
+printf("starting driver test...\n");
 if((fd_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror("socket failed (do you have root privileges?)");
@@ -5113,7 +5124,13 @@ if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+		{
+		perror("ioctl(SIOCGIFFLAGS) failed");
+		drivererrorflag = true;
+		}
+	ifr.ifr_flags = 0;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("ioctl(SIOCSIFFLAGS) failed");
@@ -5122,6 +5139,11 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 
 	memset(&iwr, 0, sizeof(iwr));
 	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
+		{
+		perror("ioctl(SIOCGIWMODE) failed");
+		drivererrorflag = true;
+		}
 	iwr.u.mode = IW_MODE_MONITOR;
 	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 		{
@@ -5161,7 +5183,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 
 	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
 		{
-		fprintf(stderr, "ioctl(SIOCGIFFLAGS) - IFF_UP | IFF_RUNNING | IFF_BROADCAST failed\n");
+		fprintf(stderr, "ioctl(SIOCGIFFLAGS) - IFF_UP \n");
 		drivererrorflag = true;
 		}
 	}
