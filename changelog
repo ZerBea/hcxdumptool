@@ -1,3 +1,8 @@
+28.08.2019
+==========
+moved to v5.2.1
+
+
 25.08.2019
 ==========
 hcxdumptool: removed option --ignore_warning (no longer needed)
@@ -21,7 +26,7 @@ warning:     on some drivers rtlXXXX netlink will not notice that we use forced 
 
 19.08.2019
 ==========
-move to v5.2.0
+moved to v5.2.0
 
 
 18.08.2019
