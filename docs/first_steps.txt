@@ -1,0 +1,58 @@
+Identify interface and processes that interferes with hcxdumptool:
+
+$ hcxdumptool -I
+wlan interfaces:
+MAC_INTERFACE  <wlan_interface> (used_driver)
+
+On a warning like this, stop services:
+warning: NetworkManager is running with pid 415
+warning: wpa_supplicant is running with pid 515
+stop this processes:
+$ sudo systemctl stop NetworkManager.service
+$ sudo systemctl stop wpa_supplicant.service
+
+Check driver
+$ sudo hcxdumptool -i <wlan_interface> --check_driver
+starting driver test...
+driver tests passed - all required ioctl() system calls are supported by driver
+restoring old driver settings
+
+Check that packet injection is working (run it at least 13 * 5 seconds):
+$ sudo hcxdumptool -i  <wlan_interface> --do_rcascan
+INFO: cha=6, rx=351, rx(dropped)=0, tx=47, err=0, aps=21 (13 in range)
+
+if the values increase and APs are in range, start the attack:
+$ hcxdumptool -i <wlan_interface> -o test.pcapng --enable_status=1
+otherwise hcxdumptool will inform you that packet injection is not working as expected.
+
+If attack finished and hcxdumptool terminated, restart services
+$ sudo systemctl start NetworkManager.service
+$ sudo systemctl start wpa_supplicant.service
+
+If hcxdumptool is not able to set monitor mode for example on this driver:
+https://github.com/aircrack-ng/rtl8188eus
+run ip link and iw first - than run hcxdumptool:
+$ sudo ip link set <wlan_interface> down
+$ sudo iw dev  <wlan_interface> set type monitor
+$ sudo ip link set  <wlan_interface> up
+$ sudo iw dev  <wlan_interface> info
+
+
+Most (nearly all) occurring issues are related to the driver (driver doesn't support monitor mode and
+full packet injection) and the system configuration (running services that take access to the interface).
+The driver of the device must support both: monitor mode and full packet injection!
+Otherwise hcxdumptool will fail!
+
+Some of the issues are fixed:
+https://bugzilla.kernel.org/show_bug.cgi?id=202241
+https://bugzilla.kernel.org/show_bug.cgi?id=202243
+https://github.com/openwrt/mt76/issues/2...-500999516
+
+Some of them are partly fixed (or somebody is working on them):
+https://github.com/aircrack-ng/rtl8812au/issues/376
+
+Some of them are not fixed, yet:
+https://bugzilla.kernel.org/show_bug.cgi?id=202541
+
+Unfortunately many, many drivers do not support monitor mode and full packet injection. Get more information here:
+https://wikidevi.com/wiki/Main_Page
