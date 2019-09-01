@@ -1673,7 +1673,7 @@ if(eapauth->type == EAPOL_KEY)
 				{
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
-					printtimenet(macfrx->addr1, macfrx->addr1);
+					printtimenet(macfrx->addr2, macfrx->addr1);
 					apzeiger = getessid(macfrx->addr1);
 					if(apzeiger != NULL)
 						{
