@@ -639,6 +639,10 @@ static inline void printessid(int essidlen, uint8_t *essid)
 {
 static int p;
 
+if(essidlen > 32)
+	{
+	return;
+	}
 if(essidlen == 0)
 	{
 	fprintf(stdout, " <hidden ssid>");
@@ -2005,7 +2009,7 @@ if(fd_pcapng != 0)
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
-//	printessid(essidtag_ptr);
+	printessid(essidtag->len, essidtag->data);
 	fprintf(stdout, " [REASSOCIATIONREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
 return;
@@ -3096,15 +3100,11 @@ if(rsntagptr != NULL)
 		memcpy(aplist_ptr->rsn, rsntag->data, rsntag->len);
 		}
 	}
-
 else
 	{
 	aplist_ptr->status = 0;
 	}
 
-aplist_ptr->essid_len = essidtag->len;
-memset(aplist_ptr->essid, 0, ESSID_LEN_MAX);
-memcpy(aplist_ptr->essid, essidtag->data, essidtag->len);
 if(attackapflag == false)
 	{
 	if((aplist_ptr->rsn_len != 0) && (aplist_ptr->essid_len != 0) && (aplist_ptr->essid[0] != 0)) 
