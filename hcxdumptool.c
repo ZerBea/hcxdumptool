@@ -273,7 +273,7 @@ if(fp)
 	pidptr = fgets(pidline, 1024, fp);
 	if(pidptr != NULL)
 		{
-		fprintf(stderr, "warning: %s is running with pid %s", &unwantedname[6], pidline);
+		fprintf(stderr, "warning: %s is running with pid %s (service possbile interfering hcxdumptool)\n", &unwantedname[6], pidline);
 		}
 	pclose(fp);
 	}
