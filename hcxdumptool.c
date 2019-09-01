@@ -4935,6 +4935,8 @@ static struct ethtool_perm_addr *epmaddr;
 fd_socket = 0;
 fd_socket_gpsd = 0;
 
+
+memset(&mac_orig, 0, 6);
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true)
 	{
