@@ -3,6 +3,13 @@
 hcxdumptool : added bind() ll.sll_pkttype = PACKET_OTHERHOST | PACKET_OUTGOING
               added setsockopt() r.mr_type = PACKET_MR_PROMISC
 
+now dmesg will show when device entered promiscuous mode
+during hcxdumptool initialization:
+[ 6313.657830] device wlp3s0f0u11u1 entered promiscuous mode
+
+and when it left promiscuous mode when hcxdumptool terminated:
+[ 6313.735833] device wlp3s0f0u11u1 left promiscuous mode
+
 
 01.09.2019
 ==========
