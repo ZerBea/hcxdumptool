@@ -4930,8 +4930,8 @@ static inline bool opensocket()
 static struct ifreq ifr;
 static struct iwreq iwr;
 static struct sockaddr_ll ll;
-static struct ethtool_perm_addr *epmaddr;
 static struct packet_mreq mr;
+static struct ethtool_perm_addr *epmaddr;
 
 fd_socket = 0;
 fd_socket_gpsd = 0;
@@ -5055,7 +5055,11 @@ if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 memset(&mr, 0, sizeof(mr));
 mr.mr_ifindex = ifr.ifr_ifindex;
 mr.mr_type    = PACKET_MR_PROMISC;
-setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr));
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0)
+	{
+	perror("failed to set setsockopt(PACKET_MR_PROMISC)");
+	return false;
+	}
 
 epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
 if (!epmaddr)
@@ -5096,6 +5100,7 @@ static inline void testdriver()
 static struct ifreq ifr;
 static struct iwreq iwr;
 static struct sockaddr_ll ll;
+static struct packet_mreq mr;
 static struct ethtool_perm_addr *epmaddr;
 static struct ifaddrs *ifaddr = NULL;
 static struct ifaddrs *ifa = NULL;
@@ -5214,9 +5219,19 @@ ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
 ll.sll_halen = ETH_ALEN;
+ll.sll_pkttype = PACKET_OTHERHOST | PACKET_OUTGOING;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("bind socket failed");
+	drivererrorflag = true;
+	}
+
+memset(&mr, 0, sizeof(mr));
+mr.mr_ifindex = ifr.ifr_ifindex;
+mr.mr_type    = PACKET_MR_PROMISC;
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0)
+	{
+	perror("setsockopt(PACKET_MR_PROMISC) failed");
 	drivererrorflag = true;
 	}
 
