@@ -1,3 +1,9 @@
+02.09.2019
+==========
+hcxdumptool : added bind() ll.sll_pkttype = PACKET_OTHERHOST | PACKET_OUTGOING
+              added setsockopt() r.mr_type = PACKET_MR_PROMISC
+
+
 01.09.2019
 ==========
 hcxdumptool     : print additional information about interfering services
