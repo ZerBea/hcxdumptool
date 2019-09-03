@@ -66,7 +66,6 @@ static struct sockaddr_in mccliaddress;
 static int mccliport;
 static struct ip_mreq cmd;
 
-
 static maclist_t *filterlist;
 static int filterlist_len;
 
@@ -362,7 +361,6 @@ static struct ifreq ifr;
 static char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 sync();
-
 if(gpiostatusled > 0)
 	{
 	GPIO_CLR = 1 << gpiostatusled;
@@ -916,7 +914,6 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		return zeiger;
 		}
 	}
-
 return NULL;
 }
 /*===========================================================================*/
@@ -1068,7 +1065,6 @@ static const uint8_t saeerrordata[] =
 0x03, 0x00, 0x02, 0x00, 0x01, 0x00
 };
 #define SEAERROR_SIZE sizeof(saeerrordata)
-
 
 static uint8_t packetout[1024];
 
@@ -3530,7 +3526,6 @@ static unsigned long long int statuscount;
 static unsigned long long int oldincommingcount1;
 static unsigned long long int oldincommingcount5;
 
-
 static char *gpsdptr;
 static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
@@ -3885,7 +3880,6 @@ while(1)
 		payload_ptr = ieee82011_ptr +MAC_SIZE_NORM;
 		payload_len = ieee82011_len -MAC_SIZE_NORM;
 		}
-
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
 		if((rth->it_present & 0x20) == 0)
@@ -4343,7 +4337,6 @@ while(ptr != NULL)
 	}
 channelscanlist[cpa] = 0;
 cpa = 0;
-
 return true;
 }
 /*===========================================================================*/
@@ -4454,7 +4447,6 @@ if(gpio_map == MAP_FAILED)
 	}
 
 gpio = (volatile unsigned *)gpio_map;
-
 return true;
 }
 /*===========================================================================*/
@@ -4908,7 +4900,6 @@ if((fd_socket_mcsrv = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
 	return;
 	}
 
-
 memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
 mcsrvaddress.sin_family = AF_INET;
 mcsrvaddress.sin_addr.s_addr = inet_addr (MCHOST);
@@ -4935,7 +4926,6 @@ static struct ethtool_perm_addr *epmaddr;
 
 fd_socket = 0;
 fd_socket_gpsd = 0;
-
 
 memset(&mac_orig, 0, 6);
 checkallunwanted();
@@ -5040,6 +5030,7 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	perror("failed to get SIOCGIFINDEX, ioctl(SIOCGIFINDEX) not supported by driver");
 	return false;
 	}
+
 memset(&ll, 0, sizeof(ll));
 ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
@@ -5214,6 +5205,7 @@ if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	perror("ioctl(SIOCGIFINDEX) failed");
 	drivererrorflag = true;
 	}
+
 memset(&ll, 0, sizeof(ll));
 ll.sll_family = AF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
@@ -5261,6 +5253,7 @@ if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	perror("ioctl(SIOCSIWFREQ) - IW_FREQ_FIXED failed");
 	drivererrorflag = true;
 	}
+
 nanosleep(&sleepch, NULL);
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
