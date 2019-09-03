@@ -1,3 +1,8 @@
+28.08.2019
+==========
+moved to v5.2.2
+
+
 02.09.2019
 ==========
 hcxdumptool : added bind() ll.sll_pkttype = PACKET_OTHERHOST | PACKET_OUTGOING
