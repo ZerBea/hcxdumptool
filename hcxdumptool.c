@@ -5646,8 +5646,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default = GPIO not in use\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
+	"                                   : default port: %d\n"
 	"--client_port=<digit>              : define port for client status read (1...65535)\n"
 	"                                   : default IP: %s\n"
+	"                                   : default port: %d\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -5658,7 +5660,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
-	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, MCHOST, MCHOST);
+	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 
 exit(EXIT_SUCCESS);
 }
