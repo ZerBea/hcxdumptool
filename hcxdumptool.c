@@ -72,11 +72,14 @@ static int filterlist_len;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
-static aplist_t *aplist, *aplist_ptr;
+static aplist_t *aplist, *aplist_ptr, *aplist_beacon_ptr;
 static int aplistcount;
 
-static myaplist_t *myaplist, *myaplist_ptr;
+static myaplist_t *myaplist, *myaplist_ptr, *myaplist_beacon_ptr;
 static macmaclist_t *pownedlist;
+
+static myaplist_t *extaplist, *extaplist_beacon_ptr;
+static int beaconlist_len;
 
 static enhanced_packet_block_t *epbhdr;
 
@@ -126,6 +129,8 @@ static bool poweroffflag;
 static bool staytimeflag;
 static bool gpsdflag;
 static bool activescanflag;
+static bool activebeaconflag;
+static bool activeextbeaconflag;
 static bool rcascanflag;
 static bool deauthenticationflag;
 static bool disassociationflag;
@@ -179,8 +184,9 @@ static int myproberesponsesequence;
 static char *interfacename;
 static char *pcapngoutname;
 static char *ippcapngoutname;
-static char *weppcapngoutname ;
+static char *weppcapngoutname;
 static char *filterlistname;
+static char *extbeaconlistname;
 static char *rcascanlistname;
 static char *rcascanpcapngname;
 
@@ -1455,7 +1461,251 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static void send_broadcastbeacon()
+static void send_beaconclone()
+{
+static mac_t *macftx;
+static capap_t *capap;
+
+static const uint8_t broadcastbeacondata[] =
+{
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+0x03, 0x01, 0x0d,
+0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
+0x2a, 0x01, 0x00,
+0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00, 
+0x3d, 0x16, 0x0d, 0x0f, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x4a, 0x0e, 0x14, 0x00, 0x0a, 0x00, 0x2c, 0x01, 0xc8, 0x00, 0x14, 0x00, 0x05, 0x00, 0x19, 0x00,
+0x7f, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
+0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
+0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
+0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01, 0x20
+};
+#define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
+
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+
+if(aplist_beacon_ptr->essid_len == 0)
+	{
+	aplist_beacon_ptr = aplist;
+	}
+if(aplist_beacon_ptr->essid_len == 0)
+	{
+	return;
+	}
+if(aplist_beacon_ptr->essid[0] == 0)
+	{
+	return;
+	}
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, &aplist_beacon_ptr->addr, 6);
+memcpy(macftx->addr3, &aplist_beacon_ptr->addr, 6);
+macftx->sequence = mybeaconsequence++ << 4;
+if(mybeaconsequence >= 4096)
+	{
+	mybeaconsequence = 0;
+	}
+capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = 0x64;
+capap->capabilities = 0x431;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = aplist_beacon_ptr->essid_len;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], aplist_beacon_ptr->essid, aplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +aplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +aplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +aplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+	{
+	perror("\nfailed to transmit internal beacon");
+	errorcount++;
+	outgoingcount--;
+	}
+fsync(fd_socket);
+aplist_beacon_ptr++;
+if((aplist_beacon_ptr -aplist) >= MYAPLIST_MAX)
+	{
+	aplist_beacon_ptr = aplist;
+	}
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static void send_beaconmyap()
+{
+static mac_t *macftx;
+static capap_t *capap;
+
+static const uint8_t broadcastbeacondata[] =
+{
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+0x03, 0x01, 0x0d,
+0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
+0x2a, 0x01, 0x00,
+0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00, 
+0x3d, 0x16, 0x0d, 0x0f, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x4a, 0x0e, 0x14, 0x00, 0x0a, 0x00, 0x2c, 0x01, 0xc8, 0x00, 0x14, 0x00, 0x05, 0x00, 0x19, 0x00,
+0x7f, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
+0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
+0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
+0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01, 0x20
+};
+#define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
+
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+
+if(myaplist_beacon_ptr->essid_len == 0)
+	{
+	myaplist_beacon_ptr = myaplist;
+	}
+if(myaplist_beacon_ptr->essid_len == 0)
+	{
+	return;
+	}
+if(myaplist_beacon_ptr->essid[0] == 0)
+	{
+	return;
+	}
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, &myaplist_beacon_ptr->addr, 6);
+memcpy(macftx->addr3, &myaplist_beacon_ptr->addr, 6);
+macftx->sequence = mybeaconsequence++ << 4;
+if(mybeaconsequence >= 4096)
+	{
+	mybeaconsequence = 0;
+	}
+capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = 0x64;
+capap->capabilities = 0x431;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = myaplist_beacon_ptr->essid_len;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], myaplist_beacon_ptr->essid, myaplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +myaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +myaplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +myaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+	{
+	perror("\nfailed to transmit internal beacon");
+	errorcount++;
+	outgoingcount--;
+	}
+fsync(fd_socket);
+myaplist_beacon_ptr++;
+if((myaplist_beacon_ptr -myaplist) >= MYAPLIST_MAX)
+	{
+	myaplist_beacon_ptr = myaplist;
+	}
+outgoingcount++;
+return;
+}
+
+/*===========================================================================*/
+static void send_beaconextap()
+{
+static mac_t *macftx;
+static capap_t *capap;
+
+static const uint8_t broadcastbeacondata[] =
+{
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+0x03, 0x01, 0x0d,
+0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
+0x2a, 0x01, 0x00,
+0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00, 
+0x3d, 0x16, 0x0d, 0x0f, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x4a, 0x0e, 0x14, 0x00, 0x0a, 0x00, 0x2c, 0x01, 0xc8, 0x00, 0x14, 0x00, 0x05, 0x00, 0x19, 0x00,
+0x7f, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
+0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
+0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
+0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01, 0x20
+};
+#define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
+
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+
+if(extaplist_beacon_ptr->essid_len == 0)
+	{
+	extaplist_beacon_ptr = extaplist;
+	}
+if(extaplist_beacon_ptr->essid_len == 0)
+	{
+	return;
+	}
+if(extaplist_beacon_ptr->essid[0] == 0)
+	{
+	return;
+	}
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, &extaplist_beacon_ptr->addr, 6);
+memcpy(macftx->addr3, &extaplist_beacon_ptr->addr, 6);
+macftx->sequence = mybeaconsequence++ << 4;
+if(mybeaconsequence >= 4096)
+	{
+	mybeaconsequence = 0;
+	}
+capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = 0x64;
+capap->capabilities = 0x431;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = extaplist_beacon_ptr->essid_len;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], extaplist_beacon_ptr->essid, extaplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +extaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +extaplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +extaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+	{
+	perror("\nfailed to transmit internal beacon");
+	errorcount++;
+	outgoingcount--;
+	}
+fsync(fd_socket);
+extaplist_beacon_ptr++;
+if((extaplist_beacon_ptr -extaplist) >= MYAPLIST_MAX)
+	{
+	extaplist_beacon_ptr = extaplist;
+	}
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static void send_beaconbroadcast()
 {
 static mac_t *macftx;
 static capap_t *capap;
@@ -1504,7 +1754,6 @@ capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
 capap->timestamp = mytime++;
 capap->beaconintervall = 0x64;
 capap->capabilities = 0x431;
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &broadcastbeacondata, BROADCASTBEACON_SIZE);
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
 
@@ -2680,7 +2929,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	printessid(myaplist_ptr->essid_len, myaplist_ptr->essid);
 	fprintf(stdout, " [PROBEREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
-aplist_ptr++;
+myaplist_ptr++;
 return;
 }
 /*===========================================================================*/
@@ -2742,7 +2991,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	printessid(aplist_ptr->essid_len, aplist_ptr->essid);
 	fprintf(stdout, " [PROBEREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
-aplist_ptr++;
+myaplist_ptr++;
 return;
 }
 /*===========================================================================*/
@@ -3638,12 +3887,13 @@ if(gpsdflag == true)
 			"INTERFACE................: %s\n"
 			"ERRORMAX.................: %d errors\n"
 			"FILTERLIST...............: %d entries\n"
+			"BEACONLIST...............: %d entries\n"
 			"MAC CLIENT...............: %06x%06x\n"
 			"MAC ACCESS POINT.........: %06x%06x (incremented on every new ESSID)\n"
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
 			"ANONCE...................: ",
-			lat, lon, alt, day, month, year, hour, minute, second, interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+			lat, lon, alt, day, month, year, hour, minute, second, interfacename, maxerrorcount, filterlist_len, beaconlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 			for(c = 0; c < 32; c++)
 				{
 				printf("%02x", anoncerandom[c]);
@@ -3659,12 +3909,13 @@ if(gpsdflag == false)
 		"INTERFACE................: %s\n"
 		"ERRORMAX.................: %d errors\n"
 		"FILTERLIST...............: %d entries\n"
+		"BEACONLIST...............: %d entries\n"
 		"MAC CLIENT...............: %06x%06x\n"
 		"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
 		"EAPOL TIMEOUT............: %d\n"
 		"REPLAYCOUNT..............: %llu\n"
 		"ANONCE...................: ",
-		interfacename, maxerrorcount, filterlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
+		interfacename, maxerrorcount, filterlist_len, beaconlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
 		for(c = 0; c < 32; c++)
 			{
 			printf("%02x", anoncerandom[c]);
@@ -3686,9 +3937,17 @@ if(set_channel() == false)
 	fprintf(stderr, "failed to set channel\n");
 	globalclose();
 	}
+
+if(activebeaconflag == false)
+	{
+	send_beaconbroadcast();
+	}
+if(activeextbeaconflag == true)
+	{
+	send_beaconextap();
+	}
 if(activescanflag == false)
 	{
-	send_broadcastbeacon();
 	send_undirected_proberequest();
 	}
 
@@ -3762,7 +4021,7 @@ while(1)
 			}
 		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 			{
-			perror("\nfailed to get time");
+			perror("\nfailed to get time stamp");
 			errorcount++;
 			continue;
 			}
@@ -3770,6 +4029,15 @@ while(1)
 		}
 	else
 		{
+		if(activebeaconflag == false)
+			{
+			send_beaconmyap();
+			send_beaconclone();
+			}
+		if(activeextbeaconflag == true)
+			{
+			send_beaconextap();
+			}
 		if((statuscount %5) == 0)
 			{
 			gettimeofday(&tvakt, NULL);
@@ -3834,9 +4102,12 @@ while(1)
 				}
 			if(set_channel() == true)
 				{
+				if(activebeaconflag == false)
+					{
+					send_beaconbroadcast();
+					}
 				if(activescanflag == false)
 					{
-					send_broadcastbeacon();
 					send_undirected_proberequest();
 					}
 				}
@@ -4388,7 +4659,7 @@ static char linein[FILTERLIST_LINE_LEN];
 
 if((fh_filter = fopen(listname, "r")) == NULL)
 	{
-	fprintf(stderr, "failed to open filter list failed %s\n", listname);
+	fprintf(stderr, "failed to open filter list %s\n", listname);
 	return 0;
 	}
 
@@ -4424,6 +4695,54 @@ while(entries < FILTERLIST_MAX)
 	}
 fclose(fh_filter);
 return entries;
+}
+/*===========================================================================*/
+static inline void readextbeaconlist(char *listname, myaplist_t *zeiger)
+{
+static int len;
+static FILE *fh_extbeacon;
+static uint32_t extnicap;
+
+static char linein[ESSID_LEN_MAX];
+
+if((fh_extbeacon = fopen(listname, "r")) == NULL)
+	{
+	fprintf(stderr, "failed to open beacon list %s\n", listname);
+	return;
+	}
+
+extnicap = mynicap - MYAPLIST_MAX -1;
+beaconlist_len = 0;
+while(beaconlist_len < MYAPLIST_MAX)
+	{
+	if((len = fgetline(fh_extbeacon, ESSID_LEN_MAX, linein)) == -1)
+		{
+		break;
+		}
+	if((len == 0) || (len > 32))
+		{
+		continue;
+		}
+	extnicap &= 0xffffff;
+	zeiger->addr[5] = extnicap & 0xff;
+	zeiger->addr[4] = (extnicap >> 8) & 0xff;
+	zeiger->addr[3] = (extnicap >> 16) & 0xff;
+	zeiger->addr[2] = myouiap & 0xff;
+	zeiger->addr[1] = (myouiap >> 8) & 0xff;
+	zeiger->addr[0] = (myouiap >> 16) & 0xff;
+	zeiger->essid_len = len;
+	memcpy(zeiger->essid, linein, len);
+	zeiger++;
+	extnicap++;
+	beaconlist_len++;
+	}
+fclose(fh_extbeacon);
+
+if(filterlist_len == 0)
+	{
+	activebeaconflag = false;
+	}
+return;
 }
 /*===========================================================================*/
 static bool initgpio(int gpioperi)
@@ -4658,6 +4977,8 @@ if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
 	return false;
 	}
 aplist_ptr = aplist;
+aplist_beacon_ptr = aplist;
+
 aplistcount = 0;
 
 if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
@@ -4665,6 +4986,13 @@ if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
 	return false;
 	}
 myaplist_ptr = myaplist;
+myaplist_beacon_ptr = myaplist;
+
+if((extaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
+	{
+	return false;
+	}
+extaplist_beacon_ptr = extaplist;
 
 if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 	{
@@ -4687,6 +5015,12 @@ if(filterlistname != NULL)
 			printf("warning: no filter list entries\n");
 			}
 		}
+	}
+
+beaconlist_len = 0;
+if(extbeaconlistname != NULL)
+	{
+	readextbeaconlist(extbeaconlistname, extaplist);
 	}
 
 if(rcascanflag == true)
@@ -5583,8 +5917,12 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--silent                           : do not transmit!\n"
 	"                                     hcxdumptool is acting like a passive dumper\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
-	"                                     do not transmit BROADCAST beacons\n"
-	"                                     affected: ap-less and client-less attacks\n"
+	"                                     affected: client-less attacks\n"
+	"--disable_internal_beacons         : do not transmit beacons from internal beacon list\n"
+	"                                     affected: ap-less\n"
+	"--use_external_beaconlist=<file>.  : transmit beacons from this list\n"
+	"                                     maximum ESSID length %d, maximum entries %d\n"
+	"                                     affected: ap-less\n"
 	"--disable_deauthentications        : disable transmitting deauthentications\n"
 	"                                     affected: connections between client an access point\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
@@ -5659,7 +5997,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"It is much better to run gzip to compress the files. Wireshark, tshark and hcxpcaptool will understand this.\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
-	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX,
+	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX, ESSID_LEN_MAX, MYAPLIST_MAX,
 	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 
 exit(EXIT_SUCCESS);
@@ -5706,6 +6044,8 @@ poweroffflag = false;
 gpsdflag = false;
 staytimeflag = false;
 activescanflag = false;
+activebeaconflag = false;
+activeextbeaconflag = false;
 rcascanflag = false;
 deauthenticationflag = false;
 disassociationflag = false;
@@ -5725,6 +6065,7 @@ pcapngoutname = NULL;
 ippcapngoutname = NULL;
 weppcapngoutname = NULL;
 filterlistname = NULL;
+extbeaconlistname = NULL;
 rcascanpcapngname = NULL;
 
 static const char *short_options = "i:o:O:W:c:t:T:E:D:A:IChv";
@@ -5734,6 +6075,8 @@ static const struct option long_options[] =
 	{"filtermode",			required_argument,	NULL,	HCXD_FILTERMODE},
 	{"silent",			no_argument,		NULL,	HCXD_SILENT},
 	{"disable_active_scan",		no_argument,		NULL,	HCXD_DISABLE_ACTIVE_SCAN},
+	{"disable_internal_beacons",	no_argument,		NULL,	HCXD_DISABLE_INTERNAL_BEACONS},
+	{"use_external_beaconlist",	required_argument,	NULL,	HCXD_USE_EXTERNAL_BEACONLIST},
 	{"disable_deauthentications",	no_argument,		NULL,	HCXD_DISABLE_DEAUTHENTICATIONS},
 	{"give_up_deauthentications",	required_argument,	NULL,	HCXD_GIVE_UP_DEAUTHENTICATIONS},
 	{"disable_disassociations",	no_argument,		NULL,	HCXD_DISABLE_DISASSOCIATIONS},
@@ -5792,6 +6135,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_SILENT:
 		activescanflag = true;
+		activebeaconflag = true;
 		deauthenticationflag = true;
 		disassociationflag = true;
 		attackapflag = true;
@@ -5801,6 +6145,16 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCXD_DISABLE_ACTIVE_SCAN:
 		activescanflag = true;
 		break;
+
+		case HCXD_DISABLE_INTERNAL_BEACONS:
+		activebeaconflag = true;
+		break;
+
+		case HCXD_USE_EXTERNAL_BEACONLIST:
+		extbeaconlistname = optarg;
+		activeextbeaconflag = true;
+		break;
+
 
 		case HCXD_DISABLE_DEAUTHENTICATIONS:
 		deauthenticationflag = true;
