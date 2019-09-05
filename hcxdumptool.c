@@ -4716,7 +4716,7 @@ if((fh_extbeacon = fopen(listname, "r")) == NULL)
 	return;
 	}
 
-extnicap = mynicap - MYAPLIST_MAX -1;
+extnicap = mynicap -MYAPLIST_MAX -1;
 beaconlist_len = 0;
 while(beaconlist_len < MYAPLIST_MAX)
 	{
