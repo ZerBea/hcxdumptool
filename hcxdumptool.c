@@ -1495,7 +1495,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
 
 if(aplist_beacon_ptr->essid_len == 0)
 	{
@@ -1576,7 +1576,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
 
 if(myaplist_beacon_ptr->essid_len == 0)
 	{
@@ -1658,7 +1658,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
 
 if(extaplist_beacon_ptr->essid_len == 0)
 	{
