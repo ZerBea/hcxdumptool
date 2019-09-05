@@ -491,6 +491,11 @@ if(myaplist != NULL)
 	free(myaplist);
 	}
 
+if(extaplist != NULL)
+	{
+	free(extaplist);
+	}
+
 if(pownedlist != NULL)
 	{
 	free(pownedlist);
