@@ -1,11 +1,21 @@
+07.09.2019
+==========
+hcxdumptool: added new option
+
+--reactive_beacon                  : send internal/external beacon every received proberequest
+                                     affected: ap-less
+
+
 05.09.2019
 ==========
 hcxdumptool: added new options (feature request: https://github.com/ZerBea/hcxdumptool/issues/70)
 
---disable_internal_beacons         : do not transmit beacons from internal beacon list
+--disable_internal_beacons         : do not transmit beacons using received ESSIDs
+                                     default: transmit one beacon/second
                                      affected: ap-less
---use_external_beaconlist=<file>.  : transmit beacons from this list
+--use_external_beaconlist=<file>   : transmit beacons from this list
                                      maximum ESSID length 32, maximum entries 4095
+                                     default: transmit one beacon/second
                                      affected: ap-less
 
 
