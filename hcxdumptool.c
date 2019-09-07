@@ -4199,8 +4199,21 @@ while(1)
 				printf("\nfailed to set channel\n");
 				globalclose();
 				}
+			if(deactivatebeaconflag == false)
+				{
+				send_beaconmyap();
+				send_beaconclone();
+				}
+			if(activeextbeaconflag == true)
+				{
+				send_beaconextap();
+				}
+			if(activescanflag == false)
+				{
+				send_undirected_proberequest();
+				}
 			}
-		if((statuscount %2) == 0)
+		else if((statuscount %5) == 0)
 			{
 			if(deactivatebeaconflag == false)
 				{
@@ -6039,34 +6052,33 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"                                     affected: client-less attacks\n"
 	"--disable_internal_beacons         : do not transmit beacons using received ESSIDs\n"
-	"                                     default: transmit beacon once every two seconds\n"
-	"                                     affected: ap-less\n"
-	"                                     affected: reactive_beacon, flood_beacon\n"
+	"                                     default: transmit this kind of beacon once on channel change or every five seconds\n"
+	"                                     affected: ap-less and reactive_beacon, flood_beacon\n"
 	"--use_external_beaconlist=<file>   : transmit beacons from this list\n"
 	"                                     maximum ESSID length %d, maximum entries %d\n"
-	"                                     default: transmit beacon once every two seconds\n"
-	"                                     affected: ap-less\n"
-	"                                     affected: reactive_beacon, flood_beacon\n"
+	"                                     default: transmit this kind of beacon once on channel change or every five seconds\n"
+	"                                     affected: ap-less and reactive_beacon, flood_beacon\n"
 	"--reactive_beacon                  : transmit internal/external beacon on every received proberequest\n"
 	"                                     affected: ap-less\n"
-	"--flood_beacon=<digit>             : transmit internal/external beacon after every <x> received management packet\n"
-	"                                     affected: ap-less\n"
-	"--disable_deauthentications        : disable transmitting deauthentications\n"
-	"                                     affected: connections between client an access point\n"
+	"--flood_beacon=<digit>             : transmit internal/external beacon after n received management packet\n"
+	"                                     warning: this will spam a channel\n"
+	"                                     affected: ap-less and whole traffic on a channel\n"
+	"--disable_deauthentications        : do not transmit deauthentications\n"
+	"                                     affected: connections between client and access point\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--give_up_deauthentications=<digit>: disable transmitting deauthentications after n tries\n"
+	"--give_up_deauthentications=<digit>: do not transmit deauthentications after n tries\n"
 	"                                     default: %d tries (minimum: 4)\n"
 	"                                     affected: connections between client an access point\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--disable_disassociations          : disable transmitting disassociations\n"
+	"--disable_disassociations          : do not transmit disassociations\n"
 	"                                     affected: retry (EAPOL 4/4 - M4) attack\n"
-	"--disable_ap_attacks               : disable attacks on single access points\n"
+	"--disable_ap_attacks               : do not attack single access points\n"
 	"                                     affected: client-less (PMKID) attack\n"
-	"--give_up_ap_attacks=<digit>       : disable transmitting directed proberequests after n tries\n"
+	"--give_up_ap_attacks=<digit>       : do not transmit directed proberequests after n tries\n"
 	"                                     default: %d tries (minimum: 4)\n"
 	"                                     affected: client-less attack\n"
 	"                                     deauthentication attacks will not work against protected management frames\n"
-	"--disable_client_attacks           : disable attacks on single clients\n"
+	"--disable_client_attacks           : do not attack single clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--ap_mac=<mac_addr>                : use this MAC address for access point as start MAC\n"
 	"                                     format = 112233445566\n"
