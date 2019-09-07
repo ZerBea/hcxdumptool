@@ -4040,15 +4040,6 @@ while(1)
 		}
 	else
 		{
-		if(activebeaconflag == false)
-			{
-			send_beaconmyap();
-			send_beaconclone();
-			}
-		if(activeextbeaconflag == true)
-			{
-			send_beaconextap();
-			}
 		if((statuscount %5) == 0)
 			{
 			gettimeofday(&tvakt, NULL);
@@ -4111,22 +4102,25 @@ while(1)
 				{
 				cpa = 0;
 				}
-			if(set_channel() == true)
-				{
-				if(activebeaconflag == false)
-					{
-					send_beaconbroadcast();
-					}
-				if(activescanflag == false)
-					{
-					send_undirected_proberequest();
-					}
-				}
-			else
+			if(set_channel() == false)
 				{
 				printf("\nfailed to set channel\n");
 				globalclose();
 				}
+			}
+		if(activebeaconflag == false)
+			{
+			send_beaconbroadcast();
+			send_beaconmyap();
+			send_beaconclone();
+			}
+		if(activeextbeaconflag == true)
+			{
+			send_beaconextap();
+			}
+		if(activescanflag == false)
+			{
+			send_undirected_proberequest();
 			}
 		oldincommingcount1 = incommingcount;
 		statuscount++;
@@ -4518,16 +4512,13 @@ while(1)
 				{
 				cpa = 0;
 				}
-			if(set_channel() == true)
-				{
-				send_undirected_proberequest();
-				}
-			else
+			if(set_channel() == false)
 				{
 				printf("\nfailed to set channel\n");
 				globalclose();
 				}
 			}
+		send_undirected_proberequest();
 		statuscount++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
