@@ -1,8 +1,10 @@
 07.09.2019
 ==========
-hcxdumptool: added new option - incremented internal/external beacon intervall (2 seconds)
+hcxdumptool: added new options
 
 --reactive_beacon                  : send internal/external beacon on every received proberequest
+                                     affected: ap-less
+--flood_beacon=<digit>             : transmit internal/external beacon after every <x> received management packet
                                      affected: ap-less
 
 

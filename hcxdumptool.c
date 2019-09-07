@@ -148,6 +148,7 @@ static int apattacksintervall;
 static int apattacksmax;
 static int staytime;
 static int stachipset;
+static int floodbeaconcount;
 static uint8_t cpa;
 
 static int gpiostatusled;
@@ -4247,6 +4248,18 @@ while(1)
 		}
 	if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
+		if((floodbeaconcount != 0) && ((incommingcount %floodbeaconcount) == 0))
+			{
+			if(deactivatebeaconflag == false)
+				{
+				send_beaconmyap();
+				send_beaconclone();
+				}
+			if(activeextbeaconflag == true)
+				{
+				send_beaconextap();
+				}
+			}
 		if((rth->it_present & 0x20) == 0)
 			{
 			continue;
@@ -5958,7 +5971,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 ip link set <interface> down\n"
 	"                 iw dev <interface> set type monitor\n"
 	"                 ip link set <interface> up\n"
-	"                 WARNING: iw use netlink (libnl) and hcxdumptool will not work on netlink interfaces\n"
+	"                 WARNING: iw use netlink (libnl) and hcxdumptool will not work on pure netlink interfaces\n"
 	"-o <dump file> : output file in pcapng format\n"
 	"                 management frames and EAP/EAPOL frames\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
@@ -6025,13 +6038,15 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--disable_internal_beacons         : do not transmit beacons using received ESSIDs\n"
 	"                                     default: transmit beacon once every two seconds\n"
 	"                                     affected: ap-less\n"
-	"                                     affected: reactive_beacon\n"
+	"                                     affected: reactive_beacon, flood_beacon\n"
 	"--use_external_beaconlist=<file>   : transmit beacons from this list\n"
 	"                                     maximum ESSID length %d, maximum entries %d\n"
 	"                                     default: transmit beacon once every two seconds\n"
 	"                                     affected: ap-less\n"
-	"                                     affected: reactive_beacon\n"
+	"                                     affected: reactive_beacon, flood_beacon\n"
 	"--reactive_beacon                  : transmit internal/external beacon on every received proberequest\n"
+	"                                     affected: ap-less\n"
+	"--flood_beacon=<digit>             : transmit internal/external beacon after every <x> received management packet\n"
 	"                                     affected: ap-less\n"
 	"--disable_deauthentications        : disable transmitting deauthentications\n"
 	"                                     affected: connections between client an access point\n"
@@ -6167,9 +6182,10 @@ mcclientflag = false;
 
 myouiap = 0;
 mynicap = 0;
-
 myouista = 0;
 mynicsta = 0;
+
+floodbeaconcount = 0;
 
 interfacename = NULL;
 pcapngoutname = NULL;
@@ -6189,6 +6205,7 @@ static const struct option long_options[] =
 	{"disable_internal_beacons",	no_argument,		NULL,	HCXD_DISABLE_INTERNAL_BEACONS},
 	{"use_external_beaconlist",	required_argument,	NULL,	HCXD_USE_EXTERNAL_BEACONLIST},
 	{"reactive_beacon",		no_argument,		NULL,	HCXD_REACTIVE_BEACON},
+	{"flood_beacon",		required_argument,	NULL,	HCXD_FLOOD_BEACON},
 	{"disable_deauthentications",	no_argument,		NULL,	HCXD_DISABLE_DEAUTHENTICATIONS},
 	{"give_up_deauthentications",	required_argument,	NULL,	HCXD_GIVE_UP_DEAUTHENTICATIONS},
 	{"disable_disassociations",	no_argument,		NULL,	HCXD_DISABLE_DISASSOCIATIONS},
@@ -6269,6 +6286,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_REACTIVE_BEACON:
 		reactivebeaconflag = true;
+		break;
+
+		case HCXD_FLOOD_BEACON:
+		floodbeaconcount = strtol(optarg, NULL, 10);
 		break;
 
 		case HCXD_DISABLE_DEAUTHENTICATIONS:
