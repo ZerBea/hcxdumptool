@@ -4194,19 +4194,22 @@ while(1)
 				globalclose();
 				}
 			}
-		if(deactivatebeaconflag == false)
+		if((statuscount %2) == 0)
 			{
-			send_beaconbroadcast();
-			send_beaconmyap();
-			send_beaconclone();
-			}
-		if(activeextbeaconflag == true)
-			{
-			send_beaconextap();
-			}
-		if(activescanflag == false)
-			{
-			send_undirected_proberequest();
+			if(deactivatebeaconflag == false)
+				{
+				send_beaconbroadcast();
+				send_beaconmyap();
+				send_beaconclone();
+				}
+			if(activeextbeaconflag == true)
+				{
+				send_beaconextap();
+				}
+			if(activescanflag == false)
+				{
+				send_undirected_proberequest();
+				}
 			}
 		oldincommingcount1 = incommingcount;
 		statuscount++;
@@ -6020,12 +6023,12 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--disable_active_scan              : do not transmit proberequests to BROADCAST using a BROADCAST ESSID\n"
 	"                                     affected: client-less attacks\n"
 	"--disable_internal_beacons         : do not transmit beacons using received ESSIDs\n"
-	"                                     default: transmit one beacon/second\n"
+	"                                     default: transmit beacon once every two seconds\n"
 	"                                     affected: ap-less\n"
 	"                                     affected: reactive_beacon\n"
 	"--use_external_beaconlist=<file>   : transmit beacons from this list\n"
 	"                                     maximum ESSID length %d, maximum entries %d\n"
-	"                                     default: transmit one beacon/second\n"
+	"                                     default: transmit beacon once every two seconds\n"
 	"                                     affected: ap-less\n"
 	"                                     affected: reactive_beacon\n"
 	"--reactive_beacon                  : transmit internal/external beacon on every received proberequest\n"
