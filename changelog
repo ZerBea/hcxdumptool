@@ -2,7 +2,7 @@
 ==========
 hcxdumptool: added new option
 
---reactive_beacon                  : send internal/external beacon every received proberequest
+--reactive_beacon                  : send internal/external beacon on every received proberequest
                                      affected: ap-less
 
 
