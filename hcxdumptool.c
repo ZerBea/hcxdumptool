@@ -1500,7 +1500,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +IETAG_SIZE +ESSID_LEN_MAX +1];
 
 if(aplist_beacon_ptr->essid_len == 0)
 	{
@@ -1533,10 +1533,10 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = aplist_beacon_ptr->essid_len;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], aplist_beacon_ptr->essid, aplist_beacon_ptr->essid_len);
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +aplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +aplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
-if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +aplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], aplist_beacon_ptr->essid, aplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +aplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +aplist_beacon_ptr->essid_len +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +aplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -1583,7 +1583,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +IETAG_SIZE +ESSID_LEN_MAX +1];
 
 if(myaplist_beacon_ptr->essid_len == 0)
 	{
@@ -1616,10 +1616,10 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = myaplist_beacon_ptr->essid_len;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], myaplist_beacon_ptr->essid, myaplist_beacon_ptr->essid_len);
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +myaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +myaplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
-if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +myaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], myaplist_beacon_ptr->essid, myaplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +myaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +myaplist_beacon_ptr->essid_len +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +myaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -1666,7 +1666,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +IETAG_SIZE +ESSID_LEN_MAX +1];
 
 if(extaplist_beacon_ptr->essid_len == 0)
 	{
@@ -1699,10 +1699,10 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = extaplist_beacon_ptr->essid_len;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], extaplist_beacon_ptr->essid, extaplist_beacon_ptr->essid_len);
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +extaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +extaplist_beacon_ptr->essid_len +0x0e] = channelscanlist[cpa];
-if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +extaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], extaplist_beacon_ptr->essid, extaplist_beacon_ptr->essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +extaplist_beacon_ptr->essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +extaplist_beacon_ptr->essid_len +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +extaplist_beacon_ptr->essid_len +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -1749,7 +1749,7 @@ static const uint8_t broadcastbeacondata[] =
 };
 #define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
 
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +2 +ESSID_LEN_MAX +1];
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +IETAG_SIZE +ESSID_LEN_MAX +1];
 
 if(extaplist_beacon_ptr->essid_len == 0)
 	{
@@ -1782,10 +1782,10 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x431;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = essid_len;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2], essid, essid_len);
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +essid_len +0x0e] = channelscanlist[cpa];
-if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +2 +essid_len +BROADCASTBEACON_SIZE) < 0)
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], essid, essid_len);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len], &broadcastbeacondata, BROADCASTBEACON_SIZE);
+packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essid_len +BROADCASTBEACON_SIZE) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -1797,69 +1797,6 @@ if((extaplist_beacon_ptr -extaplist) >= MYAPLIST_MAX)
 	{
 	extaplist_beacon_ptr = extaplist;
 	}
-outgoingcount++;
-return;
-}
-/*===========================================================================*/
-static void send_beaconbroadcast()
-{
-static mac_t *macftx;
-static capap_t *capap;
-
-static const uint8_t broadcastbeacondata[] =
-{
-0x00, 0x00,
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
-0x03, 0x01, 0x0d,
-0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
-0x2a, 0x01, 0x00,
-0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
-0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00, 
-0x3d, 0x16, 0x0d, 0x0f, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x4a, 0x0e, 0x14, 0x00, 0x0a, 0x00, 0x2c, 0x01, 0xc8, 0x00, 0x14, 0x00, 0x05, 0x00, 0x19, 0x00,
-0x7f, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
-0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
-0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
-0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
-0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
-0xdd, 0x18, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
-0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01, 0x20
-};
-#define BROADCASTBEACON_SIZE sizeof(broadcastbeacondata)
-
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1];
-
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE +1);
-memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetout +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_BEACON;
-memcpy(macftx->addr1, &mac_broadcast, 6);
-memcpy(macftx->addr2, &mac_myap, 6);
-memcpy(macftx->addr3, &mac_myap, 6);
-macftx->sequence = mybeaconsequence++ << 4;
-if(mybeaconsequence >= 4096)
-	{
-	mybeaconsequence = 0;
-	}
-capap = (capap_t*)(packetout +HDRRT_SIZE +MAC_SIZE_NORM);
-capap->timestamp = mytime++;
-capap->beaconintervall = BEACONINTERVALL;
-capap->capabilities = 0x431;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &broadcastbeacondata, BROADCASTBEACON_SIZE);
-packetout[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
-
-if(write(fd_socket, packetout, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BROADCASTBEACON_SIZE) < 0)
-	{
-	perror("\nfailed to transmit broadcast beacon");
-	errorcount++;
-	outgoingcount--;
-	}
-fsync(fd_socket);
 outgoingcount++;
 return;
 }
@@ -2308,6 +2245,7 @@ static uint8_t *essidtag_ptr;
 static ietag_t *essidtag;
 static uint8_t *reassociationrequest_ptr;
 static int reassociationrequestlen;
+static myaplist_t *zeiger;
 
 if(attackclientflag == false)
 	{
@@ -2342,17 +2280,50 @@ if((essidtag->len == 0) || (essidtag->len > ESSID_LEN_MAX) || (essidtag->data[0]
 	return;
 	}
 
+for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0)
+		{
+		myaplist_ptr = zeiger;
+		break;
+		}
+	if((memcmp(zeiger->addr, macfrx->addr1, 6) == 0) && (zeiger->essid_len == essidtag->len) && (memcmp(zeiger->essid, essidtag->data, essidtag->len) == 0))
+		{
+		zeiger->timestamp = timestamp;
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
+		if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
+			{
+			printtimenet(macfrx->addr1, macfrx->addr2);
+			printessid(essidtag->len, essidtag->data);
+			fprintf(stdout, " [REASSOCIATIONREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
+			}
+		return;
+		}
+	}
+if((myaplist_ptr -myaplist) >= MYAPLIST_MAX)
+	{
+	qsort(myaplist, MYAPLIST_MAX, MYAPLIST_SIZE, sort_myaplist_by_time);
+	myaplist_ptr = myaplist;
+	}
+memset(myaplist_ptr, 0, MYAPLIST_SIZE);
+myaplist_ptr->timestamp = timestamp;
+memcpy(myaplist_ptr->addr, macfrx->addr1, 6);
+myaplist_ptr->essid_len = essidtag->len;
+memcpy(myaplist_ptr->essid, essidtag->data, essidtag->len);
 if(fd_pcapng != 0)
 	{
 	writeepb(fd_pcapng);
 	}
-
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(essidtag->len, essidtag->data);
 	fprintf(stdout, " [REASSOCIATIONREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
+myaplist_ptr++;
 return;
 }
 /*===========================================================================*/
@@ -2535,6 +2506,7 @@ static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 static uint8_t *associationrequestptr;
 static int associationrequestlen;
+static myaplist_t *zeiger;
 
 if(attackclientflag == false)
 	{
@@ -2569,17 +2541,51 @@ if((essidtag->len == 0) || (essidtag->len > ESSID_LEN_MAX) || (essidtag->data[0]
 	return;
 	}
 
+
+for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0)
+		{
+		myaplist_ptr = zeiger;
+		break;
+		}
+	if((memcmp(zeiger->addr, macfrx->addr1, 6) == 0) && (zeiger->essid_len == essidtag->len) && (memcmp(zeiger->essid, essidtag->data, essidtag->len) == 0))
+		{
+		zeiger->timestamp = timestamp;
+		if(fd_pcapng != 0)
+			{
+			writeepb(fd_pcapng);
+			}
+		if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
+			{
+			printtimenet(macfrx->addr1, macfrx->addr2);
+			printessid(essidtag->len, essidtag->data);
+			fprintf(stdout, " [ASSOCIATIONREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
+			}
+		return;
+		}
+	}
+if((myaplist_ptr -myaplist) >= MYAPLIST_MAX)
+	{
+	qsort(myaplist, MYAPLIST_MAX, MYAPLIST_SIZE, sort_myaplist_by_time);
+	myaplist_ptr = myaplist;
+	}
+memset(myaplist_ptr, 0, MYAPLIST_SIZE);
+myaplist_ptr->timestamp = timestamp;
+memcpy(myaplist_ptr->addr, macfrx->addr1, 6);
+myaplist_ptr->essid_len = essidtag->len;
+memcpy(myaplist_ptr->essid, essidtag->data, essidtag->len);
 if(fd_pcapng != 0)
 	{
 	writeepb(fd_pcapng);
 	}
-
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
 	printtimenet(macfrx->addr1, macfrx->addr2);
 	printessid(essidtag->len, essidtag->data);
 	fprintf(stdout, " [ASSOCIATIONREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
+myaplist_ptr++;
 return;
 }
 /*===========================================================================*/
@@ -2817,7 +2823,6 @@ if((aplist_ptr -aplist) >= APLIST_MAX)
 	}
 
 memset(aplist_ptr, 0, APLIST_SIZE);
-
 aplist_ptr->timestamp = timestamp;
 if(memcmp(&mac_mysta, macfrx->addr1, 6) == 0)
 	{
@@ -2884,21 +2889,25 @@ static capap_t *capap;
 
 const uint8_t proberesponsedata[] =
 {
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
-0x03, 0x01, 0x05,
-0x2a, 0x01, 0x00,
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,	/* supported rates */
+0x03, 0x01, 0x06,	/* channel */
+0x05, 0x04, 0x00, 0x01, 0x00, 0x00,	/* tim */
+0x07, 0x06, 0x44, 0x45, 0x20, 0x01, 0x0d, 0x14,	/* country */
+0x2a, 0x01, 0x00,	/* erp information */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,	/* extended rates */
 0x2d, 0x1a, 0xef, 0x11, 0x1b, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x06, 0xe6, 0x47, 0x0d, 0x00,	/* ht capabilites */
 0x3d, 0x16, 0x05, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,	/* ht information */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,	/* extended capabilites */
 0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
-0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,
-0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,
-0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00,	/* wmm - wme */
+0xdd, 0x09, 0x00, 0x03, 0x7f, 0x01, 0x01, 0x00, 0x00, 0xff, 0x7f,	/* vendor information chipset */
+0xdd, 0x0c, 0x00, 0x04, 0x0e, 0x01, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,	/* vendorinformation router */
+0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x02, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, 0x00, 0x00,	/* rsn information */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x00, 0x00, 0x50,
+0xf2, 0x02, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02,	/* wpa information */
 0xdd, 0x6f, 0x00, 0x50, 0xf2, 0x04, 0x10, 0x4a, 0x00, 0x01, 0x10, 0x10, 0x44, 0x00, 0x01, 0x02,
 0x10, 0x3b, 0x00, 0x01, 0x03, 0x10, 0x47, 0x00, 0x10, 0xd5, 0x6c, 0x63, 0x68, 0xb0, 0x16, 0xf7,
 0xc3, 0x09, 0x22, 0x34, 0x81, 0xc4, 0xe7, 0x99, 0x1b, 0x10, 0x21, 0x00, 0x03, 0x41, 0x56, 0x4d,
@@ -2906,7 +2915,7 @@ const uint8_t proberesponsedata[] =
 0x10, 0x42, 0x00, 0x04, 0x30, 0x30, 0x30, 0x30, 0x10, 0x54, 0x00, 0x08, 0x00, 0x06, 0x00, 0x50,
 0xf2, 0x04, 0x00, 0x01, 0x10, 0x11, 0x00, 0x04, 0x46, 0x42, 0x6f, 0x78, 0x10, 0x08, 0x00, 0x02,
 0x23, 0x88, 0x10, 0x3c, 0x00, 0x01, 0x01, 0x10, 0x49, 0x00, 0x06, 0x00, 0x37, 0x2a, 0x00, 0x01,
-0x20
+0x20	/* wps information */
 };
 #define PROBERESPONSE_SIZE sizeof(proberesponsedata)
 
@@ -3004,7 +3013,6 @@ if((myaplist_ptr -myaplist) >= MYAPLIST_MAX)
 
 memset(myaplist_ptr, 0, MYAPLIST_SIZE);
 myaplist_ptr->timestamp = timestamp;
-mynicap++;
 myaplist_ptr->addr[5] = mynicap & 0xff;
 myaplist_ptr->addr[4] = (mynicap >> 8) & 0xff;
 myaplist_ptr->addr[3] = (mynicap >> 16) & 0xff;
@@ -3025,6 +3033,7 @@ if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	printessid(myaplist_ptr->essid_len, myaplist_ptr->essid);
 	fprintf(stdout, " [PROBEREQUEST, SEQUENCE %d]\n", macfrx->sequence >> 4);
 	}
+mynicap++;
 myaplist_ptr++;
 return;
 }
@@ -4036,10 +4045,6 @@ if(set_channel() == false)
 	globalclose();
 	}
 
-if(deactivatebeaconflag == false)
-	{
-	send_beaconbroadcast();
-	}
 if(activeextbeaconflag == true)
 	{
 	send_beaconextap();
@@ -4199,7 +4204,6 @@ while(1)
 			{
 			if(deactivatebeaconflag == false)
 				{
-				send_beaconbroadcast();
 				send_beaconmyap();
 				send_beaconclone();
 				}
@@ -4287,7 +4291,6 @@ while(1)
 				{
 				if(deactivatebeaconflag == false)
 					{
-					send_beaconbroadcast();
 					send_beaconmyap();
 					send_beaconclone();
 					}
