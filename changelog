@@ -13,14 +13,12 @@ hcxdumptool: added new options
 hcxdumptool: added new options (feature request: https://github.com/ZerBea/hcxdumptool/issues/70)
 
 --disable_internal_beacons         : do not transmit beacons using received ESSIDs
-                                     default: transmit beacon once every two seconds
-                                     affected: ap-less
-                                     affected: reactive_beacon
+                                     default: transmit this kind of beacon once on channel change or every five seconds
+                                     affected: ap-less and reactive_beacon, flood_beacon
 --use_external_beaconlist=<file>   : transmit beacons from this list
                                      maximum ESSID length 32, maximum entries 4095
-                                     default: transmit beacon once every two seconds
-                                     affected: ap-less
-                                     affected: reactive_beacon
+                                     default: transmit this kind of beacon once on channel change or every five seconds
+                                     affected: ap-less and reactive_beacon, flood_beacon
 
 
 28.08.2019
