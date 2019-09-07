@@ -419,6 +419,7 @@ if(fd_socket_gpsd > 0)
 		perror("failed to close gpsd socket");
 		}
 	}
+
 if(fd_weppcapng > 0)
 	{
 	writeisb(fd_weppcapng, 0, timestampstart, incommingcount);
@@ -453,6 +454,26 @@ if(fd_pcapng > 0)
 	if(close(fd_pcapng) != 0)
 		{
 		perror("failed to close pcapng file");
+		}
+	}
+
+if(rcascanflag == true)
+	{
+	if(fd_rcascanpcapng > 0)
+		{
+		writeisb(fd_rcascanpcapng, 0, timestampstart, incommingcount);
+		if(fsync(fd_rcascanpcapng) != 0)
+			{
+			perror("failed to sync pcapng file");
+			}
+		if(close(fd_rcascanpcapng) != 0)
+			{
+			perror("failed to close pcapng file");
+			}
+		}
+	if(rcascanlistname != NULL)
+		{
+		saveapinfo();
 		}
 	}
 
@@ -499,26 +520,6 @@ if(extaplist != NULL)
 if(pownedlist != NULL)
 	{
 	free(pownedlist);
-	}
-
-if(rcascanflag == true)
-	{
-	if(fd_rcascanpcapng > 0)
-		{
-		writeisb(fd_rcascanpcapng, 0, timestampstart, incommingcount);
-		if(fsync(fd_rcascanpcapng) != 0)
-			{
-			perror("failed to sync pcapng file");
-			}
-		if(close(fd_rcascanpcapng) != 0)
-			{
-			perror("failed to close pcapng file");
-			}
-		}
-	if(rcascanlistname != NULL)
-		{
-		saveapinfo();
-		}
 	}
 
 printf("\nterminated...\e[?25h\n");
