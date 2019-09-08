@@ -232,7 +232,7 @@ static uint8_t channelscanlist[128] =
 static uint8_t mac_orig[6];
 static uint8_t mac_mysta[6];
 static uint8_t mac_myap[6];
-static uint8_t mac_mybcap[6];
+static uint8_t mac_mystartap[6];
 
 static unsigned long long int rcrandom;
 static uint8_t anoncerandom[32];
@@ -917,11 +917,25 @@ for(c = 0; c < POWNEDLIST_MAX; c++)
 return 0;
 }
 /*===========================================================================*/
-static inline struct aplist_s *getessid(uint8_t *macap)
+static inline struct aplist_s *getessidfromaplist(uint8_t *macap)
 {
 static aplist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macap, 6) == 0)
+		{
+		return zeiger;
+		}
+	}
+return NULL;
+}
+/*===========================================================================*/
+static inline struct myaplist_s *getessidfrommyaplist(uint8_t *macap)
+{
+static myaplist_t *zeiger;
+
+for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->addr, macap, 6) == 0)
 		{
@@ -1844,6 +1858,7 @@ static uint16_t keyinfo;
 static unsigned long long int rc;
 static int calceapoltimeout;
 static aplist_t *apzeiger;
+static myaplist_t *myapzeiger;
 
 static exteap_t *exteap;
 static uint16_t exteaplen;
@@ -1889,10 +1904,18 @@ if(eapauth->type == EAPOL_KEY)
 					if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 						{
 						printtimenet(macfrx->addr1, macfrx->addr2);
-						apzeiger = getessid(macfrx->addr2);
+						apzeiger = getessidfromaplist(macfrx->addr2);
 						if(apzeiger != NULL)
 							{
 							printessid(apzeiger->essid_len, apzeiger->essid);
+							}
+						else
+							{
+							myapzeiger = getessidfrommyaplist(macfrx->addr2);
+							if(myapzeiger != NULL)
+								{
+								printessid(myapzeiger->essid_len, myapzeiger->essid);
+								}
 							}
 						if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 							{
@@ -1923,10 +1946,18 @@ if(eapauth->type == EAPOL_KEY)
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
 					printtimenet(macfrx->addr1, macfrx->addr2);
-					apzeiger = getessid(macfrx->addr2);
+					apzeiger = getessidfromaplist(macfrx->addr2);
 					if(apzeiger != NULL)
 						{
 						printessid(apzeiger->essid_len, apzeiger->essid);
+						}
+					else
+						{
+						myapzeiger = getessidfrommyaplist(macfrx->addr2);
+						if(myapzeiger != NULL)
+							{
+							printessid(myapzeiger->essid_len, myapzeiger->essid);
+							}
 						}
 					fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 					}
@@ -1952,10 +1983,18 @@ if(eapauth->type == EAPOL_KEY)
 				if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 					{
 					printtimenet(macfrx->addr2, macfrx->addr1);
-					apzeiger = getessid(macfrx->addr1);
+					apzeiger = getessidfromaplist(macfrx->addr1);
 					if(apzeiger != NULL)
 						{
 						printessid(apzeiger->essid_len, apzeiger->essid);
+						}
+					else
+						{
+						myapzeiger = getessidfrommyaplist(macfrx->addr1);
+						if(myapzeiger != NULL)
+							{
+							printessid(myapzeiger->essid_len, myapzeiger->essid);
+							}
 						}
 					fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 					}
@@ -5064,13 +5103,13 @@ if(mynicap == 0)
 
 myouiap &= 0xfcffff;
 mynicap &= 0xffffff;
-mac_mybcap[5] = mynicap & 0xff;
-mac_mybcap[4] = (mynicap >> 8) & 0xff;
-mac_mybcap[3] = (mynicap >> 16) & 0xff;
-mac_mybcap[2] = myouiap & 0xff;
-mac_mybcap[1] = (myouiap >> 8) & 0xff;
-mac_mybcap[0] = (myouiap >> 16) & 0xff;
-memcpy(&mac_myap, &mac_mybcap, 6);
+mac_mystartap[5] = mynicap & 0xff;
+mac_mystartap[4] = (mynicap >> 8) & 0xff;
+mac_mystartap[3] = (mynicap >> 16) & 0xff;
+mac_mystartap[2] = myouiap & 0xff;
+mac_mystartap[1] = (myouiap >> 8) & 0xff;
+mac_mystartap[0] = (myouiap >> 16) & 0xff;
+memcpy(&mac_myap, &mac_mystartap, 6);
 
 if(myouista == 0)
 	{
@@ -5163,7 +5202,7 @@ if(rcascanflag == true)
 	weppcapngoutname = NULL;
 	if(rcascanpcapngname != NULL)
 		{
-		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
+		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
 		if(fd_rcascanpcapng <= 0)
 			{
 			fprintf(stderr, "could not create dumpfile %s\n", rcascanpcapngname);
@@ -5173,7 +5212,7 @@ if(rcascanflag == true)
 	}
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
@@ -5182,7 +5221,7 @@ if(pcapngoutname != NULL)
 	}
 if(weppcapngoutname != NULL)
 	{
-	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
+	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_weppcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", weppcapngoutname);
@@ -5191,7 +5230,7 @@ if(weppcapngoutname != NULL)
 	}
 if(ippcapngoutname != NULL)
 	{
-	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mybcap, rcrandom, anoncerandom, mac_mysta);
+	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
 	if(fd_ippcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", ippcapngoutname);
@@ -5512,7 +5551,7 @@ if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 
 memset(&mr, 0, sizeof(mr));
 mr.mr_ifindex = ifr.ifr_ifindex;
-mr.mr_type    = PACKET_MR_PROMISC;
+mr.mr_type = PACKET_MR_PROMISC;
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0)
 	{
 	perror("failed to set setsockopt(PACKET_MR_PROMISC)");
@@ -5687,7 +5726,7 @@ if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 
 memset(&mr, 0, sizeof(mr));
 mr.mr_ifindex = ifr.ifr_ifindex;
-mr.mr_type    = PACKET_MR_PROMISC;
+mr.mr_type = PACKET_MR_PROMISC;
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0)
 	{
 	perror("setsockopt(PACKET_MR_PROMISC) failed");
