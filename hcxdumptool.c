@@ -4325,6 +4325,18 @@ while(1)
 			droppedcount++;
 			continue;
 			}
+		if((floodbeaconcount != 0) && ((incommingcount %floodbeaconcount) == 0))
+			{
+			if(deactivatebeaconflag == false)
+				{
+				send_beaconmyap();
+				send_beaconclone();
+				}
+			if(activeextbeaconflag == true)
+				{
+				send_beaconextap();
+				}
+			}
 		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
 			{
 			if(filtermode == 3)
@@ -4339,18 +4351,6 @@ while(1)
 			}
 		if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
 			{
-			if(reactivebeaconflag == true)
-				{
-				if(deactivatebeaconflag == false)
-					{
-					send_beaconmyap();
-					send_beaconclone();
-					}
-				if(activeextbeaconflag == true)
-					{
-					send_beaconextap();
-					}
-				}
 			if((macfrx->sequence == lastsequenceproberequest) && (memcmp(macfrx->addr1, &lastaddr1proberequest, 6) == 0) && (memcmp(macfrx->addr2, &lastaddr2proberequest, 6) == 0))
 				{
 				droppedcount++;
@@ -4377,6 +4377,18 @@ while(1)
 			else
 				{
 				process80211directed_probe_req();
+				}
+			if(reactivebeaconflag == true)
+				{
+				if(deactivatebeaconflag == false)
+					{
+					send_beaconmyap();
+					send_beaconclone();
+					}
+				if(activeextbeaconflag == true)
+					{
+					send_beaconextap();
+					}
 				}
 			continue;
 			}
