@@ -5310,6 +5310,7 @@ static inline void processclient()
 static fd_set readfds;
 static struct timeval tvfd;
 static int fdnum;
+static int client_len;;
 static unsigned long long int statuscount;
 
 static char serverstatus[SERVERSTATUSSIZE];
@@ -5339,8 +5340,12 @@ while(1)
 		}
 	if(FD_ISSET(fd_socket_mccli, &readfds))
 		{
-		read(fd_socket_mccli, serverstatus, SERVERSTATUSSIZE);
-		printf("%s\n", serverstatus);
+		client_len = read(fd_socket_mccli, serverstatus, SERVERSTATUSSIZE);
+		if(client_len < 0)
+			{
+			perror("\nfailed to read data from server");
+			continue;
+			}
 		}
 	else
 		{
