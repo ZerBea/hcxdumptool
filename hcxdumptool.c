@@ -90,7 +90,7 @@ static int ieee82011_len;
 static mac_t *macfrx;
 
 static uint8_t *payload_ptr;
-static int payload_len;
+static uint32_t payload_len;
 
 static uint8_t *llc_ptr;
 static llc_t *llc;
@@ -833,16 +833,18 @@ if(written != epblen)
 return;	
 }
 /*===========================================================================*/
-static inline uint8_t *gettag(uint8_t tag, uint8_t *tagptr, int restlen)
+static inline uint8_t *gettag(uint8_t tag, uint8_t *tagptr, uint32_t plen)
 {
-static ietag_t *tagfield;
+ietag_t *tagfield;
+uint32_t tlen;
 
-while(0 < restlen)
+tlen = 0;
+while(tlen < plen)
 	{
 	tagfield = (ietag_t*)tagptr;
 	if(tagfield->id == tag)
 		{
-		if(restlen >= (int)tagfield->len +(int)IETAG_SIZE)
+		if((tlen +tagfield->len +2) <= plen)
 			{
 			return tagptr;
 			}
@@ -852,7 +854,7 @@ while(0 < restlen)
 			}
 		}
 	tagptr += tagfield->len +IETAG_SIZE;
-	restlen -= tagfield->len +IETAG_SIZE;
+	tlen += tagfield->len +IETAG_SIZE;
 	}
 return NULL;
 }
@@ -1377,7 +1379,7 @@ static inline void send_directed_proberequest(uint8_t *macap, int essid_len, uin
 {
 static mac_t *macftx;
 static uint8_t *beaconptr;
-static int beaconlen;
+static uint32_t beaconlen;
 static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 
@@ -2062,7 +2064,10 @@ if(eapauth->type == EAP_PACKET)
 			if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 				{
 				printtimenet(macfrx->addr1, macfrx->addr2);
-				printid(exteaplen -5, exteap->data);
+				if(exteaplen > 5)
+					{
+					printid(exteaplen -5, exteap->data);
+					}
 				fprintf(stdout, " [EAP REQUEST ID, SEQUENCE %d]\n", macfrx->sequence >> 4);
 				}
 			}
@@ -2071,7 +2076,10 @@ if(eapauth->type == EAP_PACKET)
 			if((statusout & STATUS_EAPOL) == STATUS_EAPOL)
 				{
 				printtimenet(macfrx->addr1, macfrx->addr2);
-				printid(exteaplen -5, exteap->data);
+				if(exteaplen > 5)
+					{
+					printid(exteaplen -5, exteap->data);
+					}
 				fprintf(stdout, " [EAP RESPONSE ID, SEQUENCE %d]\n", macfrx->sequence >> 4);
 				}
 			}
@@ -2283,7 +2291,7 @@ static inline void process80211reassociation_req()
 static uint8_t *essidtag_ptr;
 static ietag_t *essidtag;
 static uint8_t *reassociationrequest_ptr;
-static int reassociationrequestlen;
+static uint32_t reassociationrequestlen;
 static myaplist_t *zeiger;
 
 if(attackclientflag == false)
@@ -2544,7 +2552,7 @@ static inline void process80211association_req()
 static uint8_t *essidtagptr;
 static ietag_t *essidtag;
 static uint8_t *associationrequestptr;
-static int associationrequestlen;
+static uint32_t associationrequestlen;
 static myaplist_t *zeiger;
 
 if(attackclientflag == false)
@@ -2795,7 +2803,7 @@ static inline void process80211probe_resp()
 {
 static aplist_t *zeiger;
 static uint8_t *apinfoptr;
-static int apinfolen;
+static uint32_t apinfolen;
 static uint8_t *essidtagptr;
 static ietag_t *essidtag = NULL;
 static uint8_t *channeltagptr;
@@ -2809,7 +2817,7 @@ if(payload_len < (int)CAPABILITIESAP_SIZE)
 	}
 apinfoptr = payload_ptr +CAPABILITIESAP_SIZE;
 apinfolen = payload_len -CAPABILITIESAP_SIZE;
-if(apinfolen < (int)IETAG_SIZE)
+if(apinfolen < IETAG_SIZE)
 	{
 	return;
 	}
@@ -3145,7 +3153,7 @@ static inline void process80211rcascanproberesponse()
 {
 static aplist_t *zeiger;
 static uint8_t *apinfoptr;
-static int apinfolen;
+static uint32_t apinfolen;
 static uint8_t *essidtagptr;
 static ietag_t *essidtag = NULL;
 static uint8_t *channeltagptr;
