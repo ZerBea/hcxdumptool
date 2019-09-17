@@ -1,3 +1,10 @@
+17.09.2019
+==========
+hcxdumptool: added weak password check
+             high experimental, only on WPA2 QOS
+             new dependency: lib crypto (openssl)
+
+
 07.09.2019
 ==========
 hcxdumptool: added new options

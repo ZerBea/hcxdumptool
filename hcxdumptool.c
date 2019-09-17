@@ -17,6 +17,9 @@
 #include <unistd.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/cmac.h>
 
 #ifdef __ANDROID__
 #include <libgen.h>
@@ -139,6 +142,7 @@ static bool attackapflag;
 static bool attackclientflag;
 static bool mcserverflag;
 static bool mcclientflag;
+static bool qosflag;
 
 static int filtermode;
 static int eapoltimeout;
@@ -236,6 +240,7 @@ static uint8_t mac_mystartap[6];
 
 static unsigned long long int rcrandom;
 static uint8_t anoncerandom[32];
+static uint8_t snoncerandom[32];
 
 static uint64_t lasttimestampm1;
 static uint8_t laststam1[6];
@@ -1849,6 +1854,114 @@ if(memcmp(pmkid->pmkid, &nulliv, 16) == 0)
 return true;
 }
 /*===========================================================================*/
+static inline void send_m2wpa2qos(uint8_t *macap, uint8_t *eapdataap)
+{
+static mac_t *macftx;
+static aplist_t *apzeiger;
+static uint8_t *pkeptr;
+static wpakey_t *wpakeyap;
+static int p;
+static uint8_t *mywpakey;
+uint8_t pwlen = 8;
+static char *password = "12345678";
+
+static uint8_t wpa2qosdata[] =
+{
+0x88, 0x01, 0x3a, 0x01,
+0x34, 0x81, 0xc4, 0xe7, 0x99, 0x1b, /* to */
+0xb0, 0xc0, 0x90, 0x46, 0x7c, 0xab, /* fm */
+0x34, 0x81, 0xc4, 0xe7, 0x99, 0x1b, /* net */
+0x00, 0x00, 0x07, 0x00, 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x03, 0x00, 0x75, 0x02, 0x01, 0x0a, 0x00, 0x00,
+/* rc */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+/* snonce */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+/* mic */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x16, 0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00, 0x00, 0x0f, 0xac, 0x02, 0x00, 0x00
+};
+#define WPA2QOS_SIZE sizeof(wpa2qosdata)
+
+
+static unsigned char pmk[64];
+uint8_t pkedata[102];
+uint8_t ptk[128];
+uint8_t mic[16];
+static uint8_t packetout[256];
+
+apzeiger = getessidfromaplist(macap);
+if(apzeiger == NULL)
+	{
+	return;
+	}
+if( PKCS5_PBKDF2_HMAC_SHA1(password, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+	{
+	return;
+	}
+
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+wpakeyap = (wpakey_t *)(eapdataap +EAPAUTH_SIZE);
+
+pkeptr = pkedata;
+memset(&pkedata, 0, sizeof(pkedata));
+memset(&ptk, 0, sizeof(ptk));
+memcpy(pkeptr, "Pairwise key expansion", 23);
+if(memcmp(macap, &mac_mysta, 6) < 0)
+	{
+	memcpy(pkeptr +23, macap, 6);
+	memcpy(pkeptr +29, &mac_mysta, 6);
+	}
+else
+	{
+	memcpy(pkeptr +23, &mac_mysta, 6);
+	memcpy(pkeptr +29, macap, 6);
+	}
+	if(memcmp(wpakeyap->nonce, &snoncerandom, 32) < 0)
+	{
+	memcpy (pkeptr +35, wpakeyap->nonce, 32);
+	memcpy (pkeptr +67, &snoncerandom, 32);
+	}
+else
+	{
+	memcpy (pkeptr +35, &snoncerandom, 32);
+	memcpy (pkeptr +67, wpakeyap->nonce, 32);
+	}
+
+memset(&packetout, 0, HDRRT_SIZE +WPA2QOS_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+memcpy(&packetout[HDRRT_SIZE], &wpa2qosdata, WPA2QOS_SIZE);
+memcpy(macftx->addr1, macap, 6);
+memcpy(macftx->addr2, &mac_mysta, 6);
+memcpy(macftx->addr3, macap, 6);
+packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE] = eapdataap[0];
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x05], &eapdataap [+EAPAUTH_SIZE +5], 8);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x0d], &snoncerandom, 32);
+mywpakey = &packetout[+HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
+
+for (p = 0; p < 4; p++)
+	{
+	pkedata[99] = p;
+	HMAC(EVP_sha1(), pmk, 32, pkedata, 100, ptk + p *20, NULL);
+	}
+HMAC(EVP_sha1(), ptk, 16, mywpakey, 121, mic, NULL);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
+
+if(write(fd_socket, packetout, HDRRT_SIZE +WPA2QOS_SIZE) < 0)
+	{
+	perror("\nfailed to retransmit M1");
+	errorcount++;
+	outgoingcount--;
+	}
+outgoingcount++;
+fsync(fd_socket);
+return;
+}
+/*===========================================================================*/
 static inline void process80211eap()
 {
 static uint8_t *eapauthptr;
@@ -1857,6 +1970,7 @@ static int eapauthlen;
 static uint16_t authlen;
 static wpakey_t *wpak;
 static uint16_t keyinfo;
+static uint8_t keyver;
 static unsigned long long int rc;
 static int calceapoltimeout;
 static aplist_t *apzeiger;
@@ -1882,7 +1996,12 @@ if(eapauth->type == EAPOL_KEY)
 		{
 		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
 			{
-			addpownedstaap(macfrx->addr1, macfrx->addr2, RX_M1);
+			keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
+			if(keyver == 2)
+				{
+				send_m2wpa2qos(macfrx->addr2, eapauthptr);
+				}
+//			addpownedstaap(macfrx->addr1, macfrx->addr2, RX_M1);
 			return;
 			}
 		if(fd_pcapng != 0)
@@ -1961,7 +2080,14 @@ if(eapauth->type == EAPOL_KEY)
 							printessid(myapzeiger->essid_len, myapzeiger->essid);
 							}
 						}
-					fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
+						{
+						fprintf(stdout, " [FOUND WEAK PASSWORD: 12345678, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+						}
+					else
+						{
+						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+						}
 					}
 				}
 			}
@@ -4530,6 +4656,7 @@ while(1)
 		}
 	if(macfrx->type == IEEE80211_FTYPE_DATA)
 		{
+		qosflag = false;
 		if((macfrx->sequence == lastsequencedata) && (memcmp(macfrx->addr1, &lastaddr1data, 6) == 0) && (memcmp(macfrx->addr2, &lastaddr2data, 6) == 0))
 			{
 			droppedcount++;
@@ -4540,6 +4667,7 @@ while(1)
 		memcpy(&lastaddr2data, macfrx->addr2, 6);
 		if((macfrx->subtype & IEEE80211_STYPE_QOS_DATA) == IEEE80211_STYPE_QOS_DATA)
 			{
+			qosflag = true;
 			payload_ptr += QOS_SIZE;
 			payload_len -= QOS_SIZE;
 			}
@@ -5162,6 +5290,10 @@ rcrandom = (rand()%0xfff) +0xf000;
 for(c = 0; c < 32; c++)
 	{
 	anoncerandom[c] = rand() %0xff;
+	}
+for(c = 0; c < 32; c++)
+	{
+	snoncerandom[c] = rand() %0xff;
 	}
 
 if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
