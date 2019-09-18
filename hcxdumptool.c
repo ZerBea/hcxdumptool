@@ -762,7 +762,7 @@ else
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
 	}
-epblen += addoption(epb +epblen, OPTIONCODE_ANONCE, 32, (char*)anoncerandom);
+epblen += addoption(epb +epblen, OPTIONCODE_ANONCE, 32, (char*)&anoncerandom);
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
@@ -5505,7 +5505,7 @@ if(rcascanflag == true)
 	weppcapngoutname = NULL;
 	if(rcascanpcapngname != NULL)
 		{
-		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
+		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
 		if(fd_rcascanpcapng <= 0)
 			{
 			fprintf(stderr, "could not create dumpfile %s\n", rcascanpcapngname);
@@ -5515,7 +5515,7 @@ if(rcascanflag == true)
 	}
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
@@ -5524,7 +5524,7 @@ if(pcapngoutname != NULL)
 	}
 if(weppcapngoutname != NULL)
 	{
-	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
+	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
 	if(fd_weppcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", weppcapngoutname);
@@ -5533,7 +5533,7 @@ if(weppcapngoutname != NULL)
 	}
 if(ippcapngoutname != NULL)
 	{
-	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta);
+	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
 	if(fd_ippcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", ippcapngoutname);

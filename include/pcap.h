@@ -9,10 +9,12 @@
 #define PCAPNG_MINOR_VER	0
 #define PCAPNG_MAXSNAPLEN	0xffff
 
-#define OPTIONCODE_MACMYAP	62107
-#define OPTIONCODE_RC		62108
-#define OPTIONCODE_ANONCE	62109
-#define OPTIONCODE_MACMYSTA	62110
+#define OPTIONCODE_MACMYAP		62107
+#define OPTIONCODE_RC			62108
+#define OPTIONCODE_ANONCE		62109
+#define OPTIONCODE_MACMYSTA		62110
+#define OPTIONCODE_SNONCE		62111
+#define OPTIONCODE_WEAKCANDIDATE	62112
 
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */
