@@ -254,7 +254,6 @@ static uint64_t lastrcm2;
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
-
 /*===========================================================================*/
 #ifdef DEBUG
 static inline void debugprint(int len, uint8_t *ptr)
@@ -1861,9 +1860,10 @@ static aplist_t *apzeiger;
 static uint8_t *pkeptr;
 static wpakey_t *wpakeyap;
 static int p;
-static uint8_t *mywpakey;
+static uint8_t *myeapol;
 uint8_t pwlen = 8;
-static char *password = "12345678";
+
+static char *weakcandidate = "12345678";
 
 static uint8_t wpa2qosdata[] =
 {
@@ -1899,7 +1899,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(password, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
@@ -1938,17 +1938,17 @@ memcpy(&packetout[HDRRT_SIZE], &wpa2qosdata, WPA2QOS_SIZE);
 memcpy(macftx->addr1, macap, 6);
 memcpy(macftx->addr2, &mac_mysta, 6);
 memcpy(macftx->addr3, macap, 6);
-packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE] = eapdataap[0];
+packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE] = eapdataap[0];
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x05], &eapdataap [+EAPAUTH_SIZE +5], 8);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x0d], &snoncerandom, 32);
-mywpakey = &packetout[+HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
+myeapol = &packetout[+HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
 
 for (p = 0; p < 4; p++)
 	{
 	pkedata[99] = p;
 	HMAC(EVP_sha1(), pmk, 32, pkedata, 100, ptk + p *20, NULL);
 	}
-HMAC(EVP_sha1(), ptk, 16, mywpakey, 121, mic, NULL);
+HMAC(EVP_sha1(), ptk, 16, myeapol, 121, mic, NULL);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
 
 if(write(fd_socket, packetout, HDRRT_SIZE +WPA2QOS_SIZE) < 0)
