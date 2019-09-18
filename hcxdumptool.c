@@ -254,6 +254,9 @@ static uint64_t lastrcm2;
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
+
+static int wclen;
+static char weakcandidate[64];
 /*===========================================================================*/
 #ifdef DEBUG
 static inline void debugprint(int len, uint8_t *ptr)
@@ -1825,8 +1828,6 @@ static inline int detectpmkid(uint8_t *macsta, uint8_t *macap, uint16_t authlen,
 {
 static pmkid_t *pmkid;
 static aplist_t *apzeiger;
-static uint8_t pwlen = 8;
-static char *weakcandidate = "12345678";
 static char *pmkname = "PMK Name";
 
 static uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
@@ -1865,7 +1866,7 @@ if(apzeiger == NULL)
 	return 1;
 	}
 
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return 1;
 	}
@@ -1888,9 +1889,6 @@ static uint8_t *pkeptr;
 static wpakey_t *wpakeyap;
 static int p;
 static uint8_t *myeapol;
-static uint8_t pwlen = 8;
-
-static char *weakcandidate = "12345678";
 
 static uint8_t wpa1qosdata[] =
 {
@@ -1926,7 +1924,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
@@ -1997,9 +1995,6 @@ static uint8_t *pkeptr;
 static wpakey_t *wpakeyap;
 static int p;
 static uint8_t *myeapol;
-static uint8_t pwlen = 8;
-
-static char *weakcandidate = "12345678";
 
 static uint8_t wpa2qosdata[] =
 {
@@ -2035,7 +2030,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
@@ -2188,7 +2183,7 @@ if(eapauth->type == EAPOL_KEY)
 								}
 							else
 								{
-								fprintf(stdout, " [FOUND FOUND PMKID CLIENT-LESS, WEAK PASSWORD: 12345678]\n");
+								fprintf(stdout, " [FOUND FOUND PMKID CLIENT-LESS, WEAK PASSWORD: %s]\n", weakcandidate);
 								}
 							}
 						else
@@ -2199,7 +2194,7 @@ if(eapauth->type == EAPOL_KEY)
 								}
 							else
 								{
-								fprintf(stdout, " [FOUND FOUND PMKID, WEAK PASSWORD: 12345678]\n");
+								fprintf(stdout, " [FOUND FOUND PMKID, WEAK PASSWORD: %s]\n", weakcandidate);
 								}
 							}
 						}
@@ -2238,7 +2233,7 @@ if(eapauth->type == EAPOL_KEY)
 						}
 					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 						{
-						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, WEAK PASSWORD: 12345678, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, WEAK PASSWORD: %s, EAPOL TIMEOUT %d]\n", weakcandidate, calceapoltimeout);
 						}
 					else
 						{
@@ -6467,6 +6462,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      8: ASSOCIATION/REASSOCIATION\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE (1 + 2 = 3)\n"
+	"--weak_candidate=<password>        : use this password (8...32 characters) for weak candidate alert\n"
+	"                                     default: 12345678\n"
 	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
 	"                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
 	"--reboot                           : once hcxdumptool terminated, reboot system\n"
@@ -6515,6 +6512,7 @@ static unsigned long long int stationmac;
 static struct ifreq ifr;
 static long int totvalue;
 static bool checkdriver = false;
+static char *weakcandidatename = NULL;
 
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
@@ -6563,6 +6561,8 @@ filterlistname = NULL;
 extbeaconlistname = NULL;
 rcascanpcapngname = NULL;
 
+static char *weakpass = "12345678";
+
 static const char *short_options = "i:o:O:W:c:t:T:E:D:A:IChv";
 static const struct option long_options[] =
 {
@@ -6584,6 +6584,7 @@ static const struct option long_options[] =
 	{"ap_mac",			required_argument,	NULL,	HCXD_AP_MAC},
 	{"station_mac",			required_argument,	NULL,	HCXD_STATION_MAC},
 	{"station_vendor",		required_argument,	NULL,	HCXD_STATION_VENDOR},
+	{"weak_candidate",		required_argument,	NULL,	HCXD_WEAK_CANDIDATE},
 	{"do_rcascan",			no_argument,		NULL,	HCXD_DO_RCASCAN},
 	{"save_rcascan",		required_argument,	NULL,	HCXD_SAVE_RCASCAN},
 	{"save_rcascan_raw",		required_argument,	NULL,	HCXD_SAVE_RCASCAN_RAW},
@@ -6711,6 +6712,16 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		if(stachipset >= CS_ENDE)
 			{
 			fprintf(stderr, "wrong station VENDOR information\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCXD_WEAK_CANDIDATE:
+		weakcandidatename = optarg;
+		wclen = strlen(weakcandidatename);
+		if((wclen < 8) || (wclen > 63))
+			{
+			fprintf(stderr, "only 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -6903,6 +6914,17 @@ if(mcclientflag == true)
 		processclient();
 		}
 	return EXIT_SUCCESS;
+	}
+
+memset(&weakcandidate, 0, 64);
+if(weakcandidatename == NULL)
+	{
+	wclen = 8;
+	memcpy(&weakcandidate, weakpass, 8);
+	}
+else
+	{
+	memcpy(&weakcandidate, weakcandidatename, wclen);
 	}
 
 if((rebootflag == true) && (poweroffflag == true))
