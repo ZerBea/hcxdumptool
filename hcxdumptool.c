@@ -1880,6 +1880,115 @@ if(memcmp(&mypmkid, pmkid->pmkid, 16) == 0)
 return 1;
 }
 /*===========================================================================*/
+static inline void send_m2wpa1qos(uint8_t *macap, uint8_t *eapdataap)
+{
+static mac_t *macftx;
+static aplist_t *apzeiger;
+static uint8_t *pkeptr;
+static wpakey_t *wpakeyap;
+static int p;
+static uint8_t *myeapol;
+static uint8_t pwlen = 8;
+
+static char *weakcandidate = "12345678";
+
+static uint8_t wpa1qosdata[] =
+{
+0x88, 0x01, 0x3a, 0x01,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* to */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* fm */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* net */
+0x00, 0x00, 0x07, 0x00, 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0X01, 0x03, 0x00, 0x77, 0xfe, 0x01, 0x09, 0x00, 0x20,
+/* rc */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+/* snonce */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+/* mic */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x18, 0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02
+};
+#define WPA1QOS_SIZE sizeof(wpa1qosdata)
+
+
+static unsigned char pmk[64];
+uint8_t pkedata[102];
+uint8_t ptk[128];
+uint8_t mic[16];
+static uint8_t packetout[256];
+
+apzeiger = getessidfromaplist(macap);
+if(apzeiger == NULL)
+	{
+	return;
+	}
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+	{
+	return;
+	}
+
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+wpakeyap = (wpakey_t *)(eapdataap +EAPAUTH_SIZE);
+
+pkeptr = pkedata;
+memset(&pkedata, 0, sizeof(pkedata));
+memset(&ptk, 0, sizeof(ptk));
+memcpy(pkeptr, "Pairwise key expansion", 23);
+if(memcmp(macap, &mac_mysta, 6) < 0)
+	{
+	memcpy(pkeptr +23, macap, 6);
+	memcpy(pkeptr +29, &mac_mysta, 6);
+	}
+else
+	{
+	memcpy(pkeptr +23, &mac_mysta, 6);
+	memcpy(pkeptr +29, macap, 6);
+	}
+	if(memcmp(wpakeyap->nonce, &snoncerandom, 32) < 0)
+	{
+	memcpy (pkeptr +35, wpakeyap->nonce, 32);
+	memcpy (pkeptr +67, &snoncerandom, 32);
+	}
+else
+	{
+	memcpy (pkeptr +35, &snoncerandom, 32);
+	memcpy (pkeptr +67, wpakeyap->nonce, 32);
+	}
+
+memset(&packetout, 0, HDRRT_SIZE +WPA1QOS_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+memcpy(&packetout[HDRRT_SIZE], &wpa1qosdata, WPA1QOS_SIZE);
+memcpy(macftx->addr1, macap, 6);
+memcpy(macftx->addr2, &mac_mysta, 6);
+memcpy(macftx->addr3, macap, 6);
+packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE] = eapdataap[0];
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x05], &eapdataap [+EAPAUTH_SIZE +5], 8);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +0x0d], &snoncerandom, 32);
+myeapol = &packetout[+HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
+
+for (p = 0; p < 4; p++)
+	{
+	pkedata[99] = p;
+	HMAC(EVP_sha1(), &pmk, 32, pkedata, 100, ptk + p *20, NULL);
+	}
+HMAC(EVP_md5(), &ptk, 16, myeapol, 121, mic, NULL);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
+
+if(write(fd_socket, packetout, HDRRT_SIZE +WPA1QOS_SIZE) < 0)
+	{
+	perror("\nfailed to retransmit M1");
+	errorcount++;
+	outgoingcount--;
+	}
+outgoingcount++;
+fsync(fd_socket);
+return;
+}
+/*===========================================================================*/
 static inline void send_m2wpa2qos(uint8_t *macap, uint8_t *eapdataap)
 {
 static mac_t *macftx;
@@ -1895,9 +2004,9 @@ static char *weakcandidate = "12345678";
 static uint8_t wpa2qosdata[] =
 {
 0x88, 0x01, 0x3a, 0x01,
-0x34, 0x81, 0xc4, 0xe7, 0x99, 0x1b, /* to */
-0xb0, 0xc0, 0x90, 0x46, 0x7c, 0xab, /* fm */
-0x34, 0x81, 0xc4, 0xe7, 0x99, 0x1b, /* net */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* to */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* fm */
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* net */
 0x00, 0x00, 0x07, 0x00, 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x01, 0x03, 0x00, 0x75, 0x02, 0x01, 0x0a, 0x00, 0x00,
 /* rc */
@@ -1973,9 +2082,9 @@ myeapol = &packetout[+HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
 for (p = 0; p < 4; p++)
 	{
 	pkedata[99] = p;
-	HMAC(EVP_sha1(), pmk, 32, pkedata, 100, ptk + p *20, NULL);
+	HMAC(EVP_sha1(), &pmk, 32, pkedata, 100, ptk + p *20, NULL);
 	}
-HMAC(EVP_sha1(), ptk, 16, myeapol, 121, mic, NULL);
+HMAC(EVP_sha1(), &ptk, 16, myeapol, 121, mic, NULL);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
 
 if(write(fd_socket, packetout, HDRRT_SIZE +WPA2QOS_SIZE) < 0)
@@ -2025,6 +2134,10 @@ if(eapauth->type == EAPOL_KEY)
 		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
 			{
 			keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
+			if(keyver == 1)
+				{
+				send_m2wpa1qos(macfrx->addr2, eapauthptr);
+				}
 			if(keyver == 2)
 				{
 				send_m2wpa2qos(macfrx->addr2, eapauthptr);
