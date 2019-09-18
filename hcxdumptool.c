@@ -1821,36 +1821,63 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline bool detectpmkid(uint16_t authlen, uint8_t *authpacket)
+static inline int detectpmkid(uint8_t *macsta, uint8_t *macap, uint16_t authlen, uint8_t *authpacket)
 {
 static pmkid_t *pmkid;
+static aplist_t *apzeiger;
+static uint8_t pwlen = 8;
+static char *weakcandidate = "12345678";
+static char *pmkname = "PMK Name";
 
 static uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
 #define PMKIDOUI_SIZE sizeof(pmkidoui)
 
+static unsigned char pmk[64];
+static uint8_t salt[32];
+static uint8_t mypmkid[32];
+
 if(authlen < WPAKEY_SIZE +PMKID_SIZE)
 	{
-	return false;
+	return 0;
 	}
 pmkid = (pmkid_t*)(authpacket +WPAKEY_SIZE);
 
 if((pmkid->id != 0xdd) && (pmkid->id != 0x14))
 	{
-	return false;
+	return 0;
 	}
 if(memcmp(&pmkidoui, pmkid->oui, PMKIDOUI_SIZE) != 0)
 	{
-	return false;
+	return 0;
 	}
 if(pmkid->type != 0x04)
 	{
-	return false;
+	return 0;
 	}
 if(memcmp(pmkid->pmkid, &nulliv, 16) == 0)
 	{
-	return false;
+	return 0;
 	}
-return true;
+
+apzeiger = getessidfromaplist(macap);
+if(apzeiger == NULL)
+	{
+	return 1;
+	}
+
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, pwlen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+	{
+	return 1;
+	}
+memcpy(&salt, pmkname, 8);
+memcpy(&salt[8], macap, 6);
+memcpy(&salt[14], macsta, 6);
+HMAC(EVP_sha1(), &pmk, 32, salt, 20, mypmkid, NULL);
+if(memcmp(&mypmkid, pmkid->pmkid, 16) == 0)
+	{
+	return 2;
+	}
+return 1;
 }
 /*===========================================================================*/
 static inline void send_m2wpa2qos(uint8_t *macap, uint8_t *eapdataap)
@@ -1861,7 +1888,7 @@ static uint8_t *pkeptr;
 static wpakey_t *wpakeyap;
 static int p;
 static uint8_t *myeapol;
-uint8_t pwlen = 8;
+static uint8_t pwlen = 8;
 
 static char *weakcandidate = "12345678";
 
@@ -1975,6 +2002,7 @@ static unsigned long long int rc;
 static int calceapoltimeout;
 static aplist_t *apzeiger;
 static myaplist_t *myapzeiger;
+static int pmkidok;
 
 static exteap_t *exteap;
 static uint16_t exteaplen;
@@ -2018,7 +2046,8 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(authlen > 95)
 			{
-			if(detectpmkid(authlen, eapauthptr +EAPAUTH_SIZE) == true)
+			pmkidok = detectpmkid(macfrx->addr1, macfrx->addr2, authlen, eapauthptr +EAPAUTH_SIZE);
+			if(pmkidok > 0)
 				{
 				if((addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) & RX_PMKID) != RX_PMKID)
 					{
@@ -2040,11 +2069,25 @@ if(eapauth->type == EAPOL_KEY)
 							}
 						if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 							{
-							fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
+							if(pmkidok == 1)
+								{
+								fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
+								}
+							else
+								{
+								fprintf(stdout, " [FOUND FOUND PMKID CLIENT-LESS, WEAK PASSWORD: 12345678]\n");
+								}
 							}
 						else
 							{
-							fprintf(stdout, " [FOUND PMKID]\n");
+							if(pmkidok == 1)
+								{
+								fprintf(stdout, " [FOUND PMKID]\n");
+								}
+							else
+								{
+								fprintf(stdout, " [FOUND FOUND PMKID, WEAK PASSWORD: 12345678]\n");
+								}
 							}
 						}
 					}
@@ -2082,7 +2125,7 @@ if(eapauth->type == EAPOL_KEY)
 						}
 					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 						{
-						fprintf(stdout, " [FOUND WEAK PASSWORD: 12345678, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, WEAK PASSWORD: 12345678, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 						}
 					else
 						{
