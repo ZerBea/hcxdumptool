@@ -170,13 +170,17 @@ to determine which access points are in attack range.
 pcapng option codes (Section Header Block)
 --------------
 
-OPTIONCODE_MACMYAP     62107 (6 byte)
+OPTIONCODE_MACMYAP       62107 (6 byte)
 
-OPTIONCODE_RC          62108 (8 byte)
+OPTIONCODE_RC            62108 (8 byte)
 
-OPTIONCODE_ANONCE      62109 (32 byte)
+OPTIONCODE_ANONCE        62109 (32 byte)
 
-OPTIONCODE_MACMYSTA    62110 (6 byte)
+OPTIONCODE_MACMYSTA      62110 (6 byte)
+
+OPTIONCODE_SNONCE        62111 (32 byte)
+
+OPTIONCODE_WEAKCANDIDATE 62112 (64 byte)
 
 
 Warning
