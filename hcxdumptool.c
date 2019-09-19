@@ -258,8 +258,8 @@ static char gpsddata[GPSDDATA_MAX +1];
 static int weakcandidatelen;
 static char weakcandidate[][64] =
 { 
-"00000000", "12345678", "123456789", "12345678", "1234567890",
-"1357924680", "1q2w3e4r", "yxcvbnm", "1234qwer", "1a2b3c4d5e"
+"00000000", "12345678", "123456789", "1234567890", "1357924680",
+"2468013579", "1q2w3e4r", "yxcvbnm", "1234qwer", "1a2b3c4d5e"
 };
 /*===========================================================================*/
 #ifdef DEBUG
@@ -1869,7 +1869,6 @@ if(apzeiger == NULL)
 	{
 	return 1;
 	}
-
 if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate[rc %WCMAX], strlen(weakcandidate[rc %WCMAX]), apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return 1;
