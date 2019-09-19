@@ -3,8 +3,9 @@
 hcxdumptool: added new option --weak_candidate
              added weak candidate detection on PMKID and WPA1
              weak candidate is no longer "hard coded"
---weak_candidate=<password>        : use this password (8...32 characters) for weak candidate alert
-                                     default: 12345678
+---weak_candidate=<password>        : use this password (8...63 characters) for weak candidate alert
+                                     default: 00000000
+                                     affected: client-less attack
 
 list of used pcapng option codes:
 #define OPTIONCODE_MACMYAP		62107

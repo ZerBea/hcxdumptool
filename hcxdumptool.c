@@ -6615,7 +6615,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     16: BEACON\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE (1 + 2 = 3)\n"
 	"--weak_candidate=<password>        : use this password (8...63 characters) for weak candidate alert\n"
-	"                                     default: 12345678\n"
+	"                                     default: %s\n"
 	"                                     affected: client-less attack\n"
 	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
 	"                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
@@ -6641,7 +6641,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX, ESSID_LEN_MAX, MYAPLIST_MAX,
-	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	DEAUTHENTICATIONS_MAX, APPATTACKS_MAX, weakcandidate[0], MCHOST, MCPORT, MCHOST, MCPORT);
 
 exit(EXIT_SUCCESS);
 }
