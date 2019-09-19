@@ -9,6 +9,7 @@
 #define GPSDDATA_MAX 1536
 
 #define ESSID_LEN_MAX 32
+
 #define RSN_LEN_MAX 24
 #define TIME_INTERVAL 5
 #define EAPOLTIMEOUT 150000
@@ -28,6 +29,9 @@
 
 #define PROBEREQUESTLIST_MAX 512
 #define MYPROBERESPONSELIST_MAX 512
+
+#define WEAKCANDIDATE_MAX 64
+#define WEAKCANDIDATELIST_MAX 512
 
 #define BEACONINTERVALL 0x3e8
 
@@ -69,18 +73,19 @@
 #define HCXD_STATION_MAC		17
 #define HCXD_STATION_VENDOR		18
 #define HCXD_WEAK_CANDIDATE		19
-#define HCXD_DO_RCASCAN			20
-#define HCXD_SAVE_RCASCAN		21
-#define HCXD_SAVE_RCASCAN_RAW		22
-#define HCXD_ENABLE_STATUS		23
-#define HCXD_TOT			24
-#define HCXD_REBOOT			25
-#define HCXD_POWER_OFF			26
-#define HCXD_GPIO_BUTTON		27
-#define HCXD_GPIO_STATUSLED		28
-#define HCXD_CHECK_DRIVER		29
-#define HCXD_SERVER_PORT		30
-#define HCXD_CLIENT_PORT		31
+#define HCXD_WEAK_CANDIDATE_LIST	20
+#define HCXD_DO_RCASCAN			21
+#define HCXD_SAVE_RCASCAN		22
+#define HCXD_SAVE_RCASCAN_RAW		23
+#define HCXD_ENABLE_STATUS		24
+#define HCXD_TOT			25
+#define HCXD_REBOOT			26
+#define HCXD_POWER_OFF			27
+#define HCXD_GPIO_BUTTON		28
+#define HCXD_GPIO_STATUSLED		29
+#define HCXD_CHECK_DRIVER		30
+#define HCXD_SERVER_PORT		31
+#define HCXD_CLIENT_PORT		32
 #define HCXD_HELP			'h'
 #define HCXD_VERSION			'v'
 
@@ -178,4 +183,12 @@ else if(ia->timestamp > ib->timestamp)
 	return -1;
 return 0;
 }
+/*===========================================================================*/
+struct weakcandidatelist_s
+{
+ uint8_t	len;
+ char		candidate[64];
+};
+typedef struct weakcandidatelist_s weakcandidatelist_t;
+#define	WEAKCANDIDATELIST_SIZE (sizeof(weakcandidatelist_t))
 /*===========================================================================*/
