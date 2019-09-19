@@ -255,8 +255,12 @@ static uint64_t lastrcm2;
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static char gpsddata[GPSDDATA_MAX +1];
 
-static int wclen;
-static char weakcandidate[64];
+static int weakcandidatelen;
+static char weakcandidate[][64] =
+{ 
+"00000000", "12345678", "123456789", "12345678", "1234567890",
+"1357924680", "1q2w3e4r", "yxcvbnm", "1234qwer", "1a2b3c4d5e"
+};
 /*===========================================================================*/
 #ifdef DEBUG
 static inline void debugprint(int len, uint8_t *ptr)
@@ -1824,7 +1828,7 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline int detectpmkid(uint8_t *macsta, uint8_t *macap, uint16_t authlen, uint8_t *authpacket)
+static inline int detectpmkid(uint8_t *macsta, uint8_t *macap, uint16_t authlen, uint8_t *authpacket, uint64_t rc)
 {
 static pmkid_t *pmkid;
 static aplist_t *apzeiger;
@@ -1866,7 +1870,7 @@ if(apzeiger == NULL)
 	return 1;
 	}
 
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate[rc %WCMAX], strlen(weakcandidate[rc %WCMAX]), apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return 1;
 	}
@@ -1881,7 +1885,7 @@ if(memcmp(&mypmkid, pmkid->pmkid, 16) == 0)
 return 1;
 }
 /*===========================================================================*/
-static inline void send_m2wpa1qos(uint8_t *macap, uint8_t *eapdataap)
+static inline void send_m2wpa1qos(uint8_t *macap, uint8_t *eapdataap, uint64_t rc)
 {
 static mac_t *macftx;
 static aplist_t *apzeiger;
@@ -1924,7 +1928,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate[rc %WCMAX], strlen(weakcandidate[rc %WCMAX]), apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
@@ -1987,7 +1991,7 @@ fsync(fd_socket);
 return;
 }
 /*===========================================================================*/
-static inline void send_m2wpa2qos(uint8_t *macap, uint8_t *eapdataap)
+static inline void send_m2wpa2qos(uint8_t *macap, uint8_t *eapdataap, uint64_t rc)
 {
 static mac_t *macftx;
 static aplist_t *apzeiger;
@@ -2030,11 +2034,10 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate[rc %WCMAX], strlen(weakcandidate[rc %WCMAX]), apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
-
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
 wpakeyap = (wpakey_t *)(eapdataap +EAPAUTH_SIZE);
 
@@ -2131,7 +2134,7 @@ static int omac1_aes_128(const uint8_t *key, const uint8_t *data, size_t data_le
 return omac1_aes_128_vector(key, 1, &data, &data_len, mac);
 }
 /*===========================================================================*/
-static inline void send_m2wpa2kv3qos(uint8_t *macap, uint8_t *eapdataap)
+static inline void send_m2wpa2kv3qos(uint8_t *macap, uint8_t *eapdataap, uint64_t rc)
 {
 static mac_t *macftx;
 static aplist_t *apzeiger;
@@ -2174,7 +2177,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, wclen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate[rc %WCMAX], strlen(weakcandidate[rc %WCMAX]), apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
 	{
 	return;
 	}
@@ -2277,15 +2280,15 @@ if(eapauth->type == EAPOL_KEY)
 			keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
 			if(keyver == 1)
 				{
-				send_m2wpa1qos(macfrx->addr2, eapauthptr);
+				send_m2wpa1qos(macfrx->addr2, eapauthptr, rc);
 				}
 			if(keyver == 2)
 				{
-				send_m2wpa2qos(macfrx->addr2, eapauthptr);
+				send_m2wpa2qos(macfrx->addr2, eapauthptr, rc);
 				}
 			if(keyver == 3)
 				{
-				send_m2wpa2kv3qos(macfrx->addr2, eapauthptr);
+				send_m2wpa2kv3qos(macfrx->addr2, eapauthptr, rc);
 				}
 //			addpownedstaap(macfrx->addr1, macfrx->addr2, RX_M1);
 			return;
@@ -2304,7 +2307,7 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(authlen > 95)
 			{
-			pmkidok = detectpmkid(macfrx->addr1, macfrx->addr2, authlen, eapauthptr +EAPAUTH_SIZE);
+			pmkidok = detectpmkid(macfrx->addr1, macfrx->addr2, authlen, eapauthptr +EAPAUTH_SIZE, rc);
 			if(pmkidok > 0)
 				{
 				if((addpownedstaap(macfrx->addr1, macfrx->addr2, RX_PMKID) & RX_PMKID) != RX_PMKID)
@@ -2329,22 +2332,22 @@ if(eapauth->type == EAPOL_KEY)
 							{
 							if(pmkidok == 1)
 								{
-								fprintf(stdout, " [FOUND PMKID CLIENT-LESS]\n");
+								fprintf(stdout, " [PMKID CLIENT-LESS]\n");
 								}
 							else
 								{
-								fprintf(stdout, " [FOUND FOUND PMKID CLIENT-LESS, WEAK PASSWORD: %s]\n", weakcandidate);
+								fprintf(stdout, " [PMKID CLIENT-LESS, PASSWORD: %s]\n", weakcandidate[rc %WCMAX]);
 								}
 							}
 						else
 							{
 							if(pmkidok == 1)
 								{
-								fprintf(stdout, " [FOUND PMKID]\n");
+								fprintf(stdout, " [PMKID]\n");
 								}
 							else
 								{
-								fprintf(stdout, " [FOUND FOUND PMKID, WEAK PASSWORD: %s]\n", weakcandidate);
+								fprintf(stdout, " [PMKID, PASSWORD: %s]\n",  weakcandidate[rc %WCMAX]);
 								}
 							}
 						}
@@ -2383,11 +2386,11 @@ if(eapauth->type == EAPOL_KEY)
 						}
 					if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 						{
-						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, WEAK PASSWORD: %s, EAPOL TIMEOUT %d]\n", weakcandidate, calceapoltimeout);
+						fprintf(stdout, " [AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d, PASSWORD: %s]\n", calceapoltimeout,  weakcandidate[(rc -1) %10]);
 						}
 					else
 						{
-						fprintf(stdout, " [FOUND AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+						fprintf(stdout, " [AUTHORIZED HANDSHAKE, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 						}
 					}
 				}
@@ -2425,7 +2428,7 @@ if(eapauth->type == EAPOL_KEY)
 							printessid(myapzeiger->essid_len, myapzeiger->essid);
 							}
 						}
-					fprintf(stdout, " [FOUND HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
+					fprintf(stdout, " [HANDSHAKE AP-LESS, EAPOL TIMEOUT %d]\n", calceapoltimeout);
 					}
 				}
 			return;
@@ -5603,7 +5606,6 @@ if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
 	}
 aplist_ptr = aplist;
 aplist_beacon_ptr = aplist;
-
 aplistcount = 0;
 
 if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
@@ -5655,7 +5657,7 @@ if(rcascanflag == true)
 	weppcapngoutname = NULL;
 	if(rcascanpcapngname != NULL)
 		{
-		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
+		fd_rcascanpcapng = hcxcreatepcapngdump(rcascanpcapngname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, strlen(weakcandidate[0]), weakcandidate[0]);
 		if(fd_rcascanpcapng <= 0)
 			{
 			fprintf(stderr, "could not create dumpfile %s\n", rcascanpcapngname);
@@ -5665,7 +5667,7 @@ if(rcascanflag == true)
 	}
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, strlen(weakcandidate[0]), weakcandidate[0]);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
@@ -5674,7 +5676,7 @@ if(pcapngoutname != NULL)
 	}
 if(weppcapngoutname != NULL)
 	{
-	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
+	fd_weppcapng = hcxcreatepcapngdump(weppcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, strlen(weakcandidate[0]), weakcandidate[0]);
 	if(fd_weppcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", weppcapngoutname);
@@ -5683,7 +5685,7 @@ if(weppcapngoutname != NULL)
 	}
 if(ippcapngoutname != NULL)
 	{
-	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, wclen, weakcandidate);
+	fd_ippcapng = hcxcreatepcapngdump(ippcapngoutname, mac_orig, interfacename, mac_mystartap, rcrandom, anoncerandom, mac_mysta, snoncerandom, strlen(weakcandidate[0]), weakcandidate[0]);
 	if(fd_ippcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", ippcapngoutname);
@@ -6614,6 +6616,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     example: 3 = show EAPOL and PROBEREQUEST/PROBERESPONSE (1 + 2 = 3)\n"
 	"--weak_candidate=<password>        : use this password (8...63 characters) for weak candidate alert\n"
 	"                                     default: 12345678\n"
+	"                                     affected: client-less attack\n"
 	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
 	"                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
 	"--reboot                           : once hcxdumptool terminated, reboot system\n"
@@ -6710,8 +6713,6 @@ weppcapngoutname = NULL;
 filterlistname = NULL;
 extbeaconlistname = NULL;
 rcascanpcapngname = NULL;
-
-static char *weakpass = "12345678";
 
 static const char *short_options = "i:o:O:W:c:t:T:E:D:A:IChv";
 static const struct option long_options[] =
@@ -6868,8 +6869,8 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCXD_WEAK_CANDIDATE:
 		weakcandidatename = optarg;
-		wclen = strlen(weakcandidatename);
-		if((wclen < 8) || (wclen > 63))
+		weakcandidatelen = strlen(weakcandidatename);
+		if((weakcandidatelen < 8) || (weakcandidatelen > 63))
 			{
 			fprintf(stderr, "only 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
@@ -7066,15 +7067,10 @@ if(mcclientflag == true)
 	return EXIT_SUCCESS;
 	}
 
-memset(&weakcandidate, 0, 64);
-if(weakcandidatename == NULL)
+if(weakcandidatename != NULL)
 	{
-	wclen = 8;
-	memcpy(&weakcandidate, weakpass, 8);
-	}
-else
-	{
-	memcpy(&weakcandidate, weakcandidatename, wclen);
+	memset(&weakcandidate[0], 0, 64);
+	memcpy(&weakcandidate[0], weakcandidatename, weakcandidatelen);
 	}
 
 if((rebootflag == true) && (poweroffflag == true))
