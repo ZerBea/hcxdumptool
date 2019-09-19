@@ -184,11 +184,3 @@ else if(ia->timestamp > ib->timestamp)
 return 0;
 }
 /*===========================================================================*/
-struct weakcandidatelist_s
-{
- uint8_t	len;
- char		candidate[64];
-};
-typedef struct weakcandidatelist_s weakcandidatelist_t;
-#define	WEAKCANDIDATELIST_SIZE (sizeof(weakcandidatelist_t))
-/*===========================================================================*/
