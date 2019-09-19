@@ -1973,7 +1973,7 @@ for (p = 0; p < 4; p++)
 	pkedata[99] = p;
 	HMAC(EVP_sha1(), &pmk, 32, pkedata, 100, ptk + p *20, NULL);
 	}
-HMAC(EVP_md5(), &ptk, 16, myeapol, 121, mic, NULL);
+HMAC(EVP_md5(), &ptk, 16, myeapol, 0x7b, mic, NULL);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
 
 if(write(fd_socket, packetout, HDRRT_SIZE +WPA1QOS_SIZE) < 0)
@@ -2079,7 +2079,7 @@ for (p = 0; p < 4; p++)
 	pkedata[99] = p;
 	HMAC(EVP_sha1(), &pmk, 32, pkedata, 100, ptk + p *20, NULL);
 	}
-HMAC(EVP_sha1(), &ptk, 16, myeapol, 121, mic, NULL);
+HMAC(EVP_sha1(), &ptk, 16, myeapol, 0x79, mic, NULL);
 memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +0x51], &mic, 16);
 
 if(write(fd_socket, packetout, HDRRT_SIZE +WPA2QOS_SIZE) < 0)
