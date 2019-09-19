@@ -12,8 +12,6 @@
 #include <sys/utsname.h>
 
 #include "pcap.h"
-
-
 /*===========================================================================*/
 uint16_t addoption(uint8_t *shb, uint16_t optioncode, uint16_t optionlen, char *option)
 {
