@@ -6634,9 +6634,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--version                          : show version\n"
 	"\n"
 	"Run hcxdumptool -i interface --do_rcascan for at least 30 seconds, before you start an attack!\n"
-	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
-	"Do not edit, merge or convert pcapng files!. This will remove optional comment fields!\n"
+	"Do not edit, merge or convert this pcapng files , because this will remove optional comment fields!\n"
 	"It is much better to run gzip to compress the files. Wireshark, tshark and hcxpcaptool will understand this.\n"
+	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname, TIME_INTERVAL, ERRORMAX, EAPOLTIMEOUT, DEAUTHENTICATIONINTERVALL,
 	DEAUTHENTICATIONINTERVALL, APATTACKSINTERVALL, APATTACKSINTERVALL, FILTERLIST_LINE_LEN, FILTERLIST_MAX, ESSID_LEN_MAX, MYAPLIST_MAX,

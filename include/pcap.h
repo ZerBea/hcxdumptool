@@ -9,12 +9,13 @@
 #define PCAPNG_MINOR_VER	0
 #define PCAPNG_MAXSNAPLEN	0xffff
 
-#define OPTIONCODE_MACMYAP		62107
-#define OPTIONCODE_RC			62108
-#define OPTIONCODE_ANONCE		62109
-#define OPTIONCODE_MACMYSTA		62110
-#define OPTIONCODE_SNONCE		62111
-#define OPTIONCODE_WEAKCANDIDATE	62112
+/* local */
+#define OPTIONCODE_MACMYAP		0xf29b
+#define OPTIONCODE_RC			0xf29c
+#define OPTIONCODE_ANONCE		0xf29d
+#define OPTIONCODE_MACMYSTA		0xf29e
+#define OPTIONCODE_SNONCE		0xf29f
+#define OPTIONCODE_WEAKCANDIDATE	0xf2a0
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */
 struct section_header_block_s
@@ -194,4 +195,16 @@ struct enhanced_packet_block_s
 } __attribute__((__packed__));
 typedef struct enhanced_packet_block_s enhanced_packet_block_t;
 #define	EPB_SIZE (sizeof(enhanced_packet_block_t))
+/*===========================================================================*/
+/* Custom Block (CB) - ID 0x00000bad */
+struct custom_block_s
+{
+ uint32_t	block_type;		/* block type */
+#define CBBID	0x0x00000bad;
+ uint32_t	total_length;		/* block length */
+ uint32_t	pen;			/* private enterprise number */
+ uint32_t	cdata;			/* custom data and custom options */
+} __attribute__((__packed__));
+typedef struct custom_block_s custom_block_t;
+#define	CB_SIZE (sizeof(custom_block_t))
 /*===========================================================================*/
