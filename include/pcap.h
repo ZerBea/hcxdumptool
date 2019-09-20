@@ -17,8 +17,6 @@
 #define OPTIONCODE_MACMYSTA		0xf29e
 #define OPTIONCODE_SNONCE		0xf29f
 #define OPTIONCODE_WEAKCANDIDATE	0xf2a0
-
-
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */
 struct section_header_block_s
