@@ -27,6 +27,49 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
+bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
+{
+int cblen;
+int written;
+custom_block_t *cbhdr;
+optionfield64_t *of;
+
+total_length_t *totallength;
+uint8_t cb[2048];
+
+memset(&cb, 0, 2048);
+cbhdr = (custom_block_t*)cb;
+cblen = CB_SIZE;
+cbhdr->block_type = CBID;
+cbhdr->total_length = CB_SIZE;
+memcpy(cbhdr->pen, &hcxmagic, 4);
+memcpy(cbhdr->hcxm, &hcxmagic, 32);
+
+cblen += addoption(cb +cblen, OPTIONCODE_MACMYORIG, 3, (char*)macorig);
+cblen += addoption(cb +cblen, OPTIONCODE_MACMYAP, 6, (char*)macap);
+of = (optionfield64_t*)(cb +cblen);
+of->option_code = OPTIONCODE_RC;
+of->option_length = 8;
+of->option_value = rcrandom;
+cblen += addoption(cb +cblen, OPTIONCODE_ANONCE, 32, (char*)anonce);
+cblen += addoption(cb +cblen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
+cblen += addoption(cb +cblen, OPTIONCODE_SNONCE, 32, (char*)snonce);
+cblen += addoption(cb +cblen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
+cblen += addoption(cb +cblen, 0, 0, NULL);
+
+totallength = (total_length_t*)(cb +cblen);
+cblen += TOTAL_SIZE;
+cbhdr->total_length = cblen;
+totallength->total_length = cblen;
+written = write(fd, &cb, cblen);
+if(written != cblen)
+	{
+	close(fd);
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
 bool writeisb(int fd, uint32_t interfaceid, uint64_t starttimestamp, uint64_t incomming)
 {
 int written;
@@ -94,7 +137,7 @@ bool writeidb(int fd, uint8_t *macorig, char *interfacestr)
 int idblen;
 int written;
 interface_description_block_t *idbhdr;
-total_length_t *totallenght;
+total_length_t *totallength;
 char vendor[6];
 uint8_t idb[1024];
 
@@ -111,10 +154,10 @@ memcpy(&vendor, macorig, 3);
 idblen += addoption(idb +idblen, IF_MACADDR, 6, vendor);
 idblen += addoption(idb +idblen, SHB_EOC, 0, NULL);
 
-totallenght = (total_length_t*)(idb +idblen);
+totallength = (total_length_t*)(idb +idblen);
 idblen += TOTAL_SIZE;
 idbhdr->total_length = idblen;
-totallenght->total_length = idblen;
+totallength->total_length = idblen;
 
 written = write(fd, &idb, idblen);
 if(written != idblen)
@@ -132,7 +175,7 @@ int written;
 section_header_block_t *shbhdr;
 optionfield64_t *of;
 
-total_length_t *totallenght;
+total_length_t *totallength;
 struct utsname unameData;
 char sysinfo[256];
 uint8_t shb[1024];
@@ -169,10 +212,10 @@ shblen += addoption(shb +shblen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
 shblen += addoption(shb +shblen, OPTIONCODE_SNONCE, 32, (char*)snonce);
 shblen += addoption(shb +shblen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
 shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
-totallenght = (total_length_t*)(shb +shblen);
+totallength = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
-totallenght->total_length = shblen;
+totallength->total_length = shblen;
 
 written = write(fd, &shb, shblen);
 if(written != shblen)
@@ -215,6 +258,10 @@ if(writeidb(fd, macorig, interfacestr) == false)
 	return -1;
 	}
 
+if(writecb(fd, macorig, macap, rc, anonce, macsta, snonce, weakclen, weakcan) == false)
+	{
+	return -1;
+	}
 return fd;
 }
 /*===========================================================================*/
