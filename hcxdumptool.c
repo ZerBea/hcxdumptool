@@ -253,7 +253,7 @@ static uint8_t lastapm2[6];
 static uint64_t lastrcm2;
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
-static char gpsddata[GPSDDATA_MAX +1];
+static char gpsddata[GPSDDATA_MAX];
 
 static int weakcandidatelen;
 static char weakcandidate[64];
@@ -707,7 +707,7 @@ else
 return;
 }
 /*===========================================================================*/
-static void writeepbm2(int fd)
+static void writeepb(int fd, bool aplessflag)
 {
 static int epblen;
 static int written;
@@ -719,8 +719,7 @@ static char *gpsd_time = "\"time\":";
 static char *gpsd_lat = "\"lat\":";
 static char *gpsd_lon = "\"lon\":";
 static char *gpsd_alt = "\"alt\":";
-static char aplesscomment[] = {"HANDSHAKE AP-LESS"};
-#define APLESSCOMMENT_SIZE sizeof(aplesscomment)
+static char * aplesscomment = "HANDSHAKE AP-LESS";
 
 static char gpsdatabuffer[GPSDDATA_MAX];
 
@@ -733,74 +732,6 @@ epbhdr->org_len = packet_len;
 epbhdr->timestamp_high = timestamp >> 32;
 epbhdr->timestamp_low = (uint32_t)timestamp &0xffffffff;
  padding = (4 -(epbhdr->cap_len %4)) %4;
-epblen += packet_len;
-memset(&epb[epblen], 0, padding);
-epblen += padding;
-if(gpsdflag == false)
-	{
-	epblen += addoption(epb +epblen, SHB_COMMENT, APLESSCOMMENT_SIZE, aplesscomment);
-	}
-else
-	{
-	if((gpsdptr = strstr(gpsddata, gpsd_time)) != NULL)
-		{
-		sscanf(gpsdptr +8, "%d-%d-%dT%d:%d:%d;", &year, &month, &day, &hour, &minute, &second);
-		}
-	if((gpsdptr = strstr(gpsddata, gpsd_lat)) != NULL)
-		{
-		sscanf(gpsdptr +6, "%Lf", &lat);
-		}
-	if((gpsdptr = strstr(gpsddata, gpsd_lon)) != NULL)
-		{
-		sscanf(gpsdptr +6, "%Lf", &lon);
-		}
-	if((gpsdptr = strstr(gpsddata, gpsd_alt)) != NULL)
-		{
-		sscanf(gpsdptr +6, "%Lf", &alt);
-		}
-	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d\n%s", lat, lon, alt,day, month, year, hour, minute, second, aplesscomment);
-	gpsdlen = strlen(gpsdatabuffer);
-	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
-	}
-epblen += addoption(epb +epblen, OPTIONCODE_ANONCE, 32, (char*)&anoncerandom);
-epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
-totallenght = (total_length_t*)(epb +epblen);
-epblen += TOTAL_SIZE;
-epbhdr->total_length = epblen;
-totallenght->total_length = epblen;
-
-written = write(fd, &epb, epblen);
-if(written != epblen)
-	{
-	errorcount++;
-	}
-return;	
-}
-/*===========================================================================*/
-static void writeepb(int fd)
-{
-static int epblen;
-static int written;
-static uint16_t padding;
-static total_length_t *totallenght;
-static int gpsdlen;
-static char *gpsdptr;
-static char *gpsd_time = "\"time\":";
-static char *gpsd_lat = "\"lat\":";
-static char *gpsd_lon = "\"lon\":";
-static char *gpsd_alt = "\"alt\":";
-
-static char gpsdatabuffer[GPSDDATA_MAX];
-
-epbhdr = (enhanced_packet_block_t*)epb;
-epblen = EPB_SIZE;
-epbhdr->block_type = EPBBID;
-epbhdr->interface_id = 0;
-epbhdr->cap_len = packet_len;
-epbhdr->org_len = packet_len;
-epbhdr->timestamp_high = timestamp >> 32;
-epbhdr->timestamp_low = (uint32_t)timestamp &0xffffffff;
-padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packet_len;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
@@ -822,9 +753,23 @@ if(gpsdflag == true)
 		{
 		sscanf(gpsdptr +6, "%Lf", &alt);
 		}
-	sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d", lat, lon, alt,day, month, year, hour, minute, second);
+	if(aplessflag == true)
+		{
+		sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d\n%s", lat, lon, alt,day, month, year, hour, minute, second, aplesscomment);
+		}
+	else
+		{
+		sprintf(gpsdatabuffer, "lat:%Lf,lon:%Lf,alt:%Lf,date:%02d.%02d.%04d,time:%02d:%02d:%02d", lat, lon, alt,day, month, year, hour, minute, second);
+		}
 	gpsdlen = strlen(gpsdatabuffer);
 	epblen += addoption(epb +epblen, SHB_COMMENT, gpsdlen, gpsdatabuffer);
+	}
+else
+	{
+	if(aplessflag == true)
+		{
+		epblen += addoption(epb +epblen, SHB_COMMENT, 17, aplesscomment);
+		}
 	}
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
@@ -2290,7 +2235,7 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		if(rc == rcrandom)
 			{
@@ -2356,7 +2301,7 @@ if(eapauth->type == EAPOL_KEY)
 		{
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		calceapoltimeout = timestamp -lasttimestampm2;
 		if((calceapoltimeout < eapoltimeout) && ((rc -lastrcm2) == 1) && (memcmp(&laststam2,macfrx->addr1, 6) == 0) && (memcmp(&lastapm2, macfrx->addr2, 6) == 0))
@@ -2403,7 +2348,7 @@ if(eapauth->type == EAPOL_KEY)
 			{
 			if(fd_pcapng != 0)
 				{
-				writeepbm2(fd_pcapng);
+				writeepb(fd_pcapng, true);
 				}
 			if(addpownedstaap(macfrx->addr2, macfrx->addr1, RX_M12) == false)
 				{
@@ -2430,7 +2375,7 @@ if(eapauth->type == EAPOL_KEY)
 			}
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		memcpy(&laststam2, macfrx->addr2, 6);
 		memcpy(&lastapm2, macfrx->addr1, 6);
@@ -2442,7 +2387,7 @@ if(eapauth->type == EAPOL_KEY)
 		{
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		if(checkpownedstaap(macfrx->addr2, macfrx->addr1) == false)
 			{
@@ -2461,7 +2406,7 @@ if(eapauth->type == EAPOL_KEY)
 		{
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		}
 	return;
@@ -2470,11 +2415,11 @@ if(eapauth->type == EAP_PACKET)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	exteap = (exteap_t*)(eapauthptr +EAPAUTH_SIZE);
 	exteaplen = ntohs(exteap->extlen);
@@ -2516,7 +2461,7 @@ if(eapauth->type == EAPOL_START)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if(attackclientflag == false)
 		{
@@ -2528,7 +2473,7 @@ if(eapauth->type == EAPOL_LOGOFF)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	return;
 	}
@@ -2536,7 +2481,7 @@ if(eapauth->type == EAPOL_ASF)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	return;
 	}
@@ -2544,7 +2489,7 @@ if(eapauth->type == EAPOL_MKA)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	return;
 	}
@@ -2552,7 +2497,7 @@ if(eapauth->type == EAPOL_MKA)
 /* for unknown EAP types */
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 return;
 }
@@ -2639,7 +2584,7 @@ if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 return;
 }
@@ -2764,7 +2709,7 @@ for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 			{
@@ -2787,7 +2732,7 @@ myaplist_ptr->essid_len = essidtag->len;
 memcpy(myaplist_ptr->essid, essidtag->data, essidtag->len);
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
@@ -2879,7 +2824,7 @@ if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 return;
 }
@@ -3026,7 +2971,7 @@ for(zeiger = myaplist; zeiger < myaplist +MYAPLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(fd_pcapng != 0)
 			{
-			writeepb(fd_pcapng);
+			writeepb(fd_pcapng, false);
 			}
 		if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 			{
@@ -3049,7 +2994,7 @@ myaplist_ptr->essid_len = essidtag->len;
 memcpy(myaplist_ptr->essid, essidtag->data, essidtag->len);
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_ASSOC) == STATUS_ASSOC)
 	{
@@ -3075,7 +3020,7 @@ if(macfrx->protected == 1)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3108,7 +3053,7 @@ else if(auth->authentication_algho == OPEN_SYSTEM)
 			{
 			if(memcmp(macfrx->addr2, &mac_mysta, 6) != 0)
 				{
-				writeepb(fd_pcapng);
+				writeepb(fd_pcapng, false);
 				}
 			}
 		}
@@ -3122,7 +3067,7 @@ else if(auth->authentication_algho == SAE)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3146,7 +3091,7 @@ else if(auth->authentication_algho == SHARED_KEY)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3158,7 +3103,7 @@ else if(auth->authentication_algho == FBT)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3170,7 +3115,7 @@ else if(auth->authentication_algho == FILS)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3182,7 +3127,7 @@ else if(auth->authentication_algho == FILSPFS)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3194,7 +3139,7 @@ else if(auth->authentication_algho == FILSPK)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3206,7 +3151,7 @@ else if(auth->authentication_algho == NETWORKEAP)
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	if((statusout & STATUS_AUTH) == STATUS_AUTH)
 		{
@@ -3218,7 +3163,7 @@ else
 	{
 	if(fd_pcapng != 0)
 		{
-		writeepb(fd_pcapng);
+		writeepb(fd_pcapng, false);
 		}
 	}
 return;
@@ -3342,7 +3287,7 @@ if(attackapflag == false)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
@@ -3497,7 +3442,7 @@ send_proberesponse(macfrx->addr2, myaplist_ptr->addr, myaplist_ptr->essid_len, m
 send_beaconeresponse(myaplist_ptr->addr, myaplist_ptr->essid_len, myaplist_ptr->essid);
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
@@ -3562,7 +3507,7 @@ send_proberesponse(macfrx->addr2, myaplist_ptr->addr, myaplist_ptr->essid_len, m
 send_beaconeresponse(myaplist_ptr->addr, myaplist_ptr->essid_len, myaplist_ptr->essid);
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_PROBES) == STATUS_PROBES)
 	{
@@ -3693,7 +3638,7 @@ if(attackapflag == false)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 aplist_ptr++;
 aplistcount++;
@@ -3803,7 +3748,7 @@ if(attackapflag == false)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 aplist_ptr++;
 aplistcount++;
@@ -3942,7 +3887,7 @@ if(attackapflag == false)
 	}
 if(fd_pcapng != 0)
 	{
-	writeepb(fd_pcapng);
+	writeepb(fd_pcapng, false);
 	}
 if((statusout & STATUS_BEACON) == STATUS_BEACON)
 	{
@@ -4184,7 +4129,7 @@ char *gpsd_tpv = "\"class\":\"TPV\"";
 
 printf("connecting to GPSD...\n");
 gpsd_len = 0;
-memset(&gpsddata, 0, GPSDDATA_MAX +1);
+memset(&gpsddata, 0, GPSDDATA_MAX);
 memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
 gpsd_addr.sin_family = AF_INET;
 gpsd_addr.sin_port = htons(2947);
@@ -4996,7 +4941,7 @@ while(1)
 			{
 			if(fd_ippcapng != 0)
 				{
-				writeepb(fd_ippcapng);
+				writeepb(fd_ippcapng, false);
 				}
 			continue;
 			}
@@ -5004,7 +4949,7 @@ while(1)
 			{
 			if(fd_ippcapng != 0)
 				{
-				writeepb(fd_ippcapng);
+				writeepb(fd_ippcapng, false);
 				}
 			continue;
 			}
@@ -5016,7 +4961,7 @@ while(1)
 				mpdu = (mpdu_t*)mpdu_ptr;
 				if(((mpdu->keyid >> 5) &1) == 0)
 					{
-					writeepb(fd_weppcapng);
+					writeepb(fd_weppcapng, false);
 					}
 				}
 			continue;
@@ -5182,7 +5127,7 @@ while(1)
 		 }
 	if(fd_rcascanpcapng != 0)
 		{
-		writeepb(fd_rcascanpcapng);
+		writeepb(fd_rcascanpcapng, false);
 		}
 	}
 return;
@@ -5748,7 +5693,7 @@ static inline void processclient()
 static fd_set readfds;
 static struct timeval tvfd;
 static int fdnum;
-static int client_len;;
+static int client_len;
 static unsigned long long int statuscount;
 
 static char serverstatus[SERVERSTATUSSIZE];
