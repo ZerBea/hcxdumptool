@@ -45,7 +45,7 @@ cbhdr->total_length = CB_SIZE;
 memcpy(cbhdr->pen, &hcxmagic, 4);
 memcpy(cbhdr->hcxm, &hcxmagic, 32);
 
-cblen += addoption(cb +cblen, OPTIONCODE_MACMYORIG, 3, (char*)macorig);
+cblen += addoption(cb +cblen, OPTIONCODE_MACMYORIG, 6, (char*)macorig);
 cblen += addoption(cb +cblen, OPTIONCODE_MACMYAP, 6, (char*)macap);
 of = (optionfield64_t*)(cb +cblen);
 of->option_code = OPTIONCODE_RC;
