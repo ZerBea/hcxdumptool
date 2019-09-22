@@ -4416,12 +4416,17 @@ if(gpsdflag == true)
 			"MAC ACCESS POINT.........: %06x%06x (incremented on every new ESSID)\n"
 			"EAPOL TIMEOUT............: %d\n"
 			"REPLAYCOUNT..............: %llu\n"
-			"ANONCE...................: ",
+			"SNONCE...................: ",
 			lat, lon, alt, day, month, year, hour, minute, second, interfacename, maxerrorcount, filterlist_len, beaconlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
-			for(c = 0; c < 32; c++)
-				{
-				printf("%02x", anoncerandom[c]);
-				}
+		for(c = 0; c < 32; c++)
+			{
+			printf("%02x", snoncerandom[c]);
+			}
+		printf("\nANONCE...................: ");
+		for(c = 0; c < 32; c++)
+			{
+			printf("%02x", anoncerandom[c]);
+			}
 		printf("\n\n");
 		sa = 2;
 		}
@@ -4438,12 +4443,17 @@ if(gpsdflag == false)
 		"MAC ACCESS POINT.........: %06x%06x (incremented on every new client)\n"
 		"EAPOL TIMEOUT............: %d\n"
 		"REPLAYCOUNT..............: %llu\n"
-		"ANONCE...................: ",
+		"SNONCE...................: ",
 		interfacename, maxerrorcount, filterlist_len, beaconlist_len, myouista, mynicsta, myouiap, mynicap, eapoltimeout, rcrandom);
-		for(c = 0; c < 32; c++)
-			{
-			printf("%02x", anoncerandom[c]);
-			}
+	for(c = 0; c < 32; c++)
+		{
+		printf("%02x", snoncerandom[c]);
+		}
+	printf("\nANONCE...................: ");
+	for(c = 0; c < 32; c++)
+		{
+		printf("%02x", anoncerandom[c]);
+		}
 	printf("\n\n");
 	}
 gettimeofday(&tv, NULL);
