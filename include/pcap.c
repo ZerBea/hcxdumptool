@@ -13,12 +13,12 @@
 
 #include "pcap.h"
 /*===========================================================================*/
-uint16_t addoption(uint8_t *shb, uint16_t optioncode, uint16_t optionlen, char *option)
+uint16_t addoption(uint8_t *posopt, uint16_t optioncode, uint16_t optionlen, char *option)
 {
 uint16_t padding;
 option_header_t *optionhdr;
 
-optionhdr = (option_header_t*)shb;
+optionhdr = (option_header_t*)posopt;
 optionhdr->option_code = optioncode;
 optionhdr->option_length = optionlen;
 padding = (4 -(optionlen %4)) %4;
@@ -27,13 +27,31 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
+uint16_t addcustomoption(uint8_t *pospt, int weakclen, char *weakcan)
+{
+int colen;
+option_header_t *optionhdr;
+
+optionhdr = (option_header_t*)pospt;
+optionhdr->option_code = SHB_CUSTOM_OCT;
+colen = OH_SIZE;
+memcpy(pospt +colen, &hcxmagic, 4);
+colen += 4;
+memcpy(pospt +colen, &hcxmagic, 32);
+colen += 32;
+colen += addoption(pospt +colen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
+colen += addoption(pospt +colen, 0, 0, NULL);
+
+optionhdr->option_length = colen -5;
+return colen -1;
+}
+/*===========================================================================*/
 bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
 {
 int cblen;
 int written;
 custom_block_t *cbhdr;
 optionfield64_t *of;
-
 total_length_t *totallength;
 uint8_t cb[2048];
 
@@ -201,6 +219,9 @@ if(uname(&unameData) == 0)
 	sprintf(sysinfo, "hcxdumptool %s", VERSION);
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
 	}
+
+//shblen += addcustomoption(shb +shblen, weakclen, weakcan);
+
 shblen += addoption(shb +shblen, OPTIONCODE_MACMYAP, 6, (char*)macap);
 of = (optionfield64_t*)(shb +shblen);
 of->option_code = OPTIONCODE_RC;

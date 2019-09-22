@@ -9,14 +9,6 @@
 #define PCAPNG_MINOR_VER	0
 #define PCAPNG_MAXSNAPLEN	0xffff
 
-/* local */
-#define OPTIONCODE_MACMYORIG		0xf29a
-#define OPTIONCODE_MACMYAP		0xf29b
-#define OPTIONCODE_RC			0xf29c
-#define OPTIONCODE_ANONCE		0xf29d
-#define OPTIONCODE_MACMYSTA		0xf29e
-#define OPTIONCODE_SNONCE		0xf29f
-#define OPTIONCODE_WEAKCANDIDATE	0xf2a0
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */
 struct section_header_block_s
@@ -56,11 +48,21 @@ struct option_header_s
 #define SHB_HARDWARE	2
 #define SHB_OS		3
 #define SHB_USER_APPL	4
+#define SHB_CUSTOM_OCT	0x0bad
 
 #define IF_NAME		2
 #define IF_DESCRIPTION	3
 #define IF_MACADDR	6
 #define IF_TZONE	10
+
+/* custom option code */
+#define OPTIONCODE_MACMYORIG		0xf29a
+#define OPTIONCODE_MACMYAP		0xf29b
+#define OPTIONCODE_RC			0xf29c
+#define OPTIONCODE_ANONCE		0xf29d
+#define OPTIONCODE_MACMYSTA		0xf29e
+#define OPTIONCODE_SNONCE		0xf29f
+#define OPTIONCODE_WEAKCANDIDATE	0xf2a0
 
  uint16_t		option_code;	/* option code - depending of block (0 - end of opts, 1 - comment are in common) */
  uint16_t		option_length;	/* option length - length of option in bytes (will be padded to 32bit) */
