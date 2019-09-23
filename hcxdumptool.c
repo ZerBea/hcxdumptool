@@ -725,7 +725,7 @@ static char gpsdatabuffer[GPSDDATA_MAX];
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
-epbhdr->block_type = EPBBID;
+epbhdr->block_type = EPBID;
 epbhdr->interface_id = 0;
 epbhdr->cap_len = packet_len;
 epbhdr->org_len = packet_len;

@@ -99,6 +99,7 @@ typedef struct interface_description_block_s interface_description_block_t;
 struct packet_block_s
 {
  uint32_t	block_type;		/* block type */
+#define	PBID	0x00000002
  uint32_t	total_length;		/* block length */
  uint16_t	interface_id;		/* the interface the packet was captured from - identified by interface description block in current section */
  uint16_t	drops_count;		/* packet dropped by IF and OS since prior packet */
@@ -114,6 +115,7 @@ typedef struct packet_block_s packet_block_t;
 struct simple_packet_block_s
 {
  uint32_t	block_type;		/* block type */
+#define	SPBID	0x00000003
  uint32_t	total_length;		/* block length */
  uint32_t	original_len;		/* length of packet when transmitted (was -orig_len- in classic pcap packet header) */
 } __attribute__((__packed__));
@@ -124,6 +126,7 @@ typedef struct simple_packet_block_s simple_packet_block_t;
 struct name_resolution_block_s
 {
  uint32_t	block_type;		/* block type */
+#define	NRBID	0x00000004
  uint32_t	total_length;		/* block length */
  uint16_t	record_type;		/* type of record (ipv4 / ipv6) */
  uint16_t	record_length;		/* length of record value */
@@ -188,7 +191,7 @@ typedef struct interface_statistics_block_s interface_statistics_block_t;
 struct enhanced_packet_block_s
 {
  uint32_t	block_type;		/* block type */
-#define EPBBID	0x00000006
+#define EPBID	0x00000006
  uint32_t	total_length;		/* block length */
  uint32_t	interface_id;		/* the interface the packet was captured from - identified by interface description block in current section */
  uint32_t	timestamp_high;		/* high bytes of timestamp */
