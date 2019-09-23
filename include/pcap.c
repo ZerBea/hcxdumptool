@@ -27,10 +27,11 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
-uint16_t addcustomoption(uint8_t *pospt, int weakclen, char *weakcan)
+uint16_t addcustomoption(uint8_t *pospt, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
 {
 int colen;
 option_header_t *optionhdr;
+optionfield64_t *of;
 
 optionhdr = (option_header_t*)pospt;
 optionhdr->option_code = SHB_CUSTOM_OCT;
@@ -39,9 +40,18 @@ memcpy(pospt +colen, &hcxmagic, 4);
 colen += 4;
 memcpy(pospt +colen, &hcxmagic, 32);
 colen += 32;
+
+colen += addoption(pospt +colen, OPTIONCODE_MACMYAP, 6, (char*)macap);
+of = (optionfield64_t*)(pospt +colen);
+of->option_code = OPTIONCODE_RC;
+of->option_length = 8;
+of->option_value = rcrandom;
+colen += 12;
+colen += addoption(pospt +colen, OPTIONCODE_ANONCE, 32, (char*)anonce);
+colen += addoption(pospt +colen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
+colen += addoption(pospt +colen, OPTIONCODE_SNONCE, 32, (char*)snonce);
 colen += addoption(pospt +colen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
 colen += addoption(pospt +colen, 0, 0, NULL);
-
 optionhdr->option_length = colen -5;
 return colen -1;
 }
@@ -191,7 +201,6 @@ bool writeshb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_
 int shblen;
 int written;
 section_header_block_t *shbhdr;
-optionfield64_t *of;
 
 total_length_t *totallength;
 struct utsname unameData;
@@ -220,18 +229,7 @@ if(uname(&unameData) == 0)
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
 	}
 
-//shblen += addcustomoption(shb +shblen, weakclen, weakcan);
-
-shblen += addoption(shb +shblen, OPTIONCODE_MACMYAP, 6, (char*)macap);
-of = (optionfield64_t*)(shb +shblen);
-of->option_code = OPTIONCODE_RC;
-of->option_length = 8;
-of->option_value = rcrandom;
-shblen += 12;
-shblen += addoption(shb +shblen, OPTIONCODE_ANONCE, 32, (char*)anonce);
-shblen += addoption(shb +shblen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
-shblen += addoption(shb +shblen, OPTIONCODE_SNONCE, 32, (char*)snonce);
-shblen += addoption(shb +shblen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
+shblen += addcustomoption(shb +shblen, macap, rcrandom, anonce, macsta, snonce, weakclen, weakcan);
 shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
 totallength = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
