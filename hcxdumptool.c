@@ -2150,7 +2150,6 @@ else
 	memcpy (pkeptr +66, wpakeyap->nonce, 32);
 	}
 
-
 memset(&packetout, 0, HDRRT_SIZE +WPA2QOS_SIZE +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 memcpy(&packetout[HDRRT_SIZE], &wpa2qosdata, WPA2QOS_SIZE);
@@ -2180,6 +2179,25 @@ if(write(fd_socket, packetout, HDRRT_SIZE +WPA2QOS_SIZE) < 0)
 outgoingcount++;
 fsync(fd_socket);
 return;
+}
+/*===========================================================================*/
+bool checkmyvendorsta(uint8_t *mactest)
+{
+size_t c;
+int testoui;
+
+testoui = mactest[0];
+testoui = (testoui << 8) +mactest[1];
+testoui = (testoui << 8) +mactest[2];
+
+for(c = 0; c < MYVENDORSTA_SIZE / sizeof(int); c++)
+	{
+	if(testoui == myvendorsta[c])
+		{
+		return true;
+		}
+	}
+return false;
 }
 /*===========================================================================*/
 static inline void process80211eap()
@@ -2215,23 +2233,29 @@ if(eapauth->type == EAPOL_KEY)
 	rc = be64toh(wpak->replaycount);
 	if(keyinfo == 1)
 		{
-		if((authlen == 95) && (memcmp(macfrx->addr1, &mac_mysta, 6) == 0))
+		if(authlen == 0x5f)
 			{
-			keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
-			if(keyver == 1)
+			if(memcmp(macfrx->addr1, &mac_mysta, 6) == 0)
 				{
-				send_m2wpa1qos(macfrx->addr2, eapauthptr);
+				keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
+				if(keyver == 1)
+					{
+					send_m2wpa1qos(macfrx->addr2, eapauthptr);
+					}
+				if(keyver == 2)
+					{
+					send_m2wpa2qos(macfrx->addr2, eapauthptr);
+					}
+				if(keyver == 3)
+					{
+					send_m2wpa2kv3qos(macfrx->addr2, eapauthptr);
+					}
+				return;
 				}
-			if(keyver == 2)
+			if(checkmyvendorsta(macfrx->addr1) == true)
 				{
-				send_m2wpa2qos(macfrx->addr2, eapauthptr);
+				return;
 				}
-			if(keyver == 3)
-				{
-				send_m2wpa2kv3qos(macfrx->addr2, eapauthptr);
-				}
-//			addpownedstaap(macfrx->addr1, macfrx->addr2, RX_M1);
-			return;
 			}
 		if(fd_pcapng != 0)
 			{
@@ -2245,7 +2269,7 @@ if(eapauth->type == EAPOL_KEY)
 			lasttimestampm1 = timestamp;
 			return;
 			}
-		if(authlen > 95)
+		if(authlen > 0x5f)
 			{
 			pmkidok = detectpmkid(macfrx->addr1, macfrx->addr2, authlen, eapauthptr +EAPAUTH_SIZE);
 			if(pmkidok > 0)
