@@ -5126,11 +5126,17 @@ while(1)
 		}
 	packet_ptr = &epb[EPB_SIZE];
 	rth = (rth_t*)packet_ptr;
+	if((rth->it_version != 0) && (rth->it_pad != 0))
+		{
+		printf("\nmissing radiotap header\n");
+		globalclose();
+		}
 	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
 	ieee82011_len = packet_len -le16toh(rth->it_len);
 	if(rth->it_present == 0)
 		{
-		continue;
+		printf("\nmissign radiotap flags\n");
+		globalclose();
 		}
 	if((rth->it_present & 0x20) == 0)
 		{
