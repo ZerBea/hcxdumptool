@@ -4688,16 +4688,22 @@ while(1)
 		}
 	packet_ptr = &epb[EPB_SIZE];
 	rth = (rth_t*)packet_ptr;
-	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
-	ieee82011_len = packet_len -le16toh(rth->it_len);
+	if((rth->it_version != 0) && (rth->it_pad != 0))
+		{
+		errorcount++;
+		continue;
+		}
 	if(rth->it_present == 0)
 		{
+		errorcount++;
 		continue;
 		}
 	if((rth->it_present & 0x20) != 0)
 		{
 		incommingcount++;
 		}
+	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
+	ieee82011_len = packet_len -le16toh(rth->it_len);
 	if(packet_len < (int)RTH_SIZE +(int)MAC_SIZE_NORM)
 		{
 		droppedcount++;
@@ -5128,21 +5134,21 @@ while(1)
 	rth = (rth_t*)packet_ptr;
 	if((rth->it_version != 0) && (rth->it_pad != 0))
 		{
-		printf("\nmissing radiotap header\n");
-		globalclose();
+		errorcount++;
+		continue;
 		}
-	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
-	ieee82011_len = packet_len -le16toh(rth->it_len);
 	if(rth->it_present == 0)
 		{
-		printf("\nmissign radiotap flags\n");
-		globalclose();
+		errorcount++;
+		continue;
 		}
 	if((rth->it_present & 0x20) == 0)
 		{
 		continue;
 		}
 	incommingcount++;
+	ieee82011_ptr = packet_ptr +le16toh(rth->it_len);
+	ieee82011_len = packet_len -le16toh(rth->it_len);
 	macfrx = (mac_t*)ieee82011_ptr;
 	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 		{
