@@ -1810,7 +1810,7 @@ if(apzeiger == NULL)
 	{
 	return 1;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0)
 	{
 	return 1;
 	}
@@ -1868,7 +1868,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0)
 	{
 	return;
 	}
@@ -1974,7 +1974,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0)
 	{
 	return;
 	}
@@ -2117,7 +2117,7 @@ if(apzeiger == NULL)
 	{
 	return;
 	}
-if( PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0 )
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, apzeiger->essid, apzeiger->essid_len, 4096, 32, pmk) == 0)
 	{
 	return;
 	}
