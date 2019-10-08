@@ -2441,10 +2441,6 @@ if(eapauth->type == EAP_PACKET)
 		{
 		writeepb(fd_pcapng, false);
 		}
-	if(fd_pcapng != 0)
-		{
-		writeepb(fd_pcapng, false);
-		}
 	exteap = (exteap_t*)(eapauthptr +EAPAUTH_SIZE);
 	exteaplen = ntohs(exteap->extlen);
 	if((eapauthlen != exteaplen +4) && (exteaplen -= 5))
