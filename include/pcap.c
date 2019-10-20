@@ -52,8 +52,8 @@ colen += addoption(pospt +colen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
 colen += addoption(pospt +colen, OPTIONCODE_SNONCE, 32, (char*)snonce);
 colen += addoption(pospt +colen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
 colen += addoption(pospt +colen, 0, 0, NULL);
-optionhdr->option_length = colen -5;
-return colen -1;
+optionhdr->option_length = colen -OH_SIZE;
+return colen ;
 }
 /*===========================================================================*/
 bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
