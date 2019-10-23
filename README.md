@@ -109,6 +109,15 @@ The best high frequency amplifier is a good antenna!
 | TP-LINK TL-ANT2409 A   | panel           |
 
 
+GPS devices
+--------------
+
+| VENDOR MODEL                | TYPE            |
+| --------------------------- | --------------- |
+| NAVILOCK NL-701US           | USB             |
+| JENTRO BT-GPS-8 activepilot | BLUETOOTH       |
+
+
 Useful scripts
 --------------
 
