@@ -69,7 +69,7 @@ struct option_header_s
  char			option_data[1];
 } __attribute__((__packed__));
 typedef struct option_header_s option_header_t;
-#define	OH_SIZE (sizeof(option_header_t))
+#define	OH_SIZE  offsetof(option_header_t, option_data)
 /*===========================================================================*/
 /* Option Field */
 struct optionfield64_s
