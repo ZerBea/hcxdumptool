@@ -272,7 +272,7 @@ struct mac_frame
  unsigned	retry : 1;
  unsigned	power : 1;
  unsigned	more_data : 1;
- unsigned	protected : 1;
+ unsigned	prot : 1;
  unsigned	ordered : 1;
 #endif
  uint16_t	duration;
