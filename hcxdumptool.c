@@ -6000,7 +6000,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	return false;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
 if (!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
@@ -6175,7 +6175,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	drivererrorflag = true;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
 if(epmaddr != NULL)
 	{
 	memset(&ifr, 0, sizeof(ifr));
@@ -6356,7 +6356,7 @@ if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	return false;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
 if(!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
