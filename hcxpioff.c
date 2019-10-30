@@ -38,7 +38,6 @@ struct timeval tvtot;
 
 static bool poweroffflag;
 static bool rebootflag;
-
 /*===========================================================================*/
 __attribute__ ((noreturn))
 static void globalclose()
@@ -70,15 +69,13 @@ static char *ptr;
 ptr = buffer +len -1;
 while(len)
 	{
-	if (*ptr != '\n')
-		break;
+	if (*ptr != '\n') break;
 	*ptr-- = 0;
 	len--;
 	}
 while(len)
 	{
-	if (*ptr != '\r')
-		break;
+	if (*ptr != '\r') break;
 	*ptr-- = 0;
 	len--;
 	}
@@ -90,11 +87,9 @@ static inline int fgetline(FILE *inputstream, size_t size, char *buffer)
 static size_t len;
 static char *buffptr;
 
-if(feof(inputstream))
-	return -1;
+if(feof(inputstream)) return -1;
 buffptr = fgets (buffer, size, inputstream);
-if(buffptr == NULL)
-	return -1;
+if(buffptr == NULL) return -1;
 len = strlen(buffptr);
 len = chop(buffptr, len);
 return len;
@@ -110,18 +105,14 @@ if(fd_mem < 0)
 	fprintf(stderr, "failed to get device memory\n");
 	return false;
 	}
-
 gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_mem, GPIO_BASE +gpioperi);
 close(fd_mem);
-
 if(gpio_map == MAP_FAILED)
 	{
 	fprintf(stderr, "failed to map GPIO memory\n");
 	return false;
 	}
-
 gpio = (volatile unsigned *)gpio_map;
-
 return true;
 }
 /*===========================================================================*/
@@ -146,14 +137,8 @@ if(fh_rpi == NULL)
 	}
 while(1)
 	{
-	if((len = fgetline(fh_rpi, 128, linein)) == -1)
-		{
-		break;
-		}
-	if(len < 15)
-		{
-		continue;
-		}
+	if((len = fgetline(fh_rpi, 128, linein)) == -1) break;
+	if(len < 15) continue;
 	if(memcmp(&linein, hwstr, 8) == 0)
 		{
 		rpi |= 1;
@@ -194,14 +179,8 @@ while(1)
 		rpirevision = strtol(&linein[len -4], &revptr, 16);
 		if((revptr - linein) == len)
 			{
-			if((rpirevision < 0x02) || (rpirevision > 0x15))
-				{
-				continue;
-				}
-			if((rpirevision == 0x11) || (rpirevision == 0x14))
-				{
-				continue;
-				}
+			if((rpirevision < 0x02) || (rpirevision > 0x15)) continue;
+			if((rpirevision == 0x11) || (rpirevision == 0x14)) continue;
 			gpioperibase = GPIO_PERI_BASE_OLD;
 			rpi |= 2;
 			}
@@ -214,11 +193,7 @@ while(1)
 		}
 	}
 fclose(fh_rpi);
-
-if(rpi < 0x7)
-	{
-	return 0;
-	}
+if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
@@ -228,7 +203,6 @@ static int gpiobasemem = 0;
 
 sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
-
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -252,20 +226,14 @@ if((gpiobutton > 0) || (gpiostatusled > 0))
 		INP_GPIO(gpiostatusled);
 		OUT_GPIO(gpiostatusled);
 		}
-	if(gpiobutton > 0)
-		{
-		INP_GPIO(gpiobutton);
-		}
+	if(gpiobutton > 0) INP_GPIO(gpiobutton);
 	}
 return true;
 }
 /*===========================================================================*/
 static void ledflash()
 {
-if(gpiostatusled == 0)
-	{
-	return;
-	}
+if(gpiostatusled == 0) return;
 GPIO_SET = 1 << gpiostatusled;
 nanosleep(&sleepled, NULL);
 GPIO_CLR = 1 << gpiostatusled;
@@ -285,14 +253,8 @@ while(1)
 	{
 	if(GET_GPIO(gpiobutton) > 0) globalclose();
 	gettimeofday(&tv, NULL);
-	if(tv.tv_sec >= tvtot.tv_sec)
-		{
-		globalclose();
-		}
-	if((count %5) == 0)
-		{
-		ledflash();
-		}
+	if(tv.tv_sec >= tvtot.tv_sec) globalclose();
+	if((count %5) == 0) ledflash();
 	count++;
 	sleep(1);
 	}
