@@ -137,7 +137,7 @@ LED flashes 5 times if hcxdumptool successfully started
 
 LED flashes every 5 seconds if everything is fine and signals are received
 
-LED turns on, if no signal received during the last past 5 seconds
+LED flashes twice, if no signal received during the last past 5 seconds
 
 Press push button at least > 5 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
 
@@ -179,17 +179,31 @@ to determine which access points are in attack range.
 pcapng option codes (Section Header Block)
 --------------
 
-OPTIONCODE_MACMYAP       62107 (6 byte)
+ENTERPRISE NUMBER        0x2a, 0xce, 0x46, 0xa1
 
-OPTIONCODE_RC            62108 (8 byte)
+MAGIC NUMBER             0x2a, 0xce, 0x46, 0xa1, 0x79, 0xa0, 0x72, 0x33,
 
-OPTIONCODE_ANONCE        62109 (32 byte)
+                         0x83, 0x37, 0x27, 0xab, 0x59, 0x33, 0xb3, 0x62,
 
-OPTIONCODE_MACMYSTA      62110 (6 byte)
+                         0x45, 0x37, 0x11, 0x47, 0xa7, 0xcf, 0x32, 0x7f,
 
-OPTIONCODE_SNONCE        62111 (32 byte)
+                         0x8d, 0x69, 0x80, 0xc0, 0x89, 0x5e, 0x5e, 0x98
 
-OPTIONCODE_WEAKCANDIDATE 62112 (64 byte)
+OPTIONCODE_MACMYORIG     0xf29a (6 byte)
+
+OPTIONCODE_MACMYAP       0xf29b (6 byte)
+
+OPTIONCODE_RC            0xf29c (8 byte)
+
+OPTIONCODE_ANONCE        0xf29d (32 byte)
+
+OPTIONCODE_MACMYSTA      0xf29e (6 byte)
+
+OPTIONCODE_SNONCE        0xf29f (32 byte)
+
+OPTIONCODE_WEAKCANDIDATE 0xf2a0 (32 byte)
+
+OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 
 
 Warning

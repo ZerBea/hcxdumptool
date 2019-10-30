@@ -1,3 +1,58 @@
+xx.xx.2019
+==========
+hcxdumptool: complete rewrite from scratch
+             filterlist splitted (APs, CLIENTs), entries increased upt to 256 each list:
+             --filterlist_ap
+             --filterlist_client
+             improved real time display:
+              driver information and firmware information (if available)
+              detailed information about PMKID and MESSAGE PAIR)
+              allow more than one option (--enable_status)
+                 0: no status (default)
+                 1: EAPOL
+                 2: PROBE REQUEST/PROBE RESPONSE
+                 4: AUTHENTICATON
+                 8: ASSOCIATION/REASSOCIATION
+                16: BEACON
+                32: GPS (once a minute)
+                64: internal status
+               128: send status to client
+             choose pcapng frames to save (-f) using option -o
+             improved rca_scan:
+              0: no real time display
+              1: show only access points in range (default)
+              2: show only access points not range
+              3: show all access points
+             improved GPS handling:
+              read GPS information directly from device (dropped GPSD)
+              use full standard NMEA raw sentence $GPRMC
+              $GPRMC,HHMMSS,A,BBBB.BBBB,b,LLLLL.LLLL,l,GG.G,RR.R,DDMMYY,M.M,m,F*PP
+              this version need hcxpcaptool v6.0.0 to convert GPS information!!!
+             ignore M4 if SNONCE is zeroed
+             ignore PMKID if zeroed
+             improved handling of radiatapheader on ath9k_htc driver
+             new option codes:
+              ENTERPRISE NUMBER        0x2a, 0xce, 0x46, 0xa1
+              MAGIC NUMBER             0x2a, 0xce, 0x46, 0xa1, 0x79, 0xa0, 0x72, 0x33,
+                                       0x83, 0x37, 0x27, 0xab, 0x59, 0x33, 0xb3, 0x62,
+                                       0x45, 0x37, 0x11, 0x47, 0xa7, 0xcf, 0x32, 0x7f,
+                                       0x8d, 0x69, 0x80, 0xc0, 0x89, 0x5e, 0x5e, 0x98
+              OPTIONCODE_MACMYORIG     0xf29a (6 byte)
+              OPTIONCODE_MACMYAP       0xf29b (6 byte)
+              OPTIONCODE_RC            0xf29c (8 byte)
+              OPTIONCODE_ANONCE        0xf29d (32 byte)
+              OPTIONCODE_MACMYSTA      0xf29e (6 byte)
+              OPTIONCODE_SNONCE        0xf29f (32 byte)
+              OPTIONCODE_WEAKCANDIDATE 0xf2a0 (32 byte)
+              OPTIONCODE_GPS           0xf2a1 (max 128 byte)
+             removed weak candidate check, because it leads to many, many unauthorized MP:M1M2
+
+hcxpioff: new options --tot, --poweroff, --reboot
+--tot=<digit>  : enable timeout timer in minutes (minimum = 2 minutes)
+               : hcxpioff will terminate if tot reached
+--reboot       : once hcxpioff terminated, reboot system
+
+
 20.09.2019
 ==========
 hcxdumptool: added pcapng custom block

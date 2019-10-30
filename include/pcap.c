@@ -27,14 +27,29 @@ memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding +4;
 }
 /*===========================================================================*/
-uint16_t addcustomoption(uint8_t *pospt, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
+uint16_t addcustomoptionheader(uint8_t *pospt)
+{
+int colen;
+option_header_t *optionhdr;
+
+optionhdr = (option_header_t*)pospt;
+optionhdr->option_code = SHB_CUSTOM_OPT;
+colen = OH_SIZE;
+memcpy(pospt +colen, &hcxmagic, 4);
+colen += 4;
+memcpy(pospt +colen, &hcxmagic, 32);
+colen += 32;
+return colen;
+}
+/*===========================================================================*/
+uint16_t addcustomoption(uint8_t *pospt, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce)
 {
 int colen;
 option_header_t *optionhdr;
 optionfield64_t *of;
 
 optionhdr = (option_header_t*)pospt;
-optionhdr->option_code = SHB_CUSTOM_OCT;
+optionhdr->option_code = SHB_CUSTOM_OPT;
 colen = OH_SIZE;
 memcpy(pospt +colen, &hcxmagic, 4);
 colen += 4;
@@ -50,13 +65,12 @@ colen += 12;
 colen += addoption(pospt +colen, OPTIONCODE_ANONCE, 32, (char*)anonce);
 colen += addoption(pospt +colen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
 colen += addoption(pospt +colen, OPTIONCODE_SNONCE, 32, (char*)snonce);
-colen += addoption(pospt +colen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
 colen += addoption(pospt +colen, 0, 0, NULL);
 optionhdr->option_length = colen -OH_SIZE;
-return colen ;
+return colen;
 }
 /*===========================================================================*/
-bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
+bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce)
 {
 int cblen;
 int written;
@@ -82,7 +96,6 @@ of->option_value = rcrandom;
 cblen += addoption(cb +cblen, OPTIONCODE_ANONCE, 32, (char*)anonce);
 cblen += addoption(cb +cblen, OPTIONCODE_MACMYSTA, 6, (char*)macsta);
 cblen += addoption(cb +cblen, OPTIONCODE_SNONCE, 32, (char*)snonce);
-cblen += addoption(cb +cblen, OPTIONCODE_WEAKCANDIDATE, weakclen, weakcan);
 cblen += addoption(cb +cblen, 0, 0, NULL);
 
 totallength = (total_length_t*)(cb +cblen);
@@ -196,7 +209,7 @@ if(written != idblen)
 return true;
 }
 /*===========================================================================*/
-bool writeshb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
+bool writeshb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce)
 {
 int shblen;
 int written;
@@ -229,7 +242,7 @@ if(uname(&unameData) == 0)
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
 	}
 
-shblen += addcustomoption(shb +shblen, macap, rcrandom, anonce, macsta, snonce, weakclen, weakcan);
+shblen += addcustomoption(shb +shblen, macap, rcrandom, anonce, macsta, snonce);
 shblen += addoption(shb +shblen, SHB_EOC, 0, NULL);
 totallength = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
@@ -245,7 +258,7 @@ if(written != shblen)
 return true;
 }
 /*===========================================================================*/
-int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr, uint8_t *macap, uint64_t rc, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, int weakclen, char *weakcan)
+int hcxcreatepcapngdump(char *pcapngdumpname, uint8_t *macorig, char *interfacestr, uint8_t *macap, uint64_t rc, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce)
 {
 int c;
 int fd;
@@ -267,7 +280,7 @@ if(fd == -1)
 	return -1;
 	}
 
-if(writeshb(fd, macap, rc, anonce, macsta, snonce, weakclen, weakcan) == false)
+if(writeshb(fd, macap, rc, anonce, macsta, snonce) == false)
 	{
 	return -1;
 	}
@@ -277,7 +290,7 @@ if(writeidb(fd, macorig, interfacestr) == false)
 	return -1;
 	}
 
-if(writecb(fd, macorig, macap, rc, anonce, macsta, snonce, weakclen, weakcan) == false)
+if(writecb(fd, macorig, macap, rc, anonce, macsta, snonce) == false)
 	{
 	return -1;
 	}
