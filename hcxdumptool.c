@@ -274,7 +274,7 @@ return;
 }
 #endif
 /*===========================================================================*/
-static inline void checkunwanted(char *unwantedname)
+static inline void checkunwanted(const char *unwantedname)
 {
 static FILE *fp;
 static char pidline[1024];
@@ -296,7 +296,7 @@ return;
 /*===========================================================================*/
 static inline bool checkmonitorinterface(char *checkinterfacename)
 {
-static char *monstr = "mon";
+static const char *monstr = "mon";
 
 if(checkinterfacename == NULL)
 	{
@@ -311,8 +311,8 @@ return true;
 /*===========================================================================*/
 static inline void checkallunwanted()
 {
-static char *networkmanager = "pidof NetworkManager";
-static char *wpasupplicant = "pidof wpa_supplicant";
+static const char *networkmanager = "pidof NetworkManager";
+static const char *wpasupplicant = "pidof wpa_supplicant";
 
 checkunwanted(networkmanager);
 checkunwanted(wpasupplicant);
@@ -373,7 +373,7 @@ __attribute__ ((noreturn))
 static void globalclose()
 {
 static struct ifreq ifr;
-static char *gpsd_disable = "?WATCH={\"enable\":false}";
+static const char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 sync();
 if(gpiostatusled > 0)
@@ -715,11 +715,11 @@ static uint16_t padding;
 static total_length_t *totallenght;
 static int gpsdlen;
 static char *gpsdptr;
-static char *gpsd_time = "\"time\":";
-static char *gpsd_lat = "\"lat\":";
-static char *gpsd_lon = "\"lon\":";
-static char *gpsd_alt = "\"alt\":";
-static char * aplesscomment = "HANDSHAKE AP-LESS";
+static const char *gpsd_time = "\"time\":";
+static const char *gpsd_lat = "\"lat\":";
+static const char *gpsd_lon = "\"lon\":";
+static const char *gpsd_alt = "\"alt\":";
+static char *aplesscomment = (char *) "HANDSHAKE AP-LESS";
 
 static char gpsdatabuffer[GPSDDATA_MAX];
 
@@ -1773,7 +1773,7 @@ static inline int detectpmkid(uint8_t *macsta, uint8_t *macap, uint16_t authlen,
 {
 static pmkid_t *pmkid;
 static aplist_t *apzeiger;
-static char *pmkname = "PMK Name";
+static const char *pmkname = "PMK Name";
 
 static uint8_t pmkidoui[] = { 0x00, 0x0f, 0xac };
 #define PMKIDOUI_SIZE sizeof(pmkidoui)
@@ -3036,7 +3036,7 @@ if(payload_len < (int)AUTHENTICATIONFRAME_SIZE)
 	return;
 	}
 
-if(macfrx->protected == 1)
+if(macfrx->prot == 1)
 	{
 	if(fd_pcapng != 0)
 		{
@@ -4138,14 +4138,14 @@ static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
 char *gpsdptr;
-char *gpsd_lat = "\"lat\":";
-char *gpsd_lon = "\"lon\":";
-char *gpsd_alt = "\"alt\":";
-char *gpsd_enable_json = "?WATCH={\"json\":true}";
-char *gpsd_disable = "?WATCH={\"enable\":false}";
-char *gpsd_version = "\"proto_major\":3";
-char *gpsd_json = "\"json\":true";
-char *gpsd_tpv = "\"class\":\"TPV\"";
+const char *gpsd_lat = "\"lat\":";
+const char *gpsd_lon = "\"lon\":";
+const char *gpsd_alt = "\"alt\":";
+const char *gpsd_enable_json = "?WATCH={\"json\":true}";
+const char *gpsd_disable = "?WATCH={\"enable\":false}";
+const char *gpsd_version = "\"proto_major\":3";
+const char *gpsd_json = "\"json\":true";
+const char *gpsd_tpv = "\"class\":\"TPV\"";
 
 printf("connecting to GPSD...\n");
 gpsd_len = 0;
@@ -4320,10 +4320,10 @@ static unsigned long long int oldincommingcount1;
 static unsigned long long int oldincommingcount5;
 
 static char *gpsdptr;
-static char *gpsd_time = "\"time\":";
-static char *gpsd_lat = "\"lat\":";
-static char *gpsd_lon = "\"lon\":";
-static char *gpsd_alt = "\"alt\":";
+static const char *gpsd_time = "\"time\":";
+static const char *gpsd_lat = "\"lat\":";
+static const char *gpsd_lon = "\"lon\":";
+static const char *gpsd_alt = "\"alt\":";
 
 static rth_t *rth;
 static int fdnum;
@@ -4989,7 +4989,7 @@ while(1)
 				}
 			continue;
 			}
-		if(macfrx->protected ==1)
+		if(macfrx->prot ==1)
 			{
 			if(fd_weppcapng != 0)
 				{
@@ -5383,9 +5383,9 @@ static int rpi = 0;
 static int rev = 0;
 static int gpioperibase = 0;
 static char *revptr = NULL;
-static char *revstr = "Revision";
-static char *hwstr = "Hardware";
-static char *snstr = "Serial";
+static const char *revstr = "Revision";
+static const char *hwstr = "Hardware";
+static const char *snstr = "Serial";
 static char linein[128];
 
 fh_rpi = fopen("/proc/cpuinfo", "r");
@@ -5582,7 +5582,7 @@ for(c = 0; c < 32; c++)
 	snoncerandom[c] = rand() %0xff;
 	}
 
-if((aplist = calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
+if((aplist = (aplist_t *) calloc((APLIST_MAX), APLIST_SIZE)) == NULL)
 	{
 	return false;
 	}
@@ -5590,20 +5590,20 @@ aplist_ptr = aplist;
 aplist_beacon_ptr = aplist;
 aplistcount = 0;
 
-if((myaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
+if((myaplist = (myaplist_t *) calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
 	{
 	return false;
 	}
 myaplist_ptr = myaplist;
 myaplist_beacon_ptr = myaplist;
 
-if((extaplist = calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
+if((extaplist = (myaplist_t *) calloc((MYAPLIST_MAX), MYAPLIST_SIZE)) == NULL)
 	{
 	return false;
 	}
 extaplist_beacon_ptr = extaplist;
 
-if((pownedlist = calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
+if((pownedlist = (macmaclist_t *) calloc((POWNEDLIST_MAX), MACMACLIST_SIZE)) == NULL)
 	{
 	return false;
 	}
@@ -5612,7 +5612,7 @@ filterlist_len = 0;
 filterlist = NULL;
 if(filterlistname != NULL)
 	{
-	if((filterlist = calloc((FILTERLIST_MAX), MACLIST_SIZE)) == NULL)
+	if((filterlist = (maclist_t *) calloc((FILTERLIST_MAX), MACLIST_SIZE)) == NULL)
 		{
 		printf("warning: couldn't allocate memory for filter list entries\n");
 		}
@@ -6000,7 +6000,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	return false;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (ethtool_perm_addr *) malloc(sizeof(struct ethtool_perm_addr) +6);
 if (!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
@@ -6175,7 +6175,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	drivererrorflag = true;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (ethtool_perm_addr *) malloc(sizeof(struct ethtool_perm_addr) +6);
 if(epmaddr != NULL)
 	{
 	memset(&ifr, 0, sizeof(ifr));
@@ -6356,7 +6356,7 @@ if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	return false;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (ethtool_perm_addr *) malloc(sizeof(struct ethtool_perm_addr) +6);
 if(!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
@@ -6650,7 +6650,7 @@ static long int totvalue;
 static bool checkdriver = false;
 static int weakcandidatecustomlen = 0;
 static char *weakcandidatecustom = NULL;
-static char *weakcandidatedefault = "12345678";
+static const char *weakcandidatedefault = "12345678";
 
 maxerrorcount = ERRORMAX;
 staytime = TIME_INTERVAL;
@@ -6800,6 +6800,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCXD_DISABLE_DEAUTHENTICATIONS:
 		deauthenticationflag = true;
 		break;
+
 
 		case HCXD_GIVE_UP_DEAUTHENTICATIONS:
 		deauthenticationsmax = strtol(optarg, NULL, 10);

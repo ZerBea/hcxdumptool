@@ -100,9 +100,9 @@ static int rpi = 0;
 static int rev = 0;
 static int gpioperibase = 0;
 static char *revptr = NULL;
-static char *revstr = "Revision";
-static char *hwstr = "Hardware";
-static char *snstr = "Serial";
+static const char *revstr = "Revision";
+static const char *hwstr = "Hardware";
+static const char *snstr = "Serial";
 static char linein[128];
 
 fh_rpi = fopen("/proc/cpuinfo", "r");
