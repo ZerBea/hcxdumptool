@@ -4333,6 +4333,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     2: use filter list as target list in transmission branch\n"
 	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
 	"                                        from the filter lists\n"
+	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
+	"                                     maximum entries: %d ESSIDs\n"
 	"--reactive_beacon                  : transmit beacon on every received proberequest\n"
 	"                                     affected: ap-less\n"
 	"--active_beacon                    : transmit beacon once a second\n"
@@ -4380,7 +4382,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname,
-	STAYTIME, EAPOLTIMEOUT /10000, FILTERLIST_MAX, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 
 exit(EXIT_SUCCESS);
 }
@@ -4423,7 +4425,7 @@ static const struct option long_options[] =
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
-	{"ext_ap_list",			required_argument,	NULL,	HCX_EXTAP_BEACON},
+	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"gps",				required_argument,	NULL,	HCX_GPS_NAME},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
