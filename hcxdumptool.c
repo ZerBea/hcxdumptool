@@ -1657,7 +1657,7 @@ if(fd_pcapng > 0)
 	}
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 
-for(zeiger = handshakelist; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
+for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
 	if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
@@ -1720,7 +1720,7 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
-for(zeiger = handshakelist; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
+for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
 	{
 	if(zeiger->message != HS_M2) continue;
 	if(zeiger->rc != (rc -1)) continue;
@@ -1764,7 +1764,7 @@ if(fd_pcapng > 0)
 	}
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
-for(zeiger = handshakelist; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
+for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
 	{
 	if((zeiger->message &HS_M1) != HS_M1) continue;
 	if(zeiger->rc != rc) continue;
