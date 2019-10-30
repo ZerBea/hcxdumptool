@@ -3607,7 +3607,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	}
 
 epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
-if (!epmaddr)
+if(!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
 	return false;
