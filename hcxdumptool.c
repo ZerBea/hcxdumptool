@@ -1644,6 +1644,7 @@ if(memcmp(wpak->nonce, &zeroed32, 32) == 0)
 	return;
 	}
 zeiger = handshakelist +HANDSHAKELIST_MAX -1;
+memset(zeiger, 0, HANDSHAKELIST_SIZE);
 zeiger->timestamp = timestamp;
 memcpy(zeiger->client, macfrx->addr2, 6);
 memcpy(zeiger->ap, macfrx->addr1, 6);
@@ -1708,6 +1709,7 @@ static uint64_t rc;
 static char message[128];
 
 zeiger = handshakelist +HANDSHAKELIST_MAX -1;
+memset(zeiger, 0, HANDSHAKELIST_SIZE);
 zeiger->timestamp = timestamp;
 memcpy(zeiger->client, macfrx->addr1, 6);
 memcpy(zeiger->ap, macfrx->addr2, 6);
@@ -1751,6 +1753,7 @@ static uint64_t rc;
 static char message[128];
 
 zeiger = handshakelist +HANDSHAKELIST_MAX -1;
+memset(zeiger, 0, HANDSHAKELIST_SIZE);
 zeiger->timestamp = timestamp;
 memcpy(zeiger->client, macfrx->addr2, 6);
 memcpy(zeiger->ap, macfrx->addr1, 6);
@@ -1796,6 +1799,7 @@ static maclist_t *zeigerap;
 static char message[128];
 
 zeiger = handshakelist +HANDSHAKELIST_MAX -1;
+memset(zeiger, 0, HANDSHAKELIST_SIZE);
 zeiger->timestamp = timestamp;
 memcpy(zeiger->client, macfrx->addr1, 6);
 memcpy(zeiger->ap, macfrx->addr2, 6);
