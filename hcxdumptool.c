@@ -2708,6 +2708,7 @@ return true;
 /*===========================================================================*/
 static inline void processpackets()
 {
+static int gpscount;
 static uint16_t maincount;
 static uint64_t incommingcountold;
 static int sa;
@@ -2721,6 +2722,7 @@ static const char gprmc[] = "$GPRMC";
 nmeaptr = nogps;
 if(fd_gps > 0)
 	{
+	gpscount = 0;
 	printf("waiting up to 2 minutes seconds to get GPS fix\n");
 	tvfd.tv_sec = 120;
 	tvfd.tv_usec = 0;
@@ -2736,6 +2738,12 @@ if(fd_gps > 0)
 		fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
 		if(FD_ISSET(fd_gps, &readfds))
 			{
+			if(gpscount > 120)
+				{
+				printf("GPS failed\n");
+				break;
+				}
+			gpscount++;
 			nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
 			if(nmeatemplen < 38) continue;
 			if(nmeatempsentence[17] == 'V') continue;
