@@ -2740,7 +2740,7 @@ if(fd_gps > 0)
 			{
 			if(gpscount > 120)
 				{
-				printf("GPS failed\n");
+				printf("unsupported GPS format\n");
 				break;
 				}
 			gpscount++;
