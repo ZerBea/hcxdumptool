@@ -83,13 +83,15 @@ static int gpiobutton;
 static struct timespec sleepled;
 static struct timespec sleepled2;
 
-struct timeval tv;
-struct timeval tvtot;
+static struct timeval tv;
+static struct timeval tvold;
+static struct timeval tvtot;
 static uint8_t cpa;
 static int staytime;
 
 static uint64_t timestamp;
 static uint64_t timestampstart;
+
 static uint64_t mytime;
 
 static rth_t *rth;
@@ -251,6 +253,7 @@ static struct ifreq ifr;
 
 static const char *gpsd_disable = "?WATCH={\"enable\":false}";
 
+printf("\nterminating...\e[?25h\n");
 sync();
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, "bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 if(gpiostatusled > 0)
@@ -311,8 +314,6 @@ if(handshakelist != NULL) free(handshakelist);
 if(scanlist != NULL) free(scanlist);
 if(filteraplist != NULL) free(filteraplist);
 if(filterclientlist != NULL) free(filterclientlist);
-
-printf("\nterminated...\e[?25h\n");
 if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
@@ -366,7 +367,7 @@ static inline void printposition()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[19]);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	{
 	sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
@@ -1111,6 +1112,8 @@ static const uint8_t reactivebeacondata[] =
 };
 #define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
 
+printf("debug sende\n");
+
 if(aplist->timestamp == 0) return;
 if(beaconintptr >= aplist +MACLIST_MAX) beaconintptr = aplist;
 if(beaconintptr->timestamp == 0) beaconintptr = aplist;
@@ -1439,7 +1442,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	{
 	if(memcmp(zeiger->addr, ap, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	return zeiger;
 	}
 return NULL;
@@ -1807,7 +1809,6 @@ static wpakey_t *wpak;
 static pmkid_t *pmkid;
 static handshakelist_t *zeiger;
 static maclist_t *zeigerap;
-
 static char message[128];
 
 zeiger = handshakelist +HANDSHAKELIST_MAX -1;
@@ -1913,7 +1914,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_REASSOC_RESP) != NET_REASSOC_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -1956,7 +1956,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_REASSOC_REQ) != NET_REASSOC_REQ)
 		{
 		if(fd_pcapng > 0)
@@ -2083,7 +2082,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if(zeiger->status < NET_M1) break;
 	return;
 	}
@@ -2115,7 +2113,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_ASSOC_RESP) != NET_ASSOC_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -2160,7 +2157,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_ASSOC_REQ) != NET_ASSOC_REQ)
 		{
 		zeiger->essidlen = tags.essidlen;
@@ -2265,7 +2261,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	zeiger->algorithm = auth->algorithm;
 	if((zeiger->status &NET_AUTH) != NET_AUTH)
 		{
@@ -2354,7 +2349,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_AUTH) != NET_AUTH)
 		{
 		if(fd_pcapng > 0)
@@ -2429,7 +2423,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_PROBE_REQ) != NET_PROBE_REQ)
 		{
 		if(fd_pcapng > 0)
@@ -2491,7 +2484,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->essidlen != tags.essidlen) continue;
 	if(memcmp(zeiger->essid, tags.essid, tags.essidlen) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_PROBE_REQ) != NET_PROBE_REQ)
 		{
 		if(fd_pcapng > 0)
@@ -2561,7 +2553,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	zeiger->count += 1;
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -2591,9 +2582,10 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 		}
-	if(zeiger->count %RECHECKCOUNT == 0)
+	if((zeiger->count %RECHECKCOUNT) == 0)
 		{
-		break;
+		debugprint(6, zeiger->addr);
+		zeiger->status &= 0xfffd;
 		}
 	return;
 	}
@@ -2610,7 +2602,6 @@ zeiger->cipher = tags.cipher;
 zeiger->akm = tags.akm;
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2637,9 +2628,8 @@ static inline void process80211beacon()
 static int apinfolen;
 static uint8_t *apinfoptr;
 static maclist_t *zeiger;
-static const char *message = "BEACON";
-
 static tags_t tags;
+static const char *message = "BEACON";
 
 if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
@@ -2658,13 +2648,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 			}
 		}
 	zeiger->status |= NET_BEACON;
-	if(zeiger->count %RECHECKCOUNT == 0)
-		{
-		zeiger->count = 1;
-		zeiger->status &= 0xfffd;
-		zeiger->dpv = DPC;
-		return;
-		}
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
@@ -2676,6 +2659,13 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 			}
 		zeiger->dpv += 1;
+		return;
+		}
+	if((zeiger->count %RECHECKCOUNT) == 0)
+		{
+		zeiger->count = 1;
+		zeiger->status &= 0xfffd;
+		zeiger->dpv = DPC;
 		return;
 		}
 	return;
@@ -2709,7 +2699,7 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-static bool set_channel()
+static inline bool set_channel()
 {
 static struct iwreq pwrq;
 
@@ -2722,25 +2712,211 @@ if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 return true;
 }
 /*===========================================================================*/
-static inline void processpackets()
+static inline void process_gps()
 {
-static uint16_t maincount;
+static const char gprmc[] = "$GPRMC";
+
+nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
+nmeatempsentence[nmeatemplen] = 0;
+if(nmeatemplen < 6) return;
+nmeatempsentence[nmeatemplen] = 0;
+if(memcmp(&gprmc, nmeatempsentence, 6) != 0) return;
+for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
+	{
+	if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
+		{
+		nmeatempsentence[nmealen] = 0;
+		break;
+		}
+	}
+memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
+return;
+}
+/*===========================================================================*/
+static inline void process_packet()
+{
+static uint32_t rthl;
+
+packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
+if(packetlen == 0)
+	{
+	fprintf(stderr, "\ninterface went down\n");
+	globalclose();
+	}
+if(packetlen < 0)
+	{
+	perror("\nfailed to read packet");
+	errorcount++;
+	return;
+	}
+#ifdef DEBUG
+debugprint(packetlen, &epb[EPB_SIZE]);
+#endif
+if(packetlen < (int)RTH_SIZE)
+	{
+	fprintf(stderr, "\ngot damged radiotap header\n");
+	errorcount++;
+	return;
+	}
+if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
+	{
+	perror("\nfailed to get time stamp");
+	errorcount++;
+	return;
+	}
+timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
+incommingcount++;
+packetptr = &epb[EPB_SIZE];
+rth = (rth_t*)packetptr;
+if(rth->it_version != 0)
+	{
+	errorcount++;
+	return;
+	}
+if(rth->it_pad != 0)
+	{
+	errorcount++;
+	return;
+	}
+if(rth->it_present == 0)
+	{
+	errorcount++;
+	return;
+	}
+rthl = le16toh(rth->it_len);
+if(rthl <= 14) return; /* outgoing packet */
+ieee82011ptr = packetptr +rthl;
+ieee82011len = packetlen -rthl;
+if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
+if(ieee82011len < (int)MAC_SIZE_ACK) return;
+macfrx = (mac_t*)ieee82011ptr;
+if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_LONG;
+	payloadlen = ieee82011len -MAC_SIZE_LONG;
+	}
+else
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
+	payloadlen = ieee82011len -MAC_SIZE_NORM;
+	}
+if(macfrx->type == IEEE80211_FTYPE_CTL)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_ACK)
+		{
+		memcpy(&mac_ack, macfrx->addr1, 6);
+		return;
+		}
+	}
+if(macfrx->subtype == IEEE80211_STYPE_PSPOLL)
+	{
+	process80211powersave_poll();
+	return;
+	}
+if(packetlen < (int)RTH_SIZE +(int)MAC_SIZE_NORM) return;
+if(macfrx->type == IEEE80211_FTYPE_MGMT)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON)
+		{
+		process80211beacon();
+		if(beaconfloodflag == true) send_beacon_aplist();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
+		{
+		if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0) process80211probe_req();
+		else process80211probe_req_directed();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
+		{
+		process80211probe_resp();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_AUTH)
+		{
+		if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) process80211authentication_req();
+		else if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0) process80211authentication_resp();
+		else process80211authentication_unknown();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_REQ)
+		{
+		process80211association_req();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_RESP)
+		{
+		process80211association_resp();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_REQ)
+		{
+		process80211reassociation_req();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_RESP)
+		{
+		process80211reassociation_resp();
+		}
+	else return;
+	}
+else if(macfrx->type == IEEE80211_FTYPE_DATA)
+	{
+	if(((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) || ((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC))
+		{
+		process80211null();
+		return;
+		}
+	qosflag = false;
+	if((macfrx->subtype &IEEE80211_STYPE_QOS_DATA) == IEEE80211_STYPE_QOS_DATA)
+		{
+		qosflag = true;
+		payloadptr += QOS_SIZE;
+		payloadlen -= QOS_SIZE;
+		}
+	if(payloadlen < (int)LLC_SIZE) return;
+	llcptr = payloadptr;
+	llc = (llc_t*)llcptr;
+	if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
+		{
+		process80211eap();
+		}
+	else if(((ntohs(llc->type)) == LLC_TYPE_IPV4) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
+		{
+		if((pcapngframesout &PCAPNG_FRAME_IPV4) == PCAPNG_FRAME_IPV4)
+			{
+			if(fd_pcapng <= 0) return;
+			if((pcapngframesout &PCAPNG_FRAME_IPV4) != PCAPNG_FRAME_IPV4) return;
+			writeepb(fd_pcapng);
+			}
+		}
+	else if(((ntohs(llc->type)) == LLC_TYPE_IPV6) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
+		{
+		if((pcapngframesout &PCAPNG_FRAME_IPV6) == PCAPNG_FRAME_IPV6)
+			{
+			if(fd_pcapng <= 0) return;
+			if((pcapngframesout &PCAPNG_FRAME_IPV6) != PCAPNG_FRAME_IPV6) return;
+			writeepb(fd_pcapng);
+			}
+		}
+	else if(macfrx->prot ==1)
+		{
+		mpduptr = payloadptr;
+		mpdu = (mpdu_t*)mpduptr;
+		if(((mpdu->keyid >> 5) &1) == 1) process80211data_wpa();
+		else if(((mpdu->keyid >> 5) &1) == 0) process80211data_wep();
+		}
+	}
+return;
+}
+/*===========================================================================*/
+static inline void process_fd()
+{
 static uint64_t incommingcountold;
-static int sa;
+static int sd;
 static int fdnum;
 static fd_set readfds;
-static uint32_t rthl;
 static struct timeval tvfd;
 static const char *nmeaptr;
 static const char *nogps = "N/A";
-static const char gprmc[] = "$GPRMC";
 
 nmeaptr = nogps;
-maincount = 1;
-sa = 1;
 nmeaptr = nogps;
-if(nmealen > 0) nmeaptr = nmeasentence;
-
+if(nmealen > 7) nmeaptr = nmeasentence +7;
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"NMEA 0183 RMC SENTENCE..: %s\n"
 	"INTERFACE NAME..........: %s\n"
@@ -2782,96 +2958,28 @@ if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	}
 else printf("%s", servermsg);
 
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
-cpa = 0;
-if(set_channel() == false) errorcount++;
 incommingcount = 0;
 incommingcountold = 0;
 outgoingcount = 0;
-maincount = 1;
+gettimeofday(&tv, NULL);
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+
+cpa = 0;
+if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 while(1)
 	{
-	if(gpiobutton > 0)
+	gettimeofday(&tv, NULL);
+	if(tv.tv_sec != tvold.tv_sec)
 		{
-		if(GET_GPIO(gpiobutton) > 0) globalclose();
-		}
-	if(wantstopflag == true) globalclose();
-	if(errorcount >= maxerrorcount)
-		{
-		fprintf(stderr, "\nmaximum number of errors is reached\n");
-		globalclose();
-		}
-	FD_ZERO(&readfds);
-	FD_SET(fd_socket, &readfds);
-	FD_SET(fd_gps, &readfds);
-	fdnum = select(fd_socket +sa, &readfds, NULL, NULL, &tvfd);
-	if(fdnum < 0)
-		{
-		errorcount++;
-		continue;
-		}
-	if(FD_ISSET(fd_socket, &readfds))
-		{
-		/* PACKET */
-		packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
-		if(packetlen == 0)
-			{
-			fprintf(stderr, "\ninterface went down\n");
-			globalclose();
-			}
-		if(packetlen < 0)
-			{
-			perror("\nfailed to read packet");
-			errorcount++;
-			continue;
-			}
-#ifdef DEBUG
-		debugprint(packetlen, &epb[EPB_SIZE]);
-#endif
-		if(packetlen < (int)RTH_SIZE)
-			{
-			fprintf(stderr, "\ngot damged radiotap header\n");
-			errorcount++;
-			continue;
-			}
-		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
-			{
-			perror("\nfailed to get time stamp");
-			errorcount++;
-			continue;
-			}
-		timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-		incommingcount++;
-		}
-	else if(FD_ISSET(fd_gps, &readfds))
-		{
-		/* GPS */
-		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-		if(nmeatemplen < 6) continue;
-		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
-			{
-			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
-				{
-				nmeatempsentence[nmealen] = 0;
-				break;
-				}
-			}
-		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
-		}
-	else
-		{
-		/* status */
-		gettimeofday(&tv, NULL);
-		timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
+		tvold.tv_sec = tv.tv_sec;
 		if(tv.tv_sec >= tvtot.tv_sec)
 			{
 			totflag = true;
 			globalclose();
 			}
-		if((maincount %5) == 0)
+		if((tv.tv_sec %5) == 0) 
 			{
 			if(gpiostatusled > 0)
 				{
@@ -2886,8 +2994,9 @@ while(1)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
+			incommingcountold = incommingcount;
 			}
-		if((maincount %staytime) == 0)
+		if((tv.tv_sec %staytime) == 0) 
 			{
 			cpa++;
 			if(channelscanlist[cpa] == 0) cpa = 0;
@@ -2896,156 +3005,50 @@ while(1)
 				errorcount++;
 				continue;
 				}
+			if(beaconactiveflag == true) send_beacon_aplist();
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 			}
-		if((maincount %60) == 0)
+		if((tv.tv_sec %60) == 0) 
 			{
 			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();	
 			}
-		tvfd.tv_sec = 1;
-		tvfd.tv_usec = 0;
-		incommingcountold = incommingcount;
-		maincount++;
-		if(beaconactiveflag == true) send_beacon_aplist();
-		continue;
 		}
-
-	packetptr = &epb[EPB_SIZE];
-	rth = (rth_t*)packetptr;
-	if(rth->it_version != 0)
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket, &readfds);
+	sd = fd_socket;
+	if(fd_gps > 0)
+		{
+		FD_SET(fd_gps, &readfds);
+		sd = fd_gps;
+		}
+	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
 		{
 		errorcount++;
 		continue;
 		}
-	if(rth->it_pad != 0)
-		{
-		errorcount++;
-		continue;
-		}
-	if(rth->it_present == 0)
-		{
-		errorcount++;
-		continue;
-		}
-	rthl = le16toh(rth->it_len);
-	if(rthl <= 14) continue; /* outgoing packet */
-	ieee82011ptr = packetptr +rthl;
-	ieee82011len = packetlen -rthl;
-	if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
-	if(ieee82011len < (int)MAC_SIZE_ACK) continue;
-	macfrx = (mac_t*)ieee82011ptr;
-	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
-		{
-		payloadptr = ieee82011ptr +MAC_SIZE_LONG;
-		payloadlen = ieee82011len -MAC_SIZE_LONG;
-		}
+	if(FD_ISSET(fd_gps, &readfds)) process_gps();
+	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
 	else
 		{
-		payloadptr = ieee82011ptr +MAC_SIZE_NORM;
-		payloadlen = ieee82011len -MAC_SIZE_NORM;
-		}
-	if(macfrx->type == IEEE80211_FTYPE_CTL)
-		{
-		if(macfrx->subtype == IEEE80211_STYPE_ACK)
-			{
-			memcpy(&mac_ack, macfrx->addr1, 6);
-			continue;
-			}
-		if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211powersave_poll();
-		continue;
-		}
-	if(packetlen < (int)RTH_SIZE +(int)MAC_SIZE_NORM) continue;
-	if(macfrx->type == IEEE80211_FTYPE_MGMT)
-		{
-		if(macfrx->subtype == IEEE80211_STYPE_BEACON)
-			{
-			process80211beacon();
-			if(beaconfloodflag == true) send_beacon_aplist();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
-			{
-			if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0) process80211probe_req();
-			else process80211probe_req_directed();
-			}
-
-		else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
-			{
-			process80211probe_resp();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_AUTH)
-			{
-			if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) process80211authentication_req();
-			else if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0) process80211authentication_resp();
-			else process80211authentication_unknown();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_REQ)
-			{
-			process80211association_req();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_RESP)
-			{
-			process80211association_resp();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_REQ)
-			{
-			process80211reassociation_req();
-			}
-		else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_RESP)
-			{
-			process80211reassociation_resp();
-			}
-		else continue;
-		}
-	else if(macfrx->type == IEEE80211_FTYPE_DATA)
-		{
-		if(((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) || ((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC))
-			{
-			process80211null();
-			continue;
-			}
-		qosflag = false;
-		if((macfrx->subtype &IEEE80211_STYPE_QOS_DATA) == IEEE80211_STYPE_QOS_DATA)
-			{
-			qosflag = true;
-			payloadptr += QOS_SIZE;
-			payloadlen -= QOS_SIZE;
-			}
-		if(payloadlen < (int)LLC_SIZE) continue;
-		llcptr = payloadptr;
-		llc = (llc_t*)llcptr;
-		if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
-			{
-			process80211eap();
-			}
-		else if(((ntohs(llc->type)) == LLC_TYPE_IPV4) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
-			{
-			if((pcapngframesout &PCAPNG_FRAME_IPV4) == PCAPNG_FRAME_IPV4)
-				{
-				if(fd_pcapng <= 0) continue;
-				if((pcapngframesout &PCAPNG_FRAME_IPV4) != PCAPNG_FRAME_IPV4) continue;
-				writeepb(fd_pcapng);
-				}
-			}
-		else if(((ntohs(llc->type)) == LLC_TYPE_IPV6) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
-			{
-			if((pcapngframesout &PCAPNG_FRAME_IPV6) == PCAPNG_FRAME_IPV6)
-				{
-				if(fd_pcapng <= 0) continue;
-				if((pcapngframesout &PCAPNG_FRAME_IPV6) != PCAPNG_FRAME_IPV6) continue;
-				writeepb(fd_pcapng);
-				}
-			}
-		else if(macfrx->prot ==1)
-			{
-			mpduptr = payloadptr;
-			mpdu = (mpdu_t*)mpduptr;
-			if(((mpdu->keyid >> 5) &1) == 1) process80211data_wpa();
-			else if(((mpdu->keyid >> 5) &1) == 0) process80211data_wep();
-			}
+		tvfd.tv_sec = 1;
+		tvfd.tv_usec = 0;
 		}
 	}
-
 return;
 }
 /*===========================================================================*/
@@ -3107,8 +3110,8 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	return;
 	}
 if(getaptags(apinfolen, apinfoptr, &tags) == false) return;
+memset(zeiger, 0, SCANLIST_SIZE);
 zeiger->timestamp = timestamp;
-zeiger->status = 0;
 zeiger->count = 1;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
@@ -3119,23 +3122,118 @@ qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_time);
 return;
 }
 /*===========================================================================*/
-static inline void process_rca_scan()
+static inline void process_packet_rca()
 {
-static int sa;
+static uint32_t rthl;
+
+packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
+if(packetlen == 0)
+	{
+	fprintf(stderr, "\ninterface went down\n");
+	globalclose();
+	}
+if(packetlen < 0)
+	{
+	perror("\nfailed to read packet");
+	errorcount++;
+	return;
+	}
+#ifdef DEBUG
+debugprint(packetlen, &epb[EPB_SIZE]);
+#endif
+if(packetlen < (int)RTH_SIZE)
+	{
+	fprintf(stderr, "\ngot damged radiotap header\n");
+	errorcount++;
+	return;
+	}
+if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
+	{
+	perror("\nfailed to get time stamp");
+	errorcount++;
+	return;
+	}
+timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
+incommingcount++;
+packetptr = &epb[EPB_SIZE];
+rth = (rth_t*)packetptr;
+if(rth->it_version != 0)
+	{
+	errorcount++;
+	return;
+	}
+if(rth->it_pad != 0)
+	{
+	errorcount++;
+	return;
+	}
+if(rth->it_present == 0)
+	{
+	errorcount++;
+	return;
+	}
+rthl = le16toh(rth->it_len);
+if(rthl <= 14) return; /* outgoing packet */
+ieee82011ptr = packetptr +rthl;
+ieee82011len = packetlen -rthl;
+if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
+if(ieee82011len < (int)MAC_SIZE_ACK) return;
+macfrx = (mac_t*)ieee82011ptr;
+if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_LONG;
+	payloadlen = ieee82011len -MAC_SIZE_LONG;
+	}
+else
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
+	payloadlen = ieee82011len -MAC_SIZE_NORM;
+	}
+if(macfrx->type == IEEE80211_FTYPE_MGMT)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_rca_scan();
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp_rca_scan();
+	}
+return;
+}
+/*===========================================================================*/
+static inline void process_fd_rca()
+{
+static int sd;
 static int fdnum;
 static fd_set readfds;
-static uint16_t rthl;
 static struct timeval tvfd;
-static const char gprmc[] = "$GPRMC";
 
-static char nmeasentence[NMEA_MAX];
-
-sa = 1;
+gettimeofday(&tv, NULL);
+tvold.tv_sec = tv.tv_sec;
+tvold.tv_usec = tv.tv_usec;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
+cpa = 0;
+if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 while(1)
 	{
+	gettimeofday(&tv, NULL);
+	if((tv.tv_sec -tvold.tv_sec) >= 1) 
+		{
+		tvold.tv_sec = tv.tv_sec;
+		timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
+		if(tv.tv_sec >= tvtot.tv_sec)
+			{
+			totflag = true;
+			globalclose();
+			}
+		printrcascan();
+		cpa++;
+		if(channelscanlist[cpa] == 0) cpa = 0;
+		if(set_channel() == false)
+			{
+			errorcount++;
+			continue;
+			}
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
+		}
 	if(gpiobutton > 0)
 		{
 		if(GET_GPIO(gpiobutton) > 0) globalclose();
@@ -3146,116 +3244,26 @@ while(1)
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
 		globalclose();
 		}
-
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
-	FD_SET(fd_gps, &readfds);
-	fdnum = select(fd_socket +sa, &readfds, NULL, NULL, &tvfd);
+	sd = fd_socket;
+	if(fd_gps > 0)
+		{
+		FD_SET(fd_gps, &readfds);
+		sd = fd_gps;
+		}
+	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
 	if(fdnum < 0)
 		{
 		errorcount++;
 		continue;
 		}
-	if(FD_ISSET(fd_socket, &readfds))
-		{
-		/* PACKET */
-		packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
-		if(packetlen == 0)
-			{
-			fprintf(stderr, "\ninterface went down\n");
-			globalclose();
-			}
-		if(packetlen < 0)
-			{
-			errorcount++;
-			continue;
-			}
-		if(packetlen < (int)RTH_SIZE)
-			{
-			errorcount++;
-			continue;
-			}
-		if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
-			{
-			errorcount++;
-			continue;
-			}
-		timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-		}
-	else if(FD_ISSET(fd_gps, &readfds))
-		{
-		/* GPS */
-		nmealen = read(fd_gps, nmeasentence, NMEA_MAX);
-		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-		if(nmeatemplen < 6) continue;
-		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
-			{
-			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
-				{
-				nmeatempsentence[nmealen] = 0;
-				break;
-				}
-			}
-		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
-		}
+	if(FD_ISSET(fd_gps, &readfds)) process_gps();
+	else if(FD_ISSET(fd_socket, &readfds)) process_packet_rca();
 	else
 		{
-		/* status */
-		printrcascan();
-		cpa++;
-		if(channelscanlist[cpa] == 0) cpa = 0;
-		if(set_channel() == false)
-			{
-			errorcount++;
-			continue;
-			}
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
-		continue;
-		}
-
-	packetptr = &epb[EPB_SIZE];
-	rth = (rth_t*)packetptr;
-	if(rth->it_version != 0)
-		{
-		errorcount++;
-		continue;
-		}
-	if(rth->it_pad != 0)
-		{
-		errorcount++;
-		continue;
-		}
-	if(rth->it_present == 0)
-		{
-		errorcount++;
-		continue;
-		}
-	if(rth->it_len <= 14) continue;
-	rthl = le16toh(rth->it_len);
-	ieee82011ptr = packetptr +rthl;
-	ieee82011len = packetlen -rthl;
-	if(((le16toh(rth->it_present) &0x10000003) == 0x10000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /*Atheros FCS */
-	if(ieee82011len < (int)MAC_SIZE_ACK) continue;
-	if(fd_pcapng > 0) writeepb(fd_pcapng);
-	macfrx = (mac_t*)ieee82011ptr;
-	if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
-		{
-		payloadptr = ieee82011ptr +MAC_SIZE_LONG;
-		payloadlen = ieee82011len -MAC_SIZE_LONG;
-		}
-	else
-		{
-		payloadptr = ieee82011ptr +MAC_SIZE_NORM;
-		payloadlen = ieee82011len -MAC_SIZE_NORM;
-		}
-
-	if(macfrx->type == IEEE80211_FTYPE_MGMT)
-		{
-		if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_rca_scan();
-		else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp_rca_scan();
 		}
 	}
 return;
@@ -3338,7 +3346,6 @@ static const char *monstr = "mon";
 
 if(checkinterfacename == NULL) return true;
 if(strstr(checkinterfacename, monstr) == NULL) return false;
-
 return true;
 }
 /*===========================================================================*/
@@ -3440,19 +3447,16 @@ return true;
 /*===========================================================================*/
 static inline void opengps()
 {
-static uint16_t maincount;
-static uint16_t gpscount;
+static int havegps;
+static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
-static const char gprmc[] = "$GPRMC";
-static struct sockaddr_in gpsd_addr;
-static const char *gpsd_enable_nmea = "?WATCH={\"nmea\":true}";
+static const char *gpsd_enable_nmea = "?WATCH={\"enable\":true,\"json\":false,\"nmea\":true}";
 
-maincount = 1;
-gpscount = 1;
 if(gpsname != NULL)
 	{
+	printf("connecting GPS device...\n");
 	if((fd_gps = open(gpsname, O_RDONLY)) < 0)
 		{
 		perror( "failed to open GPS device");
@@ -3469,7 +3473,7 @@ if(gpsdflag == true)
 		fd_gps = 0;
 		return;
 		}
-	printf("connecting to GPSD...\n");
+	printf("connecting GPSD...\n");
 	memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
 	gpsd_addr.sin_family = AF_INET;
 	gpsd_addr.sin_port = htons(2947);
@@ -3480,7 +3484,7 @@ if(gpsdflag == true)
 		fd_gps = 0;
 		return;
 		}
-	if(write(fd_gps, gpsd_enable_nmea, 20) != 20)
+	if(write(fd_gps, gpsd_enable_nmea, 47) != 47)
 		{
 		perror("failed to activate GPSD WATCH");
 		fd_gps = 0;
@@ -3488,21 +3492,17 @@ if(gpsdflag == true)
 		}
 	}
 
-nmealen = 0;
-memset(nmeasentence, 'A', NMEA_MAX);
-printf("waiting up to 2 minutes seconds to get GPS fix\n");
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
+havegps = 0;
 while(1)
 	{
 	if(gpiobutton > 0)
 		{
 		if(GET_GPIO(gpiobutton) > 0) globalclose();
 		}
-	if(wantstopflag == true) globalclose();
-	if(errorcount >= maxerrorcount)
+	if(wantstopflag == true)
 		{
-		fprintf(stderr, "\nmaximum number of errors is reached\n");
 		globalclose();
 		}
 	FD_ZERO(&readfds);
@@ -3515,37 +3515,25 @@ while(1)
 		}
 	if(FD_ISSET(fd_gps, &readfds))
 		{
-		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
-		if(gpscount > 120)
+		process_gps();
+		if(nmealen > 0) return;
+		if(havegps > 120)
 			{
-			printf("unsupported GPS format\n");
-			break;
+			nmealen = 0;
+			memset(&nmeasentence, 0, NMEA_MAX);
 			}
-		gpscount++;
-		if(nmeatemplen < 38) continue;
-		if(nmeatempsentence[17] == 'V') continue;
-		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
-			{
-			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
-				{
-				nmeatempsentence[nmealen] = 0;
-				break;
-				}
-			}
-		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
-		break;
+		havegps++;
 		}
 	else
 		{
-		if(maincount > 120)
+		if(havegps > 120)
 			{
-			printf("got no GPS fix\n");
-			break;
+			nmealen = 0;
+			memset(&nmeasentence, 0, NMEA_MAX);
 			}
+		havegps++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
-		maincount++;
 		}
 	}
 return;
@@ -4218,7 +4206,6 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 sleepled2.tv_sec = 0;
 sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
-
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -4312,6 +4299,8 @@ memset(&nmeatempsentence, 0, NMEA_MAX);
 memset(&nmeasentence, 0, NMEA_MAX);
 
 gettimeofday(&tv, NULL);
+tvold.tv_sec = tvold.tv_sec;
+tvold.tv_usec = tvold.tv_usec;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 wantstopflag = false;
@@ -4846,8 +4835,8 @@ if(pcapngoutname != NULL)
 
 if((gpsname != NULL) || (gpsdflag != false)) opengps();
 
-if(rcascanflag == true) process_rca_scan();
-else processpackets(); 
+if(rcascanflag == true) process_fd_rca();
+else process_fd(); 
 
 globalclose();
 return EXIT_SUCCESS;

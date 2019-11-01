@@ -58,7 +58,7 @@
 
 #define BEACONINTERVALL		0x3e8
 
-#define DPC			4
+#define DPC			3
 #define RECHECKCOUNT		432000 /* 12h */
 
 #define PCAPNG_FRAME_MANAGEMENT	1
