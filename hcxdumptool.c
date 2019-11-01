@@ -72,6 +72,7 @@ static bool wantstopflag;
 static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
+static bool gpsdflag;
 
 static int errorcount;
 static int maxerrorcount;
@@ -86,7 +87,6 @@ struct timeval tv;
 struct timeval tvtot;
 static uint8_t cpa;
 static int staytime;
-static struct timeval tvfd;
 
 static uint64_t timestamp;
 static uint64_t timestampstart;
@@ -249,6 +249,8 @@ static void globalclose()
 {
 static struct ifreq ifr;
 
+static const char *gpsd_disable = "?WATCH={\"enable\":false}";
+
 sync();
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, "bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 if(gpiostatusled > 0)
@@ -277,6 +279,10 @@ if(fd_socket > 0)
 
 if(fd_gps > 0)
 	{
+	if(gpsdflag == true)
+		{
+		if(write(fd_gps, gpsd_disable, 23) != 23) perror("failed to terminate GPSD WATCH");
+		}
 	if(close(fd_gps) != 0) perror("failed to close GPS device");
 	}
 
@@ -2712,23 +2718,27 @@ return true;
 /*===========================================================================*/
 static inline void processpackets()
 {
-static int gpscount;
+static int c;
 static uint16_t maincount;
+static uint16_t gpscount;
 static uint64_t incommingcountold;
 static int sa;
 static int fdnum;
 static fd_set readfds;
 static uint32_t rthl;
+static struct timeval tvfd;
 static const char *nmeaptr;
 static const char *nogps = "N/A";
 static const char gprmc[] = "$GPRMC";
 
 nmeaptr = nogps;
+maincount = 1;
+gpscount = 1;
+sa = 1;
 if(fd_gps > 0)
 	{
-	gpscount = 0;
 	printf("waiting up to 2 minutes seconds to get GPS fix\n");
-	tvfd.tv_sec = 120;
+	tvfd.tv_sec = 1;
 	tvfd.tv_usec = 0;
 	while(1)
 		{
@@ -2742,26 +2752,41 @@ if(fd_gps > 0)
 		fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
 		if(FD_ISSET(fd_gps, &readfds))
 			{
+			nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
 			if(gpscount > 120)
 				{
 				printf("unsupported GPS format\n");
 				break;
 				}
 			gpscount++;
-			nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
 			if(nmeatemplen < 38) continue;
 			if(nmeatempsentence[17] == 'V') continue;
 			if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
 			nmealen = nmeatemplen -1;
 			nmeatempsentence[nmeatemplen] = 0;
+			for(c = 0; c < nmealen; c++)
+				{
+				if((nmeatempsentence[c] == 0x0d) || (nmeatempsentence[c] == 0x0a))
+					{
+					nmeatempsentence[c] = 0;
+					break;
+					}
+				}
+			nmealen = c;
 			memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
 			nmeaptr = nmeasentence +7;
 			break;
 			}
 		else
 			{
-			printf("GPS failed\n");
-			break;
+			if(maincount > 120)
+				{
+				printf("got no GPS fix\n");
+				break;
+				}
+			tvfd.tv_sec = 1;
+			tvfd.tv_usec = 0;
+			maincount++;
 			}
 		}
 	}
@@ -2807,8 +2832,6 @@ if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	}
 else printf("%s", servermsg);
 
-
-sa = 1;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
 cpa = 0;
@@ -2830,7 +2853,6 @@ while(1)
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
 		globalclose();
 		}
-
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	FD_SET(fd_gps, &readfds);
@@ -2879,8 +2901,15 @@ while(1)
 		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
 		if(nmeatemplen < 38) continue;
 		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		nmealen = nmeatemplen -1;
-		nmeatempsentence[nmeatemplen] = 0;
+		for(c = 0; c < nmealen; c++)
+			{
+			if((nmeatempsentence[c] == 0x0d) || (nmeatempsentence[c] == 0x0a))
+				{
+				nmeatempsentence[c] = 0;
+				break;
+				}
+			}
+		nmealen = c;
 		memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
 		}
 	else
@@ -3147,6 +3176,7 @@ static int sa;
 static int fdnum;
 static fd_set readfds;
 static uint16_t rthl;
+static struct timeval tvfd;
 static const char gprmc[] = "$GPRMC";
 
 static char nmeasentence[NMEA_MAX];
@@ -3476,6 +3506,52 @@ if(sendto(fd_socket_mcsrv, "hello hcxdumptool clients...\n", sizeof ("hello hcxd
 	return false;
 	}
 return true;
+}
+/*===========================================================================*/
+static inline void opengps()
+{
+static struct sockaddr_in gpsd_addr;
+static const char *gpsd_enable_nmea = "?WATCH={\"nmea\":true}";
+
+
+if(gpsname != NULL)
+	{
+	if((fd_gps = open(gpsname, O_RDONLY)) < 0)
+		{
+		perror( "failed to open GPS device");
+		fprintf(stderr, "failed to open GPS device\n");
+		fd_gps = 0;
+		return;
+		}
+	return;
+	}
+if(gpsdflag == true)
+	{
+	if((fd_gps = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		{
+		perror( "failed to open GPSD socket");
+		fd_gps = 0;
+		return;
+		}
+	printf("connecting to GPSD...\n");
+	memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
+	gpsd_addr.sin_family = AF_INET;
+	gpsd_addr.sin_port = htons(2947);
+	gpsd_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	if(connect(fd_gps, (struct sockaddr*) &gpsd_addr, sizeof(gpsd_addr)) < 0)
+		{
+		perror("failed to connect to GPSD");
+		fd_gps = 0;
+		return;
+		}
+	if(write(fd_gps, gpsd_enable_nmea, 20) != 20)
+		{
+		perror("failed to activate GPSD WATCH");
+		fd_gps = 0;
+		return;
+		}
+	}
+return;
 }
 /*===========================================================================*/
 static inline bool opensocket()
@@ -4136,7 +4212,6 @@ static inline bool globalinit()
 static int c;
 static int gpiobasemem = 0;
 
-fd_gps = 0;
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
 srand(time(NULL));
@@ -4238,15 +4313,6 @@ filterclientlistentries = 0;
 nmealen = 0;
 memset(&nmeatempsentence, 0, NMEA_MAX);
 memset(&nmeasentence, 0, NMEA_MAX);
-
-if(gpsname != NULL)
-	{
-	fd_gps = open(gpsname, O_RDONLY);
-	if(fd_gps == -1)
-		{
-		fprintf(stderr, "failed to open GPS device\n");
-		}
-	}
 
 gettimeofday(&tv, NULL);
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
@@ -4353,8 +4419,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
 	"                                     affected: ap-less\n"
-	"--gps=<device>                     : GPS device\n"
+	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
+	"                                     NMEA $GPGGA\n"
+	"--use_gpsd                         : use GPSD device\n"
 	"                                     NMEA $GPGGA\n"
 	"--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)\n"
 	"                                     default = GPIO not in use\n"
@@ -4438,7 +4506,8 @@ static const struct option long_options[] =
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
-	{"gps",				required_argument,	NULL,	HCX_GPS_NAME},
+	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
+	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
@@ -4480,6 +4549,7 @@ checkdriverflag = false;
 showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
+gpsdflag = false;
 
 statusout = 0;
 attackstatus = 0;
@@ -4501,8 +4571,14 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		interfacename = optarg;
 		break;
 
-		case HCX_GPS_NAME:
+		case HCX_GPS_DEVICE:
 		gpsname = optarg;
+		gpsdflag = false;
+		break;
+
+		case HCX_GPSD:
+		gpsname = NULL;
+		gpsdflag = true;
 		break;
 
 		case HCX_CHANNEL:
@@ -4770,6 +4846,8 @@ if(pcapngoutname != NULL)
 		globalclose();
 		}
 	}
+
+if((gpsname != NULL) || (gpsdflag != false)) opengps();
 
 if(rcascanflag == true) process_rca_scan();
 else processpackets(); 
