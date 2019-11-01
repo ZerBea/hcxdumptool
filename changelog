@@ -24,7 +24,10 @@ hcxdumptool: complete rewrite from scratch
               2: show only access points not range
               3: show all access points
              improved GPS handling:
-              read GPS information directly from device (dropped GPSD)
+              read GPS information directly from device
+              --use_gps_device=<device>
+              or us GPSD
+              --use_gpsd 
               use full standard NMEA raw sentence $GPRMC
               $GPRMC,HHMMSS,A,BBBB.BBBB,b,LLLLL.LLLL,l,GG.G,RR.R,DDMMYY,M.M,m,F*PP
               this version need hcxpcaptool v6.0.0 to convert GPS information!!!
