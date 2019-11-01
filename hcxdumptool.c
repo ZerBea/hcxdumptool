@@ -498,19 +498,22 @@ padding = (4 -(epbhdrown->cap_len %4)) %4;
 epblen += packetlenown;
 memset(&epbown[epblen], 0, padding);
 epblen += padding;
-if((fd_gps > 0) && (nmealen > 0))
+if(fd_gps > 0)
 	{
-	optionhdr = (option_header_t*)(epbown +epblen);
-	optionhdr->option_code = SHB_CUSTOM_OPT;
-	colen = OH_SIZE;
-	memcpy(epbown +epblen +colen, &hcxmagic, 4);
-	colen += 4;
-	memcpy(epbown +epblen +colen, &hcxmagic, 32);
-	colen += 32;
-	colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
-	colen += addoption(epbown +epblen +colen, 0, 0, NULL);
-	optionhdr->option_length = colen -OH_SIZE;
-	epblen += colen;
+	if((nmealen > 0) && (nmeatempsentence[17] == 'A'))
+		{
+		optionhdr = (option_header_t*)(epb +epblen);
+		optionhdr->option_code = SHB_CUSTOM_OPT;
+		colen = OH_SIZE;
+		memcpy(epb +epblen +colen, &hcxmagic, 4);
+		colen += 4;
+		memcpy(epb +epblen +colen, &hcxmagic, 32);
+		colen += 32;
+		colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
+		colen += addoption(epb +epblen +colen, 0, 0, NULL);
+		optionhdr->option_length = colen -OH_SIZE;
+		epblen += colen;
+		}
 	}
 epblen += addoption(epbown +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epbown +epblen);
@@ -544,19 +547,22 @@ padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packetlen;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
-if((fd_gps > 0) && (nmealen > 0))
+if(fd_gps > 0)
 	{
-	optionhdr = (option_header_t*)(epb +epblen);
-	optionhdr->option_code = SHB_CUSTOM_OPT;
-	colen = OH_SIZE;
-	memcpy(epb +epblen +colen, &hcxmagic, 4);
-	colen += 4;
-	memcpy(epb +epblen +colen, &hcxmagic, 32);
-	colen += 32;
-	colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
-	colen += addoption(epb +epblen +colen, 0, 0, NULL);
-	optionhdr->option_length = colen -OH_SIZE;
-	epblen += colen;
+	if((nmealen > 0) && (nmeatempsentence[17] == 'A'))
+		{
+		optionhdr = (option_header_t*)(epb +epblen);
+		optionhdr->option_code = SHB_CUSTOM_OPT;
+		colen = OH_SIZE;
+		memcpy(epb +epblen +colen, &hcxmagic, 4);
+		colen += 4;
+		memcpy(epb +epblen +colen, &hcxmagic, 32);
+		colen += 32;
+		colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
+		colen += addoption(epb +epblen +colen, 0, 0, NULL);
+		optionhdr->option_length = colen -OH_SIZE;
+		epblen += colen;
+		}
 	}
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
@@ -2718,9 +2724,7 @@ return true;
 /*===========================================================================*/
 static inline void processpackets()
 {
-static int c;
 static uint16_t maincount;
-static uint16_t gpscount;
 static uint64_t incommingcountold;
 static int sa;
 static int fdnum;
@@ -2733,63 +2737,9 @@ static const char gprmc[] = "$GPRMC";
 
 nmeaptr = nogps;
 maincount = 1;
-gpscount = 1;
 sa = 1;
-if(fd_gps > 0)
-	{
-	printf("waiting up to 2 minutes seconds to get GPS fix\n");
-	tvfd.tv_sec = 1;
-	tvfd.tv_usec = 0;
-	while(1)
-		{
-		if(gpiobutton > 0)
-			{
-			if(GET_GPIO(gpiobutton) > 0) globalclose();
-			}
-		if(wantstopflag == true) globalclose();
-		FD_ZERO(&readfds);
-		FD_SET(fd_gps, &readfds);
-		fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
-		if(FD_ISSET(fd_gps, &readfds))
-			{
-			nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-			if(gpscount > 120)
-				{
-				printf("unsupported GPS format\n");
-				break;
-				}
-			gpscount++;
-			if(nmeatemplen < 38) continue;
-			if(nmeatempsentence[17] == 'V') continue;
-			if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-			nmealen = nmeatemplen -1;
-			nmeatempsentence[nmeatemplen] = 0;
-			for(c = 0; c < nmealen; c++)
-				{
-				if((nmeatempsentence[c] == 0x0d) || (nmeatempsentence[c] == 0x0a))
-					{
-					nmeatempsentence[c] = 0;
-					break;
-					}
-				}
-			nmealen = c;
-			memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
-			nmeaptr = nmeasentence +7;
-			break;
-			}
-		else
-			{
-			if(maincount > 120)
-				{
-				printf("got no GPS fix\n");
-				break;
-				}
-			tvfd.tv_sec = 1;
-			tvfd.tv_usec = 0;
-			maincount++;
-			}
-		}
-	}
+nmeaptr = nogps;
+if(nmealen > 0) nmeaptr = nmeasentence;
 
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"NMEA 0183 RMC SENTENCE..: %s\n"
@@ -2899,18 +2849,17 @@ while(1)
 		{
 		/* GPS */
 		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-		if(nmeatemplen < 38) continue;
+		if(nmeatemplen < 6) continue;
 		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		for(c = 0; c < nmealen; c++)
+		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
 			{
-			if((nmeatempsentence[c] == 0x0d) || (nmeatempsentence[c] == 0x0a))
+			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
 				{
-				nmeatempsentence[c] = 0;
+				nmeatempsentence[nmealen] = 0;
 				break;
 				}
 			}
-		nmealen = c;
-		memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
+		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
 		}
 	else
 		{
@@ -3181,32 +3130,6 @@ static const char gprmc[] = "$GPRMC";
 
 static char nmeasentence[NMEA_MAX];
 
-if(fd_gps > 0)
-	{
-	printf("waiting up to 5 seconds for GPS fix\n");
-	tvfd.tv_sec = 5;
-	tvfd.tv_usec = 0;
-	while(1)
-		{
-		FD_ZERO(&readfds);
-		FD_SET(fd_gps, &readfds);
-		fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
-		if(FD_ISSET(fd_gps, &readfds))
-			{
-			nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-			if(nmeatemplen < 38) continue;
-			if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-			nmealen = nmeatemplen -1;
-			nmeatempsentence[nmeatemplen] = 0;
-			memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
-			}
-		else
-			{
-			printf("GPS failed\n");
-			break;
-			}
-		}
-	}
 sa = 1;
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
@@ -3264,11 +3187,17 @@ while(1)
 		/* GPS */
 		nmealen = read(fd_gps, nmeasentence, NMEA_MAX);
 		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
-		if(nmeatemplen < 38) continue;
+		if(nmeatemplen < 6) continue;
 		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
-		nmealen = nmeatemplen -1;
-		nmeatempsentence[nmeatemplen] = 0;
-		memcpy(&nmeasentence, &nmeatempsentence, nmealen); 
+		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
+			{
+			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
+				{
+				nmeatempsentence[nmealen] = 0;
+				break;
+				}
+			}
+		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
 		}
 	else
 		{
@@ -3369,6 +3298,7 @@ while(1)
 	fdnum = select(fd_socket_mccli +1, &readfds, NULL, NULL, &tvfd);
 	if(fdnum < 0)
 		{
+		errorcount++;
 		continue;
 		}
 	if(FD_ISSET(fd_socket_mccli, &readfds))
@@ -3510,10 +3440,17 @@ return true;
 /*===========================================================================*/
 static inline void opengps()
 {
+static uint16_t maincount;
+static uint16_t gpscount;
+static int fdnum;
+static fd_set readfds;
+static struct timeval tvfd;
+static const char gprmc[] = "$GPRMC";
 static struct sockaddr_in gpsd_addr;
 static const char *gpsd_enable_nmea = "?WATCH={\"nmea\":true}";
 
-
+maincount = 1;
+gpscount = 1;
 if(gpsname != NULL)
 	{
 	if((fd_gps = open(gpsname, O_RDONLY)) < 0)
@@ -3523,7 +3460,6 @@ if(gpsname != NULL)
 		fd_gps = 0;
 		return;
 		}
-	return;
 	}
 if(gpsdflag == true)
 	{
@@ -3549,6 +3485,67 @@ if(gpsdflag == true)
 		perror("failed to activate GPSD WATCH");
 		fd_gps = 0;
 		return;
+		}
+	}
+
+nmealen = 0;
+memset(nmeasentence, 'A', NMEA_MAX);
+printf("waiting up to 2 minutes seconds to get GPS fix\n");
+tvfd.tv_sec = 1;
+tvfd.tv_usec = 0;
+while(1)
+	{
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
+	if(wantstopflag == true) globalclose();
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_gps, &readfds);
+	fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
+		{
+		errorcount++;
+		continue;
+		}
+	if(FD_ISSET(fd_gps, &readfds))
+		{
+		nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
+		if(gpscount > 120)
+			{
+			printf("unsupported GPS format\n");
+			break;
+			}
+		gpscount++;
+		if(nmeatemplen < 38) continue;
+		if(nmeatempsentence[17] == 'V') continue;
+		if(memcmp(&gprmc, nmeatempsentence, 6) != 0) continue;
+		for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
+			{
+			if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
+				{
+				nmeatempsentence[nmealen] = 0;
+				break;
+				}
+			}
+		memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
+		break;
+		}
+	else
+		{
+		if(maincount > 120)
+			{
+			printf("got no GPS fix\n");
+			break;
+			}
+		tvfd.tv_sec = 1;
+		tvfd.tv_usec = 0;
+		maincount++;
 		}
 	}
 return;
