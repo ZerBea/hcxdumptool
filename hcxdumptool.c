@@ -62,6 +62,8 @@ static struct ip_mreq mcmreq;
 static int fd_socket_mcsrv;
 static struct sockaddr_in mcsrvaddress;
 
+static FILE *fh_nmea;
+
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
@@ -77,6 +79,7 @@ static bool gpsdflag;
 static int errorcount;
 static int maxerrorcount;
 static int ringbuffercount;
+static int gpscount;
 
 static int gpiostatusled;
 static int gpiobutton;
@@ -308,6 +311,15 @@ if(fd_pcapng > 0)
 		}
 	}
 
+if(fh_nmea != NULL)
+	{
+	if(fclose(fh_nmea) != 0)
+		{
+		perror("failed to close NMEA 0183 dump file");
+		}
+	}
+
+
 if(aplist != NULL) free(aplist);
 if(clientlist != NULL) free(clientlist);
 if(handshakelist != NULL) free(handshakelist);
@@ -462,7 +474,7 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, ringbuffercount);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " RINGBUFFER:%d GPS:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, ringbuffercount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	{
 	sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
@@ -501,7 +513,7 @@ memset(&epbown[epblen], 0, padding);
 epblen += padding;
 if(fd_gps > 0)
 	{
-	if((nmealen > 0) && (nmeatempsentence[17] == 'A'))
+	if((nmealen > 0) && (nmeasentence[17] == 'A'))
 		{
 		optionhdr = (option_header_t*)(epb +epblen);
 		optionhdr->option_code = SHB_CUSTOM_OPT;
@@ -550,7 +562,7 @@ memset(&epb[epblen], 0, padding);
 epblen += padding;
 if(fd_gps > 0)
 	{
-	if((nmealen > 0) && (nmeatempsentence[17] == 'A'))
+	if((nmealen > 0) && (nmeasentence[17] == 'A'))
 		{
 		optionhdr = (option_header_t*)(epb +epblen);
 		optionhdr->option_code = SHB_CUSTOM_OPT;
@@ -2714,22 +2726,22 @@ return true;
 /*===========================================================================*/
 static inline void process_gps()
 {
-static const char gprmc[] = "$GPRMC";
+static char *nmeaptr;
+static const char *gprmc = "$GPRMC";
 
-nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX);
+nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
+if(nmeatemplen < 7) return;
 nmeatempsentence[nmeatemplen] = 0;
-if(nmeatemplen < 6) return;
-nmeatempsentence[nmeatemplen] = 0;
-if(memcmp(&gprmc, nmeatempsentence, 6) != 0) return;
-for(nmealen = 0; nmealen < nmeatemplen; nmealen++)
-	{
-	if((nmeatempsentence[nmealen] == 0x0d) || (nmeatempsentence[nmealen] == 0x0a))
-		{
-		nmeatempsentence[nmealen] = 0;
-		break;
-		}
-	}
-memcpy(&nmeasentence, &nmeatempsentence, nmealen +1); 
+nmeaptr = strstr(nmeatempsentence, gprmc);
+if(nmeaptr == NULL) return;
+
+if(memcmp(gprmc, nmeaptr, 6) != 0) return;
+nmealen = 0;
+while((nmeaptr[nmealen] != 0x0) && ( nmeaptr[nmealen] != 0x0a) && ( nmeaptr[nmealen] != 0xd)) nmealen++;
+nmeaptr[nmealen] = 0;
+memcpy(&nmeasentence,  nmeaptr, nmealen +1); 
+if(fh_nmea != NULL) fprintf(fh_nmea, "%s\n", nmeasentence);
+gpscount++;
 return;
 }
 /*===========================================================================*/
@@ -2911,12 +2923,7 @@ static int sd;
 static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
-static const char *nmeaptr;
-static const char *nogps = "N/A";
 
-nmeaptr = nogps;
-nmeaptr = nogps;
-if(nmealen > 7) nmeaptr = nmeasentence +7;
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"NMEA 0183 RMC SENTENCE..: %s\n"
 	"INTERFACE NAME..........: %s\n"
@@ -2935,7 +2942,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"ANONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
-	nmeaptr, interfacename, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
+	nmeasentence, interfacename, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
 	drivername, driverversion, driverfwversion, 
 	maxerrorcount, filteraplistentries, filterclientlistentries, filtermode,
 	beaconextlistlen,
@@ -2958,9 +2965,7 @@ if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	}
 else printf("%s", servermsg);
 
-incommingcount = 0;
 incommingcountold = 0;
-outgoingcount = 0;
 gettimeofday(&tv, NULL);
 tvfd.tv_sec = 1;
 tvfd.tv_usec = 0;
@@ -3452,8 +3457,13 @@ static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
+static const char *nogps = "N/A";
+static const char gprmc[] = "$GPRMC";
 static const char *gpsd_enable_nmea = "?WATCH={\"enable\":true,\"json\":false,\"nmea\":true}";
 
+nmealen = 0;
+memset(&nmeasentence, 0, NMEA_MAX);
+memcpy(&nmeasentence, nogps, 3);
 if(gpsname != NULL)
 	{
 	printf("connecting GPS device...\n");
@@ -3516,21 +3526,13 @@ while(1)
 	if(FD_ISSET(fd_gps, &readfds))
 		{
 		process_gps();
-		if(nmealen > 0) return;
-		if(havegps > 120)
-			{
-			nmealen = 0;
-			memset(&nmeasentence, 0, NMEA_MAX);
-			}
+		if(memcmp(&gprmc, nmeasentence, 6) == 0) return;
+		if(havegps > 120) return;
 		havegps++;
 		}
 	else
 		{
-		if(havegps > 120)
-			{
-			nmealen = 0;
-			memset(&nmeasentence, 0, NMEA_MAX);
-			}
+		if(havegps > 120) return;
 		havegps++;
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
@@ -4304,6 +4306,13 @@ tvold.tv_usec = tvold.tv_usec;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 wantstopflag = false;
+
+errorcount = 0;
+incommingcount = 0;
+outgoingcount = 0;
+gpscount = 0;
+ringbuffercount = 0;
+
 signal(SIGINT, programmende);
 return true;
 }
@@ -4410,6 +4419,11 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     NMEA $GPGGA\n"
 	"--use_gpsd                         : use GPSD device\n"
 	"                                     NMEA $GPGGA\n"
+	"--nmea=<file>                      : save track to file\n"
+	"                                     format: NMEA  0183\n"
+	"                                     to convert it to gpx, use GPSBabel:\n"
+	"                                     gpsbabel -i nmea -f hcxdumptool.nmea -o gpx -F file.gpx\n"
+	"                                     to display the track, open file.gpx with viking\n"
 	"--gpio_button=<digit>              : Raspberry Pi GPIO pin number of button (2...27)\n"
 	"                                     default = GPIO not in use\n"
 	"--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)\n"
@@ -4476,6 +4490,7 @@ static bool showchannelsflag;
 static char *filteraplistname;
 static char *filterclientlistname;
 static char *extaplistname;
+static char *nmeaoutname;
 
 static const char *short_options = "i:o:f:c:t:IChv";
 static const struct option long_options[] =
@@ -4494,6 +4509,7 @@ static const struct option long_options[] =
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
+	{"nmea",			required_argument,	NULL,	HCX_NMEA_NAME},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
@@ -4518,10 +4534,13 @@ pcapngoutname = NULL;
 filteraplistname = NULL;
 filterclientlistname = NULL;
 extaplistname = NULL;
-
 gpsname = NULL;
+nmeaoutname = NULL;
+
+errorcount = 0;
 maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
+fh_nmea = NULL;
 fd_pcapng = 0;
 cpa = 0;
 staytime = STAYTIME;
@@ -4565,6 +4584,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_GPSD:
 		gpsname = NULL;
 		gpsdflag = true;
+		break;
+
+		case HCX_NMEA_NAME:
+		nmeaoutname = optarg;
 		break;
 
 		case HCX_CHANNEL:
@@ -4831,6 +4854,18 @@ if(pcapngoutname != NULL)
 		errorcount++;
 		globalclose();
 		}
+	}
+
+
+if(nmeaoutname != NULL)
+	{
+	if((fh_nmea = fopen(nmeaoutname, "a+")) == NULL)
+		{
+		perror("failed to open NMEA 0183 dump file");
+		errorcount++;
+		globalclose();
+		}
+	setbuf(fh_nmea, NULL);
 	}
 
 if((gpsname != NULL) || (gpsdflag != false)) opengps();
