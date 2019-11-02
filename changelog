@@ -31,6 +31,7 @@ hcxdumptool: complete rewrite from scratch
               use full standard NMEA raw sentence GPRMC, GPGWL
               this version need hcxpcaptool v6.0.0 to convert GPS information or gpsbabel
               gpsbabel  -i nmea -f nmea.txt -o gpx -F test.gpx
+              then open test.gpx with viking (layer -> waypoint -> BSSID) 
              ignore M4 if SNONCE is zeroed
              ignore PMKID if zeroed
              improved handling of radiatapheader on ath9k_htc driver

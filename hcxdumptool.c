@@ -489,6 +489,29 @@ if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL)) wantstopfla
 return;
 }
 /*===========================================================================*/
+//GPWPL,4807.038,N,01131.000,E,112233445566*5C
+
+static void writegpwpl(uint8_t *mac)
+{
+static int c;
+static int cs;
+static char *gpwplptr;
+static char gpwpl[NMEA_MAX];
+
+if(nmealen < 66) return;
+snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[19], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
+gpwplptr = gpwpl+1;
+c = 0;
+cs = 0;
+while(gpwplptr[c] != '*')
+	{
+	cs ^= gpwplptr[c];
+	gpwplptr++;
+	}
+snprintf(gpwplptr +1, NMEA_MAX -44, "%02x", cs);
+fprintf(fh_nmea, "%s\n", gpwpl);
+return;
+}
 /*===========================================================================*/
 static void writeepbown(int fd)
 {
@@ -1926,6 +1949,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	if((zeiger->status &NET_REASSOC_RESP) != NET_REASSOC_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -1944,6 +1968,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
@@ -2125,6 +2150,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	if((zeiger->status &NET_ASSOC_RESP) != NET_ASSOC_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -2144,6 +2170,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
 return;
@@ -2214,6 +2241,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message);
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
@@ -2273,6 +2301,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	zeiger->algorithm = auth->algorithm;
 	if((zeiger->status &NET_AUTH) != NET_AUTH)
 		{
@@ -2317,6 +2346,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	{
 	if(macfrx->prot == 1) msgptr = message1;
@@ -2565,6 +2595,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -2618,6 +2649,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_PROBES) == STATUS_PROBES)	printtimenetapessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, message);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 	{
@@ -2700,6 +2732,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_BEACON) == STATUS_BEACON)	printtimenetapessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, message);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 	{
