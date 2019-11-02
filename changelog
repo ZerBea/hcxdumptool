@@ -28,7 +28,7 @@ hcxdumptool: complete rewrite from scratch
               --use_gps_device=<device>
               or us GPSD
               --use_gpsd 
-              use full standard NMEA raw sentence GPRMC, GPGWL
+              use full standard NMEA raw sentence $GPGGA, $GPRMC, $GPGWL
               this version need hcxpcaptool v6.0.0 to convert GPS information or gpsbabel
               gpsbabel  -i nmea -f nmea.txt -o gpx -F test.gpx
               then open test.gpx with viking (layer -> waypoint -> BSSID) 

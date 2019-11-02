@@ -489,17 +489,22 @@ if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL)) wantstopfla
 return;
 }
 /*===========================================================================*/
-//GPWPL,4807.038,N,01131.000,E,112233445566*5C
-
 static void writegpwpl(uint8_t *mac)
 {
 static int c;
 static int cs;
+
 static char *gpwplptr;
 static char gpwpl[NMEA_MAX];
 
-if(nmealen < 66) return;
-snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[19], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
+static const char gpgga[] = "$GPGGA";
+static const char gprmc[] = "$GPRMC";
+
+if(nmealen < 30) return;
+if(memcmp(&gpgga, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[17], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
+else if(memcmp(&gprmc, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[19], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
+else return;
+
 gpwplptr = gpwpl+1;
 c = 0;
 cs = 0;
@@ -536,7 +541,7 @@ memset(&epbown[epblen], 0, padding);
 epblen += padding;
 if(fd_gps > 0)
 	{
-	if((nmealen > 0) && (nmeasentence[17] == 'A'))
+	if(nmealen >= 44)
 		{
 		optionhdr = (option_header_t*)(epb +epblen);
 		optionhdr->option_code = SHB_CUSTOM_OPT;
@@ -585,7 +590,7 @@ memset(&epb[epblen], 0, padding);
 epblen += padding;
 if(fd_gps > 0)
 	{
-	if((nmealen > 0) && (nmeasentence[17] == 'A'))
+	if(nmealen >= 44)
 		{
 		optionhdr = (option_header_t*)(epb +epblen);
 		optionhdr->option_code = SHB_CUSTOM_OPT;
@@ -2760,15 +2765,15 @@ return true;
 static inline void process_gps()
 {
 static char *nmeaptr;
+static const char *gpgga = "$GPGGA";
 static const char *gprmc = "$GPRMC";
 
 nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
-if(nmeatemplen < 7) return;
+if(nmeatemplen < 44) return;
 nmeatempsentence[nmeatemplen] = 0;
-nmeaptr = strstr(nmeatempsentence, gprmc);
+nmeaptr = strstr(nmeatempsentence, gpgga);
+if(nmeaptr == NULL) nmeaptr = strstr(nmeatempsentence, gprmc);
 if(nmeaptr == NULL) return;
-
-if(memcmp(gprmc, nmeaptr, 6) != 0) return;
 nmealen = 0;
 while((nmeaptr[nmealen] != 0x0) && ( nmeaptr[nmealen] != 0x0a) && ( nmeaptr[nmealen] != 0xd)) nmealen++;
 nmeaptr[nmealen] = 0;
@@ -3491,6 +3496,7 @@ static int fdnum;
 static fd_set readfds;
 static struct timeval tvfd;
 static const char *nogps = "N/A";
+static const char gpgga[] = "$GPGGA";
 static const char gprmc[] = "$GPRMC";
 static const char *gpsd_enable_nmea = "?WATCH={\"enable\":true,\"json\":false,\"nmea\":true}";
 
@@ -3559,6 +3565,7 @@ while(1)
 	if(FD_ISSET(fd_gps, &readfds))
 		{
 		process_gps();
+		if(memcmp(&gpgga, nmeasentence, 6) == 0) return;
 		if(memcmp(&gprmc, nmeasentence, 6) == 0) return;
 		if(havegps > 120) return;
 		havegps++;
@@ -4449,11 +4456,11 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     affected: ap-less\n"
 	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
-	"                                     NMEA $GPGGA\n"
+	"                                     NMEA 0183 $GPGGA $GPGGA\n"
 	"--use_gpsd                         : use GPSD device\n"
-	"                                     NMEA $GPGGA\n"
+	"                                     NMEA 0183 $GPGGA, $GPRMC\n"
 	"--nmea=<file>                      : save track to file\n"
-	"                                     format: NMEA  0183\n"
+	"                                     format: NMEA 0183 $GPGGA, $GPRMC, $GPWPL\n"
 	"                                     to convert it to gpx, use GPSBabel:\n"
 	"                                     gpsbabel -i nmea -f hcxdumptool.nmea -o gpx -F file.gpx\n"
 	"                                     to display the track, open file.gpx with viking\n"
