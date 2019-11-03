@@ -4882,9 +4882,14 @@ if(pcapngoutname != NULL)
 		}
 	}
 
-
 if(nmeaoutname != NULL)
 	{
+	if((gpsname == NULL) && (gpsdflag == false)) 
+		{
+		fprintf(stderr, "no GPS device selected\n");
+		errorcount++;
+		globalclose();
+		}
 	if((fh_nmea = fopen(nmeaoutname, "a+")) == NULL)
 		{
 		perror("failed to open NMEA 0183 dump file");
@@ -4894,7 +4899,7 @@ if(nmeaoutname != NULL)
 	setbuf(fh_nmea, NULL);
 	}
 
-if((gpsname != NULL) || (gpsdflag != false)) opengps();
+if((gpsname != NULL) || (gpsdflag == true)) opengps();
 
 if(rcascanflag == true) process_fd_rca();
 else process_fd(); 
