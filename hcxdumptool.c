@@ -473,7 +473,7 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " RINGBUFFER:%d GPS:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, ringbuffercount, gpscount);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " GPS:%d RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, gpscount, ringbuffercount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))
 	{
 	sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
@@ -2949,7 +2949,7 @@ static fd_set readfds;
 static struct timeval tvfd;
 
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
-	"NMEA 0183 RMC SENTENCE..: %s\n"
+	"NMEA 0183 SENTENCE......: %s\n"
 	"INTERFACE NAME..........: %s\n"
 	"INTERFACE HARDWARE MAC..: %02x%02x%02x%02x%02x%02x\n"
 	"DRIVER..................: %s\n"
