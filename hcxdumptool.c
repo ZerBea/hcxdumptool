@@ -98,7 +98,6 @@ static uint64_t timestampstart;
 static uint64_t mytime;
 
 static rth_t *rth;
-static int packetlen;
 static uint64_t incommingcount;
 static uint64_t outgoingcount;
 
@@ -3923,9 +3922,9 @@ static int rpi = 0;
 static int rev = 0;
 static int gpioperibase = 0;
 static char *revptr = NULL;
-static char *revstr = "Revision";
-static char *hwstr = "Hardware";
-static char *snstr = "Serial";
+static const char *revstr = "Revision";
+static const char *hwstr = "Hardware";
+static const char *snstr = "Serial";
 static char linein[128];
 
 fh_rpi = fopen("/proc/cpuinfo", "r");
@@ -4147,7 +4146,7 @@ if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	return false;
 	}
 
-epmaddr = malloc(sizeof(struct ethtool_perm_addr) +6);
+epmaddr = (struct ethtool_perm_addr *) malloc(sizeof(struct ethtool_perm_addr) +6);
 if(!epmaddr)
 	{
 	perror("failed to malloc memory for permanent hardware address");
