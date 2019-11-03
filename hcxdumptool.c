@@ -517,14 +517,38 @@ fprintf(fh_nmea, "%s\n", gpwpl);
 return;
 }
 /*===========================================================================*/
+bool writecbnmea(int fd)
+{
+int cblen;
+int written;
+custom_block_t *cbhdr;
+total_length_t *totallength;
+uint8_t cb[2048];
+
+memset(&cb, 0, 2048);
+cbhdr = (custom_block_t*)cb;
+cblen = CB_SIZE;
+cbhdr->block_type = CBID;
+cbhdr->total_length = CB_SIZE;
+memcpy(cbhdr->pen, &hcxmagic, 4);
+memcpy(cbhdr->hcxm, &hcxmagic, 32);
+cblen += addoption(cb +cblen, OPTIONCODE_NMEA, nmealen, nmeasentence);
+cblen += addoption(cb +cblen, 0, 0, NULL);
+totallength = (total_length_t*)(cb +cblen);
+cblen += TOTAL_SIZE;
+cbhdr->total_length = cblen;
+totallength->total_length = cblen;
+written = write(fd, &cb, cblen);
+if(written != cblen) errorcount++;
+return true;
+}
+/*===========================================================================*/
 static void writeepbown(int fd)
 {
 static int epblen;
-static int colen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
-static option_header_t *optionhdr;
 
 epbhdrown = (enhanced_packet_block_t*)epbown;
 epblen = EPB_SIZE;
@@ -538,29 +562,11 @@ padding = (4 -(epbhdrown->cap_len %4)) %4;
 epblen += packetlenown;
 memset(&epbown[epblen], 0, padding);
 epblen += padding;
-if(fd_gps > 0)
-	{
-	if(nmealen >= 44)
-		{
-		optionhdr = (option_header_t*)(epb +epblen);
-		optionhdr->option_code = SHB_CUSTOM_OPT;
-		colen = OH_SIZE;
-		memcpy(epb +epblen +colen, &hcxmagic, 4);
-		colen += 4;
-		memcpy(epb +epblen +colen, &hcxmagic, 32);
-		colen += 32;
-		colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
-		colen += addoption(epb +epblen +colen, 0, 0, NULL);
-		optionhdr->option_length = colen -OH_SIZE;
-		epblen += colen;
-		}
-	}
 epblen += addoption(epbown +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epbown +epblen);
 epblen += TOTAL_SIZE;
 epbhdrown->total_length = epblen;
 totallenght->total_length = epblen;
-
 written = write(fd, &epbown, epblen);
 if(written != epblen) errorcount++;
 return;	
@@ -569,11 +575,9 @@ return;
 static void writeepb(int fd)
 {
 static int epblen;
-static int colen;
 static int written;
 static uint16_t padding;
 static total_length_t *totallenght;
-static option_header_t *optionhdr;
 
 epbhdr = (enhanced_packet_block_t*)epb;
 epblen = EPB_SIZE;
@@ -587,29 +591,11 @@ padding = (4 -(epbhdr->cap_len %4)) %4;
 epblen += packetlen;
 memset(&epb[epblen], 0, padding);
 epblen += padding;
-if(fd_gps > 0)
-	{
-	if(nmealen >= 44)
-		{
-		optionhdr = (option_header_t*)(epb +epblen);
-		optionhdr->option_code = SHB_CUSTOM_OPT;
-		colen = OH_SIZE;
-		memcpy(epb +epblen +colen, &hcxmagic, 4);
-		colen += 4;
-		memcpy(epb +epblen +colen, &hcxmagic, 32);
-		colen += 32;
-		colen += addoption(epb +epblen +colen, OPTIONCODE_NMEA, nmealen, nmeasentence);
-		colen += addoption(epb +epblen +colen, 0, 0, NULL);
-		optionhdr->option_length = colen -OH_SIZE;
-		epblen += colen;
-		}
-	}
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallenght->total_length = epblen;
-
 written = write(fd, &epb, epblen);
 if(written != epblen) errorcount++;
 return;	
@@ -2777,6 +2763,7 @@ nmealen = 0;
 while((nmeaptr[nmealen] != 0x0) && ( nmeaptr[nmealen] != 0x0a) && ( nmeaptr[nmealen] != 0xd)) nmealen++;
 nmeaptr[nmealen] = 0;
 memcpy(&nmeasentence,  nmeaptr, nmealen +1); 
+if(fd_pcapng > 0) writecbnmea(fd_pcapng);
 if(fh_nmea != NULL) fprintf(fh_nmea, "%s\n", nmeasentence);
 gpscount++;
 return;
