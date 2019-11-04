@@ -18,7 +18,7 @@ all: build
 build:
 ifeq ($(HOSTOS), Linux)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS) -lcrypto
 else
 	$(info OS not supported)
 endif

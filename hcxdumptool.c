@@ -36,6 +36,9 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>  
 #include <netpacket/packet.h>
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/cmac.h>
 
 #include "include/version.h"
 #include "include/hcxdumptool.h"
@@ -150,6 +153,8 @@ static uint32_t pcapngframesout;
 static enhanced_packet_block_t *epbhdr;
 static enhanced_packet_block_t *epbhdrown;
 
+static int weakcandidatelen;
+
 static const uint8_t hdradiotap[] =
 {
 0x00, 0x00, // radiotap version and padding
@@ -203,6 +208,8 @@ static uint8_t mac_ack[6];
 static unsigned long long int myrc;
 static uint8_t myanonce[32];
 static uint8_t mysnonce[32];
+
+static char weakcandidate[64];
 
 static uint8_t epb[PCAPNG_MAXSNAPLEN *2];
 static uint8_t epbown[PCAPNG_MAXSNAPLEN *2];
@@ -1828,6 +1835,22 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 return;
 }
 /*===========================================================================*/
+static inline bool detectweakpmkid(uint8_t *macclient, uint8_t *macap, uint8_t essidlen, uint8_t *essid, uint8_t *pmkid)
+{
+static const char *pmkname = "PMK Name";
+static unsigned char pmk[64];
+static uint8_t salt[32];
+static uint8_t pmkidcalc[32];
+
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, essid, essidlen, 4096, 32, pmk) == 0) return false;
+memcpy(&salt, pmkname, 8);
+memcpy(&salt[8], macap, 6);
+memcpy(&salt[14], macclient, 6);
+HMAC(EVP_sha1(), &pmk, 32, salt, 20, pmkidcalc, NULL);
+if(memcmp(&pmkidcalc, pmkid, 16) == 0) return true;
+return false;
+}
+/*===========================================================================*/
 static inline void process80211eapol_m1(int authlen, uint8_t *wpakptr)
 {
 static wpakey_t *wpak;
@@ -1861,9 +1884,19 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 			{
 			if((zeigerap->status &NET_PMKID) != NET_PMKID)
 				{
-				snprintf(message, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-							pmkid->pmkid[0], pmkid->pmkid[1], pmkid->pmkid[2], pmkid->pmkid[3], pmkid->pmkid[4], pmkid->pmkid[5], pmkid->pmkid[6], pmkid->pmkid[7],
-							pmkid->pmkid[8], pmkid->pmkid[9], pmkid->pmkid[10], pmkid->pmkid[11], pmkid->pmkid[12], pmkid->pmkid[13], pmkid->pmkid[14], pmkid->pmkid[15]);
+				if(detectweakpmkid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, pmkid->pmkid) == true)
+					{
+					snprintf(message, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x PSK:%s",
+								pmkid->pmkid[0], pmkid->pmkid[1], pmkid->pmkid[2], pmkid->pmkid[3], pmkid->pmkid[4], pmkid->pmkid[5], pmkid->pmkid[6], pmkid->pmkid[7],
+								pmkid->pmkid[8], pmkid->pmkid[9], pmkid->pmkid[10], pmkid->pmkid[11], pmkid->pmkid[12], pmkid->pmkid[13], pmkid->pmkid[14], pmkid->pmkid[15],
+								weakcandidate);
+					}
+				else
+					{
+					snprintf(message, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+								pmkid->pmkid[0], pmkid->pmkid[1], pmkid->pmkid[2], pmkid->pmkid[3], pmkid->pmkid[4], pmkid->pmkid[5], pmkid->pmkid[6], pmkid->pmkid[7],
+								pmkid->pmkid[8], pmkid->pmkid[9], pmkid->pmkid[10], pmkid->pmkid[11], pmkid->pmkid[12], pmkid->pmkid[13], pmkid->pmkid[14], pmkid->pmkid[15]);
+					}
 				printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
 				}
 			}
@@ -4225,6 +4258,11 @@ static inline bool globalinit()
 static int c;
 static int gpiobasemem = 0;
 
+static char weakcandidatedefault[] =
+{
+"12345678"
+};
+
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
 srand(time(NULL));
@@ -4325,6 +4363,10 @@ filterclientlistentries = 0;
 nmealen = 0;
 memset(&nmeatempsentence, 0, NMEA_MAX);
 memset(&nmeasentence, 0, NMEA_MAX);
+
+weakcandidatelen = 8;
+memset(&weakcandidate, 0, 64);
+memcpy(&weakcandidate, weakcandidatedefault, 8);
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tvold.tv_sec;
@@ -4432,6 +4474,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     2: use filter list as target list in transmission branch\n"
 	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
 	"                                        from the filter lists\n"
+	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
+	"                                     default: %s\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
 	"--reactive_beacon                  : transmit beacon on every received proberequest\n"
@@ -4488,7 +4532,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname,
-	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 
 exit(EXIT_SUCCESS);
 }
@@ -4508,6 +4552,7 @@ static int index;
 static long int totvalue;
 static int mccliport;
 static int mcsrvport;
+static int weakcandidatelenuser;
 static bool rcascanflag;
 static bool checkdriverflag;
 static bool showinterfaceflag;
@@ -4517,6 +4562,7 @@ static char *filteraplistname;
 static char *filterclientlistname;
 static char *extaplistname;
 static char *nmeaoutname;
+static char *weakcandidateuser;
 
 static const char *short_options = "i:o:f:c:t:IChv";
 static const struct option long_options[] =
@@ -4528,6 +4574,7 @@ static const struct option long_options[] =
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
+	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
@@ -4562,7 +4609,9 @@ filterclientlistname = NULL;
 extaplistname = NULL;
 gpsname = NULL;
 nmeaoutname = NULL;
+weakcandidateuser = NULL;
 
+weakcandidatelenuser = 0;
 errorcount = 0;
 maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
@@ -4670,6 +4719,17 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_FILTERMODE:
 		filtermode = strtol(optarg, NULL, 10);
+		break;
+
+		case HCX_WEAKCANDIDATE:
+		weakcandidateuser = optarg;
+		weakcandidatelenuser = strlen(weakcandidateuser);
+		if((weakcandidatelenuser < 8) || (weakcandidatelenuser > 63))
+			{
+			fprintf(stderr, "only length 8...63 characters allowed\n");
+			exit(EXIT_FAILURE);
+			}
+
 		break;
 
 		case HCX_EAPOL_TIMEOUT:
@@ -4813,6 +4873,12 @@ if(globalinit() == false)
 	globalclose();
 	}
 
+if(weakcandidateuser != NULL)
+	{
+	memcpy(&weakcandidate, weakcandidateuser, weakcandidatelenuser);
+	weakcandidatelen = weakcandidatelenuser;
+	}
+
 if((statusout &STATUS_CLIENT) == STATUS_CLIENT)
 	{
 	if(openmcclisocket(mccliport) == true) process_server();
@@ -4873,7 +4939,7 @@ if(extaplistname != NULL) readextbeaconlist(extaplistname);
 
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce);
+	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
