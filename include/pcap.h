@@ -8,7 +8,6 @@
 #define PCAPNG_MAJOR_VER	1
 #define PCAPNG_MINOR_VER	0
 #define PCAPNG_MAXSNAPLEN	0xffff
-
 /*===========================================================================*/
 /* Section Header Block (SHB) - ID 0x0A0D0D0A */
 struct section_header_block_s
