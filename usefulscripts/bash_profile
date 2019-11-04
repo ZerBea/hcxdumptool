@@ -8,8 +8,8 @@ then
 	ip link set $WLANDEV down
 	iw dev $WLANDEV set type monitor
 	ip link set $WLANDEV up
-	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --poweroff --filterlist=blacklistown --filtermode=1 --give_up_ap_attacks=100000 --give_up_deauthentications=100000
-#	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --tot=1440 --filterlist=blacklistown --filtermode=1 --disable_ap_attacks --disable_deauthentications -t 120
+	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --poweroff --filterlist_ap=blacklistown --filtermode=1
+#	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --tot=1440 --filterlist_ap=blacklistown --filtermode=1 --disable_ap_attacks --disable_deauthentications -t 120
 	hcxret=$?
 	if [ $hcxret -eq 2 ]
 	then
