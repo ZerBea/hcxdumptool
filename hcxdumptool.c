@@ -701,6 +701,7 @@ memcpy(zeiger->client, macfrx->addr2, 6);
 memcpy(zeiger->ap, macfrx->addr1, 6);
 zeiger->message = HS_M1;
 zeiger->rc = myrc;
+memcpy(zeiger->nonce, &myanonce, 32);
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 return;
 }
@@ -777,6 +778,7 @@ memcpy(zeiger->client, macfrx->addr2, 6);
 memcpy(zeiger->ap, macfrx->addr1, 6);
 zeiger->message = HS_M1;
 zeiger->rc = myrc;
+memcpy(zeiger->nonce, &myanonce, 32);
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 return;
 }
@@ -1667,6 +1669,143 @@ if(exteap->exttype == EAP_TYPE_ID)
 return;
 }
 /*===========================================================================*/
+static int omac1_aes_128_vector(const uint8_t *key, size_t num_elem, const uint8_t *addr[], const size_t *len, uint8_t *mac)
+{
+static CMAC_CTX *ctx;
+static int ret = -1;
+static size_t outlen, i;
+
+ctx = CMAC_CTX_new();
+if (ctx == NULL)
+	{
+	return -1;
+	}
+if (!CMAC_Init(ctx, key, 16, EVP_aes_128_cbc(), NULL))
+	{
+	goto fail;
+	}
+for (i = 0; i < num_elem; i++)
+	{
+	if (!CMAC_Update(ctx, addr[i], len[i]))
+		{
+		goto fail;
+		}
+	}
+if (!CMAC_Final(ctx, mac, &outlen) || outlen != 16)
+	{
+	goto fail;
+	}
+
+ret = 0;
+fail:
+CMAC_CTX_free(ctx);
+return ret;
+}
+/*===========================================================================*/
+static int omac1_aes_128(const uint8_t *key, const uint8_t *data, size_t data_len, uint8_t *mac)
+{
+return omac1_aes_128_vector(key, 1, &data, &data_len, mac);
+}
+/*===========================================================================*/
+static inline bool detectweakwpa( uint8_t essidlen, uint8_t *essid, uint8_t *anonce)
+{
+static int keyver;
+static int p;
+static int authlen;
+static uint8_t *eapauthptr;
+static eapauth_t *eapauth;
+static uint8_t *wpakptr;
+static wpakey_t *wpak;
+static uint8_t *pkeptr;
+
+static unsigned char pmk[64];
+static uint8_t pkedata[102];
+static uint8_t pkedata_prf[2 + 98 + 2];
+static uint8_t ptk[128];
+static uint8_t mymic[16];
+static uint8_t keymic[16];
+
+if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, essid, essidlen, 4096, 32, pmk) == 0) return false;
+
+eapauthptr = payloadptr +LLC_SIZE;
+eapauth = (eapauth_t*)eapauthptr;
+authlen = ntohs(eapauth->len);
+wpakptr = eapauthptr +EAPAUTH_SIZE;
+wpak = (wpakey_t*)wpakptr;
+keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
+memcpy(&keymic, wpak->keymic, 16);
+memset(wpak->keymic, 0, 16);
+if((keyver == 1 || keyver == 2))
+	{
+	pkeptr = pkedata;
+	memset(&pkedata, 0, sizeof(pkedata));
+	memset(&ptk, 0, sizeof(ptk));
+	memcpy(pkeptr, "Pairwise key expansion", 23);
+	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
+		{
+		memcpy(pkeptr +23, macfrx->addr1, 6);
+		memcpy(pkeptr +29, macfrx->addr2, 6);
+		}
+	else
+		{
+		memcpy(pkeptr +23, macfrx->addr2, 6);
+		memcpy(pkeptr +29, macfrx->addr1, 6);
+		}
+
+	if(memcmp(anonce, wpak->nonce, 32) < 0)
+		{
+		memcpy (pkeptr +35, anonce, 32);
+		memcpy (pkeptr +67, wpak->nonce, 32);
+		}
+	else
+		{
+		memcpy (pkeptr +35, wpak->nonce, 32);
+		memcpy (pkeptr +67, anonce, 32);
+		}
+	for (p = 0; p < 4; p++)
+		{
+		pkedata[99] = p;
+		HMAC(EVP_sha1(), &pmk, 32, pkedata, 100, ptk + p *20, NULL);
+		}
+	if(keyver == 1) HMAC(EVP_md5(), &ptk, 16, eapauthptr, authlen +EAPAUTH_SIZE, mymic, NULL);
+	if(keyver == 2) HMAC(EVP_sha1(), &ptk, 16, eapauthptr, authlen +EAPAUTH_SIZE, mymic, NULL);
+	if(memcmp(&keymic, &mymic, 16) == 0) return true;
+	return false;
+	}
+else if(keyver == 3)
+	{
+	pkeptr = pkedata;
+	memset(&pkedata_prf, 0, sizeof(pkedata_prf));
+	memset(&ptk, 0, sizeof(ptk));
+	memcpy(pkeptr, "Pairwise key expansion", 22);
+	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
+		{
+		memcpy(pkeptr +22, macfrx->addr1, 6);
+		memcpy(pkeptr +28, macfrx->addr2, 6);
+		}
+	else
+		{
+		memcpy(pkeptr +22, macfrx->addr2, 6);
+		memcpy(pkeptr +28, macfrx->addr1, 6);
+		}
+	if(memcmp(anonce, wpak->nonce, 32) < 0)
+		{
+		memcpy (pkeptr +34, anonce, 32);
+		memcpy (pkeptr +66, wpak->nonce, 32);
+		}
+	else
+		{
+		memcpy (pkeptr +34, wpak->nonce, 32);
+		memcpy (pkeptr +66, anonce, 32);
+		}
+	HMAC(EVP_sha256(), &pmk, 32, pkedata_prf, 2 + 98 + 2, ptk, NULL);
+	omac1_aes_128(ptk, eapauthptr, authlen +EAPAUTH_SIZE, mymic);
+	if(memcmp(&keymic, &mymic, 16) == 0) return true;
+	return false;
+	}
+return false;
+}
+/*===========================================================================*/
 static inline void process80211eapol_m4(uint8_t *wpakptr)
 {
 static wpakey_t *wpak;
@@ -1720,6 +1859,11 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			{
 			snprintf(message, 128, "MP:M3M4 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
 			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+			if(detectweakwpa(zeigerap->essidlen, zeigerap->essid, zeiger->nonce) == true)
+				{
+				snprintf(message, 128, "PSK:%s", weakcandidate);
+				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+				}
 			}
 		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 		return;
@@ -1736,6 +1880,11 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			{
 			snprintf(message, 128, "MP:M1M4 RC:%" PRIu64 " EAPOLTIME %" PRIu64, rc, timestamp -zeiger->timestamp);
 			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+			if(detectweakwpa(zeigerap->essidlen, zeigerap->essid, zeiger->nonce) == true)
+				{
+				snprintf(message, 128, "PSK:%s", weakcandidate);
+				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+				}
 			}
 		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 		return;
@@ -1763,6 +1912,7 @@ wpak = (wpakey_t*)wpakptr;
 zeiger->message = HS_M3;
 rc = be64toh(wpak->replaycount);
 zeiger->rc = rc;
+memcpy(zeiger->nonce, wpak->nonce, 32);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
@@ -1783,6 +1933,11 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 		{
 		snprintf(message, 128, "MP:M2M3 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
 		printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
+		if(detectweakwpa(zeigerap->essidlen, zeigerap->essid, zeiger->nonce) == true)
+			{
+			snprintf(message, 128, "PSK:%s", weakcandidate);
+			printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
+			}
 		}
 	qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 	return;
@@ -1807,6 +1962,7 @@ wpak = (wpakey_t*)wpakptr;
 zeiger->message = HS_M2;
 rc = be64toh(wpak->replaycount);
 zeiger->rc = rc;
+memcpy(zeiger->nonce, wpak->nonce, 32);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
@@ -1828,6 +1984,11 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 		{
 		snprintf(message, 128, "MP:M1M2 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
 		printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+		if(detectweakwpa(zeigerap->essidlen, zeigerap->essid, zeiger->nonce) == true)
+			{
+			snprintf(message, 128, "PSK:%s", weakcandidate);
+			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
+			}
 		}
 	qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 	return;
@@ -1867,6 +2028,7 @@ memcpy(zeiger->ap, macfrx->addr2, 6);
 wpak = (wpakey_t*)wpakptr;
 zeiger->message = HS_M1;
 zeiger->rc = be64toh(wpak->replaycount);
+memcpy(zeiger->nonce, wpak->nonce, 32);
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 zeigerap = getnet(macfrx->addr2);
 if(zeigerap == NULL) return;
