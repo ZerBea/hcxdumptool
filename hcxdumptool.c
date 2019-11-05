@@ -1726,7 +1726,6 @@ static uint8_t mymic[16];
 static uint8_t keymic[16];
 
 if(PKCS5_PBKDF2_HMAC_SHA1(weakcandidate, weakcandidatelen, essid, essidlen, 4096, 32, pmk) == 0) return false;
-
 eapauthptr = payloadptr +LLC_SIZE;
 eapauth = (eapauth_t*)eapauthptr;
 authlen = ntohs(eapauth->len);
