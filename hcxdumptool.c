@@ -2143,17 +2143,12 @@ if(eapauth->type == EAPOL_KEY)
 else if(eapauth->type == EAP_PACKET) process80211exteap(authlen);
 else if(eapauth->type == EAPOL_ASF) process80211exteap_asf();
 else if(eapauth->type == EAPOL_MKA) process80211exteap_mka();
-else if(eapauth->type == EAPOL_START)
+else if((eapauth->type == EAPOL_START) && (macfrx->to_ds == 1))
 	{
-	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
-		{
-		send_ack();
-		send_eap_request_id();
-		}
+	send_ack();
+	send_eap_request_id();
 	}
-else if(eapauth->type == EAPOL_LOGOFF)
-	{
-	}
+else if(eapauth->type == EAPOL_LOGOFF) return;
 else
 	{
 	if(fd_pcapng > 0)
@@ -2187,6 +2182,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->dpv = DPC;
 zeiger->status = NET_REASSOC_RESP;
 if(fd_pcapng > 0)
 	{
@@ -2389,6 +2385,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->dpv = DPC;
 zeiger->status = NET_ASSOC_RESP;
 if(fd_pcapng > 0)
 	{
