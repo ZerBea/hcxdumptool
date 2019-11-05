@@ -167,6 +167,7 @@ struct handshakelist_s
 #define HS_M3	4
 #define HS_M4	8
  uint64_t	rc;
+ uint8_t	nonce[32];
 };
 typedef struct handshakelist_s handshakelist_t;
 #define	HANDSHAKELIST_SIZE (sizeof(handshakelist_t))
