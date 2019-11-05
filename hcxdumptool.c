@@ -1633,10 +1633,51 @@ if(fd_pcapng > 0)
 return;
 }
 /*===========================================================================*/
+static void send_eap_request_id()
+{
+static mac_t *macftx;
+static const uint8_t requestidentitydata[] =
+{
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x00, 0x00, 0x0a, 0x01, 0x63, 0x00, 0x05, 0x01
+};
+#define REQUESTIDENTITY_SIZE sizeof(requestidentitydata)
+
+static uint8_t packetout[1024];
+
+if(filtermode == 1)
+	{
+	if(isclientinfilterlist(macfrx->addr2) == true) return;
+	}
+else if(filtermode ==2)
+	{
+	if(isclientinfilterlist(macfrx->addr2) == false) return;
+	}
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_QOS_DATA;
+memcpy(macftx->addr1, macfrx->addr2, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, macfrx->addr1, 6);
+macftx->from_ds = 1;
+macftx->duration = 0x002c;
+macftx->sequence = 0;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &requestidentitydata, REQUESTIDENTITY_SIZE);
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE) < 0)
+	{
+	perror("\nfailed to transmit request identity");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
 static inline void process80211exteap(int authlen)
 {
 static uint8_t *eapauthptr;
-static int eapauthlen;
 static exteap_t *exteap;
 static int exteaplen;
 
@@ -1644,24 +1685,23 @@ static const char *message1 = "REQUEST ID";
 static const char *message2 = "RESPONSE ID";
 
 eapauthptr = payloadptr +LLC_SIZE +EAPAUTH_SIZE;
-eapauthlen = payloadlen -LLC_SIZE -EAPAUTH_SIZE;
+//eapauthlen = payloadlen -LLC_SIZE -EAPAUTH_SIZE;
 exteap = (exteap_t*)eapauthptr;
 exteaplen = ntohs(exteap->extlen);
 
 if(exteaplen > authlen) return;
 
-if((eapauthlen != exteaplen +4) && (exteaplen -= 5)) return;
 if(exteap->exttype == EAP_TYPE_ID)
 	{
 	if(fd_pcapng > 0)
 		{
 		if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 		}
-	if((exteap->code == EAP_CODE_REQ) && (exteap->data[0] != 0))
+	if(exteap->code == EAP_CODE_REQ)
 		{
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printtimenetap(macfrx->addr1, macfrx->addr2, message1);
 		}
-	if((exteap->code == EAP_CODE_RESP) && (exteap->data[0] != 0))
+	else if(exteap->code == EAP_CODE_RESP)
 		{
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printtimenetclient(macfrx->addr2, macfrx->addr1, message2);
 		}
@@ -2105,6 +2145,11 @@ else if(eapauth->type == EAPOL_ASF) process80211exteap_asf();
 else if(eapauth->type == EAPOL_MKA) process80211exteap_mka();
 else if(eapauth->type == EAPOL_START)
 	{
+	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+		{
+		send_ack();
+		send_eap_request_id();
+		}
 	}
 else if(eapauth->type == EAPOL_LOGOFF)
 	{
