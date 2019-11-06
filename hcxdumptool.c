@@ -3188,6 +3188,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"FILTERLIST ACCESS POINT.: %d entries\n"
 	"FILTERLIST CLIENT.......: %d entries\n"
 	"FILTERMODE..............: %d\n"
+	"WEAK CANDIDATE..........: %s\n"
 	"PREDEFINED ACCESS POINT.: %d entries\n"
 	"MAC ACCESS POINT........: %02x%02x%02x%02x%02x%02x (incremented on every new client)\n"
 	"MAC CLIENT..............: %02x%02x%02x%02x%02x%02x\n"
@@ -3197,7 +3198,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"\n",
 	nmeasentence, interfacename, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
 	drivername, driverversion, driverfwversion, 
-	maxerrorcount, filteraplistentries, filterclientlistentries, filtermode,
+	maxerrorcount, filteraplistentries, filterclientlistentries, filtermode, weakcandidate,
 	beaconextlistlen,
 	mac_myap[0], mac_myap[1], mac_myap[2], mac_myap[3], mac_myap[4], mac_myap[5],
 	mac_myclient[0], mac_myclient[1], mac_myclient[2], mac_myclient[3], mac_myclient[4], mac_myclient[5],
