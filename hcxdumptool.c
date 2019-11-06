@@ -1146,8 +1146,6 @@ static const uint8_t reactivebeacondata[] =
 };
 #define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
 
-printf("debug sende\n");
-
 if(aplist->timestamp == 0) return;
 if(beaconintptr >= aplist +MACLIST_MAX) beaconintptr = aplist;
 if(beaconintptr->timestamp == 0) beaconintptr = aplist;
@@ -1690,13 +1688,14 @@ exteap = (exteap_t*)eapauthptr;
 exteaplen = ntohs(exteap->extlen);
 
 if(exteaplen > authlen) return;
+if(exteaplen <= 5) return;
 
+if(fd_pcapng > 0)
+	{
+	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
+	}
 if(exteap->exttype == EAP_TYPE_ID)
 	{
-	if(fd_pcapng > 0)
-		{
-		if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
-		}
 	if(exteap->code == EAP_CODE_REQ)
 		{
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printtimenetap(macfrx->addr1, macfrx->addr2, message1);
