@@ -85,10 +85,6 @@
 #define DISABLE_CLIENT_ATTACKS	2
 #define SILENT			3
 
-#define RCA_INRANGE		1
-#define RCA_NOTINRANGE		2
-
-
 #ifdef __BYTE_ORDER__
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define BIG_ENDIAN_HOST
@@ -183,7 +179,7 @@ struct scanlist_s
 {
  uint64_t		timestamp;
  int			count;
- int			status;
+ int			counthit;
  uint8_t		addr[6];
  uint8_t		channel;
  uint8_t		essidlen;
@@ -192,18 +188,11 @@ struct scanlist_s
 typedef struct scanlist_s scanlist_t;
 #define	SCANLIST_SIZE (sizeof(scanlist_t))
 
-static int sort_scanlist_by_time(const void *a, const void *b)
+static int sort_scanlist_by_count(const void *a, const void *b)
 {
 const scanlist_t *ia = (const scanlist_t *)a;
 const scanlist_t *ib = (const scanlist_t *)b;
-return (ia->timestamp < ib->timestamp);
-}
-
-static int sort_scanlist_by_status(const void *a, const void *b)
-{
-const scanlist_t *ia = (const scanlist_t *)a;
-const scanlist_t *ib = (const scanlist_t *)b;
-return (ia->status < ib->status);
+return (ia->count < ib->count);
 }
 /*===========================================================================*/
 struct filterlist_s

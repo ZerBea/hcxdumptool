@@ -148,7 +148,6 @@ static uint64_t eapoltimeoutvalue;
 
 static uint32_t statusout;
 static uint32_t attackstatus;
-static uint32_t rcascanstatus;
 static uint32_t pcapngframesout;
 static enhanced_packet_block_t *epbhdr;
 static enhanced_packet_block_t *epbhdrown;
@@ -361,21 +360,20 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_status);
+qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 
-printf("\033[2J\033[0;0H BSSID         CH   HIT ESSID                 [%s]\n"
-	"--------------------------------------------------------\n",
+printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
+	"---------------------------------------------------------------\n",
 	timestring);
-for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
+//for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
+for(zeiger = scanlist; zeiger < scanlist +20; zeiger++)
+
 	{
-	if(zeiger->timestamp == 0) return;
-	if(rcascanstatus == 0) continue;
-	if((rcascanstatus == RCA_INRANGE) && (zeiger->status == 0)) continue;
-	if((rcascanstatus == RCA_NOTINRANGE) && (zeiger->status != 0)) continue;
-	printf(" %02x%02x%02x%02x%02x%02x %3d %5d %s\n",
+	if(zeiger->count == 0) return;
+	printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
 		zeiger->addr[0], zeiger->addr[1], zeiger->addr[2], zeiger->addr[3], zeiger->addr[4], zeiger->addr[5],
-		zeiger->channel, zeiger->status, zeiger->essid);
+		zeiger->channel, zeiger->count, zeiger->counthit, zeiger->essid);
 	}
 return;
 }
@@ -3324,24 +3322,26 @@ apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	{
-	if(zeiger->timestamp == 0) break;
+	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->status += 1;
+	zeiger->count +=1;
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 	if(getaptags(apinfolen, apinfoptr, &tags) == false) return;
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 	return;
 	}
 if(getaptags(apinfolen, apinfoptr, &tags) == false) return;
+memset(zeiger, 0, SCANLIST_SIZE);
 zeiger->timestamp = timestamp;
-zeiger->status = 0;
+if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit = 1;
 zeiger->count = 1;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_time);
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
 return;
 }
 /*===========================================================================*/
@@ -3358,7 +3358,7 @@ apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	{
-	if(zeiger->timestamp == 0) break;
+	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
@@ -3377,7 +3377,7 @@ zeiger->channel = tags.channel;
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed_broadcast(zeiger->essidlen, zeiger->essid);
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_time);
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
 return;
 }
 /*===========================================================================*/
@@ -3458,6 +3458,7 @@ return;
 /*===========================================================================*/
 static inline void process_fd_rca()
 {
+static uint64_t incommingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
@@ -3466,24 +3467,17 @@ static struct timeval tvfd;
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
+tvfd.tv_sec = 0;
+tvfd.tv_usec = 100000;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
+printrcascan();
 while(1)
 	{
 	gettimeofday(&tv, NULL);
-	if((tv.tv_sec -tvold.tv_sec) >= 1) 
+	if(tv.tv_sec != tvold.tv_sec)
 		{
-		tvold.tv_sec = tv.tv_sec;
-		timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
-		if(tv.tv_sec >= tvtot.tv_sec)
-			{
-			totflag = true;
-			globalclose();
-			}
-		printrcascan();
 		cpa++;
 		if(channelscanlist[cpa] == 0) cpa = 0;
 		if(set_channel() == false)
@@ -3491,13 +3485,40 @@ while(1)
 			errorcount++;
 			continue;
 			}
+		tvold.tv_sec = tv.tv_sec;
+		if(tv.tv_sec >= tvtot.tv_sec)
+			{
+			totflag = true;
+			globalclose();
+			}
+		if((tv.tv_sec %5) == 0) 
+			{
+			if(gpiostatusled > 0)
+				{
+				GPIO_SET = 1 << gpiostatusled;
+				nanosleep(&sleepled, NULL);
+				GPIO_CLR = 1 << gpiostatusled;
+				if(incommingcountold == incommingcount)
+					{
+					nanosleep(&sleepled, NULL);
+					GPIO_SET = 1 << gpiostatusled;
+					nanosleep(&sleepled, NULL);
+					GPIO_CLR = 1 << gpiostatusled;
+					}
+				}
+			incommingcountold = incommingcount;
+			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
+		printrcascan();
 		}
 	if(gpiobutton > 0)
 		{
 		if(GET_GPIO(gpiobutton) > 0) globalclose();
 		}
-	if(wantstopflag == true) globalclose();
+	if(wantstopflag == true)
+		{
+		globalclose();
+		}
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -3521,8 +3542,15 @@ while(1)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet_rca();
 	else
 		{
-		tvfd.tv_sec = 1;
-		tvfd.tv_usec = 0;
+		cpa++;
+		if(channelscanlist[cpa] == 0) cpa = 0;
+		if(set_channel() == false)
+			{
+			errorcount++;
+			continue;
+			}
+		tvfd.tv_sec = 0;
+		tvfd.tv_usec = 100000;
 		}
 	}
 return;
@@ -4637,12 +4665,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 if no channels are available, interface is pobably in use or doesn't support monitor mode\n"
 	"\n"
 	"long options:\n"
-	"--do_rcascan=<digit>               : show radio channel assignment (scan for target access points)\n"
-	"                                     0: no real time display\n"
-	"                                     1: show only access points in range (default)\n"
-	"                                     2: show only access points not range\n"
-	"                                     3: show all access points\n"
+	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
 	"                                     this can be used to test that ioctl() calls and packet injection is working\n"
+	"                                     if you got no HIT, packet injection is possible not working\n"
 	"                                     also it can be used to get information about the target\n"
 	"                                     and to determine that the target is in range\n"
 	"                                     use this mode to collect data for the filter list\n"
@@ -4765,7 +4790,7 @@ static char *weakcandidateuser;
 static const char *short_options = "i:o:f:c:t:IChv";
 static const struct option long_options[] =
 {
-	{"do_rcascan",			required_argument,	NULL,	HCX_DO_RCASCAN},
+	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
 	{"disable_ap_attacks",		no_argument,		NULL,	HCX_DISABLE_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCX_DISABLE_CLIENT_ATTACKS},
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
@@ -4838,7 +4863,6 @@ mcsrvport = MCPORT;
 
 tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
-rcascanstatus = RCA_INRANGE;
 eapoltimeoutvalue = EAPOLTIMEOUT;
 
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
@@ -4891,7 +4915,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_DO_RCASCAN:
 		rcascanflag = true;
-		rcascanstatus = strtol(optarg, NULL, 10);
 		break;
 
 		case HCX_DISABLE_AP_ATTACKS:
