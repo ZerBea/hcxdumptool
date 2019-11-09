@@ -3301,15 +3301,18 @@ while(1)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
 	else
 		{
-		cpa++;
-		if(channelscanlist[cpa] == 0) cpa = 0;
-		if(set_channel() == false)
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 			{
-			errorcount++;
-			continue;
+			cpa++;
+			if(channelscanlist[cpa] == 0) cpa = 0;
+			if(set_channel() == false)
+				{
+				errorcount++;
+				continue;
+				}
+			send_proberequest_undirected_broadcast();
+			if(beaconactiveflag == true) send_beacon_aplist();
 			}
-		if(beaconactiveflag == true) send_beacon_aplist();
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		tvfd.tv_sec = 1;
 		tvfd.tv_usec = 0;
 		}
