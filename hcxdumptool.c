@@ -366,8 +366,7 @@ strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
 	timestring);
-//for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
-for(zeiger = scanlist; zeiger < scanlist +20; zeiger++)
+for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 
 	{
 	if(zeiger->count == 0) return;
