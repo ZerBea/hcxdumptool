@@ -83,8 +83,6 @@ This list is for information purposes only and should not be regarded as a bindi
 | SEMPRE WU150-1       | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter                   |
 | TENDA W311U+         | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter             |
 | TP-LINK TL-WN722N v1 | ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n                      |
-| ALFA AWUS036H        | ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter                |
-| RTL8821AE            | Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter |
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
