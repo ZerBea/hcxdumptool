@@ -204,7 +204,7 @@ static uint8_t mac_myclient[6];
 static uint8_t mac_myap[6];
 static uint8_t mac_ack[6];
 
-static unsigned long long int myrc;
+static uint64_t myrc;
 static uint8_t myanonce[32];
 static uint8_t mysnonce[32];
 
@@ -3189,7 +3189,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"PREDEFINED ACCESS POINT.: %d entries\n"
 	"MAC ACCESS POINT........: %02x%02x%02x%02x%02x%02x (incremented on every new client)\n"
 	"MAC CLIENT..............: %02x%02x%02x%02x%02x%02x\n"
-	"REPLAYCOUNT.............: %llu\n"
+	"REPLAYCOUNT.............: %"  PRIu64  "\n"
 	"ANONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
