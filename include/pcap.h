@@ -55,11 +55,11 @@ struct option_header_s
 #define IF_TZONE	10
 
 /* custom option code */
-#define OPTIONCODE_MACMYORIG		0xf29a
-#define OPTIONCODE_MACMYAP		0xf29b
+#define OPTIONCODE_MACORIG		0xf29a
+#define OPTIONCODE_MACAP		0xf29b
 #define OPTIONCODE_RC			0xf29c
 #define OPTIONCODE_ANONCE		0xf29d
-#define OPTIONCODE_MACMYSTA		0xf29e
+#define OPTIONCODE_MACCLIENT		0xf29e
 #define OPTIONCODE_SNONCE		0xf29f
 #define OPTIONCODE_WEAKCANDIDATE	0xf2a0
 #define OPTIONCODE_NMEA			0xf2a1
