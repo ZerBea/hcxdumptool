@@ -334,20 +334,13 @@ struct rsnie_tag
 } __attribute__((__packed__));
 typedef struct rsnie_tag rsnie_t;
 #define	RSNIE_SIZE offsetof(rsnie_t, data)
-
 /*===========================================================================*/
-struct rsnpmkid_s
+struct rsnpmkidlist_s
 {
- uint8_t		id;
- uint8_t		len;
- uint8_t		oui[3];
- uint8_t		ouitype;
-#define	RSN_PMKID	4
- uint8_t		pmkid[16];
+ uint16_t	count;
 } __attribute__((__packed__));
-typedef struct rsnpmkid_s rsnpmkid_t;
-#define	RSNPMKID_SIZE sizeof(rsnpmkid_t)
-
+typedef struct rsnpmkidlist_s rsnpmkidlist_t;
+#define	RSNPMKIDLIST_SIZE (sizeof(rsnpmkidlist_t))
 /*===========================================================================*/
 struct wpaie_tag
 {
@@ -398,6 +391,13 @@ static const uint8_t suiteoui[3] =
 {
 0x00, 0x0f, 0xac
 };
+/*===========================================================================*/
+struct rsncapabilites_s
+{
+ uint16_t	rsncapa;
+};
+typedef struct rsncapabilites_s rsncapabilites_t;
+#define	RSNCAPABILITIES_SIZE sizeof(rsncapabilites_t)
 /*===========================================================================*/
 struct llc_frame
 {

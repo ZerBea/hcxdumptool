@@ -1483,8 +1483,9 @@ static ietag_t *tagptr;
 static rsnie_t *rsnptr;
 static wpaie_t *wpaptr;
 static suite_t *suiteptr;
-static int suitelen;
 static suitecount_t *suitecountptr;
+static int suitelen;
+static rsnpmkidlist_t *rsnpmkidlistptr;
 
 memset(zeiger, 0, TAGS_SIZE);
 while(0 < infolen)
@@ -1546,6 +1547,18 @@ while(0 < infolen)
 									}
 								}
 							}
+						}
+					if(suitelen < rsnptr->len) 
+						{
+						suitelen += RSNCAPABILITIES_SIZE;
+						}
+					if(suitelen < rsnptr->len) 
+						{
+						rsnpmkidlistptr = (rsnpmkidlist_t*)(infoptr +suitelen);
+						if(rsnpmkidlistptr->count == 0) break;
+						suitelen += RSNPMKIDLIST_SIZE;
+						if((suitelen +16) > (rsnptr->len +4)) break;
+						memcpy(zeiger->pmkid, &infoptr[suitelen], 16);
 						}
 					}
 				}
@@ -2194,9 +2207,10 @@ static inline void process80211reassociation_req()
 static uint8_t *clientinfoptr;
 static int clientinfolen;
 static maclist_t *zeiger;
-static const char *message = "REASSOCIATION";
+static const char *message1 = "REASSOCIATION";
 
 static tags_t tags;
+static char message2[128];
 
 clientinfoptr = payloadptr +CAPABILITIESREQSTA_SIZE;
 clientinfolen = payloadlen -CAPABILITIESREQSTA_SIZE;
@@ -2219,7 +2233,17 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
 			{
-			if(zeiger->status != NET_REASSOC_REQ) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message);
+			if(zeiger->status != NET_REASSOC_REQ)
+				{
+				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
+				if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
+					{
+					snprintf(message2, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+								tags.pmkid[0], tags.pmkid[1], tags.pmkid[2], tags.pmkid[3], tags.pmkid[4], tags.pmkid[5], tags.pmkid[6], tags.pmkid[7],
+								tags.pmkid[8], tags.pmkid[9], tags.pmkid[10], tags.pmkid[11], tags.pmkid[12], tags.pmkid[13], tags.pmkid[14], tags.pmkid[15]);
+					printtimenetclientessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message2);
+					}
+				}
 			}
 		}
 	zeiger->status |= NET_REASSOC_REQ;
@@ -2238,7 +2262,17 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
-if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message);
+if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
+	{
+	printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
+	if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
+		{
+		snprintf(message2, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+					tags.pmkid[0], tags.pmkid[1], tags.pmkid[2], tags.pmkid[3], tags.pmkid[4], tags.pmkid[5], tags.pmkid[6], tags.pmkid[7],
+					tags.pmkid[8], tags.pmkid[9], tags.pmkid[10], tags.pmkid[11], tags.pmkid[12], tags.pmkid[13], tags.pmkid[14], tags.pmkid[15]);
+		printtimenetclientessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message2);
+		}
+	}
 qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
 
 return;

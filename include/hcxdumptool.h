@@ -146,6 +146,7 @@ struct tags_s
  uint8_t	kdversion;
  uint8_t	akm;
  uint8_t	cipher;
+ uint8_t	pmkid[16];
  uint8_t	essidlen;
  uint8_t	essid[ESSID_LEN_MAX];
 };
