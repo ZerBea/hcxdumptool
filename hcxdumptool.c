@@ -202,6 +202,7 @@ static char driverfwversion[ETHTOOL_FWVERS_LEN +2];
 static uint8_t mac_orig[6];
 static uint8_t mac_myclient[6];
 static uint8_t mac_myap[6];
+static uint8_t mac_myapopen[6];
 static uint8_t mac_ack[6];
 
 static uint64_t myrc;
@@ -1231,7 +1232,7 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = essidlen;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE],essid, essidlen);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], essid, essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essidlen], &reactivebeacondata, REACTIVEBEACON_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essidlen +0x0c] = channelscanlist[cpa];
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +essidlen +REACTIVEBEACON_SIZE) < 0)
@@ -1243,7 +1244,6 @@ fsync(fd_socket);
 outgoingcount++;
 return;
 }
-/*===========================================================================*/
 /*===========================================================================*/
 static inline void send_proberequest_directed(uint8_t *macap, int essid_len, uint8_t *essid)
 {
@@ -3252,8 +3252,8 @@ else printf("%s", servermsg);
 
 incommingcountold = 0;
 gettimeofday(&tv, NULL);
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
+tvfd.tv_sec = 0;
+tvfd.tv_usec = 500000;
 
 cpa = 0;
 if(set_channel() == false) errorcount++;
@@ -3347,8 +3347,8 @@ while(1)
 			send_proberequest_undirected_broadcast();
 			if(beaconactiveflag == true) send_beacon_aplist();
 			}
-		tvfd.tv_sec = 1;
-		tvfd.tv_usec = 0;
+		tvfd.tv_sec = 0;
+		tvfd.tv_usec = 500000;
 		}
 	}
 return;
@@ -4594,6 +4594,13 @@ if((filterclientlist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZ
 myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
 myoui_ap &= 0xfcffff;
 mynic_ap = rand() & 0xffffff;
+mac_myapopen[5] = mynic_ap & 0xff;
+mac_myapopen[4] = (mynic_ap >> 8) & 0xff;
+mac_myapopen[3] = (mynic_ap >> 16) & 0xff;
+mac_myapopen[2] = myoui_ap & 0xff;
+mac_myapopen[1] = (myoui_ap >> 8) & 0xff;
+mac_myapopen[0] = (myoui_ap >> 16) & 0xff;
+mynic_ap++;
 mac_myap[5] = mynic_ap & 0xff;
 mac_myap[4] = (mynic_ap >> 8) & 0xff;
 mac_myap[3] = (mynic_ap >> 16) & 0xff;
