@@ -2458,22 +2458,19 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message);
 		}
 	zeiger->status |= NET_ASSOC_REQ;
-	if(zeiger->status < NET_M2)
+	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
-		if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+		if((tags.akm &AK_PSK) == AK_PSK)
 			{
-			if((tags.akm &AK_PSK) == AK_PSK)
+			if((tags.kdversion &WPA2) == WPA2)
 				{
-				if((tags.kdversion &WPA2) == WPA2)
-					{
-					send_association_resp();
-					send_m1_wpa2();
-					}
-				else if((tags.kdversion &WPA1) == WPA1)
-					{
-					send_association_resp();
-					send_m1_wpa1();
-					}
+				send_association_resp();
+				send_m1_wpa2();
+				}
+			else if((tags.kdversion &WPA1) == WPA1)
+				{
+				send_association_resp();
+				send_m1_wpa1();
 				}
 			}
 		}
