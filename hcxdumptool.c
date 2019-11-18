@@ -2873,7 +2873,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 			}
 		}
-	if((zeiger->count %RECHECKCOUNT) == 0) zeiger->status &= 0xfffd;
 	return;
 	}
 ringbuffercount = zeiger -aplist;
@@ -2952,7 +2951,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if((zeiger->count %RECHECKCOUNT) == 0)
 		{
 		zeiger->count = 1;
-		zeiger->status &= 0xfffd;
 		zeiger->dpv = DPC;
 		return;
 		}
