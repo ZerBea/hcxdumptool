@@ -2948,10 +2948,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		zeiger->dpv += 1;
 		return;
 		}
-	if((zeiger->count %RECHECKCOUNT) == 0)
+	if(zeiger->count > RECHECKCOUNT)
 		{
 		zeiger->count = 1;
 		zeiger->dpv = DPC;
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+		zeiger->status &= 0xfffd;
 		return;
 		}
 	return;
