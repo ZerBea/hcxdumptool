@@ -2868,10 +2868,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		}
 	if((zeiger->count %zeiger->dpv) == 0)
 		{
-		if(zeiger->status < NET_M3)
+		if((zeiger->status & NET_PMKID) == NET_PMKID) return;
+		if((zeiger->status & NET_M3) == NET_M3) return;
 			{
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 			}
+		zeiger->dpv += 1;
 		}
 	return;
 	}
@@ -2941,7 +2943,8 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		}
 	if((zeiger->count %zeiger->dpv) == 0)
 		{
-		if(zeiger->status < NET_M3)
+		if((zeiger->status & NET_PMKID) == NET_PMKID) return;
+		if((zeiger->status & NET_M3) == NET_M3) return;
 			{
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 			}
