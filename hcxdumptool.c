@@ -893,9 +893,9 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &associationrequestcapa, ASSOCI
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +1] = zeiger->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +IETAG_SIZE], zeiger->essid, zeiger->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE], &associationrequestwpa2data, ASSOCIATIONREQUESTWPA2_SIZE);
-
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x17] = zeiger->groupcipher;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1d] = zeiger->cipher;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x23] = zeiger->akm;
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA2_SIZE) < 0)
 	{
 	perror("\nfailed to transmit associationrequest");
@@ -966,6 +966,7 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +IET
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE], &associationrequestwpa1data, ASSOCIATIONREQUESTWPA1_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1b] = zeiger->groupcipher;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x21] = zeiger->cipher;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x27] = zeiger->akm;
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA1_SIZE) < 0)
 	{
 	perror("\nfailed to transmit associationrequest");
@@ -1565,9 +1566,9 @@ while(0 < infolen)
 							if(suitelen > rsnptr->len) break;
 							if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
 								{
-								if(suiteptr->type == AK_PSK)
+								if((suiteptr->type == AK_PSK) || (suiteptr->type == AK_PSKSHA256))
 									{
-									zeiger->akm = AK_PSK;
+									zeiger->akm = suiteptr->type;
 									break;
 									}
 								}
@@ -1626,9 +1627,9 @@ while(0 < infolen)
 									if(suitelen > rsnptr->len) break;
 									if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
 										{
-										if(suiteptr->type == AK_PSK)
+										if((suiteptr->type == AK_PSK) || (suiteptr->type == AK_PSKSHA256))
 											{
-											zeiger->akm = AK_PSK;
+											zeiger->akm = suiteptr->type;
 											break;
 											}
 										}
