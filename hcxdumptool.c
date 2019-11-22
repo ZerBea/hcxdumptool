@@ -848,12 +848,24 @@ static const uint8_t associationrequestwpa2data[] =
 /* extended supported rates */
 0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
 /* RSN information AES PSK (WPA2) */
-0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x04, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02, 0x80, 0x00,
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, /* group cipher */
+0x01, 0x00, /* count */
+0x00, 0x0f, 0xac, 0x04, /* pairwise cipher */
+0x01, 0x00, /* count */
+0x00, 0x0f, 0xac, 0x02, /* AKM */
+0x80, 0x00,
+/* HT capabilites */
+0x2d, 0x1a, 0x6e, 0x18, 0x1f, 0xff, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
+0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 /* extended capabilites */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40,
 /* supported operating classes */
-0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
+//0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
+0x3b, 0x14, 0x51, 0x51, 0x53, 0x54, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c,
+0x7d, 0x7e, 0x7f, 0x80, 0x81, 0x82,
+/* WMM/WME */
+0xdd, 0x07, 0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00
 };
 #define ASSOCIATIONREQUESTWPA2_SIZE sizeof(associationrequestwpa2data)
 
@@ -881,6 +893,9 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &associationrequestcapa, ASSOCI
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +1] = zeiger->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +IETAG_SIZE], zeiger->essid, zeiger->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE], &associationrequestwpa2data, ASSOCIATIONREQUESTWPA2_SIZE);
+
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x17] = zeiger->groupcipher;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1d] = zeiger->cipher;
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA2_SIZE) < 0)
 	{
 	perror("\nfailed to transmit associationrequest");
@@ -908,12 +923,20 @@ static const uint8_t associationrequestwpa1data[] =
 /* extended supported rates */
 0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
 /* WPA information (WPA1) */
-0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x00, 0x00, 0x50,
-0xf2, 0x02, 0x01, 0x00, 0x00, 0x50, 0xf2, 0x02,
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02, /* group cipher */
+0x01, 0x00, /* count */
+0x00, 0x50, 0xf2, 0x02, /* pairwise cipher */
+0x01, 0x00,  /* count */
+0x00, 0x50, 0xf2, 0x02, /* AKM */
 /* extended capabilites */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40,
 /* supported operating classes */
-0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
+//0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
+0x3b, 0x14, 0x51, 0x51, 0x53, 0x54, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c,
+0x7d, 0x7e, 0x7f, 0x80, 0x81, 0x82,
+/* WMM/WME */
+0xdd, 0x07, 0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00
 };
 #define ASSOCIATIONREQUESTWPA1_SIZE sizeof(associationrequestwpa1data)
 
@@ -941,6 +964,8 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &associationrequestcapa, ASSOCI
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +1] = zeiger->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +IETAG_SIZE], zeiger->essid, zeiger->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE], &associationrequestwpa1data, ASSOCIATIONREQUESTWPA1_SIZE);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1b] = zeiger->groupcipher;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x21] = zeiger->cipher;
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA1_SIZE) < 0)
 	{
 	perror("\nfailed to transmit associationrequest");
@@ -1518,6 +1543,7 @@ while(0 < infolen)
 				suiteptr = (suite_t*)(infoptr + RSNIE_SIZE); 
 				if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
 					{
+					zeiger->groupcipher = suiteptr->type;
 					suitelen = RSNIE_SIZE +SUITE_SIZE;
 					suitecountptr = (suitecount_t*)(infoptr +suitelen);
 					suitelen += SUITECOUNT_SIZE;
@@ -1526,8 +1552,7 @@ while(0 < infolen)
 						suiteptr = (suite_t*)(infoptr +suitelen);
 						suitelen += SUITE_SIZE;
 						if(suitelen > rsnptr->len) break;
-						if(suiteptr->type == CS_CCMP) zeiger->cipher |= CS_CCMP;
-						if(suiteptr->type == CS_TKIP) zeiger->cipher |= CS_TKIP;
+						if((suiteptr->type == CS_CCMP) || (suiteptr->type == CS_TKIP)) zeiger->cipher = suiteptr->type;
 						}
 					if(suitelen < rsnptr->len)
 						{
@@ -1579,6 +1604,7 @@ while(0 < infolen)
 						suiteptr = (suite_t*)(infoptr + WPAIE_SIZE); 
 						if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
 							{
+							zeiger->groupcipher = suiteptr->type;
 							suitelen = WPAIE_SIZE +SUITE_SIZE;
 							suitecountptr = (suitecount_t*)(infoptr +suitelen);
 							suitelen += SUITECOUNT_SIZE;
@@ -1587,8 +1613,7 @@ while(0 < infolen)
 								suiteptr = (suite_t*)(infoptr +suitelen);
 								suitelen += SUITE_SIZE;
 								if(suitelen > rsnptr->len) break;
-								if(suiteptr->type == CS_CCMP) zeiger->cipher |= CS_CCMP;
-								if(suiteptr->type == CS_TKIP) zeiger->cipher |= CS_TKIP;
+								if((suiteptr->type == CS_CCMP) || (suiteptr->type == CS_TKIP)) zeiger->cipher = suiteptr->type;
 								}
 							if(suitelen < rsnptr->len)
 								{
@@ -2886,6 +2911,7 @@ zeiger->status = NET_PROBE_RESP;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
 zeiger->kdversion = tags.kdversion;
+zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
 zeiger->akm = tags.akm;
 zeiger->essidlen = tags.essidlen;
@@ -2971,6 +2997,7 @@ zeiger->status = NET_BEACON;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
 zeiger->kdversion = tags.kdversion;
+zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
 zeiger->akm = tags.akm;
 zeiger->essidlen = tags.essidlen;

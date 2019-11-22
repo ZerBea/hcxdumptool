@@ -120,6 +120,7 @@ struct maclist_s
 
  uint8_t		addr[6];
  uint8_t		kdversion;
+ uint8_t		groupcipher;
  uint8_t		cipher;
  uint8_t		akm;
 #define	WPA1		1
@@ -144,8 +145,9 @@ struct tags_s
 {
  uint8_t	channel;
  uint8_t	kdversion;
- uint8_t	akm;
+ uint8_t	groupcipher;
  uint8_t	cipher;
+ uint8_t	akm;
  uint8_t	pmkid[16];
  uint8_t	essidlen;
  uint8_t	essid[ESSID_LEN_MAX];
