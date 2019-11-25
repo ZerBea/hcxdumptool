@@ -1896,6 +1896,7 @@ if(memcmp(wpak->nonce, &zeroed32, 32) == 0)
 		if(memcmp(zeigerap->addr, macfrx->addr1, 6) == 0)
 			{
 			zeigerap->timestamp = timestamp;
+			if((zeiger->message & NET_PMKID) == NET_PMKID) return;
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
 			return;
 			}
@@ -1962,6 +1963,10 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			}
 		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 		return;
+		}
+	if((zeiger->message & NET_PMKID) != NET_PMKID)
+		{
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
 		}
 	}
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
