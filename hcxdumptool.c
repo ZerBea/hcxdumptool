@@ -4556,11 +4556,8 @@ static inline bool globalinit()
 {
 static int c;
 static int gpiobasemem = 0;
-
-static char weakcandidatedefault[] =
-{
-"12345678"
-};
+static const char notavailable[] = { "N/A" };
+static const char weakcandidatedefault[] = { "12345678" };
 
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
@@ -4669,6 +4666,7 @@ filterclientlistentries = 0;
 nmealen = 0;
 memset(&nmeatempsentence, 0, NMEA_MAX);
 memset(&nmeasentence, 0, NMEA_MAX);
+memcpy(&nmeasentence, &notavailable, 3);
 
 weakcandidatelen = 8;
 memset(&weakcandidate, 0, 64);
