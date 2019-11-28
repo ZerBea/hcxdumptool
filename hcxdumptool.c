@@ -861,7 +861,6 @@ static const uint8_t associationrequestwpa2data[] =
 /* extended capabilites */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40,
 /* supported operating classes */
-//0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
 0x3b, 0x14, 0x51, 0x51, 0x53, 0x54, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c,
 0x7d, 0x7e, 0x7f, 0x80, 0x81, 0x82,
 /* WMM/WME */
@@ -932,7 +931,6 @@ static const uint8_t associationrequestwpa1data[] =
 /* extended capabilites */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40,
 /* supported operating classes */
-//0x3b, 0x04, 0x51, 0x51, 0x53, 0x54,
 0x3b, 0x14, 0x51, 0x51, 0x53, 0x54, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c,
 0x7d, 0x7e, 0x7f, 0x80, 0x81, 0x82,
 /* WMM/WME */
@@ -2641,8 +2639,6 @@ qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
-/*===========================================================================*/
-/*===========================================================================*/
 static inline void process80211authentication_req()
 {
 static authf_t *auth;
@@ -2728,11 +2724,9 @@ static inline void process80211probe_req_directed()
 {
 static maclist_t *zeiger;
 static const char *message = "DIRECTED PROBE REQUEST";
-
 static tags_t tags;
 
 if(payloadlen < (int)IETAG_SIZE) return;
-
 if(getaptags(payloadlen, payloadptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
@@ -2788,7 +2782,6 @@ static inline void process80211probe_req()
 {
 static maclist_t *zeiger;
 static const char *message = "PROBE REQUEST";
-
 static tags_t tags;
 
 if(payloadlen < (int)IETAG_SIZE) return;
@@ -2857,7 +2850,6 @@ static int apinfolen;
 static uint8_t *apinfoptr;
 static maclist_t *zeiger;
 static const char *message = "PROBE RESPONSE";
-
 static tags_t tags;
 
 if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
@@ -2948,8 +2940,8 @@ static inline void process80211beacon()
 static int apinfolen;
 static uint8_t *apinfoptr;
 static maclist_t *zeiger;
-static tags_t tags;
 static const char *message = "BEACON";
+static tags_t tags;
 
 if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
