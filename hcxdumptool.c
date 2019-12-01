@@ -2252,6 +2252,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	if((zeiger->status &NET_REASSOC_REQ) != NET_REASSOC_REQ)
 		{
 		if(fd_pcapng > 0)
