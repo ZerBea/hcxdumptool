@@ -2262,7 +2262,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
 			{
-			if(zeiger->status != NET_REASSOC_REQ)
+			if((zeiger->status &NET_REASSOC_REQ) != NET_REASSOC_REQ)
 				{
 				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
 				if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
