@@ -1938,7 +1938,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 				}
 			}
-		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
+		qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 		return;
 		}
 	if((zeiger->message &HS_M1) == HS_M1)
@@ -1959,7 +1959,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 				}
 			}
-		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
+		qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 		return;
 		}
 	if((zeiger->message & NET_PMKID) != NET_PMKID)
@@ -2016,7 +2016,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
 			}
 		}
-	qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
+	qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 	return;
 	}
 return;
@@ -2067,7 +2067,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 			}
 		}
-	qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
+	qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 	return;
 	}
 return;
@@ -2141,7 +2141,7 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 		}
 	}
 if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) send_ack();
-qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2227,7 +2227,7 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
 if(fh_nmea != NULL) writegpwpl(zeiger->addr);
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2302,7 +2302,7 @@ if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
 		printtimenetclientessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message2);
 		}
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 
 return;
 }
@@ -2452,7 +2452,7 @@ if(fd_pcapng > 0)
 	}
 if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2539,7 +2539,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			}
 		}
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 //*===========================================================================*/
@@ -2635,7 +2635,7 @@ if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	else msgptr = message10;
 	printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, msgptr);
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2716,7 +2716,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		send_authentication_resp_opensystem();
 		}
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2774,7 +2774,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2840,7 +2840,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	}
 if(beaconreactiveflag == true) send_beacon_aplist();
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2931,7 +2931,7 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		}
 	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -3009,7 +3009,7 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 	send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
 	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
-qsort(aplist, zeiger -aplist, MACLIST_SIZE, sort_maclist_by_time);
+qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
