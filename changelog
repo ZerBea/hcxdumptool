@@ -1,5 +1,6 @@
-xx.xx.2019
+11.12.2019
 ==========
+moved to v6.0.0
 hcxdumptool: complete rewrite from scratch
              filterlist splitted (APs, CLIENTs), entries increased upt to 256 each list:
              --filterlist_ap

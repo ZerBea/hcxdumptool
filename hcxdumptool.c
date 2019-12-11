@@ -49,7 +49,6 @@
 #include "include/pcap.c"
 #include "include/strings.c"
 #include "include/hashops.c"
-
 /*===========================================================================*/
 /* global var */
 
@@ -86,18 +85,16 @@ static int gpscount;
 
 static int gpiostatusled;
 static int gpiobutton;
+
 static struct timespec sleepled;
 static struct timespec sleepled2;
-
 static struct timeval tv;
 static struct timeval tvold;
 static struct timeval tvtot;
 static uint8_t cpa;
 static int staytime;
-
 static uint64_t timestamp;
 static uint64_t timestampstart;
-
 static uint64_t mytime;
 
 static rth_t *rth;
@@ -218,7 +215,6 @@ static char nmeatempsentence[NMEA_MAX];
 static char nmeasentence[NMEA_MAX];
 
 static char servermsg[SERVERMSG_MAX];
-
 /*===========================================================================*/
 static inline void debugprint2(int len, uint8_t *ptr1, uint8_t *ptr2, char *mesg)
 {
@@ -325,7 +321,6 @@ if(fh_nmea != NULL)
 		}
 	}
 
-
 if(aplist != NULL) free(aplist);
 if(clientlist != NULL) free(clientlist);
 if(handshakelist != NULL) free(handshakelist);
@@ -363,7 +358,6 @@ static char timestring[16];
 
 qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
 	timestring);
@@ -524,11 +518,11 @@ return;
 /*===========================================================================*/
 bool writecbnmea(int fd)
 {
-int cblen;
-int written;
-custom_block_t *cbhdr;
-total_length_t *totallength;
-uint8_t cb[2048];
+static int cblen;
+static int written;
+static custom_block_t *cbhdr;
+static total_length_t *totallength;
+static uint8_t cb[2048];
 
 memset(&cb, 0, 2048);
 cbhdr = (custom_block_t*)cb;
@@ -676,7 +670,6 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE], &wpa1data, WPA1_SIZE)
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x0f] = (myrc >> 8) &0xff;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x10] = myrc &0xff;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x11], &myanonce, 32);
-
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP)
@@ -753,7 +746,6 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE], &wpa2data, WPA2_SIZE)
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x0f] = (myrc >> 8) &0xff;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x10] = myrc &0xff;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +0x11], &myanonce, 32);
-
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP)
@@ -1047,7 +1039,6 @@ macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
 if(myclientsequence >= 4096) myclientsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationrequestdata, MYAUTHENTICATIONREQUEST_SIZE);
-
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE) < 0)
 	{
 	perror("\nfailed to transmit authenticationrequest");
@@ -1915,7 +1906,6 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
-
 for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
@@ -2173,7 +2163,6 @@ eapauthlen = payloadlen -LLC_SIZE;
 eapauth = (eapauth_t*)eapauthptr;
 authlen = ntohs(eapauth->len);
 if(authlen > (eapauthlen -4)) return;
-
 if(eapauth->type == EAPOL_KEY)
 	{
 	if(authlen >= WPAKEY_SIZE) process80211eapol(authlen);
@@ -2304,7 +2293,6 @@ if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
 		}
 	}
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
-
 return;
 }
 /*===========================================================================*/
@@ -2786,7 +2774,6 @@ static const char *message = "PROBE REQUEST";
 static tags_t tags;
 
 if(payloadlen < (int)IETAG_SIZE) return;
-
 if(getaptags(payloadlen, payloadptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
@@ -3275,7 +3262,6 @@ incommingcountold = 0;
 gettimeofday(&tv, NULL);
 tvfd.tv_sec = 0;
 tvfd.tv_usec = 250000;
-
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
@@ -3746,7 +3732,6 @@ memset (&mccliaddress, 0, sizeof(mccliaddress));
 mccliaddress.sin_family = AF_INET;
 mccliaddress.sin_addr.s_addr = htonl(INADDR_ANY);
 mccliaddress.sin_port = htons(mccliport);
-
 loop = 1;
 if(setsockopt(fd_socket_mccli, SOL_SOCKET, SO_REUSEADDR, &loop, sizeof (loop)) < 0)
 	{
@@ -3789,7 +3774,6 @@ memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
 mcsrvaddress.sin_family = AF_INET;
 mcsrvaddress.sin_addr.s_addr = inet_addr (MCHOST);
 mcsrvaddress.sin_port = htons(mcsrvport);
- 
 if(sendto(fd_socket_mcsrv, "hello hcxdumptool clients...\n", sizeof ("hello hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress)) < 0)
 	{
 	perror("server socket failed");
@@ -3907,7 +3891,6 @@ memset(&mac_orig, 0, 6);
 memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
-
 checkallunwanted();
 if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a monitor interface\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
@@ -4304,7 +4287,6 @@ while(1)
 		}
 	}
 fclose(fh_rpi);
-
 if(rpi < 0x7) return 0;
 return gpioperibase;
 }
@@ -4424,7 +4406,6 @@ for(c = 0; c < 256; c++)
 							}
 						}
 					}
-
 				}
 			}
 		}
@@ -4555,7 +4536,6 @@ static const char weakcandidatedefault[] = { "12345678" };
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
 srand(time(NULL));
-
 rpirevision = 0;
 sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
@@ -4589,7 +4569,6 @@ if((gpiobutton > 0) || (gpiostatusled > 0))
 		INP_GPIO(gpiobutton);
 		}
 	}
-
 if(gpiostatusled > 0)
 	{
 	for (c = 0; c < 5; c++)
@@ -4828,7 +4807,6 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname,
 	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
-
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -4896,7 +4874,6 @@ auswahl = -1;
 index = 0;
 optind = 1;
 optopt = 0;
-
 interfacename = NULL;
 pcapngoutname = NULL;
 filteraplistname = NULL;
@@ -4905,7 +4882,6 @@ extaplistname = NULL;
 gpsname = NULL;
 nmeaoutname = NULL;
 weakcandidateuser = NULL;
-
 weakcandidatelenuser = 0;
 errorcount = 0;
 maxerrorcount = ERROR_MAX;
@@ -4915,7 +4891,6 @@ fd_pcapng = 0;
 cpa = 0;
 staytime = STAYTIME;
 myoui_client = 0;
-
 rcascanflag = false;
 beaconreactiveflag = false;
 beaconactiveflag = false;
@@ -4925,18 +4900,14 @@ showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
 gpsdflag = false;
-
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
-
 mccliport = MCPORT;
 mcsrvport = MCPORT;
-
 tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
 eapoltimeoutvalue = EAPOLTIMEOUT;
-
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
 	switch (auswahl)
@@ -5022,7 +4993,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "only length 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
 			}
-
 		break;
 
 		case HCX_EAPOL_TIMEOUT:
@@ -5139,7 +5109,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 	}
 
 setbuf(stdout, NULL);
-
 if(argc < 2)
 	{
 	fprintf(stderr, "no option selected\n");
