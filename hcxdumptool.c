@@ -1482,8 +1482,9 @@ return;
 static inline maclist_t *getnet(uint8_t *ap)
 {
 static maclist_t *zeiger;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) return NULL;
 	if(memcmp(zeiger->addr, ap, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	return zeiger;
@@ -1928,7 +1929,6 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 				}
 			}
-		qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 		return;
 		}
 	if((zeiger->message &HS_M1) == HS_M1)
@@ -1949,7 +1949,6 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 				}
 			}
-		qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 		return;
 		}
 	if((zeiger->message & NET_PMKID) != NET_PMKID)
@@ -2006,7 +2005,6 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
 			}
 		}
-	qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 	return;
 	}
 return;
@@ -2057,7 +2055,6 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeigerap->essidlen, zeigerap->essid, message);
 			}
 		}
-	qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 	return;
 	}
 return;
@@ -2126,12 +2123,10 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 			}
 		zeigerap->status |= NET_PMKID;
 		if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) send_ack();
-		qsort(aplist, MACLIST_MAX, MACLIST_SIZE, sort_maclist_by_time);
 		return;
 		}
 	}
 if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) send_ack();
-qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
@@ -2190,7 +2185,7 @@ static inline void process80211reassociation_resp()
 {
 static maclist_t *zeiger;
 
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
@@ -2236,7 +2231,7 @@ if(clientinfolen < (int)IETAG_SIZE) return;
 if(getaptags(clientinfolen, clientinfoptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
@@ -2382,7 +2377,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_WPA) == PCAPNG_FRAME_WPA) writeepb(fd_pcapng);
 	}
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
@@ -2413,7 +2408,7 @@ static inline void process80211association_resp()
 {
 static maclist_t *zeiger;
 
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
@@ -2460,7 +2455,7 @@ if(clientinfolen < (int)IETAG_SIZE) return;
 if(getaptags(clientinfolen, clientinfoptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
@@ -2559,7 +2554,7 @@ static const char *message10 = "AUTHENTICATION UNKNOWN";
 
 auth = (authf_t*)payloadptr;
 if(payloadlen < (int)AUTHENTICATIONFRAME_SIZE) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
@@ -2647,7 +2642,7 @@ static const char *message10 = "AUTHENTICATION UNKNOWN";
 if(memcmp(macfrx->addr1, &zeroed32, 6) == 0) return;
 auth = (authf_t*)payloadptr;
 if(payloadlen < (int)AUTHENTICATIONFRAME_SIZE) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
@@ -2696,7 +2691,6 @@ if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	else msgptr = message10;
 	printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, msgptr);
 	}
-
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
 	if(auth->algorithm == OPEN_SYSTEM)
@@ -2719,7 +2713,7 @@ if(payloadlen < (int)IETAG_SIZE) return;
 if(getaptags(payloadlen, payloadptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
@@ -2777,12 +2771,13 @@ if(payloadlen < (int)IETAG_SIZE) return;
 if(getaptags(payloadlen, payloadptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(zeiger->essidlen != tags.essidlen) continue;
 	if(memcmp(zeiger->essid, tags.essid, tags.essidlen) != 0) continue;
 	zeiger->timestamp = timestamp;
+	zeiger->count += 1;
 	if((zeiger->status &NET_PROBE_REQ) != NET_PROBE_REQ)
 		{
 		if(fd_pcapng > 0)
@@ -2846,7 +2841,7 @@ apinfolen = payloadlen -CAPABILITIESAP_SIZE;
 if(getaptags(apinfolen, apinfoptr, &tags) == false) return;
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
@@ -2934,7 +2929,7 @@ static tags_t tags;
 if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX -1; zeiger++)
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;

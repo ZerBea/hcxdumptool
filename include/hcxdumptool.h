@@ -35,7 +35,7 @@
 
 #define ERROR_MAX		100
 
-#define MACLIST_MAX		2048
+#define MACLIST_MAX		1024
 #define HANDSHAKELIST_MAX	16
 #define SCANLIST_MAX		256
 #define FILTERLIST_MAX		256
