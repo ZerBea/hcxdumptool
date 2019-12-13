@@ -1633,6 +1633,7 @@ while(0 < infolen)
 		}
 	infoptr += tagptr->len +IETAG_SIZE;
 	infolen -= tagptr->len +IETAG_SIZE;
+	if(infolen == 4) return true;
 	}
 if(infolen != 0) return false;
 return true;
