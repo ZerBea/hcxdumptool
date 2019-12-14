@@ -1593,7 +1593,7 @@ while(0 < infolen)
 						{
 						zeiger->kdversion |= WPA1;
 						suiteptr = (suite_t*)(infoptr + WPAIE_SIZE); 
-						if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
+						if(memcmp(suiteptr->oui, &mscorp, 3) == 0)
 							{
 							zeiger->groupcipher = suiteptr->type;
 							suitelen = WPAIE_SIZE +SUITE_SIZE;
@@ -1603,10 +1603,10 @@ while(0 < infolen)
 								{
 								suiteptr = (suite_t*)(infoptr +suitelen);
 								suitelen += SUITE_SIZE;
-								if(suitelen > rsnptr->len) break;
+								if(suitelen > wpaptr->len +(int)IETAG_SIZE) break;
 								if((suiteptr->type == CS_CCMP) || (suiteptr->type == CS_TKIP)) zeiger->cipher = suiteptr->type;
 								}
-							if(suitelen < rsnptr->len)
+							if(suitelen < wpaptr->len)
 								{
 								suitecountptr = (suitecount_t*)(infoptr +suitelen);
 								suitelen += SUITECOUNT_SIZE;
@@ -1614,8 +1614,8 @@ while(0 < infolen)
 									{
 									suiteptr = (suite_t*)(infoptr +suitelen);
 									suitelen += SUITE_SIZE;
-									if(suitelen > rsnptr->len) break;
-									if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
+									if(suitelen > wpaptr->len +(int)IETAG_SIZE) break;
+									if(memcmp(suiteptr->oui, &mscorp, 3) == 0)
 										{
 										if((suiteptr->type == AK_PSK) || (suiteptr->type == AK_PSKSHA256))
 											{
