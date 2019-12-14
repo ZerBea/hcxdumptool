@@ -1542,7 +1542,7 @@ while(0 < infolen)
 						{
 						suiteptr = (suite_t*)(infoptr +suitelen);
 						suitelen += SUITE_SIZE;
-						if(suitelen > rsnptr->len) break;
+						if(suitelen > rsnptr->len +(int)IETAG_SIZE) break;
 						if((suiteptr->type == CS_CCMP) || (suiteptr->type == CS_TKIP)) zeiger->cipher = suiteptr->type;
 						}
 					if(suitelen < rsnptr->len)
@@ -1553,7 +1553,7 @@ while(0 < infolen)
 							{
 							suiteptr = (suite_t*)(infoptr +suitelen);
 							suitelen += SUITE_SIZE;
-							if(suitelen > rsnptr->len) break;
+							if(suitelen > rsnptr->len +(int)IETAG_SIZE) break;
 							if(memcmp(suiteptr->oui, &suiteoui, 3) == 0)
 								{
 								if((suiteptr->type == AK_PSK) || (suiteptr->type == AK_PSKSHA256))
