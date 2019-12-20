@@ -117,7 +117,6 @@ struct maclist_s
 #define NET_M3			1024
 #define NET_M4			2048
 #define NET_PMKID		4096
-
  uint8_t		addr[6];
  uint8_t		kdversion;
  uint8_t		groupcipher;
@@ -145,9 +144,27 @@ struct tags_s
 {
  uint8_t	channel;
  uint8_t	kdversion;
+#define KV_RSNIE	1
+#define KV_WPAIE	2
  uint8_t	groupcipher;
  uint8_t	cipher;
+#define TCS_WEP40	0b00000001
+#define TCS_TKIP	0b00000010
+#define TCS_WRAP	0b00000100
+#define TCS_CCMP	0b00001000
+#define TCS_WEP104	0b00010000
+#define TCS_BIP		0b00100000
+#define TCS_NOT_ALLOWED	0b01000000
  uint8_t	akm;
+#define	TAK_PMKSA	0b0000000000000001
+#define	TAK_PSK		0b0000000000000010
+#define TAK_FT		0b0000000000000100
+#define TAK_FT_PSK	0b0000000000001000
+#define	TAK_PMKSA256	0b0000000000010000
+#define	TAK_PSKSHA256	0b0000000000100000
+#define	TAK_TDLS	0b0000000001000000
+#define	TAK_SAE_SHA256	0b0000000010000000
+#define TAK_FT_SAE	0b0000000100000000
  uint8_t	pmkid[16];
  uint8_t	essidlen;
  uint8_t	essid[ESSID_LEN_MAX];
