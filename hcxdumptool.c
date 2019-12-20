@@ -843,10 +843,10 @@ static const uint8_t associationrequestwpa2data[] =
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02, /* group cipher */
 0x01, 0x00, /* count */
-0x00, 0x0f, 0xac, 0x04, /* pairwise cipher */
+0x00, 0x0f, 0xac, 0x02, /* pairwise cipher */
 0x01, 0x00, /* count */
 0x00, 0x0f, 0xac, 0x02, /* AKM */
-0x80, 0x00,
+0x00, 0x00,
 /* HT capabilites */
 0x2d, 0x1a, 0x6e, 0x18, 0x1f, 0xff, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x96,
 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1071,7 +1071,7 @@ const uint8_t proberesponsedata[] =
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0f, 0xac, 0x04,
 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
 0x00, 0x00,
@@ -1146,10 +1146,10 @@ static const uint8_t reactivebeacondata[] =
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0f, 0xac, 0x04,
 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
-0x00, 0x00,
+0x00, 0xc0,
 /* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
 0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
 0x00, 0x50, 0xf2, 0x02,
@@ -1217,10 +1217,10 @@ static const uint8_t reactivebeacondata[] =
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0f, 0xac, 0x04,
 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
-0x00, 0x00,
+0x00, 0x0c,
 /* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
 0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
 0x00, 0x50, 0xf2, 0x02,
@@ -1453,27 +1453,6 @@ packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
 if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
 	{
 	perror("\nfailed to transmit deuthentication");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
-return;
-}
-/*===========================================================================*/
-static void send_ack()
-{
-static mac_t *macftx;
-
-packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_ACK+1);
-memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_CTL;
-macftx->subtype = IEEE80211_STYPE_ACK;
-memcpy(macftx->addr1, macfrx->addr2, 6);
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_ACK) < 0)
-	{
-	perror("\nfailed to transmit acknowledgement");
 	errorcount++;
 	}
 fsync(fd_socket);
@@ -2084,7 +2063,6 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger++)
 	{
@@ -2174,11 +2152,9 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 				}
 			}
 		zeigerap->status |= NET_PMKID;
-		if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) send_ack();
 		return;
 		}
 	}
-if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) send_ack();
 return;
 }
 /*===========================================================================*/
@@ -2219,7 +2195,6 @@ else if(eapauth->type == EAPOL_ASF) process80211exteap_asf();
 else if(eapauth->type == EAPOL_MKA) process80211exteap_mka();
 else if((eapauth->type == EAPOL_START) && (macfrx->to_ds == 1))
 	{
-	send_ack();
 	send_eap_request_id();
 	}
 else if(eapauth->type == EAPOL_LOGOFF) return;
@@ -2474,7 +2449,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			}
 		}
 	zeiger->status |= NET_ASSOC_RESP;
-	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 	return;
 	}
 memset(zeiger, 0, MACLIST_SIZE);
@@ -2487,7 +2461,6 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
 if(fh_nmea != NULL) writegpwpl(zeiger->addr);
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
@@ -2631,12 +2604,10 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 					{
 					if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE)
 						{
-						send_ack();
 						send_association_req_wpa2(zeiger);
 						}
 					else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE)
 						{
-						send_ack();
 						send_association_req_wpa1(zeiger);
 						}
 					}
@@ -2712,7 +2683,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		{
 		if(auth->algorithm == OPEN_SYSTEM)
 			{
-			send_ack();
 			send_authentication_resp_opensystem();
 			}
 		}
@@ -2747,7 +2717,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
 	if(auth->algorithm == OPEN_SYSTEM)
 		{
-		send_ack();
 		send_authentication_resp_opensystem();
 		}
 	}
@@ -2783,7 +2752,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->status |= NET_PROBE_REQ;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
-		send_ack();
 		send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		}
@@ -2805,7 +2773,6 @@ if(fd_pcapng > 0)
 if((statusout &STATUS_PROBES) == STATUS_PROBES) printtimenetclientessid(macfrx->addr2, zeiger->addr, zeiger->essidlen, zeiger->essid, message);
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
-	send_ack();
 	send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	}
@@ -2843,7 +2810,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->status |= NET_PROBE_REQ;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
-		send_ack();
 		send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		}
@@ -2870,7 +2836,6 @@ if(fd_pcapng > 0)
 if((statusout &STATUS_PROBES) == STATUS_PROBES) printtimenetclientessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message);
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
-	send_ack();
 	send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	}
@@ -2916,7 +2881,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 				{
 				if((((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) && (tags.kdversion > 0))
 					{
-					send_ack();
 					send_authentication_req_opensystem(macfrx->addr2);
 					}
 				}
@@ -2958,7 +2922,6 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		{
 		if((((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) && (tags.kdversion > 0))
 			{
-			send_ack();
 			send_authentication_req_opensystem(macfrx->addr2);
 			}
 		}
