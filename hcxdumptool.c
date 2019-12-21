@@ -1761,7 +1761,7 @@ static int omac1_aes_128(const uint8_t *key, const uint8_t *data, size_t data_le
 return omac1_aes_128_vector(key, 1, &data, &data_len, mac);
 }
 /*===========================================================================*/
-static inline bool detectweakwpa( uint8_t essidlen, uint8_t *essid, uint8_t *anonce)
+static inline bool detectweakwpa(uint8_t essidlen, uint8_t *essid, uint8_t *anonce)
 {
 static int keyver;
 static int p;
