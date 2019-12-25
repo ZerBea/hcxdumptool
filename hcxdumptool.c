@@ -4667,7 +4667,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Do not edit, merge or convert this pcapng files , because it will remove optional comment fields!\n"
 	"It is much better to run gzip to compress the files. Wireshark, tshark and hcxpcaptool will understand this.\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
-	"if you use GPS, make sure GPS device is in fix, bevor you start hcxdumptool\n"
+	"if you use GPS, make sure GPS device is in fix, before you start hcxdumptool\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname,
 	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
