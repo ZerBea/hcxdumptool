@@ -71,7 +71,7 @@ optionhdr->option_length = colen -OH_SIZE;
 return colen;
 }
 /*===========================================================================*/
-bool writecb(int fd, uint8_t *macorig, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
+bool writecb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
 {
 int cblen;
 int written;
@@ -88,12 +88,12 @@ cbhdr->total_length = CB_SIZE;
 memcpy(cbhdr->pen, &hcxmagic, 4);
 memcpy(cbhdr->hcxm, &hcxmagic, 32);
 
-cblen += addoption(cb +cblen, OPTIONCODE_MACORIG, 6, (char*)macorig);
 cblen += addoption(cb +cblen, OPTIONCODE_MACAP, 6, (char*)macap);
 of = (optionfield64_t*)(cb +cblen);
 of->option_code = OPTIONCODE_RC;
 of->option_length = 8;
 of->option_value = rcrandom;
+cblen += 12;
 cblen += addoption(cb +cblen, OPTIONCODE_ANONCE, 32, (char*)anonce);
 cblen += addoption(cb +cblen, OPTIONCODE_MACCLIENT, 6, (char*)macsta);
 cblen += addoption(cb +cblen, OPTIONCODE_SNONCE, 32, (char*)snonce);
@@ -292,7 +292,7 @@ if(writeidb(fd, macorig, interfacestr) == false)
 	return -1;
 	}
 
-if(writecb(fd, macorig, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+if(writecb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 	{
 	return -1;
 	}
