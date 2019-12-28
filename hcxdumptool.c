@@ -1432,6 +1432,26 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
+static void send_ack()
+{
+static mac_t *macftx;
+
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_ACK+1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_CTL;
+macftx->subtype = IEEE80211_STYPE_ACK;
+memcpy(macftx->addr1, macfrx->addr2, 6);
+if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_ACK) < 0)
+	{
+	perror("\nfailed to transmit acknowledgement");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
 /*===========================================================================*/
 static inline maclist_t *getnet(uint8_t *ap)
 {
@@ -2033,6 +2053,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 	if(zeigerap == NULL) return;
 	if((zeigerap->status &NET_M2) == NET_M2) return;
 	zeigerap->status |= NET_M2;
+	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
 	if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 		{
 		snprintf(message, 128, "MP:M1M2 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
@@ -2288,6 +2309,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if(zeiger->status >= NET_M1) return;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
+		send_ack();
 		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
 		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		}
@@ -2308,7 +2330,8 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if(zeiger->status >= NET_M1) return;
-	if((zeiger->status &NET_ASSOC_REQ) == NET_ASSOC_REQ)return;
+	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
+	if((zeiger->status &NET_ASSOC_REQ) == NET_ASSOC_REQ) return;
 	if((macfrx->to_ds == 1) && (macfrx->power == 0))
 		{
 		if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
@@ -2395,6 +2418,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->count += 1;
 	if((zeiger->status &NET_ASSOC_RESP) != NET_ASSOC_RESP)
 		{
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 		if(fd_pcapng > 0)
 			{
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2412,6 +2436,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_ack();
 if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
@@ -2454,11 +2479,13 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
+				send_ack();
 				send_association_resp();
 				send_m1_wpa2();
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
+				send_ack();
 				send_association_resp();
 				send_m1_wpa1();
 				}
@@ -2489,11 +2516,13 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
+				send_ack();
 				send_association_resp();
 				send_m1_wpa2();
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
+				send_ack();
 				send_association_resp();
 				send_m1_wpa1();
 				}
@@ -2627,7 +2656,11 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->algorithm = auth->algorithm;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
-		if(auth->algorithm == OPEN_SYSTEM) send_authentication_resp_opensystem();
+		if(auth->algorithm == OPEN_SYSTEM)
+			{
+			send_ack();
+			send_authentication_resp_opensystem();
+			}
 		}
 	return;
 	}
@@ -2658,7 +2691,11 @@ if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	}
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
-	if(auth->algorithm == OPEN_SYSTEM) send_authentication_resp_opensystem();
+	if(auth->algorithm == OPEN_SYSTEM)
+		{
+		send_ack();
+		send_authentication_resp_opensystem();
+		}
 	}
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
