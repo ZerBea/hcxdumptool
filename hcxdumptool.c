@@ -81,6 +81,9 @@ static bool gpsdflag;
 static int errorcount;
 static int maxerrorcount;
 static int ringbuffercount;
+static int pmkidcount;
+static int eapolmpcount;
+
 static int gpscount;
 
 static int gpiostatusled;
@@ -448,7 +451,7 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " GPS:%d RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, gpscount, ringbuffercount);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " PMKID:%d MP:%d GPS:%d RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, pmkidcount, eapolmpcount, gpscount, ringbuffercount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
@@ -1928,6 +1931,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 		if(zeigerap == NULL) return;
 		if((zeigerap->status &NET_M4) == NET_M4) return;
 		zeigerap->status |= NET_M4;
+		eapolmpcount++;
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 			{
 			snprintf(message, 128, "MP:M3M4 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
@@ -1948,6 +1952,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 		if(zeigerap == NULL) return;
 		if((zeigerap->status &NET_M4) == NET_M4) return;
 		zeigerap->status |= NET_M4;
+		eapolmpcount++;
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 			{
 			snprintf(message, 128, "MP:M1M4 RC:%" PRIu64 " EAPOLTIME %" PRIu64, rc, timestamp -zeiger->timestamp);
@@ -2004,6 +2009,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 	if(zeigerap == NULL) return;
 	if((zeigerap->status &NET_M3) == NET_M3) return;
 	zeigerap->status |= NET_M3;
+	eapolmpcount++;
 	if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 		{
 		snprintf(message, 128, "MP:M2M3 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
@@ -2054,6 +2060,7 @@ for(zeiger = handshakelist +1; zeiger < handshakelist +HANDSHAKELIST_MAX; zeiger
 	if((zeigerap->status &NET_M2) == NET_M2) return;
 	zeigerap->status |= NET_M2;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
+	eapolmpcount++;
 	if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 		{
 		snprintf(message, 128, "MP:M1M2 RC:%" PRIu64 " EAPOLTIME:%" PRIu64, rc, timestamp -zeiger->timestamp);
@@ -2115,6 +2122,7 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 	pmkid = (pmkid_t*)(wpakptr +WPAKEY_SIZE);
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
+		pmkidcount++;
 		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 			{
 			if((zeigerap->status &NET_PMKID) != NET_PMKID)
@@ -4554,6 +4562,8 @@ wantstopflag = false;
 errorcount = 0;
 incommingcount = 0;
 outgoingcount = 0;
+pmkidcount = 0;
+eapolmpcount = 0;
 gpscount = 0;
 ringbuffercount = 0;
 
