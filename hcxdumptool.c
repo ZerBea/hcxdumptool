@@ -2195,6 +2195,12 @@ else
 return;
 }
 /*===========================================================================*/
+static inline void process80211action()
+{
+
+return;
+}
+/*===========================================================================*/
 static inline void process80211reassociation_resp()
 {
 static maclist_t *zeiger;
@@ -3128,6 +3134,7 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_RESP) process80211association_resp();
 	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_REQ) process80211reassociation_req();
 	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_RESP) process80211reassociation_resp();
+	else if(macfrx->subtype == IEEE80211_STYPE_ACTION) process80211action();
 	else return;
 	}
 else if(macfrx->type == IEEE80211_FTYPE_DATA)
