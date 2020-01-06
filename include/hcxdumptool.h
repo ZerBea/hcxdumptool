@@ -137,7 +137,10 @@ static int sort_maclist_by_time(const void *a, const void *b)
 {
 const maclist_t *ia = (const maclist_t *)a;
 const maclist_t *ib = (const maclist_t *)b;
-return (ia->timestamp < ib->timestamp);
+
+if(ia->timestamp < ib->timestamp) return 1;
+else if(ia->timestamp > ib->timestamp) return -1;
+return 0;
 }
 /*===========================================================================*/
 struct tags_s
@@ -192,7 +195,10 @@ static int sort_handshakelist_by_time(const void *a, const void *b)
 {
 const handshakelist_t *ia = (const handshakelist_t *)a;
 const handshakelist_t *ib = (const handshakelist_t *)b;
-return (ia->timestamp < ib->timestamp);
+
+if(ia->timestamp < ib->timestamp) return 1;
+else if(ia->timestamp > ib->timestamp) return -1;
+return 0;
 }
 /*===========================================================================*/
 struct scanlist_s
@@ -212,7 +218,10 @@ static int sort_scanlist_by_count(const void *a, const void *b)
 {
 const scanlist_t *ia = (const scanlist_t *)a;
 const scanlist_t *ib = (const scanlist_t *)b;
-return (ia->count < ib->count);
+
+if(ia->count < ib->count) return 1;
+else if(ia->count > ib->count) return -1;
+return 0;
 }
 /*===========================================================================*/
 struct filterlist_s
@@ -226,10 +235,9 @@ static int sort_filterlist_by_mac(const void *a, const void *b)
 {
 const filterlist_t *ia = (const filterlist_t *)a;
 const filterlist_t *ib = (const filterlist_t *)b;
-if(memcmp(ia->mac, ib->mac, 6) > 0)
-	return 1;
-else if(memcmp(ia->mac, ib->mac, 6) < 0)
-	return -1;
+
+if(memcmp(ia->mac, ib->mac, 6) > 0) return 1;
+else if(memcmp(ia->mac, ib->mac, 6) < 0) return -1;
 return 0;
 }
 /*===========================================================================*/
