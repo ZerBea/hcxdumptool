@@ -5085,7 +5085,9 @@ if(filterclientlistname != NULL) filterclientlistentries = readfilterlist(filter
 
 if(opensocket() == false)
 	{
-	fprintf(stderr, "failed to init socket\nhcxdumptool need full and exclusive access to the adapter\nthat is not the case\n"
+	fprintf(stderr, "failed to init socket\nhcxdumptool need full and exclusive access to the adapter\n"
+			"as well as write permission for the dumpfile\n"
+			"that is not the case\n"
 			"try to use ip link to bring interface down/up\n"
 			"and iw to set monitor mode\n");
 	errorcount++;
