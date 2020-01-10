@@ -5148,7 +5148,7 @@ if(nmeaoutname != NULL)
 		errorcount++;
 		globalclose();
 		}
-	if((fh_nmea = fopen(nmeaoutname, "a+")) == NULL)
+	if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
 		{
 		perror("failed to open NMEA 0183 dump file");
 		errorcount++;
