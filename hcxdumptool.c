@@ -3115,12 +3115,7 @@ if(macfrx->type == IEEE80211_FTYPE_CTL)
 		return;
 		}
 	}
-if(macfrx->subtype == IEEE80211_STYPE_PSPOLL)
-	{
-	process80211powersave_poll();
-	return;
-	}
-if(packetlen < (int)RTH_SIZE +(int)MAC_SIZE_NORM) return;
+if(ieee82011len < (int)MAC_SIZE_NORM) return;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON)
@@ -3146,6 +3141,10 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_RESP) process80211reassociation_resp();
 	else if(macfrx->subtype == IEEE80211_STYPE_ACTION) process80211action();
 	else return;
+	}
+else if(macfrx->type == IEEE80211_FTYPE_CTL)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211powersave_poll();
 	}
 else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	{
