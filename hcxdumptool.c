@@ -3484,6 +3484,7 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_rca_scan();
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp_rca_scan();
 	}
+	if(fd_pcapng > 0) writeepb(fd_pcapng);
 return;
 }
 /*===========================================================================*/
