@@ -2353,7 +2353,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->timestamp = timestamp;
 	if(zeiger->status >= NET_M1) return;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
-	if((zeiger->status &NET_ASSOC_REQ) == NET_ASSOC_REQ) return;
 	if((macfrx->to_ds == 1) && (macfrx->power == 0))
 		{
 		if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
@@ -2879,7 +2878,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			{
 			if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0)
 				{
-				if((((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) && (tags.kdversion > 0)) send_authentication_req_opensystem(macfrx->addr2);
+				if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
 				}
 			}
 		}
@@ -2917,7 +2916,7 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 	{
 	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0)
 		{
-		if((((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) && (tags.kdversion > 0)) send_authentication_req_opensystem(macfrx->addr2);
+		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
 		}
 	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
