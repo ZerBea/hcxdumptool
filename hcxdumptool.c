@@ -77,6 +77,7 @@ static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
+static bool macmyclientflag;
 
 static int errorcount;
 static int maxerrorcount;
@@ -4531,14 +4532,17 @@ mac_myap[2] = myoui_ap & 0xff;
 mac_myap[1] = (myoui_ap >> 8) & 0xff;
 mac_myap[0] = (myoui_ap >> 16) & 0xff;
 
-if(myoui_client == 0) myoui_client = myvendorclient[rand() %((MYVENDORCLIENT_SIZE /sizeof(int)))];
-myoui_client &= 0xffffff;
-mac_myclient[5] = rand() & 0xff;
-mac_myclient[4] = rand() & 0xff;
-mac_myclient[3] = rand() & 0xff;
-mac_myclient[2] = myoui_client & 0xff;
-mac_myclient[1] = (myoui_client >> 8) &0xff;
-mac_myclient[0] = (myoui_client >> 16) &0xff;
+if(macmyclientflag == false)
+	{
+	if(myoui_client == 0) myoui_client = myvendorclient[rand() %((MYVENDORCLIENT_SIZE /sizeof(int)))];
+	myoui_client &= 0xffffff;
+	mac_myclient[5] = rand() & 0xff;
+	mac_myclient[4] = rand() & 0xff;
+	mac_myclient[3] = rand() & 0xff;
+	mac_myclient[2] = myoui_client & 0xff;
+	mac_myclient[1] = (myoui_client >> 8) &0xff;
+	mac_myclient[0] = (myoui_client >> 16) &0xff;
+	}
 
 for(c = 0; c < 32; c++)
 	{
@@ -4675,6 +4679,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
 	"                                     will be saved to pcapng to inform hcxpcaptool\n"
 	"                                     default: %s\n"
+	"--mac_client                       : use this mac for as client mac instead of a randomized one\n"
+	"                                     format: 112233445566\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
 	"--reactive_beacon                  : transmit beacon on every received proberequest\n"
@@ -4774,6 +4780,7 @@ static const struct option long_options[] =
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
+	{"mac_client",			required_argument,	NULL,	HCX_MAC_CLIENT},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
@@ -4826,6 +4833,7 @@ showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
 gpsdflag = false;
+macmyclientflag = false;
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
@@ -4919,6 +4927,20 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "only length 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCX_MAC_CLIENT:
+		if(strlen(optarg) != 12)
+			{
+			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
+			exit(EXIT_FAILURE);
+			}
+		if(hex2bin(&optarg[0x0], mac_myclient, 6) == false)
+			{
+			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
+			exit(EXIT_FAILURE);
+			}
+		macmyclientflag = true;
 		break;
 
 		case HCX_EAPOL_TIMEOUT:
