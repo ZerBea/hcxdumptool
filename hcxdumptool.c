@@ -77,6 +77,7 @@ static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
+static bool macmyapflag;
 static bool macmyclientflag;
 
 static int errorcount;
@@ -192,9 +193,10 @@ static uint8_t channelscanlist[128] =
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-static int myoui_client;
-static int myoui_ap;
-static int mynic_ap;
+static uint32_t myoui_client;
+static uint64_t mymac_ap;
+static uint32_t myoui_ap;
+static uint32_t mynic_ap;
 
 static char drivername[34];
 static char driverversion[34];
@@ -203,7 +205,6 @@ static char driverfwversion[ETHTOOL_FWVERS_LEN +2];
 static uint8_t mac_orig[6];
 static uint8_t mac_myclient[6];
 static uint8_t mac_myap[6];
-static uint8_t mac_myapopen[6];
 static uint8_t mac_ack[6];
 
 static uint64_t myrc;
@@ -4515,16 +4516,12 @@ if((scanlist = (scanlist_t*)calloc((SCANLIST_MAX +1), SCANLIST_SIZE)) == NULL) r
 if((filteraplist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
 if((filterclientlist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
 
-myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
-myoui_ap &= 0xfcffff;
-mynic_ap = rand() & 0xffffff;
-mac_myapopen[5] = mynic_ap & 0xff;
-mac_myapopen[4] = (mynic_ap >> 8) & 0xff;
-mac_myapopen[3] = (mynic_ap >> 16) & 0xff;
-mac_myapopen[2] = myoui_ap & 0xff;
-mac_myapopen[1] = (myoui_ap >> 8) & 0xff;
-mac_myapopen[0] = (myoui_ap >> 16) & 0xff;
-mynic_ap++;
+if(macmyapflag == false)
+	{
+	myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
+	mynic_ap = rand() & 0xffffff;
+	myoui_ap &= 0xfcffff;
+	}
 mac_myap[5] = mynic_ap & 0xff;
 mac_myap[4] = (mynic_ap >> 8) & 0xff;
 mac_myap[3] = (mynic_ap >> 16) & 0xff;
@@ -4661,25 +4658,27 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     hcxdumptool is acting like a passive dumper\n"
 	"--eapoltimeout=<digit>             : set EAPOL TIMEOUT (milliseconds)\n"
 	"                                     default: %d ms\n"
-	"--filterlist_ap=<file>             : access point mac filter list\n"
+	"--filterlist_ap=<file>             : ACCESS POINT MAC filter list\n"
 	"                                     format: 112233445566 + comment\n"
 	"                                     maximum entries %d\n"
 	"                                     run first --do_rcascan to retrieve information about the target\n"
-	"--filterlist_client=<file>         : client mac filter list\n"
+	"--filterlist_client=<file>         : CLIENT MAC filter list\n"
 	"                                     format: 112233445566 # comment\n"
 	"                                     maximum entries %d\n"
 	"                                     run first --do_rcascan to retrieve information about the target\n"
 	"--filtermode=<digit>               : mode for filter list\n"
 	"                                     1: use filter list as protection list (default) in transmission branch\n"
-	"                                        receive everything, interact with all APs and CLIENTs in range,\n"
+	"                                        receive everything, interact with all ACCESS POINTs and CLIENTs in range,\n"
 	"                                        except(!) the ones from the filter lists\n"
 	"                                     2: use filter list as target list in transmission branch\n"
-	"                                        receive everything, only interact with APs and CLIENTs in range,\n"
+	"                                        receive everything, only interact with ACCESS POINTs and CLIENTs in range,\n"
 	"                                        from the filter lists\n"
 	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
 	"                                     will be saved to pcapng to inform hcxpcaptool\n"
 	"                                     default: %s\n"
-	"--mac_client                       : use this mac for as client mac instead of a randomized one\n"
+	"--mac_client                       : use this MAC as ACCESS POINT MAC instead of a randomized one\n"
+	"                                     format: 112233445566\n"
+	"--mac_client                       : use this MAC as CLIENT MAC instead of a randomized one\n"
 	"                                     format: 112233445566\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
@@ -4780,6 +4779,7 @@ static const struct option long_options[] =
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
+	{"mac_ap",			required_argument,	NULL,	HCX_MAC_AP},
 	{"mac_client",			required_argument,	NULL,	HCX_MAC_CLIENT},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
@@ -4833,6 +4833,7 @@ showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
 gpsdflag = false;
+macmyapflag = false;
 macmyclientflag = false;
 statusout = 0;
 attackstatus = 0;
@@ -4927,6 +4928,18 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "only length 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCX_MAC_AP:
+		if(strlen(optarg) != 12)
+			{
+			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
+			exit(EXIT_FAILURE);
+			}
+		mymac_ap = strtoull(optarg, NULL, 16);
+		myoui_ap = (mymac_ap &0xffffff000000) >> 24;
+		mynic_ap = mymac_ap &0xffffff;
+		macmyapflag = true;
 		break;
 
 		case HCX_MAC_CLIENT:
