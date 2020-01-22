@@ -2599,7 +2599,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			}
 		zeiger->status |= NET_AUTH;
 		}
-	if(zeiger->status < NET_M1)
+	if((auth->statuscode == AUTH_OK) && (zeiger->status < NET_M1))
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 			{
