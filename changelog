@@ -1,3 +1,26 @@
+xx.xx.2020
+==========
+moved to v6.0.1
+hcxdumptool: added options to use user defined MACs
+--mac_ap                           : use this MAC as ACCESS POINT MAC instead of a randomized one
+                                     format: 112233445566
+--mac_client                       : use this MAC as CLIENT MAC instead of a randomized one
+                                     format: 112233445566
+--essidlist=<file>                 : transmit beacons from this ESSID list
+
+improved handling of association/reassociation frames
+improved handling of null/powersave frames
+added counter for PMKID/EAPOL frames
+handle EAP request/response frames
+improved IE tag walk similar to hcxpcapngtool
+fixed cipher suite and AKM suite handling
+handle wrong FCS
+reduce pcapng size
+fixed internal counters
+allow mixed attack vector PSK/PSK256
+handle PMKID in reassociationrequest
+
+
 11.12.2019
 ==========
 moved to v6.0.0
