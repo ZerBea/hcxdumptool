@@ -77,8 +77,6 @@ static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
-static bool macmyapflag;
-static bool macmyclientflag;
 
 static int errorcount;
 static int maxerrorcount;
@@ -194,7 +192,6 @@ static uint8_t channelscanlist[128] =
 };
 
 static uint32_t myoui_client;
-static uint64_t mymac_ap;
 static uint32_t myoui_ap;
 static uint32_t mynic_ap;
 
@@ -4516,12 +4513,9 @@ if((scanlist = (scanlist_t*)calloc((SCANLIST_MAX +1), SCANLIST_SIZE)) == NULL) r
 if((filteraplist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
 if((filterclientlist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
 
-if(macmyapflag == false)
-	{
-	myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
-	mynic_ap = rand() & 0xffffff;
-	myoui_ap &= 0xfcffff;
-	}
+myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
+mynic_ap = rand() & 0xffffff;
+myoui_ap &= 0xfcffff;
 mac_myap[5] = mynic_ap & 0xff;
 mac_myap[4] = (mynic_ap >> 8) & 0xff;
 mac_myap[3] = (mynic_ap >> 16) & 0xff;
@@ -4529,17 +4523,14 @@ mac_myap[2] = myoui_ap & 0xff;
 mac_myap[1] = (myoui_ap >> 8) & 0xff;
 mac_myap[0] = (myoui_ap >> 16) & 0xff;
 
-if(macmyclientflag == false)
-	{
-	if(myoui_client == 0) myoui_client = myvendorclient[rand() %((MYVENDORCLIENT_SIZE /sizeof(int)))];
-	myoui_client &= 0xffffff;
-	mac_myclient[5] = rand() & 0xff;
-	mac_myclient[4] = rand() & 0xff;
-	mac_myclient[3] = rand() & 0xff;
-	mac_myclient[2] = myoui_client & 0xff;
-	mac_myclient[1] = (myoui_client >> 8) &0xff;
-	mac_myclient[0] = (myoui_client >> 16) &0xff;
-	}
+myoui_client = myvendorclient[rand() %((MYVENDORCLIENT_SIZE /sizeof(int)))];
+myoui_client &= 0xffffff;
+mac_myclient[5] = rand() & 0xff;
+mac_myclient[4] = rand() & 0xff;
+mac_myclient[3] = rand() & 0xff;
+mac_myclient[2] = myoui_client & 0xff;
+mac_myclient[1] = (myoui_client >> 8) &0xff;
+mac_myclient[0] = (myoui_client >> 16) &0xff;
 
 for(c = 0; c < 32; c++)
 	{
@@ -4779,8 +4770,6 @@ static const struct option long_options[] =
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
-	{"mac_ap",			required_argument,	NULL,	HCX_MAC_AP},
-	{"mac_client",			required_argument,	NULL,	HCX_MAC_CLIENT},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
@@ -4833,8 +4822,6 @@ showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
 gpsdflag = false;
-macmyapflag = false;
-macmyclientflag = false;
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
@@ -4928,32 +4915,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "only length 8...63 characters allowed\n");
 			exit(EXIT_FAILURE);
 			}
-		break;
-
-		case HCX_MAC_AP:
-		if(strlen(optarg) != 12)
-			{
-			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
-			exit(EXIT_FAILURE);
-			}
-		mymac_ap = strtoull(optarg, NULL, 16);
-		myoui_ap = (mymac_ap &0xffffff000000) >> 24;
-		mynic_ap = mymac_ap &0xffffff;
-		macmyapflag = true;
-		break;
-
-		case HCX_MAC_CLIENT:
-		if(strlen(optarg) != 12)
-			{
-			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
-			exit(EXIT_FAILURE);
-			}
-		if(hex2bin(&optarg[0x0], mac_myclient, 6) == false)
-			{
-			fprintf(stderr, "wrong mac format (allowed: 112233445566)\n");
-			exit(EXIT_FAILURE);
-			}
-		macmyclientflag = true;
 		break;
 
 		case HCX_EAPOL_TIMEOUT:
