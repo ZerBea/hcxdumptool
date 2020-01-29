@@ -1643,8 +1643,14 @@ static ietag_t *tagptr;
 memset(zeiger, 0, TAGS_SIZE);
 while(0 < infolen)
 	{
+	if(infolen == 4) return;
 	tagptr = (ietag_t*)infoptr;
-	if(tagptr->len == 0) return;
+	if(tagptr->len == 0)
+		{
+		infoptr += tagptr->len +IETAG_SIZE;
+		infolen -= tagptr->len +IETAG_SIZE;
+		continue;
+		}
 	if(tagptr->len > infolen) return;
 	if(tagptr->id == TAG_SSID)
 		{
