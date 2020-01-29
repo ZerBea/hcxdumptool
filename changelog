@@ -1,4 +1,4 @@
-xx.xx.2020
+29.01.2020
 ==========
 moved to v6.0.1
 removed options to set userdefined MAC_AP and/or MAC_CLIENT, because they make hcxdumptool's stealth capability ineffective
