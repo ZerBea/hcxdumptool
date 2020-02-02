@@ -1356,7 +1356,7 @@ static void send_disassociation(uint8_t *macsta, uint8_t *macap, uint8_t reason)
 static mac_t *macftx;
 static maclist_t *zeiger;
 
-if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) return;
+if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
@@ -1398,7 +1398,7 @@ static void send_deauthentication_broadcast(uint8_t *macap, uint8_t reason)
 static mac_t *macftx;
 static maclist_t *zeiger;
 
-if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) return;
+if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
