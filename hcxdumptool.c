@@ -77,7 +77,6 @@ static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
-
 static int errorcount;
 static int maxerrorcount;
 static int ringbuffercount;
@@ -1357,6 +1356,7 @@ static void send_disassociation(uint8_t *macsta, uint8_t *macap, uint8_t reason)
 static mac_t *macftx;
 static maclist_t *zeiger;
 
+if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
@@ -1398,6 +1398,7 @@ static void send_deauthentication_broadcast(uint8_t *macap, uint8_t reason)
 static mac_t *macftx;
 static maclist_t *zeiger;
 
+if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
@@ -4650,9 +4651,12 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--disable_client_attacks           : do not attack clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
 	"--disable_ap_attacks               : do not attack access points\n"
-	"                                     affected: client-less (PMKID) attack\n"
+	"                                     affected: connected clients and client-less (PMKID) attack\n"
+	"--disable_deauthentication         : do not send deauthentication or disassociation frames\n"
+	"                                     affected: conntected clients\n"
 	"--silent                           : do not transmit!\n"
 	"                                     hcxdumptool is acting like a passive dumper\n"
+	"                                     expect possible packet loss\n"
 	"--eapoltimeout=<digit>             : set EAPOL TIMEOUT (milliseconds)\n"
 	"                                     default: %d ms\n"
 	"--filterlist_ap=<file>             : ACCESS POINT MAC filter list\n"
@@ -4769,6 +4773,7 @@ static const char *short_options = "i:o:f:c:t:IChv";
 static const struct option long_options[] =
 {
 	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
+	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
 	{"disable_ap_attacks",		no_argument,		NULL,	HCX_DISABLE_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCX_DISABLE_CLIENT_ATTACKS},
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
@@ -4886,6 +4891,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_DO_RCASCAN:
 		rcascanflag = true;
+		break;
+
+		case HCX_DISABLE_DEAUTHENTICATION:
+		attackstatus |= DISABLE_DEAUTHENTICATION;
 		break;
 
 		case HCX_DISABLE_AP_ATTACKS:
