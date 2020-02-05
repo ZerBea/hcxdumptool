@@ -100,7 +100,7 @@ static uint64_t timestampstart;
 static uint64_t mytime;
 
 static rth_t *rth;
-static uint64_t incommingcount;
+static uint64_t incomingcount;
 static uint64_t outgoingcount;
 
 static int packetlenown;
@@ -449,7 +449,7 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMMING:%" PRIu64 " OUTGOING:%" PRIu64 " PMKID:%d MP:%d GPS:%d RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incommingcount, outgoingcount, pmkidcount, eapolmpcount, gpscount, ringbuffercount);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO ERROR:%d INCOMING:%" PRIu64 " OUTGOING:%" PRIu64 " PMKID:%d MP:%d GPS:%d RINGBUFFER:%d\n", timestring, channelscanlist[cpa], errorcount, incomingcount, outgoingcount, pmkidcount, eapolmpcount, gpscount, ringbuffercount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
@@ -3076,7 +3076,7 @@ if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 	return;
 	}
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-incommingcount++;
+incomingcount++;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
@@ -3202,7 +3202,7 @@ return;
 /*===========================================================================*/
 static inline void process_fd()
 {
-static uint64_t incommingcountold;
+static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
@@ -3246,7 +3246,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 
-incommingcountold = 0;
+incomingcountold = 0;
 gettimeofday(&tv, NULL);
 tvfd.tv_sec = 0;
 tvfd.tv_usec = 250000;
@@ -3271,7 +3271,7 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if(incommingcountold == incommingcount)
+				if(incomingcountold == incomingcount)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -3279,7 +3279,7 @@ while(1)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
-			incommingcountold = incommingcount;
+			incomingcountold = incomingcount;
 			}
 		if((tv.tv_sec %staytime) == 0) 
 			{
@@ -3450,7 +3450,7 @@ if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 	return;
 	}
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-incommingcount++;
+incomingcount++;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
@@ -3496,7 +3496,7 @@ return;
 /*===========================================================================*/
 static inline void process_fd_rca()
 {
-static uint64_t incommingcountold;
+static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
@@ -3536,7 +3536,7 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if(incommingcountold == incommingcount)
+				if(incomingcountold == incomingcount)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -3544,7 +3544,7 @@ while(1)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
-			incommingcountold = incommingcount;
+			incomingcountold = incomingcount;
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		printrcascan();
@@ -4574,7 +4574,7 @@ timestamp = timestampstart;
 wantstopflag = false;
 
 errorcount = 0;
-incommingcount = 0;
+incomingcount = 0;
 outgoingcount = 0;
 pmkidcount = 0;
 eapolmpcount = 0;
