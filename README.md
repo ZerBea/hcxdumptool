@@ -199,7 +199,7 @@ OPTIONCODE_MACMYSTA      0xf29e (6 byte)
 
 OPTIONCODE_SNONCE        0xf29f (32 byte)
 
-OPTIONCODE_WEAKCANDIDATE 0xf2a0 (32 byte)
+OPTIONCODE_WEAKCANDIDATE 0xf2a0 (64 byte) == 63 characters + zero
 
 OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 
