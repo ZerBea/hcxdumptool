@@ -34,6 +34,23 @@ make
 make install (as super user)
 ```
 
+## Ubuntu 18.04
+
+For Ubuntu to compile you need to do the following before running `make`:
+
+Add the following to the beginning of `hcxpcapngtool.c`:
+
+```
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+```
+
+Install missing dependencies:
+
+```
+sudo apt-get install libcurl4-openssl-dev
+sudo apt-get install libssl-dev
+```
 
 Compile for Android
 --------------
