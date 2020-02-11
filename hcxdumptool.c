@@ -77,6 +77,7 @@ static bool beaconreactiveflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
+static bool infinityflag;
 static int errorcount;
 static int maxerrorcount;
 static int ringbuffercount;
@@ -3289,12 +3290,19 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
 		}
+	if(infinityflag == true)
+		{
+		if(zeiger->count > 5)
+			{
+			send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
+			zeiger->status = 0;
+			return;
+			}
+		}
 	if((zeiger->count %zeiger->dpv) == 0)
 		{
 		if(zeiger->status >= NET_M3 + NET_M4) return;
-			{
-			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-			}
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 		zeiger->dpv += 1;
 		return;
 		}
@@ -5027,6 +5035,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
 	"                                     affected: ap-less\n"
+	"--infinity                         : do not give up!\n"
+	"                                     affected: everything\n"
 	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
 	"                                     NMEA 0183 $GPGGA $GPGGA\n"
@@ -5123,6 +5133,7 @@ static const struct option long_options[] =
 	{"reactive_beacon",		no_argument,		NULL,	HCX_REACTIVE_BEACON},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
+	{"infinity",			no_argument,		NULL,	HCX_INFINITY},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
@@ -5171,6 +5182,7 @@ showinterfaceflag = false;
 showchannelsflag = false;
 totflag = false;
 gpsdflag = false;
+infinityflag = false;
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
@@ -5290,6 +5302,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_FLOOD_BEACON:
 		beaconfloodflag = true;
+		break;
+
+		case HCX_INFINITY:
+		infinityflag = true;
 		break;
 
 		case HCX_EXTAP_BEACON:
