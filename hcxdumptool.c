@@ -2540,9 +2540,9 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 		{
 		send_ack();
-		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		}
 	return;
 	}
@@ -2561,10 +2561,9 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 		{
 		send_ack();
-		send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		}
 	return;
 	}
@@ -2619,10 +2618,9 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 			{
 			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
 			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 			}
 		}
 	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
@@ -2668,10 +2666,9 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
 			{
 			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
 			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 			}
 		}
 	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
