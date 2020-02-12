@@ -2779,7 +2779,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			{
 			if(memcmp(&mac_broadcast, macfrx->addr2, 6) == 0) return;
 			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
 			send_beacon_reactive(zeiger->addr, zeiger->essidlen, zeiger->essid);
 			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
 			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
@@ -5121,7 +5120,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                       8: ASSOCIATION/REASSOCIATION\n"
 	"                                      16: BEACON\n"
 	"                                      32: GPS (once a minute)\n"
-	"                                      64: internal status\n"
+	"                                      64: internal status (once a minute)\n"
 	"                                     128: run as server\n"
 	"                                     256: run as client\n"
 	"                                     example: show EAPOL and PROBEREQUEST/PROBERESPONSE (2+4 = 6)\n"
