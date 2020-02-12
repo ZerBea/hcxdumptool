@@ -2750,6 +2750,8 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	return;
 	}
 if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if(memcmp(&mac_broadcast, macfrx->addr1, 6) == 0) return;
+if(memcmp(&mac_broadcast, macfrx->addr2, 6) == 0) return;
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
@@ -2761,7 +2763,6 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
-	if(memcmp(&mac_broadcast, macfrx->addr1, 6) == 0) return;
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
