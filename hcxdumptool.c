@@ -3697,7 +3697,6 @@ while(1)
 				errorcount++;
 				continue;
 				}
-			if(beaconactiveflag == true) send_beacon_aplist();
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 			}
 		if((tv.tv_sec %60) == 0) 
@@ -3705,6 +3704,7 @@ while(1)
 			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();	
 			}
+
 		}
 	if(gpiobutton > 0)
 		{
@@ -3746,6 +3746,7 @@ while(1)
 			send_proberequest_undirected_broadcast();
 			if(beaconactiveflag == true) send_beacon_aplist();
 			}
+		if(beaconactiveflag == true) send_beacon_aplist();
 		tvfd.tv_sec = 0;
 		tvfd.tv_usec = 250000;
 		}
