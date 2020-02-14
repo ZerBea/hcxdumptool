@@ -394,12 +394,27 @@ return;
 /*===========================================================================*/
 static inline void printtimenetclientessid(uint8_t *macclient, uint8_t *macap, uint8_t essidlen, uint8_t *essid, const char *message)
 {
+static int c, p;
 static char timestring[16];
+static char essidstring[ESSID_LEN_MAX *2 +1];
 
+p = 0;
+for(c = 0; c < essidlen; c++)
+	{
+	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	else if(essid[c] == 0x5c)
+		{
+		essidstring[p++] = 0x5c;
+		
+		essidstring[p++] = 0x5c;
+		}
+	else essidstring[p++] = essid[c];
+	}
+essidstring[p] = 0;
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x --> %02x%02x%02x%02x%02x%02x %s (%.*s)\n", timestring, channelscanlist[cpa],
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x --> %02x%02x%02x%02x%02x%02x %s (%s)\n", timestring, channelscanlist[cpa],
 		macclient[0], macclient[1], macclient[2], macclient[3], macclient[4], macclient[5],
-		macap[0], macap[1], macap[2], macap[3], macap[4], macap[5], message, essidlen, essid);
+		macap[0], macap[1], macap[2], macap[3], macap[4], macap[5], message, essidstring);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
@@ -3612,13 +3627,14 @@ while(1)
 				errorcount++;
 				continue;
 				}
-			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 			}
 		if((tv.tv_sec %60) == 0) 
 			{
 			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();	
 			}
+		if(beaconactiveflag == true) send_beacon_aplist();
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
 	if(gpiobutton > 0)
 		{
