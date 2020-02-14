@@ -2534,13 +2534,19 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			}
 		zeiger->essidlen = tags.essidlen;
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
-		if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
+		zeiger->status |= NET_REASSOC_REQ;
+		if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
+		}
+	if((zeiger->status &NET_PMKID) != NET_PMKID)
+		{
+		if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
 			{
-			if((zeiger->status &NET_REASSOC_REQ) != NET_REASSOC_REQ)
+			zeiger->status |= NET_PMKID;
+			if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 				{
-				printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
 				if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
 					{
+					zeiger->status |= NET_PMKID;
 					snprintf(message2, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 							tags.pmkid[0], tags.pmkid[1], tags.pmkid[2], tags.pmkid[3], tags.pmkid[4], tags.pmkid[5], tags.pmkid[6], tags.pmkid[7],
 							tags.pmkid[8], tags.pmkid[9], tags.pmkid[10], tags.pmkid[11], tags.pmkid[12], tags.pmkid[13], tags.pmkid[14], tags.pmkid[15]);
@@ -2548,7 +2554,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 					}
 				}
 			}
-		zeiger->status |= NET_REASSOC_REQ;
 		}
 	if((zeiger->status) >= NET_M2) continue;
 	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
@@ -2575,6 +2580,7 @@ ringbuffercount = zeiger -aplist;
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->status = NET_REASSOC_REQ;
+if(memcmp(&tags.pmkid, &zeroed32, 16) != 0) zeiger->status |= NET_PMKID;
 zeiger->count = 1;
 memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->essidlen = tags.essidlen;
@@ -2583,10 +2589,10 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
-if((statusout &STATUS_ASSOC) == STATUS_ASSOC)
+if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
+if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 	{
-	printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
-	if(memcmp(&tags.pmkid, &zeroed32, 16) != 0)
+	if((zeiger->status &NET_PMKID) == NET_PMKID)
 		{
 		snprintf(message2, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 				tags.pmkid[0], tags.pmkid[1], tags.pmkid[2], tags.pmkid[3], tags.pmkid[4], tags.pmkid[5], tags.pmkid[6], tags.pmkid[7],
