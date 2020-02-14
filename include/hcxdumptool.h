@@ -53,7 +53,7 @@
 #define EAPOLTIMEOUT		200000
 
 #define USER_EXIT_TOT		2
-#define STAYTIME		5
+#define STAYTIME		4
 #define NMEA_MAX		256
 
 #define ESSID_LEN_MAX		32
@@ -62,7 +62,6 @@
 
 #define BEACONINTERVALL		0x3e8
 
-#define DPC			3
 #define RECHECKCOUNT		1000000
 
 #define PCAPNG_FRAME_MANAGEMENT	1

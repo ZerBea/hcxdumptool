@@ -156,14 +156,14 @@ static int weakcandidatelen;
 
 static const uint8_t hdradiotap[] =
 {
-0x00, 0x00, // radiotap version and padding
-0x0e, 0x00, // radiotap header length
-0x06, 0x8c, 0x00, 0x00, // bitmap
-0x02, // flags
-0x02, // rate
-0x14, // tx power
-0x01, // antenna
-0x08, 0x00 // tx flags
+0x00, 0x00, /* radiotap version and padding */
+0x0e, 0x00, /* radiotap header length */
+0x06, 0x8c, 0x00, 0x00, /* bitmap */
+0x02, /* flags */
+0x02, /* rate */
+0x14, /* tx power */
+0x01, /* antenna */
+0x08, 0x00 /* tx flags */
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
@@ -181,9 +181,9 @@ static uint8_t channeldefaultlist[] =
 
 static uint8_t channelscanlist[128] =
 {
-1, 6, 2, 11, 1, 13, 6, 11, 1, 6, 3, 11, 1, 12, 6, 11,
-1, 6, 4, 11, 1, 10, 6, 11, 1, 6, 11, 5, 1, 6, 11, 8,
-1, 9, 6, 11, 1, 6, 11, 7, 0, 0, 0, 0, 0, 0, 0, 0,
+1, 6, 11, 3, 5, 7, 9, 13, 1, 6, 11, 2, 4, 8, 10, 12,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -421,12 +421,27 @@ return;
 /*===========================================================================*/
 static inline void printtimenetapessid(uint8_t *macclient, uint8_t *macap, uint8_t essidlen, uint8_t *essid, const char *message)
 {
+static int c, p;
 static char timestring[16];
+static char essidstring[ESSID_LEN_MAX *2 +1];
 
+p = 0;
+for(c = 0; c < essidlen; c++)
+	{
+	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	else if(essid[c] == 0x5c)
+		{
+		essidstring[p++] = 0x5c;
+		
+		essidstring[p++] = 0x5c;
+		}
+	else essidstring[p++] = essid[c];
+	}
+essidstring[p] = 0;
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-- %02x%02x%02x%02x%02x%02x %s (%.*s)\n", timestring, channelscanlist[cpa],
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-- %02x%02x%02x%02x%02x%02x %s (%s)\n", timestring, channelscanlist[cpa],
 		macclient[0], macclient[1], macclient[2], macclient[3], macclient[4], macclient[5],
-		macap[0], macap[1], macap[2], macap[3], macap[4], macap[5], message, essidlen, essid);
+		macap[0], macap[1], macap[2], macap[3], macap[4], macap[5], message, essidstring);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
@@ -434,12 +449,27 @@ return;
 /*===========================================================================*/
 static inline void printtimenetbothessid(uint8_t *macaddr1, uint8_t *macaddr2, uint8_t essidlen, uint8_t *essid, const char *message)
 {
+static int c, p;
 static char timestring[16];
+static char essidstring[ESSID_LEN_MAX *2 +1];
 
+p = 0;
+for(c = 0; c < essidlen; c++)
+	{
+	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	else if(essid[c] == 0x5c)
+		{
+		essidstring[p++] = 0x5c;
+		
+		essidstring[p++] = 0x5c;
+		}
+	else essidstring[p++] = essid[c];
+	}
+essidstring[p] = 0;
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %s (%.*s)\n", timestring, channelscanlist[cpa],
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %s (%s)\n", timestring, channelscanlist[cpa],
 		macaddr1[0], macaddr1[1], macaddr1[2], macaddr1[3], macaddr1[4], macaddr1[5],
-		macaddr2[0], macaddr2[1], macaddr2[2], macaddr2[3], macaddr2[4], macaddr2[5], message, essidlen, essid);
+		macaddr2[0], macaddr2[1], macaddr2[2], macaddr2[3], macaddr2[4], macaddr2[5], message, essidstring);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
@@ -1577,12 +1607,12 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
+/*
 static void send_deauthentication(uint8_t *macclient, uint8_t *macap, uint8_t reason)
 {
 static mac_t *macftx;
 static maclist_t *zeiger;
 
-if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
@@ -1618,13 +1648,13 @@ fsync(fd_socket);
 outgoingcount++;
 return;
 }
+*/
 /*===========================================================================*/
 static void send_deauthentication_broadcast(uint8_t *macap, uint8_t reason)
 {
 static mac_t *macftx;
 static maclist_t *zeiger;
 
-if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if(filtermode == 1)
 	{
 	if(isapinfilterlist(macap) == true) return;
@@ -2140,7 +2170,12 @@ if(memcmp(wpak->nonce, &zeroed32, 32) == 0)
 		if(memcmp(zeigerap->addr, macfrx->addr1, 6) == 0)
 			{
 			zeigerap->timestamp = timestamp;
-			if((zeiger->message & NET_PMKID) == NET_PMKID) return;
+			if(infinityflag == true)
+				{
+				send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
+				return;
+				}
+			if(zeigerap->status >= (NET_M3 |NET_M4)) return;
 			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
 			return;
 			}
@@ -2434,12 +2469,6 @@ else
 return;
 }
 /*===========================================================================*/
-static inline void process80211action()
-{
-
-return;
-}
-/*===========================================================================*/
 static inline void process80211reassociation_resp()
 {
 static maclist_t *zeiger;
@@ -2464,7 +2493,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_REASSOC_RESP;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
@@ -2485,6 +2513,8 @@ static const char *message1 = "REASSOCIATION";
 
 static tags_t tags;
 static char message2[128];
+
+printf("debug send\n");
 
 clientinfoptr = payloadptr +CAPABILITIESREQSTA_SIZE;
 clientinfolen = payloadlen -CAPABILITIESREQSTA_SIZE;
@@ -2548,7 +2578,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->status = NET_REASSOC_REQ;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, tags.essidlen);
@@ -2571,6 +2600,19 @@ qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void process80211powersave_poll()
+{
+static maclist_t *zeiger;
+
+for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
+	{
+	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
+	zeiger->timestamp = timestamp;
+	return;
+	}
+return;
+}
+/*===========================================================================*/
 static inline void process80211blockack_req()
 {
 static maclist_t *zeiger;
@@ -2579,14 +2621,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
 	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M2) return;
-	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-		{
-		send_ack();
-		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
-		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
-		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-		}
 	return;
 	}
 return;
@@ -2600,49 +2634,20 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
 	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M2) return;
-	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-		{
-		send_ack();
-		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
-		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
-		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-		}
 	return;
 	}
 return;
 }
 /*===========================================================================*/
-static inline void process80211powersave_poll()
+static inline void process80211action()
 {
 static maclist_t *zeiger;
 
-if(macfrx->power == 1) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
+	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0)
 	zeiger->timestamp = timestamp;
-	if(zeiger->status >= NET_M2) return;
-	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
-		{
-		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE)
-			{
-			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			send_reassociation_req_wpa2(macfrx->addr2, zeiger);
-			}
-		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE)
-			{
-			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			send_reassociation_req_wpa1(macfrx->addr2, zeiger);
-			}
-		}
-	return;
 	}
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
 return;
 }
 /*===========================================================================*/
@@ -2650,7 +2655,7 @@ static inline void process80211null()
 {
 static maclist_t *zeiger;
 
-if(macfrx->power == 1) return;
+if(macfrx->power == 0) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
@@ -2659,12 +2664,13 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			send_ack();
-			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
-			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			}
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+		send_ack();
+		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
+		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
+
 		}
 	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 		{
@@ -2672,28 +2678,26 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-			}
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+		send_ack();
+		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 		}
 	return;
 	}
 if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
-	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	return;
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_deauthentication(macfrx->addr1, macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
@@ -2702,7 +2706,7 @@ static inline void process80211qosnull()
 {
 static maclist_t *zeiger;
 
-if(macfrx->power == 1) return;
+if(macfrx->power == 0) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
@@ -2711,12 +2715,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			send_ack();
-			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
-			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			}
+		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+		send_ack();
+		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
+		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
 		}
 	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 		{
@@ -2724,28 +2728,26 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-			}
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+		send_ack();
+		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 		}
 	return;
 	}
 if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
 	send_ack();
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
-	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
+	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	return;
 	}
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
 	send_ack();
 	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
@@ -2761,66 +2763,9 @@ return;
 /*===========================================================================*/
 static inline void process80211data_wpa()
 {
-static maclist_t *zeiger;
-
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_WPA) == PCAPNG_FRAME_WPA) writeepb(fd_pcapng);
-	}
-
-for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
-	{
-	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
-		{
-		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
-		zeiger->timestamp = timestamp;
-		if(zeiger->status >= NET_M2) return;
-		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			if(memcmp(&mac_broadcast, macfrx->addr2, 6) == 0) return;
-			send_ack();
-			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
-			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
-			}
-		}
-	if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
-		{
-		if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
-		zeiger->timestamp = timestamp;
-		if(zeiger->status >= NET_M2) return;
-		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-			{
-			if(memcmp(&mac_broadcast, macfrx->addr1, 6) == 0)
-				{
-				send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-				return;
-				}
-			send_ack();
-			send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-			if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
-			}
-		}
-	return;
-	}
-if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-if(memcmp(&mac_broadcast, macfrx->addr1, 6) == 0) return;
-if(memcmp(&mac_broadcast, macfrx->addr2, 6) == 0) return;
-if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
-	{
-	send_ack();
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_AP_BUSY);
-	send_deauthentication(macfrx->addr2, macfrx->addr1, WLAN_REASON_UNSPECIFIED);
-	send_deauthentication_broadcast(macfrx->addr1, WLAN_REASON_UNSPECIFIED);
-	return;
-	}
-if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
-	{
-	send_ack();
-	send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
-	send_deauthentication(macfrx->addr1, macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
 return;
 }
@@ -2849,7 +2794,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_ASSOC_RESP;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
@@ -2918,7 +2862,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->status = NET_ASSOC_REQ;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, tags.essidlen);
@@ -2952,7 +2895,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
-//*===========================================================================*/
+/*===========================================================================*/
 static inline void process80211authentication_unknown()
 {
 if(fd_pcapng > 0)
@@ -3015,7 +2958,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_AUTH;
 zeiger->algorithm = auth->algorithm;
 if(fd_pcapng > 0)
@@ -3088,7 +3030,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_AUTH;
 zeiger->algorithm = auth->algorithm;
 if(fd_pcapng > 0)
@@ -3159,7 +3100,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->status = NET_PROBE_REQ;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 memcpy(zeiger->addr, macfrx->addr1, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, tags.essidlen);
@@ -3210,7 +3150,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
 		}
-	if(beaconactiveflag == true) send_beacon_aplist();
 	return;
 	}
 ringbuffercount = zeiger -aplist;
@@ -3218,7 +3157,6 @@ memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->status = NET_PROBE_REQ;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 memcpy(zeiger->addr, &mac_myap, 3);
 zeiger->addr[3] = (mynic_ap >> 16) & 0xff;
 zeiger->addr[4] = (mynic_ap >> 8) & 0xff;
@@ -3236,7 +3174,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	send_probe_resp(zeiger->addr, zeiger->essidlen, zeiger->essid);
 	if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
 	}
-if(beaconactiveflag == true) send_beacon_aplist();
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
@@ -3270,23 +3207,19 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		if((statusout &STATUS_PROBES) == STATUS_PROBES)	printtimenetapessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, message);
 		zeiger->status |= NET_PROBE_RESP;
 		}
+	if(zeiger->status >= (NET_M3 |NET_M4)) return;
+	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+	if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
+	send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_PREV_AUTH_NOT_VALID);
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) != 0)
+		{
+		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
+		return;
+		}
 	if(zeiger->status < NET_M1)
 		{
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
-			{
-			if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0)
-				{
-				if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
-				}
-			}
-		}
-	if((zeiger->count %zeiger->dpv) == 0)
-		{
-		if(zeiger->status >= NET_M3 + NET_M4) return;
-			{
-			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-			}
-		zeiger->dpv += 1;
+		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
 		}
 	return;
 	}
@@ -3294,7 +3227,6 @@ ringbuffercount = zeiger -aplist;
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_PROBE_RESP;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
@@ -3316,8 +3248,8 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		{
 		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
 		}
-	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 	}
+if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_PREV_AUTH_NOT_VALID);
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
@@ -3350,29 +3282,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
-		}
-	if(infinityflag == true)
-		{
-		if(zeiger->count > 5)
-			{
-			send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-			zeiger->status = 0;
-			return;
-			}
-		}
-	if((zeiger->count %zeiger->dpv) == 0)
-		{
-		if(zeiger->status >= NET_M3 + NET_M4) return;
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-		zeiger->dpv += 1;
 		return;
 		}
-	if(zeiger->count > RECHECKCOUNT)
+	if(zeiger->status >= (NET_M3 |NET_M4)) return;
+	if((zeiger->count %20) == 0)
 		{
-		zeiger->count = 1;
-		zeiger->dpv = DPC;
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
-		zeiger->status &= 0xfffd;
 		return;
 		}
 	return;
@@ -3382,7 +3297,6 @@ gettags(apinfolen, apinfoptr, &tags);
 memset(zeiger, 0, MACLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
-zeiger->dpv = DPC;
 zeiger->status = NET_BEACON;
 memcpy(zeiger->addr, macfrx->addr2, 6);
 zeiger->channel = tags.channel;
@@ -3398,11 +3312,8 @@ if(fd_pcapng > 0)
 	}
 if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_BEACON) == STATUS_BEACON)	printtimenetapessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, message);
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
-	{
-	send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
-	send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
-	}
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
@@ -3655,8 +3566,8 @@ else printf("%s", servermsg);
 
 incomingcountold = 0;
 gettimeofday(&tv, NULL);
-tvfd.tv_sec = 0;
-tvfd.tv_usec = 250000;
+tvfd.tv_sec = staytime;
+tvfd.tv_usec = 0;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
@@ -3704,7 +3615,6 @@ while(1)
 			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();	
 			}
-
 		}
 	if(gpiobutton > 0)
 		{
@@ -3734,21 +3644,9 @@ while(1)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
 	else
 		{
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
-			{
-			cpa++;
-			if(channelscanlist[cpa] == 0) cpa = 0;
-			if(set_channel() == false)
-				{
-				errorcount++;
-				continue;
-				}
-			send_proberequest_undirected_broadcast();
-			if(beaconactiveflag == true) send_beacon_aplist();
-			}
 		if(beaconactiveflag == true) send_beacon_aplist();
 		tvfd.tv_sec = 0;
-		tvfd.tv_usec = 250000;
+		tvfd.tv_usec = 100000;
 		}
 	}
 return;
@@ -5131,6 +5029,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     128: run as server\n"
 	"                                     256: run as client\n"
 	"                                     example: show EAPOL and PROBEREQUEST/PROBERESPONSE (2+4 = 6)\n"
+	"                                     characters < 0x20 && > 0x7e are replaced by .\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
 	"                                   : default port: %d\n"
