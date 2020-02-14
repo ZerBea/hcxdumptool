@@ -238,11 +238,11 @@ fprintf(stdout, "\n");
 return;
 }
 /*===========================================================================*/
-static inline void debugprint(int len, uint8_t *ptr)
+static inline void debugprint(int len, uint8_t *ptr, char *mesg)
 {
 static int p;
 
-fprintf(stdout, "\nRAW: "); 
+fprintf(stdout, "%s ", mesg); 
 
 for(p = 0; p < len; p++)
 	{
@@ -1362,7 +1362,7 @@ static const uint8_t reactivebeacondata[] =
 #define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
 
 if(aplist->timestamp == 0) return;
-if(beaconintptr >= aplist +MACLIST_MAX) beaconintptr = aplist;
+if(beaconintptr >= aplist +ringbuffercount) beaconintptr = aplist;
 if(beaconintptr->timestamp == 0) beaconintptr = aplist;
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +REACTIVEBEACON_SIZE +1);
@@ -2504,11 +2504,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
-memset(zeiger, 0, MACLIST_SIZE);
-zeiger->timestamp = timestamp;
-zeiger->count = 1;
-zeiger->status = NET_REASSOC_RESP;
-memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2637,7 +2632,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	return;
 	}
@@ -2650,7 +2645,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0)
+	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	return;
 	}
@@ -2663,7 +2658,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
-	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0)
+	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	}
 return;
@@ -2682,10 +2677,10 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		send_ack();
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr2, zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr2, zeiger);
 		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
-		send_ack();
 		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 		if(beaconreactiveflag == true) send_beacon_reactive(zeiger);
 
@@ -2696,10 +2691,10 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		send_ack();
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
 		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
-		send_ack();
 		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 		}
 	return;
@@ -2746,10 +2741,10 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		if(zeiger->status >= NET_M2) return;
 		if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+		send_ack();
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
 		if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
-		send_ack();
 		send_disassociation(macfrx->addr2, macfrx->addr1, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
 		}
 	return;
@@ -2809,11 +2804,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
-memset(zeiger, 0, MACLIST_SIZE);
-zeiger->timestamp = timestamp;
-zeiger->count = 1;
-zeiger->status = NET_ASSOC_RESP;
-memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2972,12 +2962,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
-memset(zeiger, 0, MACLIST_SIZE);
-memcpy(zeiger->addr, macfrx->addr2, 6);
-zeiger->timestamp = timestamp;
-zeiger->count = 1;
-zeiger->status = NET_AUTH;
-zeiger->algorithm = auth->algorithm;
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -3044,12 +3028,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
-memset(zeiger, 0, MACLIST_SIZE);
-memcpy(zeiger->addr, macfrx->addr1, 6);
-zeiger->timestamp = timestamp;
-zeiger->count = 1;
-zeiger->status = NET_AUTH;
-zeiger->algorithm = auth->algorithm;
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -3145,6 +3123,7 @@ if(payloadlen < (int)IETAG_SIZE) return;
 gettags(payloadlen, payloadptr, &tags);
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
+
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -3227,18 +3206,14 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	if(zeiger->status >= (NET_M3 |NET_M4)) return;
 	if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
-	if((attackstatus &DISABLE_DEAUTHENTICATION) == DISABLE_DEAUTHENTICATION) return;
-	send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_PREV_AUTH_NOT_VALID);
-	if(memcmp(macfrx->addr1, &mac_myclient, 6) != 0)
-		{
-		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
-		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
-		return;
-		}
 	if(zeiger->status < NET_M1)
 		{
 		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256)) send_authentication_req_opensystem(macfrx->addr2);
 		}
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) return;
+	if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) send_disassociation(macfrx->addr1, macfrx->addr2, WLAN_REASON_PREV_AUTH_NOT_VALID);
+	if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_reassociation_req_wpa2(macfrx->addr1, zeiger);
+	else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_reassociation_req_wpa1(macfrx->addr1, zeiger);
 	return;
 	}
 ringbuffercount = zeiger -aplist;
