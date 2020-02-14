@@ -2514,8 +2514,6 @@ static const char *message1 = "REASSOCIATION";
 static tags_t tags;
 static char message2[128];
 
-printf("debug send\n");
-
 clientinfoptr = payloadptr +CAPABILITIESREQSTA_SIZE;
 clientinfolen = payloadlen -CAPABILITIESREQSTA_SIZE;
 if(clientinfolen < (int)IETAG_SIZE) return;
