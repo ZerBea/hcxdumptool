@@ -2632,6 +2632,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	return;
@@ -2645,6 +2646,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	return;
@@ -2658,6 +2660,7 @@ static maclist_t *zeiger;
 
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr3, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	}
@@ -2671,6 +2674,7 @@ static maclist_t *zeiger;
 if(macfrx->power == 0) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) break;
 	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
@@ -2722,6 +2726,7 @@ static maclist_t *zeiger;
 if(macfrx->power == 0) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
+	if(zeiger->timestamp == 0) break;
 	if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
