@@ -405,7 +405,6 @@ for(c = 0; c < essidlen; c++)
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
-		
 		essidstring[p++] = 0x5c;
 		}
 	else essidstring[p++] = essid[c];
@@ -447,7 +446,6 @@ for(c = 0; c < essidlen; c++)
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
-		
 		essidstring[p++] = 0x5c;
 		}
 	else essidstring[p++] = essid[c];
@@ -475,7 +473,6 @@ for(c = 0; c < essidlen; c++)
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
-		
 		essidstring[p++] = 0x5c;
 		}
 	else essidstring[p++] = essid[c];
@@ -2404,20 +2401,22 @@ memcpy(zeiger->nonce, wpak->nonce, 32);
 qsort(handshakelist, HANDSHAKELIST_MAX, HANDSHAKELIST_SIZE, sort_handshakelist_by_time);
 zeigerap = getnet(macfrx->addr2);
 if(zeigerap == NULL) return;
-if(zeiger->rc != myrc) zeigerap->status |= NET_M1;
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
+if(zeiger->rc == myrc) return;
+zeigerap->status |= NET_M1;
 if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 	{
 	pmkid = (pmkid_t*)(wpakptr +WPAKEY_SIZE);
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
 		pmkidcount++;
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+		if((zeigerap->status &NET_PMKID) != NET_PMKID)
 			{
-			if((zeigerap->status &NET_PMKID) != NET_PMKID)
+			zeigerap->status |= NET_PMKID;
+			if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 				{
 				snprintf(message, 128, "PMKID:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
 						pmkid->pmkid[0], pmkid->pmkid[1], pmkid->pmkid[2], pmkid->pmkid[3], pmkid->pmkid[4], pmkid->pmkid[5], pmkid->pmkid[6], pmkid->pmkid[7],
@@ -2429,8 +2428,8 @@ if(authlen >= (int)(WPAKEY_SIZE +PMKID_SIZE))
 					printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeigerap->essidlen, zeigerap->essid, message);
 					}
 				}
+			if(fh_nmea != NULL) writegpwpl(zeigerap->addr);
 			}
-		zeigerap->status |= NET_PMKID;
 		return;
 		}
 	}
@@ -3459,6 +3458,7 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
 		{
 		if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0) process80211probe_req();
+		else if(memcmp(macfrx->addr1, &mac_null, 6) == 0) process80211probe_req();
 		else process80211probe_req_directed();
 		}
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp();
