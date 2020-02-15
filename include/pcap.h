@@ -52,6 +52,7 @@ struct option_header_s
 #define IF_NAME		2
 #define IF_DESCRIPTION	3
 #define IF_MACADDR	6
+#define IF_TSRESOL	9
 #define IF_TZONE	10
 
 /* custom option code */

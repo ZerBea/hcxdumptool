@@ -182,6 +182,7 @@ int written;
 interface_description_block_t *idbhdr;
 total_length_t *totallength;
 char vendor[6];
+char tr[1];
 uint8_t idb[1024];
 
 memset(&idb, 0, 256);
@@ -195,6 +196,8 @@ idblen += addoption(idb +idblen, IF_NAME, strlen(interfacestr), interfacestr);
 memset(&vendor, 0, 6);
 memcpy(&vendor, macorig, 3);
 idblen += addoption(idb +idblen, IF_MACADDR, 6, vendor);
+tr[0] = 0;
+idblen += addoption(idb +idblen, IF_TSRESOL, 1, tr);
 idblen += addoption(idb +idblen, SHB_EOC, 0, NULL);
 
 totallength = (total_length_t*)(idb +idblen);
