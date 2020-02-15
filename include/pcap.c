@@ -196,7 +196,7 @@ idblen += addoption(idb +idblen, IF_NAME, strlen(interfacestr), interfacestr);
 memset(&vendor, 0, 6);
 memcpy(&vendor, macorig, 3);
 idblen += addoption(idb +idblen, IF_MACADDR, 6, vendor);
-tr[0] = 0;
+tr[0] = TSRESOL_USEC;
 idblen += addoption(idb +idblen, IF_TSRESOL, 1, tr);
 idblen += addoption(idb +idblen, SHB_EOC, 0, NULL);
 

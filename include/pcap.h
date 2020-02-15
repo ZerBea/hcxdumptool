@@ -55,6 +55,9 @@ struct option_header_s
 #define IF_TSRESOL	9
 #define IF_TZONE	10
 
+#define TSRESOL_USEC	6
+#define TSRESOL_NSEC	9
+
 /* custom option code */
 #define OPTIONCODE_MACORIG		0xf29a
 #define OPTIONCODE_MACAP		0xf29b
