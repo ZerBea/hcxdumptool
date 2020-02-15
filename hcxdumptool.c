@@ -3540,7 +3540,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"PREDEFINED ACCESS POINT.: %d entries\n"
 	"MAC ACCESS POINT........: %02x%02x%02x%02x%02x%02x (incremented on every new client)\n"
 	"MAC CLIENT..............: %02x%02x%02x%02x%02x%02x\n"
-	"REPLAYCOUNT.............: %"  PRIu64  "\n"
+	"REPLAYCOUNT.............: %" PRIu64 "\n"
 	"ANONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE..................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
