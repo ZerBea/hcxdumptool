@@ -3327,7 +3327,7 @@ qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
-static inline void printpagid(uint8_t *pagidptr)
+static inline void processpagid(uint8_t *pagidptr)
 {
 static pagidlist_t *zeiger;
 
@@ -3340,12 +3340,15 @@ for(zeiger = pagidlist; zeiger < pagidlist +PAGIDLIST_MAX -1; zeiger++)
 	}
 zeiger->timestamp = timestamp;
 memcpy(zeiger->id, pagidptr, 64); 
-strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-- %02x%02x%02x%02x%02x%02x PWNAGOTCHI ID:%.*s\n", timestring, channelscanlist[cpa],
-		macfrx->addr1[0], macfrx->addr1[1], macfrx->addr1[2], macfrx->addr1[3], macfrx->addr1[4], macfrx->addr1[5],
-		macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
-else printf("%s", servermsg);
+if((statusout &STATUS_BEACON) == STATUS_BEACON)
+	{
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-- %02x%02x%02x%02x%02x%02x PWNAGOTCHI ID:%.*s\n", timestring, channelscanlist[cpa],
+			macfrx->addr1[0], macfrx->addr1[1], macfrx->addr1[2], macfrx->addr1[3], macfrx->addr1[4], macfrx->addr1[5],
+			macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
+	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	else printf("%s", servermsg);
+	}
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -3374,7 +3377,7 @@ for(p = 0; p < vendorlen -1 ; p++)
 			{
 			if(!isxdigit(ieptr[p +11 +c])) return false;
 			}
-		printpagid(ieptr +p +11);
+		processpagid(ieptr +p +11);
 		return true;
 		}
 	}
