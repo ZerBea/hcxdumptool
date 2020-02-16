@@ -3367,9 +3367,9 @@ static const uint8_t mac_pwag[6] =
 };
 
 if(ieptr[1] != 0xff) return false;
-if(vendorlen <= 0xff) return false;
+if(vendorlen <= 0x78) return false;
 if(memcmp(&mac_pwag, macfrx->addr2, 6) != 0) return false;
-for(p = 0; p < vendorlen -1 ; p++)
+for(p = 2; p < vendorlen -75 ; p++)
 	{
 	if(memcmp(&ieptr[p], "identity", 8) == 0) 
 		{
