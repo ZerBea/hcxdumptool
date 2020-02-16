@@ -60,6 +60,8 @@
 #define RSN_LEN_MIN		20
 #define WPA_LEN_MIN		22
 
+#define PAGIDLIST_MAX		256
+
 #define BEACONINTERVALL		0x3e8
 
 #define RECHECKCOUNT		1000000
@@ -239,6 +241,24 @@ const filterlist_t *ib = (const filterlist_t *)b;
 
 if(memcmp(ia->mac, ib->mac, 6) > 0) return 1;
 else if(memcmp(ia->mac, ib->mac, 6) < 0) return -1;
+return 0;
+}
+/*===========================================================================*/
+struct pagidlist_s
+{
+ uint64_t		timestamp;
+ char			id[64];
+};
+typedef struct pagidlist_s pagidlist_t;
+#define	PAGIDLIST_SIZE (sizeof(pagidlist_t))
+
+static int sort_pagidlist_by_time(const void *a, const void *b)
+{
+const pagidlist_t *ia = (const pagidlist_t *)a;
+const pagidlist_t *ib = (const pagidlist_t *)b;
+
+if(ia->timestamp < ib->timestamp) return 1;
+else if(ia->timestamp > ib->timestamp) return -1;
 return 0;
 }
 /*===========================================================================*/

@@ -131,6 +131,7 @@ static handshakelist_t *handshakelist;
 static scanlist_t *scanlist;
 static filterlist_t *filteraplist;
 static filterlist_t *filterclientlist;
+static pagidlist_t *pagidlist;
 
 static int filteraplistentries;
 static int filterclientlistentries;
@@ -324,6 +325,8 @@ if(handshakelist != NULL) free(handshakelist);
 if(scanlist != NULL) free(scanlist);
 if(filteraplist != NULL) free(filteraplist);
 if(filterclientlist != NULL) free(filterclientlist);
+if(pagidlist != NULL) free(pagidlist);
+
 if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
@@ -3324,6 +3327,60 @@ qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void printpagid(uint8_t *pagidptr)
+{
+static pagidlist_t *zeiger;
+
+static char timestring[16];
+
+for(zeiger = pagidlist; zeiger < pagidlist +PAGIDLIST_MAX -1; zeiger++)
+	{
+	if(zeiger->id[0] == 0) break;
+	if(memcmp(zeiger->id, pagidptr, 64) == 0) return;
+	}
+zeiger->timestamp = timestamp;
+memcpy(zeiger->id, pagidptr, 64); 
+strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x <-- %02x%02x%02x%02x%02x%02x PWNAGOTCHI ID:%.*s\n", timestring, channelscanlist[cpa],
+		macfrx->addr1[0], macfrx->addr1[1], macfrx->addr1[2], macfrx->addr1[3], macfrx->addr1[4], macfrx->addr1[5],
+		macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+else printf("%s", servermsg);
+if(fd_pcapng > 0)
+	{
+	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+	}
+qsort(pagidlist, PAGIDLIST_MAX, PAGIDLIST_SIZE, sort_pagidlist_by_time);
+return;
+}
+/*===========================================================================*/
+static inline bool processpag(int vendorlen, uint8_t *ieptr)
+{
+static int c, p;
+
+static const uint8_t mac_pwag[6] =
+{
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad
+};
+
+if(ieptr[1] != 0xff) return false;
+if(vendorlen <= 0xff) return false;
+if(memcmp(&mac_pwag, macfrx->addr2, 6) != 0) return false;
+for(p = 0; p < vendorlen -1 ; p++)
+	{
+	if(memcmp(&ieptr[p], "identity", 8) == 0) 
+		{
+		for(c = 0; c < 64; c++)
+			{
+			if(!isxdigit(ieptr[p +11 +c])) return false;
+			}
+		printpagid(ieptr +p +11);
+		return true;
+		}
+	}
+return false;
+}
+/*===========================================================================*/
 static inline void process80211beacon()
 {
 static int apinfolen;
@@ -3335,6 +3392,10 @@ static tags_t tags;
 if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
+if(apinfoptr[0] == TAG_PAG)
+	{
+	if(processpag(apinfolen, apinfoptr) == true) return;
+	}
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -3637,7 +3698,6 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
-
 incomingcountold = 0;
 gettimeofday(&tv, NULL);
 tvfd.tv_sec = staytime;
@@ -4901,6 +4961,7 @@ if((handshakelist = (handshakelist_t*)calloc((HANDSHAKELIST_MAX +1), HANDSHAKELI
 if((scanlist = (scanlist_t*)calloc((SCANLIST_MAX +1), SCANLIST_SIZE)) == NULL) return false;
 if((filteraplist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
 if((filterclientlist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZE)) == NULL) return false;
+if((pagidlist = (pagidlist_t*)calloc((PAGIDLIST_MAX +1), PAGIDLIST_SIZE)) == NULL) return false;
 
 myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
 mynic_ap = rand() & 0xffffff;
