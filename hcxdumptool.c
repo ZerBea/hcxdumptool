@@ -201,6 +201,7 @@ static char driverfwversion[ETHTOOL_FWVERS_LEN +2];
 
 static uint8_t mac_orig[6];
 static uint8_t mac_myclient[6];
+static uint8_t mac_myapbc[6];
 static uint8_t mac_myap[6];
 static uint8_t mac_ack[6];
 
@@ -1459,6 +1460,77 @@ if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE
 	}
 fsync(fd_socket);
 outgoingcount++;
+return;
+}
+/*===========================================================================*/
+static void send_beacon_broadcast()
+{
+static mac_t *macftx;
+static capap_t *capap;
+
+static const uint8_t bcbeacondata[] =
+{
+/* Tag: BC SSID */
+0x00, 0x00,
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: DS Parameter set: Current Channel: 1 */
+0x03, 0x01, 0x01,
+/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
+0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
+/* Tag: ERP Information */
+0x2a, 0x01, 0x04,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: RSN Information WPA1 & WPA2 PSK */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0xc0,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+};
+#define BCBEACON_SIZE sizeof(bcbeacondata)
+
+if(aplist->timestamp == 0) return;
+if(beaconintptr >= aplist +ringbuffercount) beaconintptr = aplist;
+if(beaconintptr->timestamp == 0) beaconintptr = aplist;
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, &mac_myapbc, 6);
+memcpy(macftx->addr3, &mac_myapbc, 6);
+macftx->sequence = myreactivebeaconsequence++ << 4;
+if(myreactivebeaconsequence >= 4096) myreactivebeaconsequence = 1;
+capap = (capap_t*)(packetoutptr +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = BEACONINTERVALL;
+capap->capabilities = 0x411;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondata, BCBEACON_SIZE);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE) < 0)
+	{
+	perror("\nfailed to transmit internal beacon");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+beaconintptr++;
 return;
 }
 /*===========================================================================*/
@@ -3439,6 +3511,7 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		{
 		if(memcmp(macfrx->addr1, &mac_broadcast, 6) == 0) process80211probe_req();
 		else if(memcmp(macfrx->addr1, &mac_null, 6) == 0) process80211probe_req();
+		else if(memcmp(macfrx->addr1, &mac_myapbc, 6) == 0) process80211probe_req();
 		else process80211probe_req_directed();
 		}
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp();
@@ -3538,6 +3611,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"FILTERMODE..............: %d\n"
 	"WEAK CANDIDATE..........: %s\n"
 	"PREDEFINED ACCESS POINT.: %d entries\n"
+	"MAC ACCESS BROADCAST....: %02x%02x%02x%02x%02x%02x\n"
 	"MAC ACCESS POINT........: %02x%02x%02x%02x%02x%02x (incremented on every new client)\n"
 	"MAC CLIENT..............: %02x%02x%02x%02x%02x%02x\n"
 	"REPLAYCOUNT.............: %" PRIu64 "\n"
@@ -3548,6 +3622,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	drivername, driverversion, driverfwversion, 
 	maxerrorcount, filteraplistentries, filterclientlistentries, filtermode, weakcandidate,
 	beaconextlistlen,
+	mac_myapbc[0], mac_myapbc[1], mac_myapbc[2], mac_myapbc[3], mac_myapbc[4], mac_myapbc[5],
 	mac_myap[0], mac_myap[1], mac_myap[2], mac_myap[3], mac_myap[4], mac_myap[5],
 	mac_myclient[0], mac_myclient[1], mac_myclient[2], mac_myclient[3], mac_myclient[4], mac_myclient[5],
 	myrc,
@@ -3613,6 +3688,7 @@ while(1)
 			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();	
 			}
+		if(beaconactiveflag == true) send_beacon_broadcast();
 		if(beaconactiveflag == true) send_beacon_aplist();
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
@@ -3646,7 +3722,7 @@ while(1)
 		{
 		if(beaconactiveflag == true) send_beacon_aplist();
 		tvfd.tv_sec = 0;
-		tvfd.tv_usec = 100000;
+		tvfd.tv_usec = 200000;
 		}
 	}
 return;
@@ -4829,6 +4905,13 @@ if((filterclientlist = (filterlist_t*)calloc((FILTERLIST_MAX +1), FILTERLIST_SIZ
 myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
 mynic_ap = rand() & 0xffffff;
 myoui_ap &= 0xfcffff;
+mac_myapbc[5] = mynic_ap & 0xff;
+mac_myapbc[4] = (mynic_ap >> 8) & 0xff;
+mac_myapbc[3] = (mynic_ap >> 16) & 0xff;
+mac_myapbc[2] = myoui_ap & 0xff;
+mac_myapbc[1] = (myoui_ap >> 8) & 0xff;
+mac_myapbc[0] = (myoui_ap >> 16) & 0xff;
+mynic_ap++;
 mac_myap[5] = mynic_ap & 0xff;
 mac_myap[4] = (mynic_ap >> 8) & 0xff;
 mac_myap[3] = (mynic_ap >> 16) & 0xff;
