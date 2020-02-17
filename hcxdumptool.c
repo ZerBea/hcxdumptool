@@ -3493,8 +3493,8 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		zeiger->status |= NET_BEACON;
 		return;
 		}
-	if(tags.essidlen == 0) return;
-	if(tags.essid[0] == 0) return;
+	if(zeiger->essidlen == 0) return;
+	if(zeiger->essid[0] == 0) return;
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
