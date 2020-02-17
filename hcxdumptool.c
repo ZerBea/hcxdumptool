@@ -2579,6 +2579,16 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
+ringbuffercount = zeiger -aplist;
+memset(zeiger, 0, MACLIST_SIZE);
+zeiger->timestamp = timestamp;
+zeiger->status = NET_ASSOC_RESP;
+zeiger->count = 1;
+memcpy(zeiger->addr, macfrx->addr2, 6);
+if(fd_pcapng > 0)
+	{
+	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+	}
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2616,8 +2626,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			{
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 			}
-		zeiger->essidlen = tags.essidlen;
-		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		zeiger->status |= NET_REASSOC_REQ;
 		if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
 		}
@@ -2673,6 +2681,7 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
+if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_ASSOC) == STATUS_ASSOC) printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, message1);
 if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
 	{
@@ -2884,6 +2893,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
+ringbuffercount = zeiger -aplist;
+memset(zeiger, 0, MACLIST_SIZE);
+zeiger->timestamp = timestamp;
+zeiger->status = NET_ASSOC_RESP;
+zeiger->count = 1;
+memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -2916,8 +2931,6 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &NET_ASSOC_REQ) != NET_ASSOC_REQ)
 		{
-		zeiger->essidlen = tags.essidlen;
-		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		if(fd_pcapng > 0)
 			{
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -3025,6 +3038,20 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 			}
 		zeiger->status |= NET_AUTH;
+		if((statusout &STATUS_AUTH) == STATUS_AUTH)
+			{
+			if(macfrx->prot == 1) msgptr = message1;
+			else if(auth->algorithm == OPEN_SYSTEM)	msgptr = message2;
+			else if(auth->algorithm == SAE)	msgptr = message3;
+			else if(auth->algorithm == SHARED_KEY) msgptr = message4;
+			else if(auth->algorithm == FBT)	msgptr = message5;
+			else if(auth->algorithm == FILS) msgptr = message6;
+			else if(auth->algorithm == FILSPFS) msgptr = message7;
+			else if(auth->algorithm == FILSPK) msgptr = message8;
+			else if(auth->algorithm == NETWORKEAP) msgptr = message9;
+			else msgptr = message10;
+			printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, msgptr);
+			}
 		}
 	if((auth->statuscode == AUTH_OK) && (zeiger->status < NET_M1))
 		{
@@ -3042,11 +3069,16 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
+ringbuffercount = zeiger -aplist;
+memset(zeiger, 0, MACLIST_SIZE);
+zeiger->timestamp = timestamp;
+zeiger->status = NET_AUTH;
+zeiger->count = 1;
+memcpy(zeiger->addr, macfrx->addr2, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
-if(fh_nmea != NULL) writegpwpl(zeiger->addr);
 if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	{
 	if(macfrx->prot == 1) msgptr = message1;
@@ -3060,6 +3092,17 @@ if((statusout &STATUS_AUTH) == STATUS_AUTH)
 	else if(auth->algorithm == NETWORKEAP) msgptr = message9;
 	else msgptr = message10;
 	printtimenetbothessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, msgptr);
+	}
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+	{
+	if((zeiger->algorithm == OPEN_SYSTEM) && (auth->statuscode == AUTH_OK))
+		{
+		if(memcmp(&mac_myclient, macfrx->addr1, 6) == 0)
+			{
+			if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_association_req_wpa2(zeiger);
+			else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_association_req_wpa1(zeiger);
+			}
+		}
 	}
 qsort(aplist, ringbuffercount +1, MACLIST_SIZE, sort_maclist_by_time);
 return;
@@ -3096,6 +3139,20 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 			}
 		zeiger->status |= NET_AUTH;
+		if((statusout &STATUS_AUTH) == STATUS_AUTH)
+			{
+			if(macfrx->prot == 1) msgptr = message1;
+			else if(auth->algorithm == OPEN_SYSTEM)	msgptr = message2;
+			else if(auth->algorithm == SAE)	msgptr = message3;
+			else if(auth->algorithm == SHARED_KEY) msgptr = message4;
+			else if(auth->algorithm == FBT)	msgptr = message5;
+			else if(auth->algorithm == FILS) msgptr = message6;
+			else if(auth->algorithm == FILSPFS) msgptr = message7;
+			else if(auth->algorithm == FILSPK) msgptr = message8;
+			else if(auth->algorithm == NETWORKEAP) msgptr = message9;
+			else msgptr = message10;
+			printtimenetbothessid(macfrx->addr2, macfrx->addr1, zeiger->essidlen, zeiger->essid, msgptr);
+			}
 		}
 	zeiger->algorithm = auth->algorithm;
 	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
@@ -3108,6 +3165,12 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 		}
 	return;
 	}
+ringbuffercount = zeiger -aplist;
+memset(zeiger, 0, MACLIST_SIZE);
+zeiger->timestamp = timestamp;
+zeiger->status = NET_AUTH;
+zeiger->count = 1;
+memcpy(zeiger->addr, macfrx->addr1, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
@@ -3152,6 +3215,8 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr1, 6) != 0) continue;
+	if(zeiger->essidlen != tags.essidlen) continue;
+	if(memcmp(zeiger->essid, tags.essid, tags.essidlen) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &NET_PROBE_REQ) != NET_PROBE_REQ)
 		{
@@ -3203,7 +3268,6 @@ if(payloadlen < (int)IETAG_SIZE) return;
 gettags(payloadlen, payloadptr, &tags);
 if(tags.essidlen == 0) return;
 if(tags.essid[0] == 0) return;
-
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -3267,20 +3331,25 @@ if(payloadlen < (int)CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
 gettags(apinfolen, apinfoptr, &tags);
+if(tags.essidlen == 0) return;
+if(tags.essid[0] == 0) return;
 for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
 	if(memcmp(zeiger->addr, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
+	if((zeiger->essidlen == 0) && (zeiger->essid[0] == 0))
+		{
+		zeiger->essidlen = tags.essidlen;
+		memcpy(zeiger->essid, tags.essid, tags.essidlen);
+		}
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if(fd_pcapng > 0)
 			{
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 			}
-		zeiger->essidlen = tags.essidlen;
-		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		if((statusout &STATUS_PROBES) == STATUS_PROBES)	printtimenetapessid(macfrx->addr1, macfrx->addr2, zeiger->essidlen, zeiger->essid, message);
 		zeiger->status |= NET_PROBE_RESP;
 		}
@@ -3407,12 +3476,25 @@ for(zeiger = aplist; zeiger < aplist +MACLIST_MAX; zeiger++)
 	zeiger->count += 1;
 	if((zeiger->status &NET_BEACON) != NET_BEACON)
 		{
+		gettags(apinfolen, apinfoptr, &tags);
+		if((tags.essidlen > 0) && (tags.essid[0] != 0))
+			{
+			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, tags.essidlen, tags.essid);
+			if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
+			zeiger->essidlen = tags.essidlen;
+			memcpy(zeiger->essid, tags.essid, tags.essidlen);
+			}
 		if(fd_pcapng > 0)
 			{
 			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+			if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) send_deauthentication_broadcast(macfrx->addr2, WLAN_REASON_UNSPECIFIED);
 			}
 		zeiger->status |= NET_BEACON;
+		return;
 		}
+	if(tags.essidlen == 0) return;
+	if(tags.essid[0] == 0) return;
 	if((zeiger->status &NET_PROBE_RESP) != NET_PROBE_RESP)
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
