@@ -405,7 +405,7 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 p = 0;
 for(c = 0; c < essidlen; c++)
 	{
-	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	if((essid[c] < 0x20) || (essid[c] > 0x7e)) essidstring[p++] = '.';
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
@@ -446,7 +446,7 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 p = 0;
 for(c = 0; c < essidlen; c++)
 	{
-	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	if((essid[c] < 0x20) || (essid[c] > 0x7e)) essidstring[p++] = '.';
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
@@ -473,7 +473,7 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 p = 0;
 for(c = 0; c < essidlen; c++)
 	{
-	if((essid[c] < 0x20) && (essid[c] > 0x7e)) essidstring[p++] = '.';
+	if((essid[c] < 0x20) || (essid[c] > 0x7e)) essidstring[p++] = '.';
 	else if(essid[c] == 0x5c)
 		{
 		essidstring[p++] = 0x5c;
