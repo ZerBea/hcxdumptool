@@ -5257,7 +5257,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      64: internal status (once a minute)\n"
 	"                                     128: run as server\n"
 	"                                     256: run as client\n"
-	"                                     example: show EAPOL and PROBEREQUEST/PROBERESPONSE (2+4 = 6)\n"
+	"                                     example: show EAPOL and PROBEREQUEST/PROBERESPONSE (1+2 = 3)\n"
+	"                                              show everything but don\'t run as server or client (1+2+4+8+16+32+64 = 127)\n"
 	"                                     characters < 0x20 && > 0x7e are replaced by .\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
@@ -5273,7 +5274,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Do not edit, merge or convert this pcapng files, because it will remove optional comment fields!\n"
 	"It is much better to run gzip to compress the files. Wireshark, tshark and hcxpcapngtool will understand this.\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
-	"If you use GPS, make sure GPS device is in fix, before you start hcxdumptool\n"
+	"If you use GPS, make sure GPS device is inserted, before you start hcxdumptool\n"
 	"\n",
 	eigenname, VERSION, VERSION_JAHR, eigenname, eigenname,
 	STAYTIME, EAPOLTIMEOUT /10000, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
