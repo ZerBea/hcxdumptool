@@ -1,3 +1,14 @@
+PRODUCTION		:= 0
+PRODUCTION_VERSION	:= 6.0.1
+PRODUCTION_YEAR		:= 2020
+
+ifeq ($(PRODUCTION),1)
+VERSION_TAG		:= $(PRODUCTION_VERSION)
+else
+VERSION_TAG		:= $(shell git describe --tags || echo $(PRODUCTION_VERSION))
+endif
+VERSION_YEAR		:= $(shell echo $(PRODUCTION_YEAR))
+
 PREFIX		?=/usr/local
 INSTALLDIR	= $(DESTDIR)$(PREFIX)/bin
 
@@ -17,9 +28,8 @@ all: build
 
 build:
 ifeq ($(HOSTOS), Linux)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS) -lcrypto
-else
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS) -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS) -lcrypto -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 	$(info OS not supported)
 endif
 

@@ -15,9 +15,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#include "include/version.h"
 #include "include/rpigpio.h"
-
 
 #define HCX_GPIO_BUTTON		1
 #define HCX_GPIO_STATUSLED	2
@@ -26,7 +24,6 @@
 #define HCX_POWER_OFF		5
 #define HCX_HELP		'h'
 #define HCX_VERSION		'v'
-
 /*===========================================================================*/
 /* global var */
 
@@ -263,7 +260,7 @@ while(1)
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
-printf("%s %s (wpi version) (C) %s ZeroBeat\n", eigenname, VERSION, VERSION_JAHR);
+printf("%s %s (wpi version) (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -294,7 +291,7 @@ printf("%s %s (wpi version) (C) %s ZeroBeat\n"
 	"run gpio readall to print a table of all accessable pins and their numbers\n"
 	"(wiringPi, BCM_GPIO and physical pin numbers)\n"
 	"\n",
-	eigenname, VERSION, VERSION_JAHR, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -302,7 +299,7 @@ __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
 printf("%s %s (wpi version) (C) %s by ZeroBeat\n"
-	"usage: %s -h for help\n", eigenname, VERSION, VERSION_JAHR, eigenname);
+	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
 }
 /*===========================================================================*/

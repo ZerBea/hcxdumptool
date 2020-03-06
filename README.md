@@ -67,7 +67,7 @@ Copy it to your phone and enjoy.
 Requirements
 --------------
 
-* Arch Linux (strict), Kernel >= 4.19 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions). No support for proprietary (closed source), commercial operating systems). Don't use Kernel 4.4 (rt2x00 driver regression)
+* Operatingsystem: Arch Linux (strict), Kernel >= 4.19 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems). Don't use Kernel 4.4 (rt2x00 driver regression)
 
 * Chipset must be able to run in monitor mode and driver must support monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
 
