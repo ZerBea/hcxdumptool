@@ -2516,7 +2516,7 @@ if((lastkeyinfo == 2) && (lastkeyver == keyver) && (lastrc == (rc -1))
 	&& (memcmp(&lastap, macfrx->addr2, 6) == 0) 
 	&& (memcmp(&lastclient, macfrx->addr1, 6) == 0))
 		{
-		if(addownap(AP_M2M3, macfrx->addr2) == true)
+		if((addown(OW_M2M3, macfrx->addr1, macfrx->addr2) == true) || (addownap(AP_M2M3, macfrx->addr2) == true))
 			{
 			eapolmp23count++;
 			if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
@@ -2554,7 +2554,7 @@ if(rc == myrc)
 		&& (memcmp(&mylastap, macfrx->addr1, 6) == 0) 
 		&& (memcmp(&mylastclient, macfrx->addr2, 6) == 0))
 		{
-		if(addown(OW_M1M2APLESS, macfrx->addr2, macfrx->addr1) == true)
+		if(addown(OW_M1M2ROGUE, macfrx->addr2, macfrx->addr1) == true)
 			{
 			eapolmp12roguecount++;
 			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printeapol(macfrx->addr2, macfrx->addr1, "M1M2ROGUE", timestamp -mylasttimestamp, rc, keyver, myanonce);
@@ -2905,6 +2905,9 @@ static macessidlist_t *zeiger;
 
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
+	memset(&mylastap, 0, 6);
+	memset(&mylastclient, 0, 6);
+	mylasttimestamp = 0;
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -3044,6 +3047,31 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		zeiger->essidlen = tags.essidlen;
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		}
+	if(zeiger->status >= OW_M2M3) return;
+	if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+		{
+		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256))
+			{
+			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
+				{
+				send_ack();
+				send_reassociation_resp();
+				memcpy(&mylastap, macfrx->addr1, 6);
+				memcpy(&mylastclient, macfrx->addr2, 6);
+				mylasttimestamp = timestamp;
+				mylastkeyver = 2;
+				}
+			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
+				{
+				send_ack();
+				send_reassociation_resp();
+				memcpy(&mylastap, macfrx->addr1, 6);
+				memcpy(&mylastclient, macfrx->addr2, 6);
+				mylasttimestamp = timestamp;
+				mylastkeyver = 1;
+				}
+			}
+		}
 	if((zeiger->status &OW_REASSOC) != OW_REASSOC)
 		{
 		zeiger->status |= OW_REASSOC;
@@ -3071,6 +3099,30 @@ if(filtermode != 0)
 		{
 		qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 		return;
+		}
+	}
+if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+	{
+	if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256))
+		{
+		if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
+			{
+			send_ack();
+			send_reassociation_resp();
+			memcpy(&mylastap, macfrx->addr1, 6);
+			memcpy(&mylastclient, macfrx->addr2, 6);
+			mylasttimestamp = timestamp;
+			mylastkeyver = 2;
+			}
+		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
+			{
+			send_ack();
+			send_reassociation_resp();
+			memcpy(&mylastap, macfrx->addr1, 6);
+			memcpy(&mylastclient, macfrx->addr2, 6);
+			mylasttimestamp = timestamp;
+			mylastkeyver = 1;
+			}
 		}
 	}
 if(fd_pcapng > 0)
@@ -3142,14 +3194,14 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if(zeiger->timestamp == 0) break;
 	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
-	if((zeiger->status &FILTERED) == FILTERED) return;
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
 		{
 		zeiger->essidlen = tags.essidlen;
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		}
-	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2APLESS))
+	if(zeiger->status >= OW_M1M2ROGUE) return;
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2ROGUE))
 		{
 		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256))
 			{
@@ -3302,7 +3354,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
-	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2APLESS))
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2ROGUE))
 		{
 		if(auth->algorithm == OPEN_SYSTEM)
 			{
