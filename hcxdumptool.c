@@ -2948,6 +2948,9 @@ static macessidlist_t *zeiger;
 
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
+	memset(&mylastap, 0, 6);
+	memset(&mylastclient, 0, 6);
+	mylasttimestamp = 0;
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
