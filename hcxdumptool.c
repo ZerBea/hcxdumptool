@@ -250,10 +250,10 @@ static uint8_t lastkeyver;
 static uint8_t lastanonce[32];
 static uint8_t lastsnonce[32];
 
-static uint64_t mylasttimestamp;
-static uint8_t mylastclient[6];
-static uint8_t mylastap[6];
-static uint8_t mylastkeyver;
+static uint64_t lastauthtimestamp;
+static uint8_t lastauthclient[6];
+static uint8_t lastauthap[6];
+static uint8_t lastauthkeyver;
 
 static char nmeatempsentence[NMEA_MAX];
 static char nmeasentence[NMEA_MAX];
@@ -1147,9 +1147,9 @@ memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_DATA;
 macftx->subtype = IEEE80211_STYPE_DATA;
-memcpy(macftx->addr1, &mylastclient, 6);
-memcpy(macftx->addr2, &mylastap, 6);
-memcpy(macftx->addr3, &mylastap, 6);
+memcpy(macftx->addr1, &lastauthclient, 6);
+memcpy(macftx->addr2, &lastauthap, 6);
+memcpy(macftx->addr3, &lastauthap, 6);
 macftx->from_ds = 1;
 macftx->duration = 0x013a;
 macftx->sequence = myapsequence++ << 4;
@@ -1174,7 +1174,7 @@ if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99) < 0)
 	}
 fsync(fd_socket);
 outgoingcount++;
-mylasttimestamp = timestamp;
+lastauthtimestamp = timestamp;
 return;
 }
 /*===========================================================================*/
@@ -1204,9 +1204,9 @@ memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_DATA;
 macftx->subtype = IEEE80211_STYPE_DATA;
-memcpy(macftx->addr1, &mylastclient, 6);
-memcpy(macftx->addr2, &mylastap, 6);
-memcpy(macftx->addr3, &mylastap, 6);
+memcpy(macftx->addr1, &lastauthclient, 6);
+memcpy(macftx->addr2, &lastauthap, 6);
+memcpy(macftx->addr3, &lastauthap, 6);
 macftx->from_ds = 1;
 macftx->duration = 0x013a;
 macftx->sequence = myapsequence++ << 4;
@@ -1231,7 +1231,7 @@ if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99) < 0)
 	}
 fsync(fd_socket);
 outgoingcount++;
-mylasttimestamp = timestamp;
+lastauthtimestamp = timestamp;
 return;
 }
 /*===========================================================================*/
@@ -2455,9 +2455,9 @@ if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
-memset(&mylastap, 0, 6);
-memset(&mylastclient, 0, 6);
-mylasttimestamp = 0;
+memset(&lastauthap, 0, 6);
+memset(&lastauthclient, 0, 6);
+lastauthtimestamp = 0;
 wpak = (wpakey_t*)wpakptr;
 rc = be64toh(wpak->replaycount);
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
@@ -2504,9 +2504,9 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
 	}
 if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
-memset(&mylastap, 0, 6);
-memset(&mylastclient, 0, 6);
-mylasttimestamp = 0;
+memset(&lastauthap, 0, 6);
+memset(&lastauthclient, 0, 6);
+lastauthtimestamp = 0;
 wpak = (wpakey_t*)wpakptr;
 rc = be64toh(wpak->replaycount);
 if(rc == myrc) send_ack();
@@ -2550,20 +2550,20 @@ rc = be64toh(wpak->replaycount);
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
 if(rc == myrc)
 	{
-	if((mylastkeyver == keyver) && ((timestamp -mylasttimestamp) <= eapoltimeoutvalue)
-		&& (memcmp(&mylastap, macfrx->addr1, 6) == 0) 
-		&& (memcmp(&mylastclient, macfrx->addr2, 6) == 0))
+	if((lastauthkeyver == keyver) && ((timestamp -lastauthtimestamp) <= eapoltimeoutvalue) && (memcmp(&lastauthap, macfrx->addr1, 6) == 0) && (memcmp(&lastauthclient, macfrx->addr2, 6) == 0))
 		{
 		if(addown(OW_M1M2ROGUE, macfrx->addr2, macfrx->addr1) == true)
 			{
 			eapolmp12roguecount++;
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printeapol(macfrx->addr2, macfrx->addr1, "M1M2ROGUE", timestamp -mylasttimestamp, rc, keyver, myanonce);
+			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printeapol(macfrx->addr2, macfrx->addr1, "M1M2ROGUE", timestamp -lastauthtimestamp, rc, keyver, myanonce);
 			}
-		memset(&mylastap, 0, 6);
-		memset(&mylastclient, 0, 6);
-		mylasttimestamp = 0;
+		lastauthtimestamp = 0;
+		memset(&lastauthap, 0, 6);
+		memset(&lastauthclient, 0, 6);
+		lastauthkeyver = 0;
 		return;
 		}
+	return;
 	}
 else if(lastrc == rc)
 	{
@@ -2875,27 +2875,21 @@ return;
 /*===========================================================================*/
 static inline void process80211action()
 {
-if(memcmp(&mylastap, macfrx->addr1, 6) != 0) return;
-if((timestamp -mylasttimestamp) <= eapoltimeoutvalue)
-	{
-	send_ack();
-	if(mylastkeyver == 2) send_m1_wpa2();
-	else if(mylastkeyver == 1) send_m1_wpa1();
-	return;
-	}
+if((timestamp -lastauthtimestamp) > eapoltimeoutvalue) return;
+if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
+send_ack();
+if(lastauthkeyver == 2) send_m1_wpa2();
+else if(lastauthkeyver == 1) send_m1_wpa1();
 return;
 }
 /*===========================================================================*/
 static inline void process80211ack()
 {
-if(memcmp(&mylastap, macfrx->addr1, 6) != 0) return;
-if((timestamp -mylasttimestamp) <= eapoltimeoutvalue)
-	{
-	send_ack();
-	if(mylastkeyver == 2) send_m1_wpa2();
-	else if(mylastkeyver == 1) send_m1_wpa1();
-	return;
-	}
+if((timestamp -lastauthtimestamp) > eapoltimeoutvalue) return;
+if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
+send_ack();
+if(lastauthkeyver == 2) send_m1_wpa2();
+else if(lastauthkeyver == 1) send_m1_wpa1();
 return;
 }
 /*===========================================================================*/
@@ -2905,9 +2899,6 @@ static macessidlist_t *zeiger;
 
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
-	memset(&mylastap, 0, 6);
-	memset(&mylastclient, 0, 6);
-	mylasttimestamp = 0;
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -2921,12 +2912,15 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	}
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if((memcmp(&mylastap, macfrx->addr1, 6) == 0) && ((timestamp -mylasttimestamp) <= eapoltimeoutvalue))
+	if((timestamp -lastauthtimestamp) <= eapoltimeoutvalue)
 		{
-		send_ack();
-		if(mylastkeyver == 2) send_m1_wpa2();
-		else if(mylastkeyver == 1) send_m1_wpa1();
-		return;
+		if(memcmp(&lastauthap, macfrx->addr1, 6) == 0)
+			{
+			send_ack();
+			if(lastauthkeyver == 2) send_m1_wpa2();
+			else if(lastauthkeyver == 1) send_m1_wpa1();
+			return;
+			}
 		}
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		{
@@ -2948,9 +2942,9 @@ static macessidlist_t *zeiger;
 
 if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	{
-	memset(&mylastap, 0, 6);
-	memset(&mylastclient, 0, 6);
-	mylasttimestamp = 0;
+	memset(&lastauthap, 0, 6);
+	memset(&lastauthclient, 0, 6);
+	lastauthtimestamp = 0;
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -2964,11 +2958,11 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	}
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if((memcmp(&mylastap, macfrx->addr1, 6) == 0) && ((timestamp -mylasttimestamp) <= eapoltimeoutvalue))
+	if((memcmp(&lastauthap, macfrx->addr1, 6) == 0) && ((timestamp -lastauthtimestamp) <= eapoltimeoutvalue))
 		{
 		send_ack();
-		if(mylastkeyver == 2) send_m1_wpa2();
-		else if(mylastkeyver == 1) send_m1_wpa1();
+		if(lastauthkeyver == 2) send_m1_wpa2();
+		else if(lastauthkeyver == 1) send_m1_wpa1();
 		return;
 		}
 	for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
@@ -3059,19 +3053,19 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				{
 				send_ack();
 				send_reassociation_resp();
-				memcpy(&mylastap, macfrx->addr1, 6);
-				memcpy(&mylastclient, macfrx->addr2, 6);
-				mylasttimestamp = timestamp;
-				mylastkeyver = 2;
+				memcpy(&lastauthap, macfrx->addr1, 6);
+				memcpy(&lastauthclient, macfrx->addr2, 6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 2;
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
 				send_ack();
 				send_reassociation_resp();
-				memcpy(&mylastap, macfrx->addr1, 6);
-				memcpy(&mylastclient, macfrx->addr2, 6);
-				mylasttimestamp = timestamp;
-				mylastkeyver = 1;
+				memcpy(&lastauthap, macfrx->addr1, 6);
+				memcpy(&lastauthclient, macfrx->addr2, 6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 1;
 				}
 			}
 		}
@@ -3112,19 +3106,19 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			{
 			send_ack();
 			send_reassociation_resp();
-			memcpy(&mylastap, macfrx->addr1, 6);
-			memcpy(&mylastclient, macfrx->addr2, 6);
-			mylasttimestamp = timestamp;
-			mylastkeyver = 2;
+			memcpy(&lastauthap, macfrx->addr1, 6);
+			memcpy(&lastauthclient, macfrx->addr2, 6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 2;
 			}
 		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 			{
 			send_ack();
 			send_reassociation_resp();
-			memcpy(&mylastap, macfrx->addr1, 6);
-			memcpy(&mylastclient, macfrx->addr2, 6);
-			mylasttimestamp = timestamp;
-			mylastkeyver = 1;
+			memcpy(&lastauthap, macfrx->addr1, 6);
+			memcpy(&lastauthclient, macfrx->addr2, 6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 1;
 			}
 		}
 	}
@@ -3212,19 +3206,19 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				{
 				send_ack();
 				send_association_resp();
-				memcpy(&mylastap, macfrx->addr1, 6);
-				memcpy(&mylastclient, macfrx->addr2, 6);
-				mylasttimestamp = timestamp;
-				mylastkeyver = 2;
+				memcpy(&lastauthap, macfrx->addr1, 6);
+				memcpy(&lastauthclient, macfrx->addr2, 6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 2;
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
 				send_ack();
 				send_association_resp();
-				memcpy(&mylastap, macfrx->addr1,6);
-				memcpy(&mylastclient, macfrx->addr2,6);
-				mylasttimestamp = timestamp;
-				mylastkeyver = 1;
+				memcpy(&lastauthap, macfrx->addr1,6);
+				memcpy(&lastauthclient, macfrx->addr2,6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 1;
 				}
 			}
 		}
@@ -3267,19 +3261,19 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			{
 			send_ack();
 			send_association_resp();
-			memcpy(&mylastap, macfrx->addr1, 6);
-			memcpy(&mylastclient, macfrx->addr2, 6);
-			mylasttimestamp = timestamp;
-			mylastkeyver = 2;
+			memcpy(&lastauthap, macfrx->addr1, 6);
+			memcpy(&lastauthclient, macfrx->addr2, 6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 2;
 			}
 		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 			{
 			send_ack();
 			send_association_resp();
-			memcpy(&mylastap, macfrx->addr1, 6);
-			memcpy(&mylastclient, macfrx->addr2, 6);
-			mylasttimestamp = timestamp;
-			mylastkeyver = 1;
+			memcpy(&lastauthap, macfrx->addr1, 6);
+			memcpy(&lastauthclient, macfrx->addr2, 6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 1;
 			}
 		}
 	}
