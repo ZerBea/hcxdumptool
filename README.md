@@ -87,7 +87,7 @@ The driver must support monitor mode and full packet injection, as well as ioctl
 
 Netlink (libnl) interfaces are not supported!
 
-Get information about VENDOR, model, chipset and driver here: https://wikidevi.com
+Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
