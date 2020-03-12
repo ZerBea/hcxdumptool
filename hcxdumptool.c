@@ -2833,22 +2833,84 @@ if(fd_pcapng > 0)
 	}
 }
 /*===========================================================================*/
-/*===========================================================================*/
-static inline void process80211cts()
+static inline void process80211rts()
 {
+static macessidlist_t *zeiger;
 
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) break;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr2, 6);
+	return;
+	}
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) return;
+	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr1, 6);
+	return;
+	}
 return;
 }
 /*===========================================================================*/
 static inline void process80211blockack_req()
 {
+static macessidlist_t *zeiger;
 
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) break;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr2, 6);
+	return;
+	}
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) return;
+	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr1, 6);
+	return;
+	}
 return;
 }
 /*===========================================================================*/
 static inline void process80211blockack()
 {
+static macessidlist_t *zeiger;
 
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) break;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr2, 6);
+	return;
+	}
+for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
+	{
+	if(zeiger->timestamp == 0) return;
+	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+	if((zeiger->status &FILTERED) == FILTERED) return;
+	zeiger->timestamp = timestamp;
+	if(memcmp(&mac_null, zeiger->client, 6) == 0) zeiger->count = 0;
+	memcpy(zeiger->client, macfrx->addr1, 6);
+	return;
+	}
 return;
 }
 /*===========================================================================*/
@@ -3869,7 +3931,7 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 else if(macfrx->type == IEEE80211_FTYPE_CTL)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_ACK) process80211ack();
-	else if(macfrx->subtype == IEEE80211_STYPE_CTS) process80211cts();
+	else if(macfrx->subtype == IEEE80211_STYPE_RTS) process80211rts();
 	else if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211powersave_poll();
 	else if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockack();
 	else if(macfrx->subtype == IEEE80211_STYPE_BACK_REQ) process80211blockack_req();
