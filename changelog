@@ -1,5 +1,6 @@
-06.03.2020
+14.03.2020
 ==========
+release v 6.0.2
 complete rewrite from scratch
 the Raspberry Pi is a little bit too slow, so we have to reduce status output. Most CLIENTs running randomized MACs. They are no longer displayed.
 improved IE tag walk similar to hcxpcapngtool
@@ -12,7 +13,7 @@ WLAN REASON CODE (deauthentication) no longer hardcoded
 moved to git versioning on non releases
 
 $ hcxdumptool -h
-hcxdumptool 6.0.1-37-g21550bd  (C) 2020 ZeroBeat
+hcxdumptool 6.0.2  (C) 2020 ZeroBeat
 usage  : hcxdumptool <options>
          press the switch to terminate hcxdumptool
          hardware modification is necessary, read more:
@@ -30,7 +31,7 @@ short options:
                  WARNING: iw use NETLINK (libnl) and hcxdumptool will not work on pure NETLINK interfaces
 -o <dump file> : output file in pcapng format
                  including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)
--f <frames     : frames to save
+-f <frames>    : frames to save
                  bitmask:
                   0: clear default values
                   1: MANAGEMENT frames (default)
@@ -184,6 +185,19 @@ It is much better to run gzip to compress the files. Wireshark, tshark and hcxpc
 If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!
 If you use GPS, make sure GPS device is inserted and has a GPS FIX, before you start hcxdumptool!
 
+
+06.03.2020
+==========
+complete rewrite from scratch
+the Raspberry Pi is a little bit too slow, so we have to reduce status output. Most CLIENTs running randomized MACs. They are no longer displayed.
+improved IE tag walk similar to hcxpcapngtool
+improved attack vector
+added new options to improve attack vector against hardened targets
+added more information to help menu
+added option to import Berkeley packet Filter code fom tcpdump as alternative to apfilterlist and clientfilterlist
+make less noise on the the channel (receive more, transmit less)
+WLAN REASON CODE (deauthentication) no longer hardcoded
+moved to git versioning on non releases
 
 
 29.01.2020
