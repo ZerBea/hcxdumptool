@@ -122,6 +122,8 @@ Antennas
 
 The best high frequency amplifier is a good antenna!
 
+It is much better to achieve gain using a good antenna instead of increasing transmitter power
+
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
 | LOGILINK WL0097        | grid parabolic  |
