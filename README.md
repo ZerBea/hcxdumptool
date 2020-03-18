@@ -24,27 +24,30 @@ Detailed description
 | hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
-Compile
+Get source
 --------------
 ```
-git clone https://github.com/ZerBea/hcxdumptool.git
-cd hcxdumptool*/
-```
-Then Simply run:
-
-```
-make
-make install (as super user)
+git clone https://github.com/ZerBea/hcxtools.git
+cd hcxtools
 ```
 
-## Debian based distributions:
+Solve dependencies (Debian based distributions: KALI, UBUNTU, ...) 
+--------------
 
-You need install missing dependencies before running `make`:
+You need to install missing dependencies before running `make`:
 
 ```
 sudo apt-get install libcurl4-openssl-dev
 sudo apt-get install libssl-dev
 ```
+
+Compile
+--------------
+```
+make
+make install (as super user)
+```
+
 
 Compile for Android
 --------------
