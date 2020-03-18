@@ -1,3 +1,9 @@
+18.03.2020
+==========
+release v 6.0.3
+removed debug message "OS not supported" from Makefile
+
+
 14.03.2020
 ==========
 release v 6.0.2
