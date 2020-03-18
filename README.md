@@ -26,8 +26,11 @@ Detailed description
 
 Compile
 --------------
-
-Simply run:
+```
+git clone https://github.com/ZerBea/hcxdumptool.git
+cd hcxdumptool*/
+```
+Then Simply run:
 
 ```
 make
