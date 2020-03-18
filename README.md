@@ -27,8 +27,8 @@ Detailed description
 Get source
 --------------
 ```
-git clone https://github.com/ZerBea/hcxtools.git
-cd hcxtools
+git clone https://github.com/ZerBea/hcxdumptool.git
+cd hcxdumptool
 ```
 
 Solve dependencies (Debian based distributions: KALI, UBUNTU, ...) 
