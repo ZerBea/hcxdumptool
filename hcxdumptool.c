@@ -259,6 +259,7 @@ static char nmeasentence[NMEA_MAX];
 
 static char servermsg[SERVERMSG_MAX];
 /*===========================================================================*/
+/*===========================================================================*/
 static inline void debugprint2(int len, uint8_t *ptr1, uint8_t *ptr2, char *mesg)
 {
 static int p;
