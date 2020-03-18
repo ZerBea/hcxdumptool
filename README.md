@@ -34,18 +34,9 @@ make
 make install (as super user)
 ```
 
-## Ubuntu 18.04
+## Debian based distributions:
 
-For Ubuntu to compile you need to do the following before running `make`:
-
-Add the following to the beginning of `hcxpcapngtool.c`:
-
-```
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-```
-
-Install missing dependencies:
+You need install missing dependencies before running `make`:
 
 ```
 sudo apt-get install libcurl4-openssl-dev
