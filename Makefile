@@ -29,7 +29,7 @@ all: build
 build:
 ifeq ($(HOSTOS), Linux)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxpioff hcxpioff.c $(LDFLAGS) -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS) -lcrypto -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o hcxdumptool hcxdumptool.c $(LDFLAGS) -lcrypto -lssl -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 else
 	$(info OS not supported)
 endif
