@@ -4325,7 +4325,7 @@ gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
 tvfd.tv_sec = 0;
-tvfd.tv_usec = 100000;
+tvfd.tv_usec = FDUSECTIMER;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
@@ -4405,7 +4405,7 @@ while(1)
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		tvfd.tv_sec = 0;
-		tvfd.tv_usec = 100000;
+		tvfd.tv_usec = FDUSECTIMER;
 		}
 	}
 return;
