@@ -5706,6 +5706,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default = GPIO not in use\n"
 	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
 	"                                   : hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
+	"--error_max=<digit>                : terminate hcxdumptool if error maximum reached\n"
+	"                                     default: %d errors\n"
 	"--reboot                           : once hcxdumptool terminated, reboot system\n"
 	"--poweroff                         : once hcxdumptool terminated, power off system\n"
 	"--enable_status=<digit>            : enable real-time display (waterfall)\n"
@@ -5745,7 +5747,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"If you use GPS, make sure GPS device is inserted and has a GPS FIX, before you start hcxdumptool!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -5804,6 +5806,7 @@ static const struct option long_options[] =
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
+	{"error_max",			required_argument,	NULL,	HCX_ERROR_MAX},
 	{"reboot",			no_argument,		NULL,	HCX_REBOOT},
 	{"poweroff",			no_argument,		NULL,	HCX_POWER_OFF},
 	{"enable_status",		required_argument,	NULL,	HCX_STATUS},
@@ -6036,6 +6039,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			}
 		gettimeofday(&tvtot, NULL);
 		tvtot.tv_sec += totvalue *60;
+		break;
+
+		case HCX_ERROR_MAX:
+		maxerrorcount = strtol(optarg, NULL, 10);
 		break;
 
 		case HCX_REBOOT:

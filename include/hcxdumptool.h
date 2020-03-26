@@ -28,7 +28,8 @@
 #define HCX_CLIENT_PORT			28
 #define HCX_CHECK_DRIVER		29
 #define HCX_CHECK_INJECTION		30
-#define HCX_STATUS			31
+#define HCX_ERROR_MAX			31
+#define HCX_STATUS			32
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'

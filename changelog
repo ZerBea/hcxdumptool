@@ -1,3 +1,10 @@
+27.03.2020
+==========
+hcxdumptool: ERROR_MAX not longer hard coded
+--error_max=<digit>                : terminate hcxdumptool if error maximum reached
+                                     default: 100 errors
+
+
 26.03.2020
 ==========
 Some drivers / firmwares provide only limited monitor functions instead of full packet injection capabilities.
