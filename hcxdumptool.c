@@ -4157,7 +4157,6 @@ printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]
 	"---------------------------------------------------------------\n",
 	timestring);
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
-
 	{
 	if(zeiger->count == 0) return;
 	printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
@@ -4408,6 +4407,114 @@ while(1)
 		tvfd.tv_usec = FDUSECTIMER;
 		}
 	}
+return;
+}
+/*===========================================================================*/
+static inline bool set_channel_injection()
+{
+static struct iwreq pwrq;
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.e = 0;
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.m = channeldefaultlist[cpa];
+if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
+return true;
+}
+/*===========================================================================*/
+static inline void process_fd_injection()
+{
+static uint64_t incomingcountold;
+static int sd;
+static int fdnum;
+static fd_set readfds;
+static uint64_t injectionhit;
+static scanlist_t *zeiger;
+static struct timeval tvfd;
+
+gettimeofday(&tv, NULL);
+tvold.tv_sec = tv.tv_sec;
+tvold.tv_usec = tv.tv_usec;
+tvfd.tv_sec = 0;
+tvfd.tv_usec = FDUSECTIMER;
+cpa = 0;
+if(set_channel() == false) errorcount++;
+send_proberequest_undirected_broadcast();
+injectionhit = 0;
+printf("starting packet injection test (that will take up to one minute)...\n");
+while(1)
+	{
+	gettimeofday(&tv, NULL);
+	if(tv.tv_sec != tvold.tv_sec)
+		{
+		cpa++;
+		if(channeldefaultlist[cpa] == 0) break;
+		if(set_channel() == false) continue;
+		tvold.tv_sec = tv.tv_sec;
+		if((tv.tv_sec %5) == 0)
+			{
+			if(gpiostatusled > 0)
+				{
+				GPIO_SET = 1 << gpiostatusled;
+				nanosleep(&sleepled, NULL);
+				GPIO_CLR = 1 << gpiostatusled;
+				if(incomingcountold == incomingcount)
+					{
+					nanosleep(&sleepled, NULL);
+					GPIO_SET = 1 << gpiostatusled;
+					nanosleep(&sleepled, NULL);
+					GPIO_CLR = 1 << gpiostatusled;
+					}
+				}
+			incomingcountold = incomingcount;
+			}
+		send_proberequest_undirected_broadcast();
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
+	if(wantstopflag == true) globalclose();
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket, &readfds);
+	sd = fd_socket;
+	if(fd_gps > 0)
+		{
+		FD_SET(fd_gps, &readfds);
+		sd = fd_gps;
+		}
+	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
+	if(fdnum < 0)
+		{
+		errorcount++;
+		continue;
+		}
+	if(FD_ISSET(fd_gps, &readfds)) process_gps();
+	else if(FD_ISSET(fd_socket, &readfds)) process_packet_rca();
+	else
+		{
+		cpa++;
+		if(channeldefaultlist[cpa] == 0) break;
+		if(set_channel() == false) continue;
+		send_proberequest_undirected_broadcast();
+		tvfd.tv_sec = 0;
+		tvfd.tv_usec = FDUSECTIMER;
+		}
+	}
+for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
+	{
+	if(zeiger->count == 0) break;
+	injectionhit += zeiger->counthit;
+	}
+if(injectionhit != 0) printf("packet injection is working!\n");
+else printf("warning: no PROBERESPOND received - packet injection is not working!\n");
+globalclose();
 return;
 }
 /*===========================================================================*/
@@ -5622,6 +5729,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                   : default IP: %s\n"
 	"                                   : default port: %d\n"
 	"--check_driver                     : run several tests to determine that driver support all(!) required ioctl() system calls\n"
+	"--check_injection                  : run packet injection test to determine that driver support full packet injection\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -5653,6 +5761,7 @@ static int mccliport;
 static int mcsrvport;
 static int weakcandidatelenuser;
 static bool rcascanflag;
+static bool injectionflag;
 static bool checkdriverflag;
 static bool showinterfaceflag;
 static bool monitormodeflag;
@@ -5696,6 +5805,7 @@ static const struct option long_options[] =
 	{"server_port",			required_argument,	NULL,	HCX_SERVER_PORT},
 	{"client_port",			required_argument,	NULL,	HCX_CLIENT_PORT},
 	{"check_driver",		no_argument,		NULL,	HCX_CHECK_DRIVER},
+	{"check_injection",		no_argument,		NULL,	HCX_CHECK_INJECTION},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
@@ -5939,6 +6049,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		checkdriverflag = true;
 		break;
 
+		case HCX_CHECK_INJECTION:
+		injectionflag = true;
+		break;
+
 		case HCX_SHOW_INTERFACES:
 		showinterfaceflag = true;
 		break;
@@ -6135,6 +6249,7 @@ if(nmeaoutname != NULL)
 if((gpsname != NULL) || (gpsdflag == true)) opengps();
 
 if(rcascanflag == true) process_fd_rca();
+else if(injectionflag == true) process_fd_injection();
 else process_fd();
 
 globalclose();
