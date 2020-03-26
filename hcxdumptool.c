@@ -4445,6 +4445,7 @@ attackstatus = 0;
 injectionhit = 0;
 printf("starting packet injection test (that can take up to two minutes)...\n");
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
+tvold.tv_sec = tv.tv_sec;
 while(1)
 	{
 	gettimeofday(&tv, NULL);
