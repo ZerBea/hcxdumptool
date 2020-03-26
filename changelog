@@ -1,5 +1,6 @@
 26.03.2020
 ==========
+Some drivers / firmwares provide only limited monitor functions instead of full packet injection capabilities.
 hcxdumptool: added packet injection test
 --check_injection                  : run packet injection test to determine that driver support full packet injection\n"
 
