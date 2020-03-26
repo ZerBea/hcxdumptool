@@ -4439,10 +4439,12 @@ tvold.tv_usec = tv.tv_usec;
 tvfd.tv_sec = 0;
 tvfd.tv_usec = FDUSECTIMER;
 cpa = 0;
-if(set_channel() == false) errorcount++;
+if(set_channel_injection() == false) errorcount++;
 send_proberequest_undirected_broadcast();
+attackstatus = 0;
 injectionhit = 0;
-printf("starting packet injection test (that will take up to one minute)...\n");
+printf("starting packet injection test (that can take up to two minutes)...\n");
+while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 while(1)
 	{
 	gettimeofday(&tv, NULL);
