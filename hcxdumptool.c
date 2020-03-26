@@ -3806,9 +3806,9 @@ static struct iwreq pwrq;
 
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
+pwrq.u.freq.e = 0;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 return true;
 }
