@@ -4513,7 +4513,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	injectionhit += zeiger->counthit;
 	}
 if(injectionhit != 0) printf("packet injection is working!\n");
-else printf("warning: no PROBERESPOND received - packet injection is not working!\n");
+else printf("warning: no PROBERESPONSE received - packet injection is not working!\n");
 globalclose();
 return;
 }
