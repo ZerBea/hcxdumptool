@@ -1,13 +1,11 @@
 05.04.2020
 ==========
 release v 6.0.5
-security fix: increase error count and terminate hcxdumptool if channel was changed by a third party tool
+Security fix: We do not want to disturb uninvolved users!
+Increase error count and terminate hcxdumptool if channel was changed by a third party tool.
 After transmitting a request, hcxdumptool expect an answer on the same channel.
-If the channel was changes by a third party tool, hcxdumptool will never get this answer and transmit again, again and again.
-This will jam the channel.
+If the channel was changed by a third party tool, hcxdumptool will never get this answer and transmit again, again and again. This will jam all channels, set by the third party tool.
 https://forum.hashkiller.io/index.php?threads/ap-less-attack-with-hcxtools.21036/page-4#post-237403
-
-
 04.04.2020
 ==========
 release v 6.0.4
