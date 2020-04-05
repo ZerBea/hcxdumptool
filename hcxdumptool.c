@@ -4611,7 +4611,7 @@ fp = popen(unwantedname,"r");
 if(fp)
 	{
 	pidptr = fgets(pidline, 1024, fp);
-	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s (possbile interfering hcxdumptool)\n", &unwantedname[6], pidline);
+	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s (possible interfering hcxdumptool)\n", &unwantedname[6], pidline);
 	pclose(fp);
 	}
 return;
