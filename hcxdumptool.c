@@ -159,6 +159,8 @@ static int myreactivebeaconsequence;
 
 static struct sock_fprog bpf;
 
+static int aktchannel;
+
 static uint16_t myapsequence;
 static uint16_t myclientsequence;
 
@@ -3799,6 +3801,26 @@ qsort(aplist, zeiger -aplist +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void get_channel()
+{
+static struct iwreq pwrq;
+static char timestring[16];
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.e = 0;
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return;
+if(aktchannel != pwrq.u.freq.m)
+	{
+	errorcount++;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL]\n", timestring, errorcount);
+	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	else printf("%s", servermsg);
+	}
+return;
+}
 /*===========================================================================*/
 static inline bool set_channel()
 {
@@ -3810,6 +3832,7 @@ pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
 pwrq.u.freq.e = 0;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
 }
 /*===========================================================================*/
@@ -4065,6 +4088,7 @@ while(1)
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
+		get_channel();
 		tvold.tv_sec = tv.tv_sec;
 		if(tv.tv_sec >= tvtot.tv_sec)
 			{
@@ -4334,6 +4358,7 @@ while(1)
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
+		get_channel();
 		cpa++;
 		if(channelscanlist[cpa] == 0) cpa = 0;
 		if(set_channel() == false)
@@ -4420,6 +4445,7 @@ pwrq.u.freq.e = 0;
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channeldefaultlist[cpa];
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
 }
 /*===========================================================================*/
@@ -4451,6 +4477,7 @@ while(1)
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
+		get_channel();
 		cpa++;
 		if(channeldefaultlist[cpa] == 0) break;
 		if(set_channel() == false) continue;
@@ -5556,6 +5583,7 @@ eapolmp34zeroedcount = 0;
 gpscount = 0;
 bpf.filter = NULL;
 bpf.len = 0;
+aktchannel = 0;
 signal(SIGINT, programmende);
 return true;
 }
