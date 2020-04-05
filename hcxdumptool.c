@@ -4621,9 +4621,11 @@ static inline void checkallunwanted()
 {
 static const char *networkmanager = "pidof NetworkManager";
 static const char *wpasupplicant = "pidof wpa_supplicant";
+static const char *airodumpng = "pidof airodump-ng";
 
 checkunwanted(networkmanager);
 checkunwanted(wpasupplicant);
+checkunwanted(airodumpng);
 return;
 }
 /*===========================================================================*/
