@@ -4611,7 +4611,7 @@ fp = popen(unwantedname,"r");
 if(fp)
 	{
 	pidptr = fgets(pidline, 1024, fp);
-	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s (service possbile interfering hcxdumptool)\n", &unwantedname[6], pidline);
+	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s (possbile interfering hcxdumptool)\n", &unwantedname[6], pidline);
 	pclose(fp);
 	}
 return;
@@ -4621,7 +4621,7 @@ static inline void checkallunwanted()
 {
 static const char *networkmanager = "pidof NetworkManager";
 static const char *wpasupplicant = "pidof wpa_supplicant";
-static const char *airodumpng = "pidof airodump-ng";
+static const char *airodumpng = "pidof lt-airodump-ng";
 
 checkunwanted(networkmanager);
 checkunwanted(wpasupplicant);
