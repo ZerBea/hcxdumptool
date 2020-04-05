@@ -4824,6 +4824,7 @@ static struct iw_param param;
 static struct sockaddr_ll ll;
 static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
+static struct ethtool_value edata;
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
@@ -4831,7 +4832,7 @@ memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
 checkallunwanted();
-if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a monitor interface\n", interfacename);
+if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a virtual monitor interface\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
 	perror("socket failed (do you have root privileges?)");
@@ -4895,7 +4896,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		}
 	if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		{
-		fprintf(stderr, "interface is not in monitor mode\n");
+		fprintf(stderr, "warning: interface is not in monitor mode\n");
 		return false;
 		}
 	ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
@@ -4913,7 +4914,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		}
 	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
 		{
-		fprintf(stderr, "interface may not be operational\n");
+		fprintf(stderr, "warning: interface is not up\n");
 		return false;
 		}
 	}
@@ -4974,19 +4975,34 @@ if(epmaddr->size != 6)
 	}
 memcpy(&mac_orig, epmaddr->data, 6);
 free(epmaddr);
+
 memset(&ifr, 0, sizeof(ifr));
 strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-drvinfo.cmd = ETHTOOL_GDRVINFO;
 ifr.ifr_data = (char*)&drvinfo;
+drvinfo.cmd = ETHTOOL_GDRVINFO;
 if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 	{
 	perror("failed to get driver information, ioctl(SIOCETHTOOL) not supported by driver");
-	free(epmaddr);
 	return false;
 	}
 memcpy(&drivername, drvinfo.driver, 32);
 memcpy(&driverversion, drvinfo.version, 32);
 memcpy(&driverfwversion, drvinfo.fw_version, ETHTOOL_FWVERS_LEN);
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+ifr.ifr_data = (char*)&edata;
+edata.cmd = ETHTOOL_GLINK;
+if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
+	{
+	perror("failed to get link information, ioctl(SIOCETHTOOL) not supported by driver");
+	return false;
+	}
+if(edata.data != 1)
+	{
+	fprintf(stderr, "warning: interface is not up\n");
+	return false;
+	}
 return true;
 }
 /*===========================================================================*/
@@ -6179,11 +6195,9 @@ if(monitormodeflag == true)
 		}
 	if(opensocket() == false)
 		{
-		fprintf(stderr, "failed to init socket\nhcxdumptool need full and exclusive access to the adapter\n"
-			"as well as write permission for the dumpfile\n"
-			"that is not the case\n"
-			"try to use ip link to bring interface down/up\n"
-			"and iw to set monitor mode\n");
+		fprintf(stderr, "failed to init socket\n"
+				"try to use iw to set monitor mode\n"
+				"try to use ip link to bring interface up\n");
 		exit(EXIT_FAILURE);
 		}
 	printf("setting interface %s to monitor mode\n", interfacename); 
@@ -6230,11 +6244,9 @@ if(bpfcname != NULL) readbpfc(bpfcname);
 if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
 	{
-	fprintf(stderr, "failed to init socket\nhcxdumptool need full and exclusive access to the adapter\n"
-			"as well as write permission for the dumpfile\n"
-			"that is not the case\n"
-			"try to use ip link to bring interface down/up\n"
-			"and iw to set monitor mode\n");
+	fprintf(stderr, "warning: failed to init socket\n"
+			"try to use iw to set monitor mode\n"
+			"try to use ip link to bring interface up\n");
 	errorcount++;
 	globalclose();
 	}
