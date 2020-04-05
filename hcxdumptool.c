@@ -4162,6 +4162,7 @@ while(1)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
 	else
 		{
+		get_channel();
 		if(beaconactiveflag == true) send_beacon_active();
 		tvfd.tv_sec = 0;
 		tvfd.tv_usec = FDUSECTIMER;
