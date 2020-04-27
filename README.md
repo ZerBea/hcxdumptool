@@ -48,6 +48,21 @@ make
 make install (as super user)
 ```
 
+Or install via packet manager
+--------------
+
+### Arch Linux
+[Arch Linux](https://www.archlinux.org/) 
+`pacman -S hcxtools`
+
+### Arch Linux ARM
+[Arch Linux ARM ](https://archlinuxarm.org/) 
+`pacman -S hcxtools`
+
+### Black Arch
+[Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
+`pacman -S hcxtools`
+
 
 Compile for Android
 --------------
