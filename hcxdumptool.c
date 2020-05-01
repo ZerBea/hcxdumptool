@@ -2942,7 +2942,7 @@ static inline void process80211action()
 static actf_t *actf;
 
 if(payloadlen < ACTIONFRAME_SIZE) return;
-actf = (actf_t*)packetptr;
+actf = (actf_t*)payloadptr;
 if(actf->categoriecode == CAT_VENDOR)
 	{
 	if(fd_pcapng > 0)
