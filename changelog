@@ -1,3 +1,18 @@
+01.05.2020
+==========
+hcxdumptool: added option mask to save vendor defined action frames
+-f <frames>    : frames to save
+                 bitmask:
+                  0: clear default values
+                  1: MANAGEMENT frames (default)
+                  2: EAP and EAPOL frames (default)
+                  4: IPV4 frames
+                  8: IPV6 frames
+                 16: WEP encrypted frames
+                 32: WPA encrypted frames
+                 64: vendor defined frames (AWDL)
+
+
 05.04.2020
 ==========
 release v 6.0.5
