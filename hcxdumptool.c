@@ -2939,6 +2939,18 @@ return;
 /*===========================================================================*/
 static inline void process80211action()
 {
+static actf_t *actf;
+
+if(payloadlen < ACTIONFRAME_SIZE) return;
+actf = (actf_t*)packetptr;
+if(actf->categoriecode == CAT_VENDOR)
+	{
+	if(fd_pcapng > 0)
+		{
+		if((pcapngframesout &PCAPNG_FRAME_VENDOR) == PCAPNG_FRAME_VENDOR) writeepb(fd_pcapng);
+		}
+	return;
+	}
 if((timestamp -lastauthtimestamp) > eapoltimeoutvalue) return;
 if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
 send_ack();
@@ -5647,6 +5659,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                  8: IPV6 frames\n"
 	"                 16: WEP encrypted frames\n"
 	"                 32: WPA encrypted frames\n"
+	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
 	"-c <digit>     : set scan list (1,2,3, ...)\n"
 	"                 default scan list: 1...13\n"
