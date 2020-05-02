@@ -4837,7 +4837,6 @@ static struct iw_param param;
 static struct sockaddr_ll ll;
 static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
-static struct ethtool_value edata;
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
@@ -4931,7 +4930,20 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		return false;
 		}
 	}
-else fprintf(stderr, "interface is already in monitor mode\n");
+else
+	{
+	fprintf(stderr, "interface is already in monitor mode\n");
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
+		{
+		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
+		}
+	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
+		{
+		fprintf(stderr, "warning: interface is not up\n");
+		}
+	}
 /* disable power management, if possible */
 memset(&iwr, 0, sizeof(iwr));
 strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
@@ -5001,21 +5013,6 @@ if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 memcpy(&drivername, drvinfo.driver, 32);
 memcpy(&driverversion, drvinfo.version, 32);
 memcpy(&driverfwversion, drvinfo.fw_version, ETHTOOL_FWVERS_LEN);
-
-memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-ifr.ifr_data = (char*)&edata;
-edata.cmd = ETHTOOL_GLINK;
-if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
-	{
-	perror("failed to get link information, ioctl(SIOCETHTOOL) not supported by driver");
-	return false;
-	}
-if(edata.data != 1)
-	{
-	fprintf(stderr, "warning: interface is not up\n");
-	return false;
-	}
 return true;
 }
 /*===========================================================================*/
