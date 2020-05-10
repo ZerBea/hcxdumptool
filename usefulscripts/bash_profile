@@ -5,11 +5,9 @@ export WLANDEV=`ls -1 /sys/class/net | grep ^wl`
 if [[ ! -z $WLANDEV ]]
 then
 	ARCHIVNAME=`date +'%Y%m%d%H%M'`
-	ip link set $WLANDEV down
-	iw dev $WLANDEV set type monitor
-	ip link set $WLANDEV up
-	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --poweroff --filterlist_ap=blacklistown --filtermode=1
-#	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --tot=1440 --filterlist_ap=blacklistown --filtermode=1 --disable_ap_attacks --disable_deauthentications -t 120
+	/opt/vc/bin/tvservice -o
+	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -f 79 -o $ARCHIVNAME.pcapng --poweroff --stop_ap_attacks=6000 --resume_ap_attacks=12000 --active_beacon
+#	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --tot=1440 --disable_deauthentication --disable_ap_attacks --active_beacon -c 1,3,5,7,9,11,2,4,6,8,10 -t 60
 	hcxret=$?
 	if [ $hcxret -eq 2 ]
 	then
@@ -18,6 +16,6 @@ then
 		poweroff
 	fi
 fi
-hcxpioff --gpio_button=4 --gpio_statusled=17 &
 systemctl start dhcpcd@eth0.service
 systemctl start sshd.service
+hcxpioff --gpio_button=4 --gpio_statusled=17 &
