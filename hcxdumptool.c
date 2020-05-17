@@ -3482,7 +3482,10 @@ static inline void process80211probe_req_directed()
 static macessidlist_t *zeiger;
 static tags_t tags;
 
-if(memcmp(&mac_myapopen, macfrx->addr1, 6) == 0) send_probe_resp_open();
+if(memcmp(&mac_myapopen, macfrx->addr1, 6) == 0)
+	{
+	if((attackstatus &SILENT) != SILENT) send_probe_resp_open();
+	}
 if(payloadlen < IETAG_SIZE) return;
 gettags(payloadlen, payloadptr, &tags);
 if((tags.essidlen == 0) || (tags.essid[0] == 0)) return;
@@ -3702,7 +3705,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		gettags(apinfolen, apinfoptr, &tags);
 		if((tags.essidlen == 0) || (tags.essid[0] == 0))
 			{
-			send_proberequest_undirected_broadcast();
+			if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 			return;
 			}
 		zeiger->timestamp = timestamp;
@@ -3806,7 +3809,10 @@ if(channelscanlist[cpa] == zeiger->channel)
 			if((attackstatus &DISABLE_DEAUTHENTICATION) != DISABLE_DEAUTHENTICATION) send_deauthentication2client(macfrx->addr1, macfrx->addr2, reasoncode);
 			}
 		}
-	else send_proberequest_undirected_broadcast();
+	else
+		{
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
+		}
 	}
 if((statusout &STATUS_AP_BEACON_PROBE) == STATUS_AP_BEACON_PROBE) printstatusap(macfrx->addr1, zeiger, "BEACON");
 qsort(aplist, zeiger -aplist +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
@@ -4478,7 +4484,7 @@ tvfd.tv_sec = 0;
 tvfd.tv_usec = FDUSECTIMER;
 cpa = 0;
 if(set_channel_injection() == false) errorcount++;
-send_proberequest_undirected_broadcast();
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
 injectionhit = 0;
 printf("starting packet injection test (that can take up to two minutes)...\n");
@@ -4511,7 +4517,7 @@ while(1)
 				}
 			incomingcountold = incomingcount;
 			}
-		send_proberequest_undirected_broadcast();
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
 	if(gpiobutton > 0)
 		{
@@ -4544,7 +4550,7 @@ while(1)
 		cpa++;
 		if(channeldefaultlist[cpa] == 0) break;
 		if(set_channel() == false) continue;
-		send_proberequest_undirected_broadcast();
+		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		tvfd.tv_sec = 0;
 		tvfd.tv_usec = FDUSECTIMER;
 		}
@@ -6015,9 +6021,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_SILENT:
-		attackstatus |= DISABLE_AP_ATTACKS;
-		attackstatus |= DISABLE_CLIENT_ATTACKS;
-		attackstatus |= DISABLE_DEAUTHENTICATION;
+		attackstatus = SILENT;
 		break;
 
 		case HCX_FILTERLIST_AP:
