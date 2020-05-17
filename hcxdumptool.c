@@ -4853,7 +4853,7 @@ checkallunwanted();
 if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a virtual monitor interface\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
-	perror("socket failed (do you have root privileges?)");
+	perror("socket failed");
 	return false;
 	}
 if(bpf.len > 0)
