@@ -5096,7 +5096,7 @@ return;
 static inline int readmaclist(char *listname, maclist_t *maclist)
 {
 static int len;
-static int c;
+static int c, i, o;
 static int entries;
 static maclist_t *zeiger;
 static FILE *fh_filter;
@@ -5122,6 +5122,15 @@ while(entries < FILTERLIST_MAX)
 		{
 		c++;
 		continue;
+		}
+	o = 0;
+	for(i = 0; i < len; i++)
+		{
+		if(isxdigit(linein[i]))
+			{
+			linein[o] = linein[i];
+			o++;
+			}
 		}
 	if(hex2bin(&linein[0x0], zeiger->mac, 6) == true)
 		{
@@ -5727,11 +5736,11 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                       $ hcxumptool -i <interface> --bpfc=attack.bpf ...\n"
 	"                                     see man pcap-filter for a list of all filter options\n"
 	"--filterlist_ap=<file>             : ACCESS POINT MAC filter list\n"
-	"                                     format: 112233445566 + comment\n"
+	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment\n"
 	"                                     maximum entries %d\n"
 	"                                     run first --do_rcascan to retrieve information about the target\n"
 	"--filterlist_client=<file>         : CLIENT MAC filter list\n"
-	"                                     format: 112233445566 # comment\n"
+	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment\n"
 	"                                     maximum entries %d\n"
 	"                                     due to MAC randomization of the CLIENT, it does not always work!\n"
 	"--filtermode=<digit>               : mode for filter list\n"
@@ -5745,10 +5754,6 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
 	"                                     will be saved to pcapng to inform hcxpcaptool\n"
 	"                                     default: %s\n"
-	"--mac_ap                           : use this MAC as ACCESS POINT MAC instead of a randomized one\n"
-	"                                     format: 112233445566\n"
-	"--mac_client                       : use this MAC as CLIENT MAC instead of a randomized one\n"
-	"                                     format: 112233445566\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
 	"--active_beacon                    : transmit beacon once every %d usec\n"
