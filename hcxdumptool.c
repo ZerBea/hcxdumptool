@@ -5806,6 +5806,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"It is much better to run gzip to compress the files. Wireshark, tshark and hcxpcapngtool will understand this.\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"If you use GPS, make sure GPS device is inserted and has a GPS FIX, before you start hcxdumptool!\n"
+	"Important notice:\n"
+	"Using filter options, will cause that some useful frames are filtered out!\n"
+	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
+
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
 	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
