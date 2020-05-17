@@ -1,3 +1,9 @@
+17.05.2020
+==========
+hcxdumptool: fixed issue that caused hcxdumptool to respond on probereuest even if --silent is selcted
+             allow MAC format 11:22:33:44:55:66 and 11-22-33-44-55-66 in filterlists
+
+
 01.05.2020
 ==========
 hcxdumptool: added option mask to save vendor defined action frames
