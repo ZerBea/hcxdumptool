@@ -5735,7 +5735,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                        do not interact with ACCESS POINTs and CLIENTs from this list\n"
 	"                                     2: use filter list as target list\n"
 	"                                        only interact with ACCESS POINTs and CLIENTs from this list\n"
-	"                                        not recommended, because some useful frames will be filtered out\n"
+	"                                        not recommended, because some useful frames could be filtered out\n"
 	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
 	"                                     will be saved to pcapng to inform hcxpcaptool\n"
 	"                                     default: %s\n"
@@ -5807,9 +5807,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"If you use GPS, make sure GPS device is inserted and has a GPS FIX, before you start hcxdumptool!\n"
 	"Important notice:\n"
-	"Using filter options, will cause that some useful frames are filtered out!\n"
+	"Using filter options, could cause that some useful frames are filtered out!\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
-
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
 	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
