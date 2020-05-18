@@ -3880,6 +3880,8 @@ static inline void process_packet()
 static uint32_t rthl;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
+gettimeofday(&tv, NULL);
+timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
 if(packetlen == 0)
 	{
 	fprintf(stderr, "\ninterface went down\n");
@@ -3900,13 +3902,6 @@ if(packetlen < (int)RTH_SIZE)
 	errorcount++;
 	return;
 	}
-if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
-	{
-	perror("\nfailed to get time stamp");
-	errorcount++;
-	return;
-	}
-timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
 incomingcount++;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
