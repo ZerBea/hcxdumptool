@@ -1,3 +1,9 @@
+18.05.2020
+==========
+hcxdumptool: added new option --do_targetscan
+--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target
+
+
 17.05.2020
 ==========
 hcxdumptool: fixed issue that caused hcxdumptool to respond on probereuest even if --silent is selcted

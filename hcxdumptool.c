@@ -78,6 +78,7 @@ static FILE *fh_nmea;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
+static bool targetscanflag;
 static bool totflag;
 static bool poweroffflag;
 static bool rebootflag;
@@ -4215,6 +4216,10 @@ static uint8_t *apinfoptr;
 static scanlist_t *zeiger;
 static tags_t tags;
 
+if(targetscanflag == true)
+	{
+	if(memcmp(&lastap, macfrx->addr2, 6) != 0) return;
+	}
 if(payloadlen < CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
@@ -4250,6 +4255,10 @@ static uint8_t *apinfoptr;
 static scanlist_t *zeiger;
 static tags_t tags;
 
+if(targetscanflag == true)
+	{
+	if(memcmp(&lastap, macfrx->addr2, 6) != 0) return;
+	}
 if(payloadlen < CAPABILITIESAP_SIZE +IETAG_SIZE) return;
 apinfoptr = payloadptr +CAPABILITIESAP_SIZE;
 apinfolen = payloadlen -CAPABILITIESAP_SIZE;
@@ -5698,6 +5707,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     use this mode to collect data for the filter list\n"
 	"                                     run this mode at least for 2 minutes\n"
 	"                                     to save all received raw packets use option -o\n"
+	"--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target\n"
 	"--reason_code=<digit>              : deauthentication reason code\n"
 	"                                      recommended codes:\n"
 	"                                      1 WLAN_REASON_UNSPECIFIED\n"
@@ -5838,6 +5848,7 @@ int main(int argc, char *argv[])
 {
 static int auswahl;
 static int index;
+static int l, p1, p2;
 static long int totvalue;
 static int mccliport;
 static int mcsrvport;
@@ -5858,6 +5869,7 @@ static const char *short_options = "i:o:f:c:t:m:IChv";
 static const struct option long_options[] =
 {
 	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
+	{"do_targetscan",		required_argument,	NULL,	HCX_DO_TARGETSCAN},
 	{"reason_code",			required_argument,	NULL,	HCX_DEAUTH_REASON_CODE},
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
 	{"disable_ap_attacks",		no_argument,		NULL,	HCX_DISABLE_AP_ATTACKS},
@@ -5921,6 +5933,7 @@ attackresumecount = ATTACKRESUME_MAX;
 reasoncode = WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA;
 myoui_client = 0;
 rcascanflag = false;
+targetscanflag = false;
 beaconactiveflag = false;
 beaconfloodflag = false;
 checkdriverflag = false;
@@ -5988,6 +6001,31 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_DO_RCASCAN:
 		rcascanflag = true;
+		break;
+
+		case HCX_DO_TARGETSCAN:
+		rcascanflag = true;
+		targetscanflag = true;
+		l= strlen(optarg);
+		if((l < 12) || (l > 17))
+			{
+			fprintf(stderr, "error wrong MAC size %s (alowed: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66)\n", optarg);
+			exit(EXIT_FAILURE);
+			}
+		p2 = 0;
+		for(p1 = 0; p1 < l; p1++)
+			{
+			if(isxdigit(optarg[p1]))
+				{
+				optarg[p2] = optarg[p1];
+				p2++;
+				}
+			}
+		if(hex2bin(optarg, lastap, 6) == false)
+			{
+			fprintf(stderr, "error wrong MAC size %s (alowed: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66)\n", optarg);
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		case HCX_DEAUTH_REASON_CODE:
