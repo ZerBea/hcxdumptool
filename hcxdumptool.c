@@ -1142,8 +1142,7 @@ static const uint8_t wpa2data[] =
 };
 #define WPA2_SIZE sizeof(wpa2data)
 
-gettimeofday(&tv, NULL);
-timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
+timestamp += 1;
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +100);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
@@ -1199,8 +1198,7 @@ static const uint8_t wpa1data[] =
 };
 #define WPA1_SIZE sizeof(wpa1data)
 
-gettimeofday(&tv, NULL);
-timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
+timestamp += 1;
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +100);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
