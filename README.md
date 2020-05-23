@@ -132,6 +132,7 @@ No support for a driver which doesn't support monitor and packet injection, nati
 Not recommended WiFi chipsets:
 
 Intel PRO/Wireless
+
 Broadcom
 
 
