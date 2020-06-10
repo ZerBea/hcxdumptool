@@ -1,3 +1,11 @@
+10.06.2020
+==========
+hcxdumptool: changed behavior of --essidlist and --active_beacon
+             according to https://github.com/ZerBea/hcxdumptool/issues/115
+             --essidlist - transmit beacons from this list only
+             --active_beacon - transmit beacons from collected ESSIDs and from essidlist 
+
+
 21.05.2020
 ==========
 release v 6.0.6

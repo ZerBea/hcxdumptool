@@ -147,6 +147,9 @@ static maclist_t *filterclientlist;
 static macessidlist_t *aplist;
 static macessidlist_t *rglist;
 static macessidlist_t *rgbeaconptr;
+static macessidlist_t *rgbeaconlist;
+static macessidlist_t *rgbeaconlistptr;
+
 static ownlist_t *ownlist;
 static pmklist_t *pmklist;
 
@@ -359,6 +362,7 @@ if(filteraplist != NULL) free(filteraplist);
 if(filterclientlist != NULL) free(filterclientlist);
 if(aplist != NULL) free(aplist);
 if(rglist != NULL) free(rglist);
+if(rgbeaconlist != NULL) free(rgbeaconlist);
 if(ownlist != NULL) free(ownlist);
 if(pmklist != NULL) free(pmklist);
 if(pagidlist != NULL) free(pagidlist);
@@ -1754,6 +1758,75 @@ outgoingcount++;
 rgbeaconptr++;
 if(rgbeaconptr >= rglist +RGLIST_MAX) rgbeaconptr = rglist;
 if(rgbeaconptr->timestamp == 0) rgbeaconptr = rglist;
+return;
+}
+/*===========================================================================*/
+static inline void send_beacon_list_active()
+{
+static mac_t *macftx;
+static capap_t *capap;
+static const uint8_t reactivebeacondata[] =
+{
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: DS Parameter set: Current Channel: 1 */
+0x03, 0x01, 0x01,
+/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
+0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
+/* Tag: ERP Information */
+0x2a, 0x01, 0x04,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: RSN Information WPA1 & WPA2 PSK */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0c,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+};
+#define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
+
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +REACTIVEBEACON_SIZE +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_BEACON;
+memcpy(macftx->addr1, &mac_broadcast, 6);
+memcpy(macftx->addr2, rgbeaconlistptr->ap, 6);
+memcpy(macftx->addr3, rgbeaconlistptr->ap, 6);
+macftx->sequence = myreactivebeaconsequence++ << 4;
+if(myreactivebeaconsequence >= 4096) myreactivebeaconsequence = 1;
+capap = (capap_t*)(packetoutptr +HDRRT_SIZE +MAC_SIZE_NORM);
+capap->timestamp = mytime++;
+capap->beaconintervall = BEACONINTERVALL;
+capap->capabilities = 0x411;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconlistptr->essidlen;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconlistptr->essid, rgbeaconlistptr->essidlen);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, REACTIVEBEACON_SIZE);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +0x0c] = channelscanlist[cpa];
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +REACTIVEBEACON_SIZE) < 0)
+	{
+	perror("\nfailed to transmit internal beacon");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+rgbeaconlistptr++;
+if(rgbeaconlistptr >= rgbeaconlist +RGLIST_MAX) rgbeaconlistptr = rgbeaconlist;
+if(rgbeaconlistptr->timestamp == 0) rgbeaconlistptr = rgbeaconlist;
 return;
 }
 /*===========================================================================*/
@@ -4094,6 +4167,7 @@ if(beaconactiveflag == true)
 	send_beacon_open();
 	send_beacon_hidden();
 	}
+if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 while(1)
 	{
 	gettimeofday(&tv, NULL);
@@ -4138,6 +4212,7 @@ while(1)
 				send_beacon_open();
 				send_beacon_hidden();
 				}
+			if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 			}
 		if((tv.tv_sec %60) == 0)
 			{
@@ -4175,6 +4250,7 @@ while(1)
 		{
 		get_channel();
 		if(beaconactiveflag == true) send_beacon_active();
+		if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 		tvfd.tv_sec = 0;
 		tvfd.tv_usec = FDUSECTIMER;
 		}
@@ -5069,7 +5145,8 @@ if((fh_extbeacon = fopen(listname, "r")) == NULL)
 	fprintf(stderr, "failed to open beacon list %s\n", listname);
 	return;
 	}
-zeiger = rglist;
+if(beaconactiveflag == true) zeiger = rglist;
+else zeiger = rgbeaconlist;
 beaconextlistlen = 0;
 gettimeofday(&tv, NULL);
 timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec -512;
@@ -5550,6 +5627,8 @@ if((filterclientlist = (maclist_t*)calloc((FILTERLIST_MAX +1), MACLIST_SIZE)) ==
 if((aplist = (macessidlist_t*)calloc((APLIST_MAX +1), MACESSIDLIST_SIZE)) == NULL) return false;
 if((rglist = (macessidlist_t*)calloc((RGLIST_MAX +1), MACESSIDLIST_SIZE)) == NULL) return false;
 rgbeaconptr = rglist;
+if((rgbeaconlist = (macessidlist_t*)calloc((RGLIST_MAX +1), MACESSIDLIST_SIZE)) == NULL) return false;
+rgbeaconlistptr = rgbeaconlist;
 if((ownlist = (ownlist_t*)calloc((OWNLIST_MAX +1), OWNLIST_SIZE)) == NULL) return false;
 if((pmklist = (pmklist_t*)calloc((PMKLIST_MAX +1), PMKLIST_SIZE)) == NULL) return false;
 if((pagidlist = (pagidlist_t*)calloc((PAGIDLIST_MAX +1), PAGIDLIST_SIZE)) == NULL) return false;
@@ -5762,7 +5841,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default: %s\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
-	"--active_beacon                    : transmit beacon once every %d usec\n"
+	"--active_beacon                    : transmit beacon from collected ESSIDs and from essidlist once every %d usec\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
 	"                                     affected: ap-less\n"
