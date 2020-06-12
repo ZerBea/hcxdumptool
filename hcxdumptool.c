@@ -696,12 +696,12 @@ static suite_t *asuiteptr;
 wpaptr = (wpaie_t*)ieptr;
 wpalen -= WPAIE_SIZE;
 ieptr += WPAIE_SIZE;
-if(memcmp(wpaptr->oui, &mscorp, 3) != 0) return;
+if(memcmp(wpaptr->oui, &ouimscorp, 3) != 0) return;
 if(wpaptr->ouitype != 1) return;
 if(wpaptr->type != VT_WPA_IE) return;
 zeiger->kdversion |= KV_WPAIE;
 gsuiteptr = (suite_t*)ieptr;
-if(memcmp(gsuiteptr->oui, &mscorp, 3) == 0)
+if(memcmp(gsuiteptr->oui, &ouimscorp, 3) == 0)
 	{
 	if(gsuiteptr->type == CS_WEP40) zeiger->groupcipher |= TCS_WEP40;
 	if(gsuiteptr->type == CS_TKIP) zeiger->groupcipher |= TCS_TKIP;
@@ -719,7 +719,7 @@ ieptr += SUITECOUNT_SIZE;
 for(c = 0; c < csuitecountptr->count; c++)
 	{
 	csuiteptr = (suite_t*)ieptr;
-	if(memcmp(csuiteptr->oui, &mscorp, 3) == 0)
+	if(memcmp(csuiteptr->oui, &ouimscorp, 3) == 0)
 		{
 		if(csuiteptr->type == CS_WEP40) zeiger->cipher |= TCS_WEP40;
 		if(csuiteptr->type == CS_TKIP) zeiger->cipher |= TCS_TKIP;
@@ -739,7 +739,7 @@ ieptr += SUITECOUNT_SIZE;
 for(c = 0; c < asuitecountptr->count; c++)
 	{
 	asuiteptr = (suite_t*)ieptr;
-	if(memcmp(asuiteptr->oui, &mscorp, 3) == 0)
+	if(memcmp(asuiteptr->oui, &ouimscorp, 3) == 0)
 		{
 		if(asuiteptr->type == AK_PMKSA) zeiger->akm |= TAK_PMKSA;
 		if(asuiteptr->type == AK_PSK) zeiger->akm |= TAK_PSK;
@@ -763,7 +763,7 @@ static inline void gettagvendor(int vendorlen, uint8_t *ieptr, tags_t *zeiger)
 static wpaie_t *wpaptr;
 
 wpaptr = (wpaie_t*)ieptr;
-if(memcmp(wpaptr->oui, &mscorp, 3) != 0) return;
+if(memcmp(wpaptr->oui, &ouimscorp, 3) != 0) return;
 if((wpaptr->ouitype == VT_WPA_IE) && (vendorlen >= WPAIE_LEN_MIN)) gettagwpa(vendorlen, ieptr, zeiger);
 return;
 }
