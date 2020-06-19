@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 #include <ctype.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -5771,6 +5770,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"-I             : show WLAN interfaces and quit\n"
 	"-C             : show available channels and quit\n"
 	"                 if no channels are available, interface is probably in use or doesn't support monitor mode\n"
+	"-h             : show this help\n"
+	"-v             : show version\n"
 	"\n"
 	"long options:\n"
 	"--do_rcascan                       : show radio channel assignment (scan for target access points)\n"
