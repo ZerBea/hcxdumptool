@@ -5986,6 +5986,8 @@ auswahl = -1;
 index = 0;
 optind = 1;
 optopt = 0;
+gpiobutton = 0;
+gpiostatusled = 0;
 interfacename = NULL;
 pcapngoutname = NULL;
 filteraplistname = NULL;
@@ -6027,6 +6029,7 @@ mcsrvport = MCPORT;
 tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
 eapoltimeoutvalue = EAPOLTIMEOUT;
+
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
 	switch (auswahl)
