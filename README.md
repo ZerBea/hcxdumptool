@@ -4,7 +4,7 @@ hcxdumptool
 Small tool to capture packets from wlan devices.
 After capturing, upload the "uncleaned" cap here (https://wpa-sec.stanev.org/?submit)
 to see if your ap or the client is vulnerable by using common wordlists.
-Convert the cap to hccapx and/or to WPA-PMKID-PBKDF2 hashline (16800) with hcxpcaptool (hcxtools)
+Convert the pcapng file to WPA-PBKDF2-PMKID+EAPOL hashline (22000) with hcxpcapngtool (hcxtools)
 and check if wlan-key or plainmasterkey was transmitted unencrypted.
 
 
@@ -32,7 +32,7 @@ cd hcxdumptool
 ```
 
 Solve dependencies (Debian based distributions: KALI, UBUNTU, ...) 
---------------
+-------------- 
 
 You need to install missing dependencies before running `make`:
 
@@ -256,28 +256,25 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
   (depend on selected options)
 
 * hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
-  (use hcxpcaptool to save them to file)
+  (use hcxpcapngtool to save them to file)
 
 * hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
-  (use hcxpcaptool to save them to file)
+  (use hcxpcapngtool to save them to file)
 
 * hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
-  (use hcxpcaptool to save them to file)
+  (use hcxpcapngtool to save them to file)
 
 * hcxdumptool is able to capture passwords from the wlan traffic
-  (use hcxpcaptool -E to save them to file, together with networknames)
-
-* hcxdumptool is able to capture plainmasterkeys from the wlan traffic
-  (use hcxpcaptool -P to save them to file)
+  (use hcxpcapngtool -E to save them to file, together with networknames)
 
 * hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS)
-  (hcxpcaptool will show you information about them)
+  (hcxpcapngtool will show you information about them)
 
 * hcxdumptool is able to capture identities from the wlan traffic
-  (for example: request IMSI numbers from mobile phones - use hcxpcaptool -I to save them to file)
+  (for example: request IMSI numbers from mobile phones - use hcxpcapngtool -I to save them to file)
 
 * hcxdumptool is able to capture usernames from the wlan traffic
-  (for example: user name of a server authentication - use hcxpcaptool -U to save them to file)
+  (for example: user name of a server authentication - use hcxpcapngtool -U to save them to file)
 
 * Do not use a logical interface and leave the physical interface in managed mode
 
