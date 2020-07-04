@@ -5644,6 +5644,7 @@ mac_myaphidden[0] = (myoui_ap >> 16) & 0xff;
 mynic_ap++;
 mac_myapopen[5] = mynic_ap & 0xff;
 mac_myapopen[4] = (mynic_ap >> 8) & 0xff;
+mac_myapopen[3] = (mynic_ap >> 16) & 0xff;
 mac_myapopen[2] = myoui_ap & 0xff;
 mac_myapopen[1] = (myoui_ap >> 8) & 0xff;
 mac_myapopen[0] = (myoui_ap >> 16) & 0xff;
