@@ -3645,7 +3645,8 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		if((tags.essidlen == 0) || (tags.essid[0] == 0)) return;
 		zeiger->timestamp = timestamp;
 		memcpy(zeiger->ap, macfrx->addr2, 6);
-		zeiger->channel = tags.channel;
+		if(tags.channel != 0) zeiger->channel = tags.channel;
+		else zeiger->channel = channelscanlist[cpa];
 		zeiger->kdversion = tags.kdversion;
 		zeiger->groupcipher = tags.groupcipher;
 		zeiger->cipher = tags.cipher;
@@ -3670,7 +3671,8 @@ gettags(apinfolen, apinfoptr, &tags);
 zeiger->timestamp = timestamp;
 zeiger->status = AP_PROBE_RESP;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-zeiger->channel = tags.channel;
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
 zeiger->kdversion = tags.kdversion;
 zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
@@ -3781,7 +3783,8 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 			}
 		zeiger->timestamp = timestamp;
 		memcpy(zeiger->ap, macfrx->addr2, 6);
-		zeiger->channel = tags.channel;
+		if(tags.channel != 0) zeiger->channel = tags.channel;
+		else zeiger->channel = channelscanlist[cpa];
 		zeiger->kdversion = tags.kdversion;
 		zeiger->groupcipher = tags.groupcipher;
 		zeiger->cipher = tags.cipher;
@@ -3847,7 +3850,8 @@ gettags(apinfolen, apinfoptr, &tags);
 zeiger->timestamp = timestamp;
 zeiger->status = AP_BEACON;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-zeiger->channel = tags.channel;
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
 zeiger->kdversion = tags.kdversion;
 zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
@@ -4299,6 +4303,8 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	zeiger->count +=1;
 	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 	gettags(apinfolen, apinfoptr, &tags);
+	if(tags.channel != 0) zeiger->channel = tags.channel;
+	else zeiger->channel = channelscanlist[cpa];
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 	return;
@@ -4309,7 +4315,8 @@ zeiger->timestamp = timestamp;
 if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit = 1;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-zeiger->channel = tags.channel;
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
@@ -4347,7 +4354,8 @@ memset(zeiger, 0, SCANLIST_SIZE);
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-zeiger->channel = tags.channel;
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
@@ -4530,20 +4538,6 @@ while(1)
 return;
 }
 /*===========================================================================*/
-static inline bool set_channel_injection()
-{
-static struct iwreq pwrq;
-
-memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-pwrq.u.freq.e = 0;
-pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = channeldefaultlist[cpa];
-if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
-if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
-return true;
-}
-/*===========================================================================*/
 static inline void process_fd_injection()
 {
 static uint64_t incomingcountold;
@@ -4560,7 +4554,7 @@ tvold.tv_usec = tv.tv_usec;
 tvfd.tv_sec = 0;
 tvfd.tv_usec = FDUSECTIMER;
 cpa = 0;
-if(set_channel_injection() == false) errorcount++;
+if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
 injectionhit = 0;
@@ -4574,7 +4568,7 @@ while(1)
 		{
 		get_channel();
 		cpa++;
-		if(channeldefaultlist[cpa] == 0) break;
+		if(channelscanlist[cpa] == 0) break;
 		if(set_channel() == false) continue;
 		tvold.tv_sec = tv.tv_sec;
 		if((tv.tv_sec %5) == 0)
@@ -4625,7 +4619,7 @@ while(1)
 	else
 		{
 		cpa++;
-		if(channeldefaultlist[cpa] == 0) break;
+		if(channelscanlist[cpa] == 0) break;
 		if(set_channel() == false) continue;
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		tvfd.tv_sec = 0;
@@ -5957,7 +5951,7 @@ static const struct option long_options[] =
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
-	{"bpfc	",			required_argument,	NULL,	HCX_BPFC},
+	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},

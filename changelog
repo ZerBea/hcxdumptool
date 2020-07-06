@@ -1,3 +1,9 @@
+06.07.2020
+==========
+hcxdumptool: allow to set channel (-c) on --check_injection
+             fixed display channel if tags.channel is empty
+
+
 15.06.2020
 ==========
 release v 6.0.7
