@@ -35,6 +35,7 @@
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
 #define HCX_CHANNEL			'c'
+#define HCX_SCANLIST			's'
 #define HCX_STAYTIME			't'
 #define HCX_SHOW_INTERFACES		'I'
 #define HCX_SHOW_CHANNELS		'C'

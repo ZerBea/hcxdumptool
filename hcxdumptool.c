@@ -195,7 +195,7 @@ static const uint8_t hdradiotap[] =
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
-static uint8_t channeldefaultlist[] =
+const uint8_t channeldefaultlist[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68,
@@ -205,6 +205,24 @@ static uint8_t channeldefaultlist[] =
 149, 151, 153, 155, 157, 159, 161,
 161, 165, 169, 173,
 0
+};
+
+const uint8_t channelscanlist1[] =
+{
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
+};
+
+const uint8_t channelscanlist2[] =
+{
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
+132, 136, 140, 149, 153, 157, 161, 165, 0
+};
+
+const uint8_t channelscanlist3[] =
+{
+36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
+132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
 static uint8_t channelscanlist[128] =
@@ -5762,6 +5780,11 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128\n"
 	"                 132, 134, 136, 138, 140, 142, 144, 149, 151, 153, 155, 157, 159\n"
 	"                 161, 165, 169, 173\n"
+	"-s <digit>     : set scan predefined scanlist\n"
+	"                 0 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (default)\n"
+	"                 1 = 1,2,3,4,5,6,7,8,9,10,11,12,13\n"
+	"                 2 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
+	"                 3 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default %d seconds\n"
 	"-m <interface> : set monitor mode by ioctl() system call and quit\n"
@@ -5925,6 +5948,7 @@ int main(int argc, char *argv[])
 static int auswahl;
 static int index;
 static int l, p1, p2;
+static int sl;
 static long int totvalue;
 static int mccliport;
 static int mcsrvport;
@@ -5941,7 +5965,7 @@ static char *bpfcname;
 static char *extaplistname;
 static char *nmeaoutname;
 static char *weakcandidateuser;
-static const char *short_options = "i:o:f:c:t:m:IChv";
+static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
 	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
@@ -6003,6 +6027,7 @@ maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
 fh_nmea = NULL;
 fd_pcapng = 0;
+sl = 0;
 cpa = 0;
 staytime = STAYTIME;
 attackcount = staytime *10;
@@ -6056,6 +6081,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		if(processuserscanlist(optarg) == false)
 			{
 			fprintf(stderr, "unknown channel selected\n");
+			exit (EXIT_FAILURE);
+			}
+		break;
+
+		case HCX_SCANLIST:
+		sl = strtol(optarg, NULL, 10); 
+		if(sl > 3)
+			{
+			fprintf(stderr, "no predefined scanlist available\n");
 			exit (EXIT_FAILURE);
 			}
 		break;
@@ -6345,6 +6379,33 @@ if(monitormodeflag == true)
 	}
 
 printf("initialization...\n");
+if(sl == 1)
+	{
+	while(channelscanlist1[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist1[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+if(sl == 2)
+	{
+	while(channelscanlist2[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist2[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+if(sl == 3)
+	{
+	while(channelscanlist3[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist3[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
