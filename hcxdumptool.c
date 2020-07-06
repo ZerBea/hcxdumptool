@@ -4301,24 +4301,24 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
-	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 	gettags(apinfolen, apinfoptr, &tags);
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	else zeiger->channel = channelscanlist[cpa];
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 	return;
 	}
 gettags(apinfolen, apinfoptr, &tags);
 memset(zeiger, 0, SCANLIST_SIZE);
 zeiger->timestamp = timestamp;
-if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit = 1;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 if(tags.channel != 0) zeiger->channel = tags.channel;
 else zeiger->channel = channelscanlist[cpa];
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
+if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
 return;
 }
@@ -4631,11 +4631,8 @@ while(1)
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
-	if(zeiger->channel <= 14)
-		{
-		injectionhit += zeiger->counthit;
-		injectioncount += zeiger->count;
-		}
+	injectionhit += zeiger->counthit;
+	injectioncount += zeiger->count;
 	}
 if(injectionhit != 0) printf("packet injection is working! Ratio: %" PRIu64 " to %" PRIu64" \n", injectioncount, injectionhit);
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
@@ -5894,8 +5891,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                   : default port: %d\n"
 	"--check_driver                     : run several tests to determine that driver support all(!) required ioctl() system calls\n"
 	"--check_injection                  : run packet injection test to determine that driver support full packet injection\n"
+	"                                     default test list: 1...13\n"
+	"                                     to test injection on 5GHz channels use option -c in combination with 5GHz channels (e.g.: -c 50,52,54,56,58,100)\n"
 	"                                     the driver must support monitor mode and full packet injection\n"
-	"                                     use channel option -c to test 5GHz channels (e.g.: -v 52,56,100)\n"
 	"                                     otherwise hcxdumptool will not work as expected\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
