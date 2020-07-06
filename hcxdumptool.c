@@ -4545,6 +4545,7 @@ static int sd;
 static int fdnum;
 static fd_set readfds;
 static uint64_t injectionhit;
+static uint64_t injectioncount;
 static scanlist_t *zeiger;
 static struct timeval tvfd;
 
@@ -4558,6 +4559,7 @@ if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
 injectionhit = 0;
+injectioncount = 0;
 printf("starting packet injection test (that can take up to two minutes)...\n");
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -4629,9 +4631,13 @@ while(1)
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
-	injectionhit += zeiger->counthit;
+	if(zeiger->channel <= 14)
+		{
+		injectionhit += zeiger->counthit;
+		injectioncount += zeiger->count;
+		}
 	}
-if(injectionhit != 0) printf("packet injection is working!\n");
+if(injectionhit != 0) printf("packet injection is working! Ratio: %" PRIu64 " to %" PRIu64" \n", injectioncount, injectionhit);
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 globalclose();
 return;
@@ -5889,6 +5895,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--check_driver                     : run several tests to determine that driver support all(!) required ioctl() system calls\n"
 	"--check_injection                  : run packet injection test to determine that driver support full packet injection\n"
 	"                                     the driver must support monitor mode and full packet injection\n"
+	"                                     use channel option -c to test 5GHz channels (e.g.: -v 52,56,100)\n"
 	"                                     otherwise hcxdumptool will not work as expected\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
