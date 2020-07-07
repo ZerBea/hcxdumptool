@@ -4677,7 +4677,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	injectionhit += zeiger->counthit;
 	injectioncount += zeiger->count;
 	}
-if(injectionhit != 0) printf("packet injection is working! Ratio: %" PRIu64 " to %" PRIu64" \n", injectioncount, injectionhit);
+if(injectionhit != 0) printf("packet injection is working!\nratio: %" PRIu64 " to %" PRIu64" \n", injectioncount, injectionhit);
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 globalclose();
 return;
