@@ -192,7 +192,6 @@ static const uint8_t hdradiotap[] =
 0x14, /* tx power */
 0x01, /* antenna */
 0x08, 0x00 /* tx flags */
-
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
