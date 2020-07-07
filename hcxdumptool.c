@@ -86,6 +86,7 @@ static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
 static bool infinityflag;
+static int sl;
 static int errorcount;
 static int maxerrorcount;
 static int pmkidcount;
@@ -214,16 +215,17 @@ const uint8_t channelscanlist1[] =
 
 const uint8_t channelscanlist2[] =
 {
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
 const uint8_t channelscanlist3[] =
 {
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
+
 
 static uint8_t channelscanlist[128] =
 {
@@ -4317,23 +4319,33 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	{
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
-	zeiger->timestamp = timestamp;
-	zeiger->count +=1;
 	gettags(apinfolen, apinfoptr, &tags);
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	else zeiger->channel = channelscanlist[cpa];
+	zeiger->timestamp = timestamp;
+	zeiger->count +=1;
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
 	return;
 	}
-gettags(apinfolen, apinfoptr, &tags);
 memset(zeiger, 0, SCANLIST_SIZE);
+gettags(apinfolen, apinfoptr, &tags);
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
+if((sl == 1) && (zeiger->channel) > 14)
+	{
+	zeiger->channel = 0;
+	return;
+	}
+if((sl == 2) && (zeiger->channel) <= 14)
+	{
+	zeiger->channel = 0;
+	return;
+	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
@@ -4359,6 +4371,9 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	{
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+	gettags(apinfolen, apinfoptr, &tags);
+	if(tags.channel != 0) zeiger->channel = tags.channel;
+	else zeiger->channel = channelscanlist[cpa];
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
 	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
@@ -4367,13 +4382,23 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 		}
 	return;
 	}
-gettags(apinfolen, apinfoptr, &tags);
 memset(zeiger, 0, SCANLIST_SIZE);
+gettags(apinfolen, apinfoptr, &tags);
+if(tags.channel != 0) zeiger->channel = tags.channel;
+else zeiger->channel = channelscanlist[cpa];
+if((sl == 1) && (zeiger->channel) > 14)
+	{
+	zeiger->channel = 0;
+	return;
+	}
+if((sl == 2) && (zeiger->channel) <= 14)
+	{
+	zeiger->channel = 0;
+	return;
+	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
-if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
@@ -5948,7 +5973,6 @@ int main(int argc, char *argv[])
 static int auswahl;
 static int index;
 static int l, p1, p2;
-static int sl;
 static long int totvalue;
 static int mccliport;
 static int mcsrvport;
