@@ -423,6 +423,7 @@ return;
 static inline void reloadfiles(int signum)
 {
 if((signum == SIGHUP) && (filteraplistname || filterclientlistname || bpfcname || extaplistname)) reloadfilesflag = true;
+return;
 }
 /*===========================================================================*/
 static inline size_t chop(char *buffer, size_t len)
