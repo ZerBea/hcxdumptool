@@ -65,6 +65,11 @@ static char *interfacename;
 static char *pcapngoutname;
 static char *gpsname;
 
+static char *filteraplistname;
+static char *filterclientlistname;
+static char *bpfcname;
+static char *extaplistname;
+
 static int fd_socket;
 static int fd_gps;
 static int fd_pcapng;
@@ -82,6 +87,7 @@ static bool totflag;
 static bool poweroffflag;
 static bool rebootflag;
 static bool wantstopflag;
+static bool reloadfilesflag;
 static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
@@ -411,6 +417,222 @@ static inline void programmende(int signum)
 {
 if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL)) wantstopflag = true;
 return;
+}
+/*===========================================================================*/
+/*===========================================================================*/
+static inline void reloadfiles(int signum)
+{
+if((signum == SIGHUP) && (filteraplistname || filterclientlistname || bpfcname || extaplistname)) reloadfilesflag = true;
+}
+/*===========================================================================*/
+static inline size_t chop(char *buffer, size_t len)
+{
+static char *ptr;
+
+ptr = buffer +len -1;
+while(len)
+	{
+	if (*ptr != '\n') break;
+	*ptr-- = 0;
+	len--;
+	}
+while(len)
+	{
+	if (*ptr != '\r') break;
+	*ptr-- = 0;
+	len--;
+	}
+return len;
+}
+/*---------------------------------------------------------------------------*/
+static inline int fgetline(FILE *inputstream, size_t size, char *buffer)
+{
+static size_t len;
+static char *buffptr;
+
+if(feof(inputstream)) return -1;
+buffptr = fgets (buffer, size, inputstream);
+if(buffptr == NULL) return -1;
+len = strlen(buffptr);
+len = chop(buffptr, len);
+return len;
+}
+/*===========================================================================*/
+static inline void readextbeaconlist(char *listname, bool reload)
+{
+static int len;
+static FILE *fh_extbeacon;
+static macessidlist_t *zeiger;
+static macessidlist_t *list;
+static char linein[ESSID_LEN_MAX];
+bool skipline;
+
+if((fh_extbeacon = fopen(listname, "r")) == NULL)
+	{
+	fprintf(stderr, "failed to open beacon list %s\n", listname);
+	return;
+	}
+if(beaconactiveflag == true) list = rglist;
+else 
+	{
+	list = rgbeaconlist;
+	memset(rgbeaconlist, 0, RGLIST_MAX *MACESSIDLIST_SIZE);
+	}
+zeiger = list;
+
+beaconextlistlen = 0;
+gettimeofday(&tv, NULL);
+timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec -512;
+while(beaconextlistlen < BEACONEXTLIST_MAX)
+	{
+	if((len = fgetline(fh_extbeacon, ESSID_LEN_MAX, linein)) == -1) break;
+	if((len == 0) || (len > 32)) continue;
+	if(reload == true && beaconactiveflag == true)
+		{
+		skipline = false;
+		for(zeiger = list; zeiger < list +RGLIST_MAX; zeiger++)
+			{
+			if(zeiger->timestamp == 0) break;
+			if(zeiger->essidlen != len) continue;
+			if(memcmp(zeiger->essid, linein, len) != 0) continue;
+			skipline = true;
+			break;
+			}
+		if(skipline == true) continue;
+		}
+	memset(zeiger, 0, MACESSIDLIST_SIZE);
+	zeiger->timestamp = timestamp;
+	zeiger->count = 1;
+	memcpy(zeiger->ap, &mac_myap, 3);
+	zeiger->ap[3] = (mynic_ap >> 16) & 0xff;
+	zeiger->ap[4] = (mynic_ap >> 8) & 0xff;
+	zeiger->ap[5] = mynic_ap & 0xff;
+	mynic_ap++;
+	zeiger->essidlen = len;
+	memcpy(zeiger->essid, linein, len);
+	timestamp++;
+	zeiger++;
+	beaconextlistlen++;
+	}
+fclose(fh_extbeacon);
+return;
+}
+/*===========================================================================*/
+static inline int readmaclist(char *listname, maclist_t *maclist)
+{
+static int len;
+static int c, i, o;
+static int entries;
+static maclist_t *zeiger;
+static FILE *fh_filter;
+static char linein[FILTERLIST_LINE_LEN];
+
+if((fh_filter = fopen(listname, "r")) == NULL)
+	{
+	fprintf(stderr, "failed to open filter list %s\n", listname);
+	return 0;
+	}
+entries = 0;
+c = 0;
+zeiger = maclist;
+while(entries < FILTERLIST_MAX)
+	{
+	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1) break;
+	if(len < 12)
+		{
+		c++;
+		continue;
+		}
+	if(linein[0x0] == '#')
+		{
+		c++;
+		continue;
+		}
+	o = 0;
+	for(i = 0; i < len; i++)
+		{
+		if(isxdigit(linein[i]))
+			{
+			linein[o] = linein[i];
+			o++;
+			}
+		}
+	if(hex2bin(&linein[0x0], zeiger->mac, 6) == true)
+		{
+		zeiger++;
+		entries++;
+		}
+	else fprintf(stderr, "failed to read filter list line %d: %s\n", c, linein);
+	c++;
+	}
+qsort(maclist, entries, MACLIST_SIZE, sort_maclist);
+fclose(fh_filter);
+return entries;
+}
+/*===========================================================================*/
+static inline void readbpfc(char *bpfname)
+{
+static int len;
+static uint16_t c;
+static struct sock_filter *zeiger;
+static FILE *fh_filter;
+static char linein[128];
+if((fh_filter = fopen(bpfname, "r")) == NULL)
+	{
+	fprintf(stderr, "failed to open Berkeley Packet Filter list %s\n", bpfname);
+	return;
+	}
+if((len = fgetline(fh_filter, 128, linein)) == -1)
+	{
+	fclose(fh_filter);
+	fprintf(stderr, "failed to read Berkeley Packet Filter array size\n");
+	return;
+	}
+sscanf(linein, "%"SCNu16, &bpf.len);
+if(bpf.len == 0)
+	{
+	fclose(fh_filter);
+	fprintf(stderr, "failed to read Berkeley Packet Filter array size\n");
+	return;
+	}
+bpf.filter = (struct sock_filter*)calloc(bpf.len, sizeof(struct sock_filter));
+c = 0;
+zeiger = bpf.filter;
+while(c < bpf.len)
+	{
+	if((len = fgetline(fh_filter, 128, linein)) == -1)
+		{
+		bpf.len = 0;
+		break;
+		}
+	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &zeiger->code, &zeiger->jt,  &zeiger->jf,  &zeiger->k);
+	zeiger++;
+	c++;
+	}
+if(bpf.len != c) fprintf(stderr, "failed to read Berkeley Packet Filter\n");
+fclose(fh_filter);
+return;
+}
+/*===========================================================================*/
+static inline void loadfiles()
+{
+if(reloadfilesflag == true && fd_socket > 0 && bpf.filter != NULL)
+	{
+	if(setsockopt(fd_socket, SOL_SOCKET, SO_DETACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to free BPF code");
+	if(bpf.filter != NULL) free(bpf.filter);
+	}
+if(filteraplistname != NULL) filteraplistentries = readmaclist(filteraplistname, filteraplist);
+if(filterclientlistname != NULL) filterclientlistentries = readmaclist(filterclientlistname, filterclientlist);
+if(bpfcname != NULL) readbpfc(bpfcname);
+if(extaplistname != NULL) readextbeaconlist(extaplistname, reloadfilesflag);
+if(reloadfilesflag == true)
+	{
+	if(bpf.len > 0)
+		{
+		if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to set Berkeley Packet Filter");
+		}
+	reloadfilesflag = false;
+	}
 }
 /*===========================================================================*/
 /*===========================================================================*/
@@ -4247,6 +4469,7 @@ while(1)
 		if(GET_GPIO(gpiobutton) > 0) globalclose();
 		}
 	if(wantstopflag == true) globalclose();
+	if(reloadfilesflag == true) loadfiles();
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -5138,175 +5361,6 @@ memcpy(&driverfwversion, drvinfo.fw_version, ETHTOOL_FWVERS_LEN);
 return true;
 }
 /*===========================================================================*/
-static inline size_t chop(char *buffer, size_t len)
-{
-static char *ptr;
-
-ptr = buffer +len -1;
-while(len)
-	{
-	if (*ptr != '\n') break;
-	*ptr-- = 0;
-	len--;
-	}
-while(len)
-	{
-	if (*ptr != '\r') break;
-	*ptr-- = 0;
-	len--;
-	}
-return len;
-}
-/*---------------------------------------------------------------------------*/
-static inline int fgetline(FILE *inputstream, size_t size, char *buffer)
-{
-static size_t len;
-static char *buffptr;
-
-if(feof(inputstream)) return -1;
-buffptr = fgets (buffer, size, inputstream);
-if(buffptr == NULL) return -1;
-len = strlen(buffptr);
-len = chop(buffptr, len);
-return len;
-}
-/*===========================================================================*/
-static inline void readextbeaconlist(char *listname)
-{
-static int len;
-static FILE *fh_extbeacon;
-static macessidlist_t *zeiger;
-static char linein[ESSID_LEN_MAX];
-
-if((fh_extbeacon = fopen(listname, "r")) == NULL)
-	{
-	fprintf(stderr, "failed to open beacon list %s\n", listname);
-	return;
-	}
-if(beaconactiveflag == true) zeiger = rglist;
-else zeiger = rgbeaconlist;
-beaconextlistlen = 0;
-gettimeofday(&tv, NULL);
-timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec -512;
-while(beaconextlistlen < BEACONEXTLIST_MAX)
-	{
-	if((len = fgetline(fh_extbeacon, ESSID_LEN_MAX, linein)) == -1) break;
-	if((len == 0) || (len > 32)) continue;
-	memset(zeiger, 0, MACESSIDLIST_SIZE);
-	zeiger->timestamp = timestamp;
-	zeiger->count = 1;
-	memcpy(zeiger->ap, &mac_myap, 3);
-	zeiger->ap[3] = (mynic_ap >> 16) & 0xff;
-	zeiger->ap[4] = (mynic_ap >> 8) & 0xff;
-	zeiger->ap[5] = mynic_ap & 0xff;
-	mynic_ap++;
-	zeiger->essidlen = len;
-	memcpy(zeiger->essid, linein, len);
-	timestamp++;
-	zeiger++;
-	beaconextlistlen++;
-	}
-fclose(fh_extbeacon);
-return;
-}
-/*===========================================================================*/
-static inline int readmaclist(char *listname, maclist_t *maclist)
-{
-static int len;
-static int c, i, o;
-static int entries;
-static maclist_t *zeiger;
-static FILE *fh_filter;
-static char linein[FILTERLIST_LINE_LEN];
-
-if((fh_filter = fopen(listname, "r")) == NULL)
-	{
-	fprintf(stderr, "failed to open filter list %s\n", listname);
-	return 0;
-	}
-entries = 0;
-c = 0;
-zeiger = maclist;
-while(entries < FILTERLIST_MAX)
-	{
-	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1) break;
-	if(len < 12)
-		{
-		c++;
-		continue;
-		}
-	if(linein[0x0] == '#')
-		{
-		c++;
-		continue;
-		}
-	o = 0;
-	for(i = 0; i < len; i++)
-		{
-		if(isxdigit(linein[i]))
-			{
-			linein[o] = linein[i];
-			o++;
-			}
-		}
-	if(hex2bin(&linein[0x0], zeiger->mac, 6) == true)
-		{
-		zeiger++;
-		entries++;
-		}
-	else fprintf(stderr, "failed to read filter list line %d: %s\n", c, linein);
-	c++;
-	}
-qsort(maclist, entries, MACLIST_SIZE, sort_maclist);
-fclose(fh_filter);
-return entries;
-}
-/*===========================================================================*/
-static inline void readbpfc(char *bpfname)
-{
-static int len;
-static uint16_t c;
-static struct sock_filter *zeiger;
-static FILE *fh_filter;
-static char linein[128];
-
-if((fh_filter = fopen(bpfname, "r")) == NULL)
-	{
-	fprintf(stderr, "failed to open Berkeley Packet Filter list %s\n", bpfname);
-	return;
-	}
-if((len = fgetline(fh_filter, 128, linein)) == -1)
-	{
-	fclose(fh_filter);
-	fprintf(stderr, "failed to read Berkeley Packet Filter array size\n");
-	return;
-	}
-sscanf(linein, "%"SCNu16, &bpf.len);
-if(bpf.len == 0)
-	{
-	fclose(fh_filter);
-	fprintf(stderr, "failed to read Berkeley Packet Filter array size\n");
-	return;
-	}
-bpf.filter = (struct sock_filter*)calloc(bpf.len, sizeof(struct sock_filter));
-c = 0;
-zeiger = bpf.filter;
-while(c < bpf.len)
-	{
-	if((len = fgetline(fh_filter, 128, linein)) == -1)
-		{
-		bpf.len = 0;
-		break;
-		}
-	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &zeiger->code, &zeiger->jt,  &zeiger->jf,  &zeiger->k);
-	zeiger++;
-	c++;
-	}
-if(bpf.len != c) fprintf(stderr, "failed to read Berkeley Packet Filter\n");
-fclose(fh_filter);
-return;
-}
-/*===========================================================================*/
 static inline bool initgpio(int gpioperi)
 {
 static int fd_mem;
@@ -5732,6 +5786,7 @@ memset(&weakcandidate, 0, 64);
 memcpy(&weakcandidate, weakcandidatedefault, 8);
 
 wantstopflag = false;
+reloadfilesflag = false;
 errorcount = 0;
 incomingcount = 0;
 outgoingcount = 0;
@@ -5747,6 +5802,7 @@ bpf.filter = NULL;
 bpf.len = 0;
 aktchannel = 0;
 signal(SIGINT, programmende);
+signal(SIGHUP, reloadfiles);
 return true;
 }
 /*===========================================================================*/
@@ -5985,10 +6041,6 @@ static bool checkdriverflag;
 static bool showinterfaceflag;
 static bool monitormodeflag;
 static bool showchannelsflag;
-static char *filteraplistname;
-static char *filterclientlistname;
-static char *bpfcname;
-static char *extaplistname;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
@@ -6464,9 +6516,7 @@ if(getuid() != 0)
 	globalclose();
 	}
 
-if(filteraplistname != NULL) filteraplistentries = readmaclist(filteraplistname, filteraplist);
-if(filterclientlistname != NULL) filterclientlistentries = readmaclist(filterclientlistname, filterclientlist);
-if(bpfcname != NULL) readbpfc(bpfcname);
+loadfiles();
 
 if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
@@ -6500,8 +6550,6 @@ if(checkdriverflag == true)
 	globalclose();
 	return EXIT_SUCCESS;
 	}
-
-if(extaplistname != NULL) readextbeaconlist(extaplistname);
 
 if(pcapngoutname != NULL)
 	{
