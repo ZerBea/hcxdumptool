@@ -288,6 +288,13 @@ static char nmeatempsentence[NMEA_MAX];
 static char nmeasentence[NMEA_MAX];
 
 static char servermsg[SERVERMSG_MAX];
+
+static uint8_t *reactivebeacondata;
+static int reactivebeacondatalen;
+static uint8_t *bcbeacondatahidden;
+static int bcbeacondatahiddenlen;
+static uint8_t *bcbeacondataopen;
+static int bcbeacondataopenlen;
 /*===========================================================================*/
 /*===========================================================================*/
 static inline void debugprint2(int len, uint8_t *ptr1, uint8_t *ptr2, char *mesg)
@@ -1938,40 +1945,8 @@ static inline void send_beacon_active()
 {
 static mac_t *macftx;
 static capap_t *capap;
-static const uint8_t reactivebeacondata[] =
-{
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
-/* Tag: DS Parameter set: Current Channel: 1 */
-0x03, 0x01, 0x01,
-/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
-0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
-/* Tag: ERP Information */
-0x2a, 0x01, 0x04,
-/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
-/* Tag: RSN Information WPA1 & WPA2 PSK */
-0x30, 0x14, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x00, 0x0c,
-/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
-0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-/* Tag: Extended Capabilities (8 octets) */
-0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
-};
-#define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
-
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +REACTIVEBEACON_SIZE +1);
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1988,9 +1963,9 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconptr->essid, rgbeaconptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, REACTIVEBEACON_SIZE);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], reactivebeacondata, reactivebeacondatalen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +0x0c] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +REACTIVEBEACON_SIZE) < 0)
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -2007,40 +1982,8 @@ static inline void send_beacon_list_active()
 {
 static mac_t *macftx;
 static capap_t *capap;
-static const uint8_t reactivebeacondata[] =
-{
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
-/* Tag: DS Parameter set: Current Channel: 1 */
-0x03, 0x01, 0x01,
-/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
-0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
-/* Tag: ERP Information */
-0x2a, 0x01, 0x04,
-/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
-/* Tag: RSN Information WPA1 & WPA2 PSK */
-0x30, 0x14, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x00, 0x0c,
-/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
-0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-/* Tag: Extended Capabilities (8 octets) */
-0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
-};
-#define REACTIVEBEACON_SIZE sizeof(reactivebeacondata)
-
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +REACTIVEBEACON_SIZE +1);
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2057,9 +2000,9 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconlistptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconlistptr->essid, rgbeaconlistptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, REACTIVEBEACON_SIZE);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], reactivebeacondata, reactivebeacondatalen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +0x0c] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +REACTIVEBEACON_SIZE) < 0)
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -2076,43 +2019,8 @@ static void send_beacon_hidden()
 {
 static mac_t *macftx;
 static capap_t *capap;
-
-static const uint8_t bcbeacondata[] =
-{
-/* Tag: BC SSID HIDDEN*/
-0x00, 0x00,
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
-/* Tag: DS Parameter set: Current Channel: 1 */
-0x03, 0x01, 0x01,
-/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
-0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
-/* Tag: ERP Information */
-0x2a, 0x01, 0x04,
-/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
-/* Tag: RSN Information WPA1 & WPA2 PSK */
-0x30, 0x14, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x00, 0x0c,
-/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
-0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-0x01, 0x00,
-0x00, 0x50, 0xf2, 0x02,
-/* Tag: Extended Capabilities (8 octets) */
-0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
-};
-#define BCBEACON_SIZE sizeof(bcbeacondata)
-
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE +1);
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2127,9 +2035,9 @@ capap->timestamp = mytime++;
 capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondata, BCBEACON_SIZE);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], bcbeacondatahidden, bcbeacondatahiddenlen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE) < 0)
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -2143,31 +2051,8 @@ static void send_beacon_open()
 {
 static mac_t *macftx;
 static capap_t *capap;
-
-static const uint8_t bcbeacondata[] =
-{
-/* Tag: BC SSID Hotspot*/
-0x00, 0x07, 0x48, 0x6f, 0x74, 0x73, 0x70, 0x6f, 0x74,
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
-/* Tag: DS Parameter set: Current Channel: 1 */
-0x03, 0x01, 0x01,
-/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
-0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
-/* Tag: ERP Information */
-0x2a, 0x01, 0x04,
-/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
-/* Tag: Extended Capabilities (8 octets) */
-0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
-/* Tag: WMM/WME element */
-0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
-0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00
-};
-#define BCBEACON_SIZE sizeof(bcbeacondata)
-
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE +1);
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2182,9 +2067,9 @@ capap->timestamp = mytime++;
 capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondata, BCBEACON_SIZE);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], bcbeacondataopen, bcbeacondataopenlen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x15] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +BCBEACON_SIZE) < 0)
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
 	errorcount++;
@@ -5658,6 +5543,110 @@ else
 return;
 }
 /*===========================================================================*/
+static inline bool make_beacon_tagparams()
+{
+
+static const uint8_t reactivebeacondata_templ[] =
+{
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: DS Parameter set: Current Channel: 1 */
+0x03, 0x01, 0x01,
+/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
+0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
+/* Tag: ERP Information */
+0x2a, 0x01, 0x04,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: RSN Information WPA1 & WPA2 PSK */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0c,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+};
+#define REACTIVEBEACON_TEMPL_SIZE sizeof(reactivebeacondata_templ)
+
+static const uint8_t bcbeacondata_hidden_templ[] =
+{
+/* Tag: BC SSID HIDDEN*/
+0x00, 0x00,
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: DS Parameter set: Current Channel: 1 */
+0x03, 0x01, 0x01,
+/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
+0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
+/* Tag: ERP Information */
+0x2a, 0x01, 0x04,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: RSN Information WPA1 & WPA2 PSK */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0c,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+};
+#define BCBEACON_HIDDEN_TEMPL_SIZE sizeof(bcbeacondata_hidden_templ)
+
+static const uint8_t bcbeacondata_open_templ[] =
+{
+/* Tag: BC SSID Hotspot*/
+0x00, 0x07, 0x48, 0x6f, 0x74, 0x73, 0x70, 0x6f, 0x74,
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: DS Parameter set: Current Channel: 1 */
+0x03, 0x01, 0x01,
+/* Tag: Traffic Indication Map (TIM): DTIM 1 of 0 bitmap */
+0x05, 0x04, 0x01, 0x02, 0x00, 0x00,
+/* Tag: ERP Information */
+0x2a, 0x01, 0x04,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+/* Tag: Extended Capabilities (8 octets) */
+0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40,
+/* Tag: WMM/WME element */
+0xdd, 0x18, 0x00, 0x50, 0xf2, 0x02, 0x01, 0x01, 0x00, 0x00, 0x03, 0xa4, 0x00, 0x00, 0x27, 0xa4,
+0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00
+};
+#define BCBEACON_OPEN_TEMPL_SIZE sizeof(bcbeacondata_open_templ)
+
+reactivebeacondatalen = REACTIVEBEACON_TEMPL_SIZE;
+bcbeacondatahiddenlen = BCBEACON_HIDDEN_TEMPL_SIZE;
+bcbeacondataopenlen = BCBEACON_OPEN_TEMPL_SIZE;
+if((reactivebeacondata = (uint8_t*)calloc(reactivebeacondatalen, sizeof(uint8_t))) == NULL) return false;
+if((bcbeacondatahidden = (uint8_t*)calloc((bcbeacondatahiddenlen), sizeof(uint8_t))) == NULL) return false;
+if((bcbeacondataopen = (uint8_t*)calloc((bcbeacondataopenlen), sizeof(uint8_t))) == NULL) return false;
+memcpy(reactivebeacondata, reactivebeacondata_templ, reactivebeacondatalen);
+memcpy(bcbeacondatahidden, bcbeacondata_hidden_templ, bcbeacondatahiddenlen);
+memcpy(bcbeacondataopen, bcbeacondata_open_templ, bcbeacondataopenlen);
+
+return true;
+}
+/*===========================================================================*/
 static inline bool globalinit()
 {
 static int c;
@@ -6519,6 +6508,8 @@ if(getuid() != 0)
 	}
 
 loadfiles();
+
+make_beacon_tagparams();
 
 if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
