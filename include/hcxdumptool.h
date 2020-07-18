@@ -31,6 +31,7 @@
 #define HCX_CHECK_INJECTION		31
 #define HCX_ERROR_MAX			32
 #define HCX_STATUS			33
+#define HCX_BEACONPARAMS		34
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -74,6 +75,9 @@
 #define ESSID_LEN_MAX		32
 #define RSN_LEN_MIN		20
 #define WPA_LEN_MIN		22
+#define BEACONBODY_LEN_MAX	2301
+
+#define IESETLEN_MAX 50
 
 #define PAGIDLIST_MAX		256
 
