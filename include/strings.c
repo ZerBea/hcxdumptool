@@ -25,7 +25,7 @@ return true;
 /*===========================================================================*/
 bool hex2bin(const char *str, uint8_t *bytes, size_t blen)
 {
-uint8_t pos;
+size_t pos;
 uint8_t idx0;
 uint8_t idx1;
 
