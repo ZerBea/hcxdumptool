@@ -3039,6 +3039,7 @@ if(addownap(AP_M1, macfrx->addr2) == false) return;
 if(authlen >= WPAKEY_SIZE +PMKID_SIZE)
 	{
 	pmkid = (pmkid_t*)(wpakptr +WPAKEY_SIZE);
+	if(pmkid->id != TAG_VENDOR) return;
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
 		if(addownap(AP_PMKID, macfrx->addr2) == false) return;
@@ -3070,6 +3071,7 @@ if((statusout &STATUS_EAPOL) == STATUS_EAPOL) memcpy(&lastanonce, wpak->nonce, 3
 if(authlen >= WPAKEY_SIZE +PMKID_SIZE)
 	{
 	pmkid = (pmkid_t*)(wpakptr +WPAKEY_SIZE);
+	if(pmkid->id != TAG_VENDOR) return;
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
 		if(addownap(AP_PMKID, macfrx->addr2) == false) return;
