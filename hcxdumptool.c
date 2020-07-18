@@ -289,12 +289,15 @@ static char nmeasentence[NMEA_MAX];
 
 static char servermsg[SERVERMSG_MAX];
 
-static uint8_t *reactivebeacondata;
-static int reactivebeacondatalen;
-static uint8_t *bcbeacondatahidden;
-static int bcbeacondatahiddenlen;
-static uint8_t *bcbeacondataopen;
-static int bcbeacondataopenlen;
+static uint8_t reactivebeacondata[BEACONBODY_LEN_MAX];
+static size_t reactivebeacondatalen;
+static int reactivebeacondatachanoffset;
+static uint8_t bcbeacondatahidden[BEACONBODY_LEN_MAX];
+static size_t bcbeacondatahiddenlen;
+static int bcbeacondatahiddenchanoffset;
+static uint8_t bcbeacondataopen[BEACONBODY_LEN_MAX];
+static size_t bcbeacondataopenlen;
+static int bcbeacondataopenchanoffset;
 /*===========================================================================*/
 /*===========================================================================*/
 static inline void debugprint2(int len, uint8_t *ptr1, uint8_t *ptr2, char *mesg)
@@ -1142,6 +1145,77 @@ while(0 < infolen)
 return;
 }
 /*===========================================================================*/
+static inline int gettlvoffset_value(uint8_t tag, uint8_t *tlvoctets, size_t tlvoctetslen)
+{
+size_t pos = 0;
+while(pos < tlvoctetslen)
+	{
+	if(tlvoctets[pos] == tag) return pos +2;
+	else pos += tlvoctets[pos +1] +2;
+	}
+return 0;
+}
+/*===========================================================================*/
+static inline int bin2tlvset(tlv_t *tlvset, uint8_t *tlvoctets, size_t tlvoctetslen)
+{
+size_t octet = 0;
+size_t setcnt = 0;
+
+if(tlvoctetslen == 0) return 0;
+while(octet < tlvoctetslen -1)
+	{
+    tlvset[setcnt].tag = tlvoctets[octet];
+    tlvset[setcnt].len = tlvoctets[octet +1];
+    if(tlvset[setcnt].len > (tlvoctetslen -octet -2)) break;
+    if(tlvset[setcnt].len > 0) tlvset[setcnt].val = &tlvoctets[octet +2];
+	else tlvset[setcnt].val = NULL;
+    octet += tlvset[setcnt].len +2;
+    setcnt++;
+    if(setcnt == TLVSETLEN_MAX) break;
+	}
+return setcnt;
+}
+/*===========================================================================*/
+static inline size_t merge_tlvset2bin(uint8_t *destdata, size_t destdatalenmax, const uint8_t *mergedata, size_t mergedatalen, tlv_t *tlvset, size_t tlvsetlen)
+{
+size_t setcnt, pos = 0;
+size_t destdatalen = 0;
+bool mergedtags[TLVSETLEN_MAX] = { 0 };
+
+while(pos < (mergedatalen -1))
+    {
+    for(setcnt = 0; setcnt < tlvsetlen; setcnt++)
+        {
+        if (tlvset[setcnt].tag > 0 && tlvset[setcnt].tag == mergedata[pos])
+            {
+			if(destdatalen > destdatalenmax -tlvset[setcnt].len -2) break;
+            memcpy(&destdata[destdatalen], &tlvset[setcnt], 2);
+            memcpy(&destdata[destdatalen +2], tlvset[setcnt].val, tlvset[setcnt].len);
+            destdatalen += tlvset[setcnt].len +2;
+            mergedtags[setcnt] = true;
+            break;
+            }
+        }
+    if(setcnt == tlvsetlen) {
+		if(destdatalen > destdatalenmax - mergedata[pos +1] -2) break;
+        memcpy(&destdata[destdatalen], &mergedata[pos], mergedata[pos +1] +2);
+        destdatalen += mergedata[pos +1] +2;
+    }
+    pos += mergedata[pos +1] +2;
+    }
+for(setcnt = 0; setcnt < tlvsetlen; setcnt++)
+    {
+    if(tlvset[setcnt].tag > 0 && mergedtags[setcnt] == false)
+        {
+		if(destdatalen > destdatalenmax -tlvset[setcnt].len -2) break;
+        memcpy(&destdata[destdatalen], &tlvset[setcnt], 2);
+        memcpy(&destdata[destdatalen +2], tlvset[setcnt].val, tlvset[setcnt].len);
+        destdatalen += tlvset[setcnt].len +2;
+        }
+    }
+return destdatalen;
+}
+/*===========================================================================*/
 /*===========================================================================*/
 static inline void send_disassociation(uint8_t *macsta, uint8_t *macap, uint8_t reason)
 {
@@ -1963,8 +2037,8 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconptr->essid, rgbeaconptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], reactivebeacondata, reactivebeacondatalen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +0x0c] = channelscanlist[cpa];
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
@@ -2000,8 +2074,8 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconlistptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconlistptr->essid, rgbeaconlistptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], reactivebeacondata, reactivebeacondatalen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +0x0c] = channelscanlist[cpa];
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
@@ -2035,8 +2109,8 @@ capap->timestamp = mytime++;
 capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], bcbeacondatahidden, bcbeacondatahiddenlen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x0e] = channelscanlist[cpa];
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondatahidden, bcbeacondatahiddenlen);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenchanoffset] = channelscanlist[cpa];
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
@@ -2067,8 +2141,8 @@ capap->timestamp = mytime++;
 capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], bcbeacondataopen, bcbeacondataopenlen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +0x15] = channelscanlist[cpa];
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondataopen, bcbeacondataopenlen);
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenchanoffset] = channelscanlist[cpa];
 if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen) < 0)
 	{
 	perror("\nfailed to transmit internal beacon");
@@ -5543,7 +5617,7 @@ else
 return;
 }
 /*===========================================================================*/
-static inline bool make_beacon_tagparams()
+static inline void make_beacon_tagparams(char *beaconparams)
 {
 
 static const uint8_t reactivebeacondata_templ[] =
@@ -5577,6 +5651,7 @@ static const uint8_t reactivebeacondata_templ[] =
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
 };
 #define REACTIVEBEACON_TEMPL_SIZE sizeof(reactivebeacondata_templ)
+#define REACTIVEBEACON_TEMPL_CHANOFFSET 12
 
 static const uint8_t bcbeacondata_hidden_templ[] =
 {
@@ -5611,6 +5686,7 @@ static const uint8_t bcbeacondata_hidden_templ[] =
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
 };
 #define BCBEACON_HIDDEN_TEMPL_SIZE sizeof(bcbeacondata_hidden_templ)
+#define BCBEACON_HIDDEN_TEMPL_CHANOFFSET 14
 
 static const uint8_t bcbeacondata_open_templ[] =
 {
@@ -5633,18 +5709,42 @@ static const uint8_t bcbeacondata_open_templ[] =
 0x00, 0x00, 0x42, 0x43, 0x5e, 0x00, 0x62, 0x32, 0x2f, 0x00
 };
 #define BCBEACON_OPEN_TEMPL_SIZE sizeof(bcbeacondata_open_templ)
+#define BCBEACON_OPEN_TEMPL_CHANOFFSET 21
 
-reactivebeacondatalen = REACTIVEBEACON_TEMPL_SIZE;
-bcbeacondatahiddenlen = BCBEACON_HIDDEN_TEMPL_SIZE;
-bcbeacondataopenlen = BCBEACON_OPEN_TEMPL_SIZE;
-if((reactivebeacondata = (uint8_t*)calloc(reactivebeacondatalen, sizeof(uint8_t))) == NULL) return false;
-if((bcbeacondatahidden = (uint8_t*)calloc((bcbeacondatahiddenlen), sizeof(uint8_t))) == NULL) return false;
-if((bcbeacondataopen = (uint8_t*)calloc((bcbeacondataopenlen), sizeof(uint8_t))) == NULL) return false;
-memcpy(reactivebeacondata, reactivebeacondata_templ, reactivebeacondatalen);
-memcpy(bcbeacondatahidden, bcbeacondata_hidden_templ, bcbeacondatahiddenlen);
-memcpy(bcbeacondataopen, bcbeacondata_open_templ, bcbeacondataopenlen);
+uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX];
+size_t beaconparamsoctetslen = (beaconparams == NULL) ? 0 : (strlen(beaconparams) /2);
+tlv_t tlvset[TLVSETLEN_MAX];
+size_t tlvsetlen;
 
-return true;
+if(beaconparamsoctetslen == 0)
+	{
+	reactivebeacondatalen = REACTIVEBEACON_TEMPL_SIZE;
+	memcpy(&reactivebeacondata, &reactivebeacondata_templ, reactivebeacondatalen);
+	reactivebeacondatachanoffset = REACTIVEBEACON_TEMPL_CHANOFFSET;
+	bcbeacondatahiddenlen = BCBEACON_HIDDEN_TEMPL_SIZE;
+	memcpy(&bcbeacondatahidden, &bcbeacondata_hidden_templ, bcbeacondatahiddenlen);
+	bcbeacondatahiddenchanoffset = BCBEACON_HIDDEN_TEMPL_CHANOFFSET;
+	bcbeacondataopenlen = BCBEACON_OPEN_TEMPL_SIZE;
+	memcpy(&bcbeacondataopen, &bcbeacondata_open_templ, bcbeacondataopenlen);
+	bcbeacondataopenchanoffset = BCBEACON_OPEN_TEMPL_CHANOFFSET;
+	}
+else
+	{
+	if(hex2bin(beaconparams, beaconparamsoctets, beaconparamsoctetslen) == false)
+		{
+		fprintf(stderr, "beacon parameters error can't read hex string\n");
+		exit(EXIT_FAILURE);
+		}
+	tlvsetlen = bin2tlvset(tlvset, beaconparamsoctets, beaconparamsoctetslen);
+	reactivebeacondatalen = merge_tlvset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -34, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, tlvset, tlvsetlen);
+	reactivebeacondatachanoffset = gettlvoffset_value(3, reactivebeacondata, reactivebeacondatalen);
+	bcbeacondatahiddenlen = merge_tlvset2bin(bcbeacondatahidden, BEACONBODY_LEN_MAX -2, bcbeacondata_hidden_templ, BCBEACON_HIDDEN_TEMPL_SIZE, tlvset, tlvsetlen);
+	bcbeacondatahiddenchanoffset = gettlvoffset_value(3, bcbeacondatahidden,bcbeacondatahiddenlen);
+	bcbeacondataopenlen = merge_tlvset2bin(bcbeacondataopen, BEACONBODY_LEN_MAX -9, bcbeacondata_open_templ, BCBEACON_OPEN_TEMPL_SIZE, tlvset, tlvsetlen);
+	bcbeacondataopenchanoffset = gettlvoffset_value(3, bcbeacondataopen, bcbeacondataopenlen);
+	}
+
+return;
 }
 /*===========================================================================*/
 static inline bool globalinit()
@@ -5943,6 +6043,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     affected: ap-less\n"
 	"--infinity                         : prevent that a CLIENT can establish a connection to an assigned ACCESS POINT\n"
 	"                                     affected: ACCESS POINTs and CLIENTs\n"
+	"--beaconparams=<TLVs>              : update or add Information Elements in all transmitted beacons\n"
+	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
+	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
 	"                                     NMEA 0183 $GPGGA $GPGGA\n"
@@ -6005,7 +6108,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, TLVSETLEN_MAX, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -6032,6 +6135,7 @@ static bool checkdriverflag;
 static bool showinterfaceflag;
 static bool monitormodeflag;
 static bool showchannelsflag;
+static bool beaconparamsflag;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
@@ -6055,6 +6159,7 @@ static const struct option long_options[] =
 	{"active_beacon",		no_argument,		NULL,	HCX_ACTIVE_BEACON},
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
 	{"infinity",			no_argument,		NULL,	HCX_INFINITY},
+	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
@@ -6112,6 +6217,7 @@ checkdriverflag = false;
 showinterfaceflag = false;
 showchannelsflag = false;
 monitormodeflag = false;
+beaconparamsflag = false;
 totflag = false;
 gpsdflag = false;
 infinityflag = false;
@@ -6303,6 +6409,24 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_EXTAP_BEACON:
 		extaplistname = optarg;
+		break;
+
+		case HCX_BEACONPARAMS:
+		if((strlen(optarg) % 2) > 0)
+			{
+			fprintf(stderr, "beacon parameter error odd hex string length, only full hex bytes allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		if(ishexvalue(optarg, strlen(optarg)) == false)
+			{
+			fprintf(stderr, "beacon parameter error reading hex string\n");
+			exit(EXIT_FAILURE);
+			}
+		if(strlen(optarg) > 0)
+			{
+			make_beacon_tagparams(optarg);
+			beaconparamsflag = true;
+			}
 		break;
 
 		case HCX_GPIO_BUTTON:
@@ -6509,7 +6633,7 @@ if(getuid() != 0)
 
 loadfiles();
 
-make_beacon_tagparams();
+if(beaconparamsflag == false) make_beacon_tagparams(NULL);
 
 if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
