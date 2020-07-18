@@ -1156,7 +1156,7 @@ while(pos < tlvoctetslen)
 return 0;
 }
 /*===========================================================================*/
-static inline int bin2tlvset(tlv_t *tlvset, uint8_t *tlvoctets, size_t tlvoctetslen)
+static inline int bin2ieset(ietag_t *ieset[], uint8_t *tlvoctets, size_t tlvoctetslen)
 {
 size_t octet = 0;
 size_t setcnt = 0;
@@ -1164,53 +1164,48 @@ size_t setcnt = 0;
 if(tlvoctetslen == 0) return 0;
 while(octet < tlvoctetslen -1)
 	{
-    tlvset[setcnt].tag = tlvoctets[octet];
-    tlvset[setcnt].len = tlvoctets[octet +1];
-    if(tlvset[setcnt].len > (tlvoctetslen -octet -2)) break;
-    if(tlvset[setcnt].len > 0) tlvset[setcnt].val = &tlvoctets[octet +2];
-	else tlvset[setcnt].val = NULL;
-    octet += tlvset[setcnt].len +2;
+	ieset[setcnt] = (ietag_t*)(&tlvoctets[octet]);
+    if(ieset[setcnt]->len > (tlvoctetslen -octet -2)) break;
+    octet += ieset[setcnt]->len +2;
     setcnt++;
-    if(setcnt == TLVSETLEN_MAX) break;
+    if(setcnt == IESETLEN_MAX) break;
 	}
 return setcnt;
 }
 /*===========================================================================*/
-static inline size_t merge_tlvset2bin(uint8_t *destdata, size_t destdatalenmax, const uint8_t *mergedata, size_t mergedatalen, tlv_t *tlvset, size_t tlvsetlen)
+static inline size_t merge_ieset2bin(uint8_t *destdata, size_t destdatalenmax, const uint8_t *mergedata, size_t mergedatalen, ietag_t *ieset[], size_t iesetlen)
 {
 size_t setcnt, pos = 0;
 size_t destdatalen = 0;
-bool mergedtags[TLVSETLEN_MAX] = { 0 };
+bool mergedtags[IESETLEN_MAX] = { 0 };
 
 while(pos < (mergedatalen -1))
     {
-    for(setcnt = 0; setcnt < tlvsetlen; setcnt++)
+    for(setcnt = 0; setcnt < iesetlen; setcnt++)
         {
-        if (tlvset[setcnt].tag > 0 && tlvset[setcnt].tag == mergedata[pos])
+        if (ieset[setcnt]->id > 0 && ieset[setcnt]->id == mergedata[pos])
             {
-			if(destdatalen > destdatalenmax -tlvset[setcnt].len -2) break;
-            memcpy(&destdata[destdatalen], &tlvset[setcnt], 2);
-            memcpy(&destdata[destdatalen +2], tlvset[setcnt].val, tlvset[setcnt].len);
-            destdatalen += tlvset[setcnt].len +2;
+			if(destdatalen > destdatalenmax -ieset[setcnt]->len -2) break;
+            memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
+            destdatalen += ieset[setcnt]->len +2;
             mergedtags[setcnt] = true;
             break;
             }
         }
-    if(setcnt == tlvsetlen) {
+    if(setcnt == iesetlen) {
 		if(destdatalen > destdatalenmax - mergedata[pos +1] -2) break;
         memcpy(&destdata[destdatalen], &mergedata[pos], mergedata[pos +1] +2);
         destdatalen += mergedata[pos +1] +2;
     }
     pos += mergedata[pos +1] +2;
     }
-for(setcnt = 0; setcnt < tlvsetlen; setcnt++)
+for(setcnt = 0; setcnt < iesetlen; setcnt++)
     {
-    if(tlvset[setcnt].tag > 0 && mergedtags[setcnt] == false)
+    if(ieset[setcnt]->id > 0 && mergedtags[setcnt] == false)
         {
-		if(destdatalen > destdatalenmax -tlvset[setcnt].len -2) break;
-        memcpy(&destdata[destdatalen], &tlvset[setcnt], 2);
-        memcpy(&destdata[destdatalen +2], tlvset[setcnt].val, tlvset[setcnt].len);
-        destdatalen += tlvset[setcnt].len +2;
+		if(destdatalen > destdatalenmax -ieset[setcnt]->len -2) break;
+        memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
+        destdatalen += ieset[setcnt]->len +2;
         }
     }
 return destdatalen;
@@ -5713,8 +5708,8 @@ static const uint8_t bcbeacondata_open_templ[] =
 
 uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX];
 size_t beaconparamsoctetslen = (beaconparams == NULL) ? 0 : (strlen(beaconparams) /2);
-tlv_t tlvset[TLVSETLEN_MAX];
-size_t tlvsetlen;
+ietag_t *ieset[IESETLEN_MAX];
+size_t iesetlen;
 
 if(beaconparamsoctetslen == 0)
 	{
@@ -5735,12 +5730,12 @@ else
 		fprintf(stderr, "beacon parameters error can't read hex string\n");
 		exit(EXIT_FAILURE);
 		}
-	tlvsetlen = bin2tlvset(tlvset, beaconparamsoctets, beaconparamsoctetslen);
-	reactivebeacondatalen = merge_tlvset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -34, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, tlvset, tlvsetlen);
+	iesetlen = bin2ieset(ieset, beaconparamsoctets, beaconparamsoctetslen);
+	reactivebeacondatalen = merge_ieset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -34, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, ieset, iesetlen);
 	reactivebeacondatachanoffset = gettlvoffset_value(3, reactivebeacondata, reactivebeacondatalen);
-	bcbeacondatahiddenlen = merge_tlvset2bin(bcbeacondatahidden, BEACONBODY_LEN_MAX -2, bcbeacondata_hidden_templ, BCBEACON_HIDDEN_TEMPL_SIZE, tlvset, tlvsetlen);
+	bcbeacondatahiddenlen = merge_ieset2bin(bcbeacondatahidden, BEACONBODY_LEN_MAX -2, bcbeacondata_hidden_templ, BCBEACON_HIDDEN_TEMPL_SIZE, ieset, iesetlen);
 	bcbeacondatahiddenchanoffset = gettlvoffset_value(3, bcbeacondatahidden,bcbeacondatahiddenlen);
-	bcbeacondataopenlen = merge_tlvset2bin(bcbeacondataopen, BEACONBODY_LEN_MAX -9, bcbeacondata_open_templ, BCBEACON_OPEN_TEMPL_SIZE, tlvset, tlvsetlen);
+	bcbeacondataopenlen = merge_ieset2bin(bcbeacondataopen, BEACONBODY_LEN_MAX -9, bcbeacondata_open_templ, BCBEACON_OPEN_TEMPL_SIZE, ieset, iesetlen);
 	bcbeacondataopenchanoffset = gettlvoffset_value(3, bcbeacondataopen, bcbeacondataopenlen);
 	}
 
@@ -6108,7 +6103,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, TLVSETLEN_MAX, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/

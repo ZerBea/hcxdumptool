@@ -77,6 +77,8 @@
 #define WPA_LEN_MIN		22
 #define BEACONBODY_LEN_MAX	2301
 
+#define IESETLEN_MAX 50
+
 #define PAGIDLIST_MAX		256
 
 #define BEACONINTERVALL		0x3e8
@@ -297,13 +299,4 @@ if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
 return 0;
 }
-/*===========================================================================*/
-typedef struct
-{
-uint8_t     tag;
-uint8_t     len;
-uint8_t     *val;
-}tlv_t;
-#define TLV_SIZE (sizeof(tlv_t))
-#define TLVSETLEN_MAX 50
 /*===========================================================================*/
