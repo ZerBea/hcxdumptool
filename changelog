@@ -1,3 +1,11 @@
+19.07.2020
+==========
+hcxdumptool: new option
+--beaconparams=<TLVs>  : update or add Information Elements in all transmitted beacons
+                         maximum 50 IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten
+                         multiple IEs with same tag id are added, default IE is overwritten by the first
+
+
 06.07.2020
 ==========
 hcxdumptool: allow to set channel (-c) on --check_injection
