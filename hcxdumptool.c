@@ -121,6 +121,7 @@ static uint32_t attackstopcount;
 static uint32_t attackresumecount;
 static uint64_t timestamp;
 static uint64_t timestampstart;
+static uint64_t timestamplast;
 static uint64_t mytime;
 
 static rth_t *rth;
@@ -4155,8 +4156,8 @@ static inline void process_packet()
 static uint32_t rthl;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
-gettimeofday(&tv, NULL);
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
+timestamplast = timestamp;
 if(packetlen == 0)
 	{
 	fprintf(stderr, "\ninterface went down\n");
@@ -4197,6 +4198,7 @@ if(rth->it_present == 0)
 	}
 rthl = le16toh(rth->it_len);
 if(rthl <= HDRRT_SIZE) return; /* outgoing packet */
+
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
 if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
