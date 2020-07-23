@@ -121,7 +121,6 @@ static uint32_t attackstopcount;
 static uint32_t attackresumecount;
 static uint64_t timestamp;
 static uint64_t timestampstart;
-static uint64_t timestamplast;
 static uint64_t mytime;
 
 static rth_t *rth;
@@ -4157,7 +4156,6 @@ static uint32_t rthl;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-timestamplast = timestamp;
 if(packetlen == 0)
 	{
 	fprintf(stderr, "\ninterface went down\n");
