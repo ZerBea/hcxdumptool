@@ -1,5 +1,11 @@
 29.07.2020
 ==========
+add new radiotap flag: IEEE80211_RADIOTAP_F_TX_NOSEQNO
+https://patchwork.kernel.org/patch/11680527/
+
+
+29.07.2020
+==========
 release v 6.1.0
 
 
