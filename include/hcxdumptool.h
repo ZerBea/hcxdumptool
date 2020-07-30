@@ -25,13 +25,14 @@
 #define HCX_POWER_OFF			25
 #define HCX_GPIO_BUTTON			26
 #define HCX_GPIO_STATUSLED		27
-#define HCX_SERVER_PORT			28
-#define HCX_CLIENT_PORT			29
-#define HCX_CHECK_DRIVER		30
-#define HCX_CHECK_INJECTION		31
-#define HCX_ERROR_MAX			32
-#define HCX_STATUS			33
-#define HCX_BEACONPARAMS		34
+#define HCX_IP				28
+#define HCX_SERVER_PORT			29
+#define HCX_CLIENT_PORT			30
+#define HCX_CHECK_DRIVER		31
+#define HCX_CHECK_INJECTION		32
+#define HCX_ERROR_MAX			33
+#define HCX_STATUS			34
+#define HCX_BEACONPARAMS		35
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -61,8 +62,6 @@
 #define ATTACKRESUME_MAX	864000
 
 #define SERVERMSG_MAX		2048
-
-#define MCHOST			"224.0.0.255"
 #define MCPORT			60123
 #define SERVERSTATUS_MAX	1024
 

@@ -1,6 +1,11 @@
+30.07.2020
+==========
+hcxdumptool: added new option --ip to allow to set IP for server / client mode
+
+
 29.07.2020
 ==========
-add new radiotap flag: IEEE80211_RADIOTAP_F_TX_NOSEQNO
+hcxdumptool: add new radiotap flag: IEEE80211_RADIOTAP_F_TX_NOSEQNO
 https://patchwork.kernel.org/patch/11680527/
 
 

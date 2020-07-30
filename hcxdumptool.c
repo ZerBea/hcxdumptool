@@ -74,6 +74,7 @@ static int fd_socket;
 static int fd_gps;
 static int fd_pcapng;
 static int fd_socket_mccli;
+static char *mcip;
 static struct ip_mreq mcmreq;
 static int fd_socket_mcsrv;
 static struct sockaddr_in mcsrvaddress;
@@ -231,7 +232,6 @@ const uint8_t channelscanlist3[] =
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
-
 static uint8_t channelscanlist[128] =
 {
 1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
@@ -377,7 +377,13 @@ if(fd_gps > 0)
 	}
 if(fd_socket_mccli > 0)
 	{
-	if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mcmreq, sizeof(mcmreq)) < 0) perror("failed to drop ip-membership");
+	if(strcmp(mcip, "127.0.0.1") != 0)
+		{
+		memset(&mcmreq, 0, sizeof(mcmreq));
+		mcmreq.imr_multiaddr.s_addr = inet_addr(mcip);
+		mcmreq.imr_interface.s_addr = htonl(INADDR_ANY);
+		if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mcmreq, sizeof(mcmreq)) < 0) perror("failed to drop ip-membership");
+		}
 	if(close(fd_socket_mccli) != 0) perror("failed to close client socket");
 	}
 if(fd_socket_mcsrv > 0)
@@ -5006,14 +5012,16 @@ if (setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (lo
 	perror ("setsockopt() IP_MULTICAST_LOOP failed");
 	return false;
 	}
-
-memset(&mcmreq, 0, sizeof(mcmreq));
-mcmreq.imr_multiaddr.s_addr = inet_addr(MCHOST);
-mcmreq.imr_interface.s_addr = htonl(INADDR_ANY);
-if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mcmreq, sizeof(mcmreq)) < 0)
+if(strcmp(mcip, "127.0.0.1") != 0)
 	{
-	perror ("setsockopt() IP_ADD_MEMBERSHIP failed");
-	return false;
+	memset(&mcmreq, 0, sizeof(mcmreq));
+	mcmreq.imr_multiaddr.s_addr = inet_addr(mcip);
+	mcmreq.imr_interface.s_addr = htonl(INADDR_ANY);
+	if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mcmreq, sizeof(mcmreq)) < 0)
+		{
+		perror ("setsockopt() IP_ADD_MEMBERSHIP failed");
+		return false;
+		}
 	}
 return true;
 }
@@ -5028,7 +5036,7 @@ if((fd_socket_mcsrv = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
 	}
 memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
 mcsrvaddress.sin_family = AF_INET;
-mcsrvaddress.sin_addr.s_addr = inet_addr (MCHOST);
+mcsrvaddress.sin_addr.s_addr = inet_addr(mcip);
 mcsrvaddress.sin_port = htons(mcsrvport);
 if(sendto(fd_socket_mcsrv, "hello hcxdumptool client...\n", sizeof ("hello hcxdumptool client...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress)) < 0)
 	{
@@ -6080,6 +6088,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     characters < 0x20 && > 0x7e are replaced by .\n"
 	"                                     example: show everything but don\'t run as server or client (1+2+4+8+16 = 31)\n"
 	"                                              show only EAP and EAPOL and ASSOCIATION and REASSOCIATION (1+2 = 3)\n"
+	"--ip=<IP address>                  : define IP address for server / client (default: 224.0.0.255)\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
 	"                                   : default port: %d\n"
@@ -6105,7 +6114,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, ERROR_MAX, MCHOST, MCPORT, MCHOST, MCPORT);
+	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -6123,6 +6132,7 @@ static int auswahl;
 static int index;
 static int l, p1, p2;
 static long int totvalue;
+static struct in_addr ipaddr;
 static int mccliport;
 static int mcsrvport;
 static int weakcandidatelenuser;
@@ -6168,6 +6178,7 @@ static const struct option long_options[] =
 	{"reboot",			no_argument,		NULL,	HCX_REBOOT},
 	{"poweroff",			no_argument,		NULL,	HCX_POWER_OFF},
 	{"enable_status",		required_argument,	NULL,	HCX_STATUS},
+	{"ip",				required_argument,	NULL,	HCX_IP},
 	{"server_port",			required_argument,	NULL,	HCX_SERVER_PORT},
 	{"client_port",			required_argument,	NULL,	HCX_CLIENT_PORT},
 	{"check_driver",		no_argument,		NULL,	HCX_CHECK_DRIVER},
@@ -6221,6 +6232,7 @@ infinityflag = false;
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
+mcip = "224.0.0.255";
 mccliport = MCPORT;
 mcsrvport = MCPORT;
 tvtot.tv_sec = 2147483647L;
@@ -6490,6 +6502,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_SHOW_CHANNELS:
 		showchannelsflag = true;
+		break;
+
+		case HCX_IP:
+		if(inet_aton(optarg, &ipaddr) == 0)
+			{
+			fprintf(stderr, "wrong IP address\n");
+			exit(EXIT_FAILURE);
+			}
+		mcip = optarg;
 		break;
 
 		case HCX_SERVER_PORT:
