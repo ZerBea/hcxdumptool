@@ -2,10 +2,10 @@ hcxdumptool
 ==============
 
 Small tool to capture packets from wlan devices.
-After capturing, upload the "uncleaned" cap here (https://wpa-sec.stanev.org/?submit)
-to see if your ap or the client is vulnerable by using common wordlists.
+After capturing, upload the "uncleaned" pcapng here (https://wpa-sec.stanev.org/?submit)
+to see if your ACCESS POINT or the CLIENT is vulnerable by using common wordlists.
 Convert the pcapng file to WPA-PBKDF2-PMKID+EAPOL hashline (22000) with hcxpcapngtool (hcxtools)
-and check if wlan-key or plainmasterkey was transmitted unencrypted.
+and check if PreSharedKey or PlainMasterKey was transmitted unencrypted.
 
 
 Brief description
@@ -13,6 +13,7 @@ Brief description
 
 Stand-alone binaries - designed to run on Raspberry Pi's with installed Arch Linux.
 It may work on other Linux systems (notebooks, desktops) and distributions, too.
+Capture format pcapng is compatible to Wireshark and tshark.
 
 
 Detailed description
@@ -20,7 +21,7 @@ Detailed description
 
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | Tool to run several tests to determine if access points or clients are vulnerable                      |
+| hcxdumptool    | Tool to run several tests to determine if ACCESS POINTs or CLIENTs are vulnerable                      |
 | hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
@@ -81,7 +82,7 @@ Requirements
 
 * Operatingsystem: Arch Linux (strict), Kernel >= 5.4 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems).
 
-* Chipset must be able to run in monitor mode and driver must support monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
+* Chipset must be able to run in monitor mode and driver must support monitor mode as well as full packet injection. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
 
 * libopenssl and openssl-dev installed
 
@@ -95,9 +96,9 @@ Adapters
 
 hcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter! Otherwise it will not start!
 
-The driver must support monitor mode and full packet injection, as well as ioctl() calls!
+The driver must support monitor mode and full packet injection, as well as ioctl() system calls!
 
-Netlink (libnl) interfaces are not supported!
+Virtual Netlink (libnl) interfaces are not supported!
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
@@ -133,13 +134,15 @@ Intel PRO/Wireless
 
 Broadcom
 
+Realtek (mostly no monitor mode by kernel drivers)
+
 
 Antennas
 --------------
 
 The best high frequency amplifier is a good antenna!
 
-It is much better to achieve gain using a good antenna instead of increasing transmitter power
+It is much better to achieve gain using a good antenna instead of increasing transmitter power.
 
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
@@ -200,8 +203,6 @@ Green ACT LED flashes 10 times
 
 Raspberry Pi turned off safely and can be disconnected from power supply
 
-Do not use hcxdumptool and hcxpioff together!
-
 
 Procedure
 --------------
@@ -256,13 +257,13 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
   (depend on selected options)
 
 * hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
-  (use hcxpcapngtool to save them to file)
+  (use hcxpcapngtool to convert them to a format hashcat and/Or JtR understand)
 
 * hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
-  (use hcxpcapngtool to save them to file)
+  (use hcxpcapngtool to convert them to a format hashcat and/Or JtR understand)
 
 * hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
-  (use hcxpcapngtool to save them to file)
+  (use hcxpcapngtool to to a format hashcat and/Or JtR understand)
 
 * hcxdumptool is able to capture passwords from the wlan traffic
   (use hcxpcapngtool -E to save them to file, together with networknames)
