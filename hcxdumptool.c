@@ -6480,6 +6480,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_STATUS:
+		if(!isdigit(optarg[0]))
+			{
+			fprintf(stderr, "status must be a digit\n");
+			exit(EXIT_FAILURE);
+			}
 		statusout |= strtol(optarg, NULL, 10);
 		break;
 
