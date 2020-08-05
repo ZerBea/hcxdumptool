@@ -6326,6 +6326,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_DEAUTH_REASON_CODE:
+		if(!isdigit(optarg[0]))
+			{
+			fprintf(stderr, "wrong reason code\n");
+			exit(EXIT_FAILURE);
+			}
 		reasoncode = strtol(optarg, NULL, 10);
 		break;
 
@@ -6457,6 +6462,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_TOT:
+		if(!isdigit(optarg[0]))
+			{
+			fprintf(stderr, "status must be a digit\n");
+			exit(EXIT_FAILURE);
+			}
 		totvalue = strtol(optarg, NULL, 10);
 		if(totvalue < 2)
 			{
