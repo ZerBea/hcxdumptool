@@ -3624,6 +3624,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				{
 				send_ack();
 				send_association_resp();
+				send_eap_request_id();
 				memcpy(&lastauthap, macfrx->addr1, 6);
 				memcpy(&lastauthclient, macfrx->addr2, 6);
 				lastauthtimestamp = timestamp;
@@ -3633,6 +3634,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				{
 				send_ack();
 				send_association_resp();
+				send_eap_request_id();
 				memcpy(&lastauthap, macfrx->addr1,6);
 				memcpy(&lastauthclient, macfrx->addr2,6);
 				lastauthtimestamp = timestamp;
