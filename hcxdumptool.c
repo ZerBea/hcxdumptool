@@ -93,6 +93,7 @@ static bool beaconactiveflag;
 static bool beaconfloodflag;
 static bool gpsdflag;
 static bool infinityflag;
+static bool wpaentflag;
 static int sl;
 static int errorcount;
 static int maxerrorcount;
@@ -1886,7 +1887,8 @@ static inline void send_probe_resp(uint8_t *client, macessidlist_t *zeigerap)
 {
 static mac_t *macftx;
 static capap_t *capap;
-const uint8_t proberesponsedata[] =
+size_t rsnwpa_size;
+const uint8_t proberesponse_head_data[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,
@@ -1895,7 +1897,12 @@ const uint8_t proberesponsedata[] =
 /* Tag: ERP Information */
 0x2a, 0x01, 0x04,
 /* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c
+};
+#define PROBERESPONSE_HEAD_SIZE sizeof(proberesponse_head_data)
+
+const uint8_t proberesponse_ie_wpapsk[] =
+{
 /* Tag: RSN Information WPA1 & WPA2 PSK */
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
@@ -1910,11 +1917,38 @@ const uint8_t proberesponsedata[] =
 0x01, 0x00,
 0x00, 0x50, 0xf2, 0x02,
 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02
+};
+#define PROBERESPONSE_IE_WPAPSK_SIZE sizeof(proberesponse_ie_wpapsk)
+
+const uint8_t proberesponse_ie_wpaentpsk[] =
+{
+/* Tag: RSN Information WPA1 & WPA2 PSK */
+0x30, 0x18, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x02, 0x00,
+0x00, 0x0f, 0xac, 0x01,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0x00,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x1a, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
 0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x02, 0x00,
+0x00, 0x50, 0xf2, 0x01,
+0x00, 0x50, 0xf2, 0x02
+};
+#define PROBERESPONSE_IE_WPAENTPSK_SIZE sizeof(proberesponse_ie_wpaentpsk)
+
+const uint8_t proberesponse_ie_extcap[] =
+{
 /* Tag: Extended Capabilities (8 octets) */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
 };
-#define PROBERESPONSE_SIZE sizeof(proberesponsedata)
+#define PROBERESPONSE_IE_EXTCAP_SIZE sizeof(proberesponse_ie_extcap)
 
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +ESSID_LEN_MAX +IETAG_SIZE +1);
@@ -1934,9 +1968,20 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = zeigerap->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], zeigerap->essid, zeigerap->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen], &proberesponsedata, PROBERESPONSE_SIZE);
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen], &proberesponse_head_data, PROBERESPONSE_HEAD_SIZE);
+if(wpaentflag == true)
+	{
+	rsnwpa_size = PROBERESPONSE_IE_WPAENTPSK_SIZE;
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpaentpsk, PROBERESPONSE_IE_WPAENTPSK_SIZE);
+	}
+else
+	{
+	rsnwpa_size = PROBERESPONSE_IE_WPAPSK_SIZE;
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpapsk, PROBERESPONSE_IE_WPAPSK_SIZE);
+	}
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size], &proberesponse_ie_extcap, PROBERESPONSE_IE_EXTCAP_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +0x0c] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_SIZE) < 0)
+if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size +PROBERESPONSE_IE_EXTCAP_SIZE) < 0)
 	{
 	perror("\nfailed to transmit proberesponse");
 	errorcount++;
@@ -2179,7 +2224,7 @@ static mac_t *macftx;
 static const uint8_t requestidentitydata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
-0x01, 0x00, 0x00, 0x0a, 0x01, 0x63, 0x00, 0x05, 0x01
+0x01, 0x00, 0x00, 0x05, 0x01, 0x63, 0x00, 0x05, 0x01
 };
 #define REQUESTIDENTITY_SIZE sizeof(requestidentitydata)
 static uint8_t packetout[1024];
@@ -3567,6 +3612,29 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				{
 				send_ack();
 				send_association_resp();
+				memcpy(&lastauthap, macfrx->addr1,6);
+				memcpy(&lastauthclient, macfrx->addr2,6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 1;
+				}
+			}
+		if(((tags.akm &TAK_PMKSA) == TAK_PMKSA) || ((tags.akm &TAK_PMKSA256) == TAK_PMKSA256))
+			{
+			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
+				{
+				send_ack();
+				send_association_resp();
+				send_eap_request_id();
+				memcpy(&lastauthap, macfrx->addr1, 6);
+				memcpy(&lastauthclient, macfrx->addr2, 6);
+				lastauthtimestamp = timestamp;
+				lastauthkeyver = 2;
+				}
+			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
+				{
+				send_ack();
+				send_association_resp();
+				send_eap_request_id();
 				memcpy(&lastauthap, macfrx->addr1,6);
 				memcpy(&lastauthclient, macfrx->addr2,6);
 				lastauthtimestamp = timestamp;
@@ -5716,12 +5784,39 @@ static const uint8_t bcbeacondata_open_templ[] =
 #define BCBEACON_OPEN_TEMPL_SIZE sizeof(bcbeacondata_open_templ)
 #define BCBEACON_OPEN_TEMPL_CHANOFFSET 21
 
-uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX];
-size_t beaconparamsoctetslen = (beaconparams == NULL) ? 0 : (strlen(beaconparams) /2);
+static const uint8_t beacon_ie_wpaentpsk_rsn[] =
+{
+/* Tag: RSN Information WPA1 & WPA2 ENT + PSK*/
+0x30, 0x18, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x02, 0x00,
+0x00, 0x0f, 0xac, 0x01,
+0x00, 0x0f, 0xac, 0x02,
+0x00, 0x0c
+};
+#define BEACON_IE_WPAENTPSK_RSN_SIZE sizeof(beacon_ie_wpaentpsk_rsn)
+
+static const uint8_t beacon_ie_wpaentpsk_wpa[] =
+{
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x1a, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x02, 0x00,
+0x00, 0x50, 0xf2, 0x01,
+0x00, 0x50, 0xf2, 0x02
+};
+#define BEACON_IE_WPAENTPSK_WPA_SIZE sizeof(beacon_ie_wpaentpsk_wpa)
+
+uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX +BEACON_IE_WPAENTPSK_RSN_SIZE +BEACON_IE_WPAENTPSK_WPA_SIZE];
+size_t beaconparamsoctetslen = 0;
 ietag_t *ieset[IESETLEN_MAX];
 size_t iesetlen;
 
-if(beaconparamsoctetslen == 0)
+if(beaconparams == NULL && wpaentflag == false)
 	{
 	reactivebeacondatalen = REACTIVEBEACON_TEMPL_SIZE;
 	memcpy(&reactivebeacondata, &reactivebeacondata_templ, reactivebeacondatalen);
@@ -5735,10 +5830,21 @@ if(beaconparamsoctetslen == 0)
 	}
 else
 	{
-	if(hex2bin(beaconparams, beaconparamsoctets, beaconparamsoctetslen) == false)
+	if(wpaentflag == true)
 		{
-		fprintf(stderr, "beacon parameters error can't read hex string\n");
-		exit(EXIT_FAILURE);
+		memcpy(&beaconparamsoctets, &beacon_ie_wpaentpsk_rsn, BEACON_IE_WPAENTPSK_RSN_SIZE);
+		beaconparamsoctetslen += BEACON_IE_WPAENTPSK_RSN_SIZE;
+		memcpy(&beaconparamsoctets[BEACON_IE_WPAENTPSK_RSN_SIZE], &beacon_ie_wpaentpsk_wpa, BEACON_IE_WPAENTPSK_WPA_SIZE);
+		beaconparamsoctetslen += BEACON_IE_WPAENTPSK_WPA_SIZE;
+		}
+	if(beaconparams != NULL)
+		{
+		if(hex2bin(beaconparams, &beaconparamsoctets[beaconparamsoctetslen], (strlen(beaconparams) /2)) == false)
+			{
+			fprintf(stderr, "beacon parameters error can't read hex string\n");
+			exit(EXIT_FAILURE);
+			}
+		beaconparamsoctetslen += (strlen(beaconparams) /2);
 		}
 	iesetlen = bin2ieset(ieset, beaconparamsoctets, beaconparamsoctetslen);
 	reactivebeacondatalen = merge_ieset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -34, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, ieset, iesetlen);
@@ -6051,6 +6157,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--beaconparams=<TLVs>              : update or add Information Elements in all transmitted beacons\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
+	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
 	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
 	"                                     NMEA 0183 $GPGGA $GPGGA\n"
@@ -6167,6 +6274,7 @@ static const struct option long_options[] =
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
 	{"infinity",			no_argument,		NULL,	HCX_INFINITY},
 	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
+	{"wpaent",				no_argument,		NULL,	HCX_WPAENT},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
@@ -6226,6 +6334,7 @@ showinterfaceflag = false;
 showchannelsflag = false;
 monitormodeflag = false;
 beaconparamsflag = false;
+wpaentflag = false;
 totflag = false;
 gpsdflag = false;
 infinityflag = false;
@@ -6441,6 +6550,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			make_beacon_tagparams(optarg);
 			beaconparamsflag = true;
 			}
+		break;
+
+		case HCX_WPAENT:
+		wpaentflag = true;
 		break;
 
 		case HCX_GPIO_BUTTON:

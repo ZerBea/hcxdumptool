@@ -33,6 +33,7 @@
 #define HCX_ERROR_MAX			33
 #define HCX_STATUS			34
 #define HCX_BEACONPARAMS		35
+#define HCX_WPAENT              	36
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
