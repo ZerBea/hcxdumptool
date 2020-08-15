@@ -3696,6 +3696,29 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			lastauthkeyver = 1;
 			}
 		}
+	if(((tags.akm &TAK_PMKSA) == TAK_PMKSA) || ((tags.akm &TAK_PMKSA256) == TAK_PMKSA256))
+		{
+		if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
+			{
+			send_ack();
+			send_association_resp();
+			send_eap_request_id();
+			memcpy(&lastauthap, macfrx->addr1, 6);
+			memcpy(&lastauthclient, macfrx->addr2, 6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 2;
+			}
+		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
+			{
+			send_ack();
+			send_association_resp();
+			send_eap_request_id();
+			memcpy(&lastauthap, macfrx->addr1,6);
+			memcpy(&lastauthclient, macfrx->addr2,6);
+			lastauthtimestamp = timestamp;
+			lastauthkeyver = 1;
+			}
+		}
 	}
 if(fd_pcapng > 0)
 	{
