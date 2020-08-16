@@ -2251,6 +2251,49 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
+static inline void send_eap_request(uint8_t eaptype, uint8_t id, uint8_t *requestdata, size_t requestdata_len)
+{
+static mac_t *macftx;
+uint8_t requestheaddata[] =
+{
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x00, 0x00, 0x05, 0x01, 0x63, 0x00, 0x05, 0x01
+};
+#define EAP_REQUEST_HEAD_SIZE sizeof(requestheaddata)
+#define LOGICAL_LINK_CONTROL_SIZE (8)
+
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LOGICAL_LINK_CONTROL_SIZE +EAPAUTH_SIZE +EAP_LEN_MAX];
+
+requestheaddata[10] = ((requestdata_len +5) >> 8) &0xff;
+requestheaddata[11] = (requestdata_len +5) &0xff;
+requestheaddata[13] = id;
+requestheaddata[14] = requestheaddata[10];
+requestheaddata[15] = requestheaddata[11];
+requestheaddata[16] = eaptype;
+
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE +requestdata_len +1);
+memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetout +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_QOS_DATA;
+memcpy(macftx->addr1, macfrx->addr2, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, macfrx->addr1, 6);
+macftx->from_ds = 1;
+macftx->duration = 0x002c;
+macftx->sequence = 0;
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &requestheaddata, EAP_REQUEST_HEAD_SIZE);
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE], requestdata, requestdata_len);
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE +requestdata_len) < 0)
+	{
+	perror("\nfailed to transmit EAP request");
+	errorcount++;
+	}
+fsync(fd_socket);
+outgoingcount++;
+return;
+}
+/*===========================================================================*/
 /*===========================================================================*/
 static inline void printown(ownlist_t *zeiger, char *msg)
 {

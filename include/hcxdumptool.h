@@ -76,6 +76,7 @@
 #define RSN_LEN_MIN		20
 #define WPA_LEN_MIN		22
 #define BEACONBODY_LEN_MAX	2301
+#define EAP_LEN_MAX 1418
 
 #define IESETLEN_MAX 50
 
