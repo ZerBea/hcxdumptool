@@ -94,6 +94,7 @@ static bool beaconfloodflag;
 static bool gpsdflag;
 static bool infinityflag;
 static bool wpaentflag;
+static bool eapreqflag;
 static int sl;
 static int errorcount;
 static int maxerrorcount;
@@ -163,11 +164,13 @@ static pmklist_t *pmklist;
 
 static pagidlist_t *pagidlist;
 static scanlist_t *scanlist;
+static eapreqlist_t *eapreqlist;
 
 static int filteraplistentries;
 static int filterclientlistentries;
 static int filtermode;
 static int myreactivebeaconsequence;
+static int eapreqentries;
 
 static struct sock_fprog bpf;
 
@@ -2218,18 +2221,65 @@ if(fd_pcapng > 0)
 return;
 }
 /*===========================================================================*/
-static inline void send_eap_request_id()
+static inline void send_eap(uint8_t eapoltype, uint8_t code, uint8_t id, uint8_t eaptype, uint8_t *data, size_t data_len)
 {
 static mac_t *macftx;
-static const uint8_t requestidentitydata[] =
+uint8_t eapdata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x01, 0x00, 0x00, 0x05, 0x01, 0x63, 0x00, 0x05, 0x01
 };
-#define REQUESTIDENTITY_SIZE sizeof(requestidentitydata)
-static uint8_t packetout[1024];
+#define EAP_DATA_SIZE sizeof(eapdata)
 
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE +1);
+size_t eapdata_len;
+eapauth_t *eapauth;
+exteap_t *exteap;
+static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +EAP_LEN_MAX];
+
+eapauth = (eapauth_t*)&eapdata[LLC_SIZE];
+exteap = (exteap_t*)&eapdata[LLC_SIZE +EAPAUTH_SIZE];
+
+eapauth->type = eapoltype;
+if(eapoltype == EAPOL_START || eapoltype == EAPOL_LOGOFF)
+	{
+	eapdata_len = (LLC_SIZE +EAPAUTH_SIZE);
+	eapauth->len = 0;
+	}
+else
+	{
+	switch(code)
+		{
+		case EAP_CODE_REQ:
+		case EAP_CODE_RESP:
+			eapdata_len = (LLC_SIZE +EAPAUTH_SIZE +EXTEAP_SIZE);
+			eapauth->len = htons(EXTEAP_SIZE +data_len);
+			break;
+		case EAP_CODE_INITIATE:
+		case EAP_CODE_FINISH:
+			if(data_len == 0)
+				{
+				eapdata_len = (LLC_SIZE +EAPAUTH_SIZE +EXTEAP_SIZE -1);
+				eapauth->len = htons(EXTEAP_SIZE -1);
+				}
+			else
+				{
+				eapdata_len = (LLC_SIZE +EAPAUTH_SIZE +EXTEAP_SIZE);
+				eapauth->len = htons(EXTEAP_SIZE +data_len);
+				}
+			break;
+		case EAP_CODE_SUCCESS:
+		case EAP_CODE_FAILURE:
+			eapdata_len = (LLC_SIZE +EAPAUTH_SIZE +EXTEAP_SIZE -1);
+			eapauth->len = htons(EXTEAP_SIZE -1);
+			break;
+		};
+	exteap->len = eapauth->len;
+	exteap->code = code;
+	exteap->id = id;
+	exteap->type = eaptype;
+	}
+
+memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +data_len +1);
 memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetout +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_DATA;
@@ -2240,10 +2290,11 @@ memcpy(macftx->addr3, macfrx->addr1, 6);
 macftx->from_ds = 1;
 macftx->duration = 0x002c;
 macftx->sequence = 0;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &requestidentitydata, REQUESTIDENTITY_SIZE);
-if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +REQUESTIDENTITY_SIZE) < 0)
+memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &eapdata, eapdata_len);
+if(data_len > 0) memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len], data, data_len);
+if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len) < 0)
 	{
-	perror("\nfailed to transmit request identity");
+	perror("\nfailed to transmit EAP frame");
 	errorcount++;
 	}
 fsync(fd_socket);
@@ -2251,46 +2302,21 @@ outgoingcount++;
 return;
 }
 /*===========================================================================*/
-static inline void send_eap_request(uint8_t eaptype, uint8_t id, uint8_t *requestdata, size_t requestdata_len)
+static inline void send_eap_request(uint8_t id, uint8_t eaptype, uint8_t *requestdata, size_t requestdata_len)
 {
-static mac_t *macftx;
-uint8_t requestheaddata[] =
+send_eap(EAP_PACKET, EAP_CODE_REQ, id, eaptype, requestdata, requestdata_len);
+return;
+}
+/*===========================================================================*/
+static inline void send_eap_status_resp(uint8_t code, uint8_t id, uint8_t eaptype)
 {
-0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
-0x01, 0x00, 0x00, 0x05, 0x01, 0x63, 0x00, 0x05, 0x01
-};
-#define EAP_REQUEST_HEAD_SIZE sizeof(requestheaddata)
-#define LOGICAL_LINK_CONTROL_SIZE (8)
-
-static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LOGICAL_LINK_CONTROL_SIZE +EAPAUTH_SIZE +EAP_LEN_MAX];
-
-requestheaddata[10] = ((requestdata_len +5) >> 8) &0xff;
-requestheaddata[11] = (requestdata_len +5) &0xff;
-requestheaddata[13] = id;
-requestheaddata[14] = requestheaddata[10];
-requestheaddata[15] = requestheaddata[11];
-requestheaddata[16] = eaptype;
-
-memset(&packetout, 0, HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE +requestdata_len +1);
-memcpy(&packetout, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetout +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_DATA;
-macftx->subtype = IEEE80211_STYPE_QOS_DATA;
-memcpy(macftx->addr1, macfrx->addr2, 6);
-memcpy(macftx->addr2, macfrx->addr1, 6);
-memcpy(macftx->addr3, macfrx->addr1, 6);
-macftx->from_ds = 1;
-macftx->duration = 0x002c;
-macftx->sequence = 0;
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS], &requestheaddata, EAP_REQUEST_HEAD_SIZE);
-memcpy(&packetout[HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE], requestdata, requestdata_len);
-if(write(fd_socket, packetout,  HDRRT_SIZE +MAC_SIZE_QOS +EAP_REQUEST_HEAD_SIZE +requestdata_len) < 0)
-	{
-	perror("\nfailed to transmit EAP request");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_eap(EAP_PACKET, code, id, eaptype, NULL, 0);
+return;
+}
+/*===========================================================================*/
+static inline void send_eap_request_id()
+{
+send_eap_request(99, EAP_TYPE_ID, NULL, 0);
 return;
 }
 /*===========================================================================*/
@@ -2391,6 +2417,8 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
+		if((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))
+			send_eap_request(zeiger->eapreqstate, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
 		if((zeiger->status &OW_EAP_RESP) != OW_EAP_RESP)
 			{
 			zeiger->status |= OW_EAP_RESP;
@@ -2420,6 +2448,8 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
 	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP RESPONSE ID");
+	if((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))
+		send_eap_request(zeiger->eapreqstate, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
 	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 	return;
 	}
@@ -2558,6 +2588,110 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 return;
 }
 /*===========================================================================*/
+static inline void process80211exteap_resp(uint16_t exteaplen)
+{
+static ownlist_t *zeiger;
+
+static uint8_t *eapauthptr;
+static exteap_t *exteap;
+eapauthptr = payloadptr +LLC_SIZE +EAPAUTH_SIZE;
+exteap = (exteap_t*)eapauthptr;
+char outstr[30];
+
+if(exteaplen < EAPAUTH_SIZE) return;
+if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
+	{
+	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
+		{
+		if(zeiger->timestamp == 0) break;
+		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		zeiger->timestamp = timestamp;
+		if((zeiger->status &FILTERED) == FILTERED) return;
+		if(fd_pcapng > 0)
+			{
+			if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+			}
+		sprintf(outstr, "EAP RESPONSE TYPE %d", exteap->type);
+		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, outstr);
+		if(eapreqflag == true)
+			{
+			if(exteap->id <= zeiger->eapreqstate)
+				{
+				if(eapreqlist[exteap->id].termination == 0)
+					{
+					if(exteap->id < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[exteap->id].type);
+						else send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
+					}
+				else if(eapreqlist[exteap->id].termination != EAPREQLIST_NOTERM)
+						{
+						if(eapreqlist[exteap->id].termination == EAPREQLIST_DEAUTH)
+							send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
+						else send_eap_status_resp(eapreqlist[exteap->id].termination, exteap->id, eapreqlist[exteap->id].type);
+						}
+				}
+			else return;
+			if(exteap->id == zeiger->eapreqstate)
+				{
+				zeiger->eapreqstate++;
+				if(zeiger->eapreqstate < eapreqentries)
+					{
+					send_eap_request(zeiger->eapreqstate, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
+					}
+				}
+			}
+		return;
+		}
+	memset(zeiger, 0, OWNLIST_SIZE);
+	zeiger->timestamp = timestamp;
+	zeiger->status = OW_EAP_RESP;
+	memcpy(zeiger->ap, macfrx->addr1, 6);
+	memcpy(zeiger->client, macfrx->addr2, 6);
+	if(filtermode != 0)
+		{
+		if(setclientfilter(zeiger) == true)
+			{
+			qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
+			return;
+			}
+		}
+	if(fd_pcapng > 0)
+		{
+		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+		}
+	sprintf(outstr, "EAP RESPONSE TYPE %d", exteap->type);
+	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, outstr);
+	if(eapreqflag == true)
+		{
+		if(exteap->id <= zeiger->eapreqstate)
+			{
+			if(eapreqlist[exteap->id].termination == 0)
+				{
+				if(exteap->id < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[exteap->id].type);
+					else send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
+				}
+			else if(eapreqlist[exteap->id].termination != EAPREQLIST_NOTERM)
+					{
+					if(eapreqlist[exteap->id].termination == EAPREQLIST_DEAUTH)
+						send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
+					else send_eap_status_resp(eapreqlist[exteap->id].termination, exteap->id, eapreqlist[exteap->id].type);
+					}
+			}
+		else return;
+		if(exteap->id == zeiger->eapreqstate)
+			{
+			zeiger->eapreqstate++;
+			if(zeiger->eapreqstate < eapreqentries)
+				{
+				send_eap_request(zeiger->eapreqstate, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
+				}
+			}
+		}
+	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
+	return;
+	}
+return;
+}
+/*===========================================================================*/
 static inline void process80211exteap(int authlen)
 {
 static uint8_t *eapauthptr;
@@ -2568,14 +2702,14 @@ eapauthptr = payloadptr +LLC_SIZE +EAPAUTH_SIZE;
 exteap = (exteap_t*)eapauthptr;
 exteaplen = ntohs(exteap->len);
 if(exteaplen > authlen) return;
-if(fd_pcapng > 0)
-	{
-	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
-	}
 if(exteap->type == EAP_TYPE_ID)
 	{
 	if(exteap->code == EAP_CODE_REQ) process80211exteap_req_id(exteaplen);
 	else if(exteap->code == EAP_CODE_RESP) process80211exteap_resp_id(exteaplen);
+	}
+if(exteap->type > EAP_TYPE_ID)
+	{
+	if(exteap->code == EAP_CODE_RESP) process80211exteap_resp(exteaplen);
 	}
 return;
 }
@@ -3632,12 +3766,16 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	gettags(clientinfolen, clientinfoptr, &tags);
+	if(eapreqflag == true && ((zeiger->essidlen != tags.essidlen) || (memcmp(zeiger->essid, tags.essid, zeiger->essidlen) != 0)))
+		{
+		zeiger->eapreqstate = 0;
+		}
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
 		{
 		zeiger->essidlen = tags.essidlen;
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		}
-	if(zeiger->status >= OW_M1M2ROGUE) return;
+	if((zeiger->status >= OW_M1M2ROGUE) && (eapreqflag == false)) return;
 	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2ROGUE))
 		{
 		if(((tags.akm &TAK_PSK) == TAK_PSK) || ((tags.akm &TAK_PSKSHA256) == TAK_PSKSHA256))
@@ -3661,27 +3799,32 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				lastauthkeyver = 1;
 				}
 			}
+		}
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))))
+		{
 		if(((tags.akm &TAK_PMKSA) == TAK_PMKSA) || ((tags.akm &TAK_PMKSA256) == TAK_PMKSA256))
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
+				if(eapreqflag == true && zeiger->eapreqstate == eapreqentries) return;
 				send_ack();
 				send_association_resp();
 				send_eap_request_id();
 				memcpy(&lastauthap, macfrx->addr1, 6);
 				memcpy(&lastauthclient, macfrx->addr2, 6);
 				lastauthtimestamp = timestamp;
-				lastauthkeyver = 2;
+				lastauthkeyver = 0;
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
+				if(eapreqflag == true && zeiger->eapreqstate == eapreqentries) return;
 				send_ack();
 				send_association_resp();
 				send_eap_request_id();
 				memcpy(&lastauthap, macfrx->addr1,6);
 				memcpy(&lastauthclient, macfrx->addr2,6);
 				lastauthtimestamp = timestamp;
-				lastauthkeyver = 1;
+				lastauthkeyver = 0;
 				}
 			}
 		}
@@ -3837,7 +3980,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
-	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (zeiger->status < OW_M1M2ROGUE))
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true))))
 		{
 		if(auth->algorithm == OPEN_SYSTEM)
 			{
@@ -5924,6 +6067,67 @@ else
 return;
 }
 /*===========================================================================*/
+static inline bool processeapreqlist(char *optarglist)
+{
+static char *opt_ptr;
+static char *col_ptr;
+eapreqlist_t *zeiger;
+
+memset(eapreqlist, 0, (EAPREQLIST_MAX *EAPREQLIST_SIZE));
+opt_ptr = strtok(optarglist, ",");
+zeiger = eapreqlist;
+eapreqentries = 0;
+while(opt_ptr != NULL)
+	{
+	col_ptr = strchr(opt_ptr, ':');
+	if(col_ptr != NULL)
+		{
+		zeiger->length = (((col_ptr -opt_ptr) /2) -1);
+		switch(col_ptr[1])
+			{
+			case 0:
+				break;
+			case 'F':
+			case 'f':
+				zeiger->termination = EAP_CODE_FAILURE;
+				break;
+			case 'S':
+			case 's':
+				zeiger->termination = EAP_CODE_SUCCESS;
+				break;
+			case 'I':
+			case 'i':
+				zeiger->termination = EAP_CODE_INITIATE;
+				break;
+			case 'N':
+			case 'n':
+				zeiger->termination = EAP_CODE_FINISH;
+				break;
+			case 'D':
+			case 'd':
+				zeiger->termination = EAPREQLIST_DEAUTH;
+				break;
+			case '-':
+				zeiger->termination = EAPREQLIST_NOTERM;
+				break;
+			}
+		}
+	else
+		{
+		zeiger->length = (strlen(opt_ptr) /2) -1;
+		}
+	if(hex2bin(opt_ptr, &zeiger->type, zeiger->length +1) == false)
+		{
+		return false;
+		}
+	eapreqentries++;
+	zeiger++;
+	if(zeiger >= eapreqlist + (EAPREQLIST_MAX *EAPREQLIST_SIZE)) break;
+	opt_ptr = strtok(NULL, ",");
+	}
+return true;
+}
+/*===========================================================================*/
 static inline bool globalinit()
 {
 static int c;
@@ -5993,6 +6197,7 @@ if((ownlist = (ownlist_t*)calloc((OWNLIST_MAX +1), OWNLIST_SIZE)) == NULL) retur
 if((pmklist = (pmklist_t*)calloc((PMKLIST_MAX +1), PMKLIST_SIZE)) == NULL) return false;
 if((pagidlist = (pagidlist_t*)calloc((PAGIDLIST_MAX +1), PAGIDLIST_SIZE)) == NULL) return false;
 if((scanlist = (scanlist_t*)calloc((SCANLIST_MAX +1), SCANLIST_SIZE)) == NULL) return false;
+if((eapreqlist = (eapreqlist_t*)calloc((EAPREQLIST_MAX +1), EAPREQLIST_SIZE)) == NULL) return false;
 myoui_ap = myvendorap[rand() %((MYVENDORAP_SIZE /sizeof(int)))];
 mynic_ap = rand() & 0xffffff;
 myoui_ap &= 0xfcffff;
@@ -6224,6 +6429,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
+	"--eapreq=<type><data>[:<term>],... : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	"                                     response is terminated with :F = EAP Failure, :S = EAP Success, :I = EAP ERP Initiate, :F = EAP ERP Finish,\n"
+	"                                     :D = Deauthentication, :- = no packet\n"
+	"                                     default behavior is terminating all responses with a Failure packet, after last one the client is deauthenticated\n"
 	"--use_gps_device=<device>          : use GPS device\n"
 	"                                     /dev/ttyACM0, /dev/ttyUSB0, ...\n"
 	"                                     NMEA 0183 $GPGGA $GPGGA\n"
@@ -6287,7 +6496,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -6318,6 +6527,7 @@ static bool showchannelsflag;
 static bool beaconparamsflag;
 static char *nmeaoutname;
 static char *weakcandidateuser;
+static char *eapreqhex;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
@@ -6341,6 +6551,7 @@ static const struct option long_options[] =
 	{"infinity",			no_argument,		NULL,	HCX_INFINITY},
 	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
 	{"wpaent",				no_argument,		NULL,	HCX_WPAENT},
+	{"eapreq",				required_argument,	NULL,	HCX_EAPREQ},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
@@ -6401,6 +6612,7 @@ showchannelsflag = false;
 monitormodeflag = false;
 beaconparamsflag = false;
 wpaentflag = false;
+eapreqflag = false;
 totflag = false;
 gpsdflag = false;
 infinityflag = false;
@@ -6620,6 +6832,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_WPAENT:
 		wpaentflag = true;
+		break;
+
+		case HCX_EAPREQ:
+		eapreqhex = optarg;
+		eapreqflag = true;
 		break;
 
 		case HCX_GPIO_BUTTON:
@@ -6846,6 +7063,15 @@ if(getuid() != 0)
 loadfiles();
 
 if(beaconparamsflag == false) make_beacon_tagparams(NULL);
+
+if(eapreqflag == true)
+	{
+	if(processeapreqlist(eapreqhex) == false)
+		{
+		fprintf(stderr, "failed reading EAP request list\n");
+		exit (EXIT_FAILURE);
+		}
+	}
 
 if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
