@@ -2231,7 +2231,7 @@ uint8_t eapdata[] =
 };
 #define EAP_DATA_SIZE sizeof(eapdata)
 
-size_t eapdata_len;
+size_t eapdata_len = 0;
 eapauth_t *eapauth;
 exteap_t *exteap;
 static uint8_t packetout[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +EAP_LEN_MAX];
