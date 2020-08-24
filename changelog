@@ -1,3 +1,12 @@
+24.08.2020
+==========
+hcxdumptool: added new option
+--eapreq=<type><data>[:<term>],... : send max. 20 subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type
+                                     response is terminated with :F = EAP Failure, :S = EAP Success, :I = EAP ERP Initiate, :F = EAP ERP Finish,
+                                     :D = Deauthentication, :- = no packet
+                                     default behavior is terminating all responses with a Failure packet, after last one the client is deauthenticated
+
+
 14.08.2020
 ==========
 hcxdumptool: added new option --wpaent to announce WPA ENTERPRISE
