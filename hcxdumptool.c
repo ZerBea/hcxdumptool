@@ -3224,9 +3224,9 @@ if(authlen >= WPAKEY_SIZE +PMKID_SIZE)
 	if(pmkid->id != TAG_VENDOR) return;
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
-		if(addownap(AP_PMKID, macfrx->addr2) == false) return;
+		if(addownap(AP_PMKID, macfrx->addr3) == false) return;
 		pmkidroguecount++;
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr2, pmkid->pmkid, lastkeyver, "PMKIDROGUE");
+		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr3, pmkid->pmkid, lastkeyver, "PMKIDROGUE");
 		}
 	}
 return;
@@ -3256,9 +3256,9 @@ if(authlen >= WPAKEY_SIZE +PMKID_SIZE)
 	if(pmkid->id != TAG_VENDOR) return;
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
-		if(addownap(AP_PMKID, macfrx->addr2) == false) return;
+		if(addownap(AP_PMKID, macfrx->addr3) == false) return;
 		pmkidcount++;
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr2, pmkid->pmkid, lastkeyver, "PMKID");
+		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr3, pmkid->pmkid, lastkeyver, "PMKID");
 		}
 	}
 return;
