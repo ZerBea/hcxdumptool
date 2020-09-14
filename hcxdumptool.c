@@ -2415,7 +2415,8 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+		if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))
@@ -2459,7 +2460,8 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) || (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
+		if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+		if(memcmp(zeiger->client, macfrx->addr1, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_RESP) != OW_EAP_RESP)
@@ -2509,7 +2511,8 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+		if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_REQ) != OW_EAP_REQ)
@@ -2549,7 +2552,8 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) || (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
+		if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
+		if(memcmp(zeiger->client, macfrx->addr1, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_REQ) != OW_EAP_REQ)
@@ -2605,7 +2609,8 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+		if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if(fd_pcapng > 0)
@@ -3611,7 +3616,8 @@ if(clientinfolen < IETAG_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
@@ -3764,7 +3770,8 @@ if(clientinfolen < IETAG_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if(eapreqflag == true && ((zeiger->essidlen != tags.essidlen) || (memcmp(zeiger->essid, tags.essid, zeiger->essidlen) != 0)))
@@ -3978,7 +3985,8 @@ if(payloadlen < AUTHENTICATIONFRAME_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if(memcmp(zeiger->ap, macfrx->addr1, 6) != 0) continue;
+	if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
 	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true))))
