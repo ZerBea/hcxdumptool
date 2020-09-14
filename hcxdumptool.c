@@ -6494,6 +6494,13 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Important notice:\n"
 	"Using filter options, could cause that some useful frames are filtered out!\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
+	"\n"
+	"PMKIDROGUE = PMKID requested from ACCESS POINT by hcxdumptool\n"
+	"M1M2ROGUE = M2 requested from CLIENT by hcxdumptool\n"
+	"KDV0 = Key Descriptor Version 0 = Authentication Management Key defined\n"
+	"KDV1 = Key Descriptor Version 1 = WPA1 HMAC-MD5\n"
+	"KDV2 = Key Descriptor Version 2 = WPA2 HMAC-SHA1\n"
+	"KDV3 = Key Descriptor Version 3 = WPA2 AES-128-CMAC\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
 	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
