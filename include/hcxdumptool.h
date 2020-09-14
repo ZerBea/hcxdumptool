@@ -33,8 +33,8 @@
 #define HCX_ERROR_MAX			33
 #define HCX_STATUS			34
 #define HCX_BEACONPARAMS		35
-#define HCX_WPAENT              	36
-#define HCX_EAPREQ                  37
+#define HCX_WPAENT			36
+#define HCX_EAPREQ			37
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -54,8 +54,8 @@
 #define OWNLIST_MAX		1024
 #define PMKLIST_MAX		1024
 
-#define EAPLIST_MAX     1024
-#define EAPREQLIST_MAX  20
+#define EAPLIST_MAX		1024
+#define EAPREQLIST_MAX		20
 
 #define SCANLIST_MAX		256
 #define FILTERLIST_MAX		256
@@ -80,9 +80,9 @@
 #define RSN_LEN_MIN		20
 #define WPA_LEN_MIN		22
 #define BEACONBODY_LEN_MAX	2301
-#define EAP_LEN_MAX 1418
+#define EAP_LEN_MAX		1418
 
-#define IESETLEN_MAX 50
+#define IESETLEN_MAX		50
 
 #define PAGIDLIST_MAX		256
 
@@ -187,12 +187,11 @@ typedef struct
 #define OW_M1M2ROGUE	0b0000000000100000
 #define OW_M2M3		0b0000000001000000
 #define FILTERED	0b1000000000000000
+ uint8_t 		eapreqstate;
  uint8_t		ap[6];
  uint8_t		client[6];
  uint8_t		essidlen;
  uint8_t		essid[ESSID_LEN_MAX];
- uint8_t        eapreqstate;
-
 }ownlist_t;
 #define	OWNLIST_SIZE (sizeof(ownlist_t))
 

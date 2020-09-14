@@ -508,7 +508,7 @@ while(beaconextlistlen < BEACONEXTLIST_MAX)
 	{
 	if((len = fgetline(fh_extbeacon, ESSID_LEN_MAX, linein)) == -1) break;
 	if((len == 0) || (len > 32)) continue;
-	if(reload == true && beaconactiveflag == true)
+	if((reload == true) && (beaconactiveflag == true))
 		{
 		skipline = false;
 		for(zeiger = list; zeiger < list +RGLIST_MAX; zeiger++)
@@ -637,7 +637,7 @@ return;
 /*===========================================================================*/
 static inline void loadfiles()
 {
-if(reloadfilesflag == true && fd_socket > 0 && bpf.filter != NULL)
+if((reloadfilesflag == true) && (fd_socket > 0) && (bpf.filter != NULL))
 	{
 	if(setsockopt(fd_socket, SOL_SOCKET, SO_DETACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to free BPF code");
 	if(bpf.filter != NULL) free(bpf.filter);
@@ -1190,34 +1190,35 @@ size_t destdatalen = 0;
 bool mergedtags[IESETLEN_MAX] = { 0 };
 
 while(pos < (mergedatalen -1))
-    {
-    for(setcnt = 0; setcnt < iesetlen; setcnt++)
-        {
-        if (ieset[setcnt]->id > 0 && ieset[setcnt]->id == mergedata[pos])
-            {
+	{
+	for(setcnt = 0; setcnt < iesetlen; setcnt++)
+		{
+		if((ieset[setcnt]->id > 0) && (ieset[setcnt]->id == mergedata[pos]))
+			{
 			if(destdatalen > destdatalenmax -ieset[setcnt]->len -2) break;
-            memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
-            destdatalen += ieset[setcnt]->len +2;
-            mergedtags[setcnt] = true;
-            break;
-            }
-        }
-    if(setcnt == iesetlen) {
+			memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
+			destdatalen += ieset[setcnt]->len +2;
+			mergedtags[setcnt] = true;
+			break;
+			}
+		}
+	if(setcnt == iesetlen)
+		{
 		if(destdatalen > destdatalenmax - mergedata[pos +1] -2) break;
-        memcpy(&destdata[destdatalen], &mergedata[pos], mergedata[pos +1] +2);
-        destdatalen += mergedata[pos +1] +2;
-    }
-    pos += mergedata[pos +1] +2;
-    }
+		memcpy(&destdata[destdatalen], &mergedata[pos], mergedata[pos +1] +2);
+		destdatalen += mergedata[pos +1] +2;
+		}
+	pos += mergedata[pos +1] +2;
+	}
 for(setcnt = 0; setcnt < iesetlen; setcnt++)
-    {
-    if(ieset[setcnt]->id > 0 && mergedtags[setcnt] == false)
-        {
+	{
+	if(ieset[setcnt]->id > 0 && mergedtags[setcnt] == false)
+		{
 		if(destdatalen > destdatalenmax -ieset[setcnt]->len -2) break;
-        memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
-        destdatalen += ieset[setcnt]->len +2;
-        }
-    }
+		memcpy(&destdata[destdatalen], ieset[setcnt], ieset[setcnt]->len +2);
+		destdatalen += ieset[setcnt]->len +2;
+		}
+	}
 return destdatalen;
 }
 /*===========================================================================*/
@@ -2414,7 +2415,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))
@@ -2458,7 +2459,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) && (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
+		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) || (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_RESP) != OW_EAP_RESP)
@@ -2508,7 +2509,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_REQ) != OW_EAP_REQ)
@@ -2548,7 +2549,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) && (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
+		if((memcmp(zeiger->ap, macfrx->addr2, 6) != 0) || (memcmp(zeiger->client, macfrx->addr1, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if((zeiger->status &OW_EAP_REQ) != OW_EAP_REQ)
@@ -2604,7 +2605,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
-		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+		if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
 		if(fd_pcapng > 0)
@@ -3610,7 +3611,7 @@ if(clientinfolen < IETAG_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
@@ -3763,7 +3764,7 @@ if(clientinfolen < IETAG_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if(eapreqflag == true && ((zeiger->essidlen != tags.essidlen) || (memcmp(zeiger->essid, tags.essid, zeiger->essidlen) != 0)))
@@ -3977,7 +3978,7 @@ if(payloadlen < AUTHENTICATIONFRAME_SIZE) return;
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
-	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) && (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
+	if((memcmp(zeiger->ap, macfrx->addr1, 6) != 0) || (memcmp(zeiger->client, macfrx->addr2, 6) != 0)) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
 	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true))))
