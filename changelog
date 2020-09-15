@@ -1,3 +1,11 @@
+15.09.2020
+==========
+hcxdumptool: added new option
+--stop_client_m2_attacks=<digit>   : stop attacks against CLIENTS after 10 M2 frames received
+                                     affected: ap-less (EAPOL 2/4 - M2) attack
+                                     require hcxpcangtool --all option
+
+
 24.08.2020
 ==========
 hcxdumptool: added new option
