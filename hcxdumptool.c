@@ -105,6 +105,7 @@ static int eapolmp12roguecount;
 static int eapolmp23count;
 static int eapolmp34count;
 static int eapolmp34zeroedcount;
+static int owm1m2roguemax;
 
 static int gpscount;
 
@@ -933,14 +934,22 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if(memcmp(zeiger->client, client, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &status) == status) return false;
+	if(status == OW_M1M2ROGUE) zeiger->owm1m2roguecount += 1;
+	if(zeiger->owm1m2roguecount < owm1m2roguemax) return true;
 	zeiger->status |= status;
 	return true;
 	}
 memset(zeiger, 0, OWNLIST_SIZE);
 zeiger->timestamp = timestamp;
-zeiger->status = status;
 memcpy(zeiger->ap, ap, 6);
 memcpy(zeiger->client, client, 6);
+if(status == OW_M1M2ROGUE)
+	{
+	zeiger->owm1m2roguecount = 1;
+	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
+	return true;
+	}
+zeiger->status = status;
 qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 return true;
 }
@@ -4283,7 +4292,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		zeiger->essidlen = tags.essidlen;
 		memcpy(zeiger->essid, tags.essid, tags.essidlen);
 		}
-	if((infinityflag == true)&& ((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS))
+	if((infinityflag == true) && ((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS))
 		{
 		if(((zeiger->akm &TAK_PSK) == TAK_PSK) || ((zeiger->akm &TAK_PSKSHA256) == TAK_PSKSHA256))
 			{
@@ -6378,6 +6387,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      9 WLAN_REASON_STA_REQ_ASSOC_WITHOUT_AUTH\n"
 	"--disable_client_attacks           : do not attack clients\n"
 	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
+	"--stop_client_m2_attacks=<digit>   : stop attacks against CLIENTS after %d M2 frames received\n"
+	"                                     affected: ap-less (EAPOL 2/4 - M2) attack\n"
+	"                                     require hcxpcangtool --all option\n"
 	"--disable_ap_attacks               : do not attack access points\n"
 	"                                     affected: connected clients and client-less (PMKID) attack\n"
 	"--stop_ap_attacks=<digit>          : stop attacks against ACCESS POINTs if <n> BEACONs received\n"
@@ -6432,6 +6444,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
 	"                                     affected: ap-less\n"
+	"--all_m2                           : accept all connection attempts from a CLIENT\n"
+	"                                     affected: CLIENTs\n"
+	"                                     warning: that can prevent that a CLIENT can establish a connection to an assigned ACCESS POINT\n"
 	"--infinity                         : prevent that a CLIENT can establish a connection to an assigned ACCESS POINT\n"
 	"                                     affected: ACCESS POINTs and CLIENTs\n"
 	"--beaconparams=<TLVs>              : update or add Information Elements in all transmitted beacons\n"
@@ -6512,7 +6527,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"KDV3 = Key Descriptor Version 3 = WPA2 AES-128-CMAC\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname,
-	STAYTIME, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -6555,6 +6570,7 @@ static const struct option long_options[] =
 	{"stop_ap_attacks",		required_argument,	NULL,	HCX_STOP_AP_ATTACKS},
 	{"resume_ap_attacks",		required_argument,	NULL,	HCX_RESUME_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCX_DISABLE_CLIENT_ATTACKS},
+	{"stop_client_m2_attacks",	required_argument,	NULL,	HCX_STOP_CLIENT_M2_ATTACKS},
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
@@ -6566,8 +6582,8 @@ static const struct option long_options[] =
 	{"flood_beacon",		no_argument,		NULL,	HCX_FLOOD_BEACON},
 	{"infinity",			no_argument,		NULL,	HCX_INFINITY},
 	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
-	{"wpaent",				no_argument,		NULL,	HCX_WPAENT},
-	{"eapreq",				required_argument,	NULL,	HCX_EAPREQ},
+	{"wpaent",			no_argument,		NULL,	HCX_WPAENT},
+	{"eapreq",			required_argument,	NULL,	HCX_EAPREQ},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
@@ -6616,6 +6632,7 @@ staytime = STAYTIME;
 attackcount = staytime *10;
 attackstopcount = ATTACKSTOP_MAX;
 attackresumecount = ATTACKRESUME_MAX;
+owm1m2roguemax = OW_M1M2ROGUE_MAX;
 reasoncode = WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA;
 myoui_client = 0;
 rcascanflag = false;
@@ -6740,6 +6757,16 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_DISABLE_CLIENT_ATTACKS:
 		attackstatus |= DISABLE_CLIENT_ATTACKS;
 		break;
+
+		case HCX_STOP_CLIENT_M2_ATTACKS:
+		owm1m2roguemax = strtol(optarg, NULL, 10);
+		if((owm1m2roguemax < 0) || (owm1m2roguemax > 10000))
+			{
+			fprintf(stderr, "only values from 1 to 10000 allowed");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
 
 		case HCX_DISABLE_DEAUTHENTICATION:
 		attackstatus |= DISABLE_DEAUTHENTICATION;

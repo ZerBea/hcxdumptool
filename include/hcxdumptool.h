@@ -6,35 +6,36 @@
 #define HCX_STOP_AP_ATTACKS		6
 #define HCX_RESUME_AP_ATTACKS		7
 #define HCX_DISABLE_CLIENT_ATTACKS	8
-#define HCX_SILENT			9
-#define HCX_GPS_DEVICE			10
-#define HCX_GPSD			11
-#define HCX_NMEA_NAME			12
-#define HCX_EAPOL_TIMEOUT		13
-#define HCX_ACTIVE_BEACON		14
-#define HCX_FLOOD_BEACON		15
-#define HCX_EXTAP_BEACON		16
-#define HCX_INFINITY			17
-#define HCX_FILTERLIST_AP		18
-#define HCX_FILTERLIST_CLIENT		19
-#define HCX_FILTERMODE			20
-#define HCX_BPFC			21
-#define HCX_WEAKCANDIDATE		22
-#define HCX_TOT				23
-#define HCX_REBOOT			24
-#define HCX_POWER_OFF			25
-#define HCX_GPIO_BUTTON			26
-#define HCX_GPIO_STATUSLED		27
-#define HCX_IP				28
-#define HCX_SERVER_PORT			29
-#define HCX_CLIENT_PORT			30
-#define HCX_CHECK_DRIVER		31
-#define HCX_CHECK_INJECTION		32
-#define HCX_ERROR_MAX			33
-#define HCX_STATUS			34
-#define HCX_BEACONPARAMS		35
-#define HCX_WPAENT			36
-#define HCX_EAPREQ			37
+#define HCX_STOP_CLIENT_M2_ATTACKS	9
+#define HCX_SILENT			10
+#define HCX_GPS_DEVICE			11
+#define HCX_GPSD			12
+#define HCX_NMEA_NAME			13
+#define HCX_EAPOL_TIMEOUT		14
+#define HCX_ACTIVE_BEACON		15
+#define HCX_FLOOD_BEACON		16
+#define HCX_EXTAP_BEACON		17
+#define HCX_INFINITY			18
+#define HCX_FILTERLIST_AP		19
+#define HCX_FILTERLIST_CLIENT		20
+#define HCX_FILTERMODE			21
+#define HCX_BPFC			22
+#define HCX_WEAKCANDIDATE		23
+#define HCX_TOT				24
+#define HCX_REBOOT			25
+#define HCX_POWER_OFF			26
+#define HCX_GPIO_BUTTON			27
+#define HCX_GPIO_STATUSLED		28
+#define HCX_IP				29
+#define HCX_SERVER_PORT			30
+#define HCX_CLIENT_PORT			31
+#define HCX_CHECK_DRIVER		32
+#define HCX_CHECK_INJECTION		33
+#define HCX_ERROR_MAX			34
+#define HCX_STATUS			35
+#define HCX_BEACONPARAMS		36
+#define HCX_WPAENT			37
+#define HCX_EAPREQ			38
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -65,6 +66,8 @@
 
 #define ATTACKSTOP_MAX		600
 #define ATTACKRESUME_MAX	864000
+
+#define OW_M1M2ROGUE_MAX	10
 
 #define SERVERMSG_MAX		2048
 #define MCPORT			60123
@@ -187,6 +190,7 @@ typedef struct
 #define OW_M1M2ROGUE	0b0000000000100000
 #define OW_M2M3		0b0000000001000000
 #define FILTERED	0b1000000000000000
+ int			owm1m2roguecount;
  uint8_t 		eapreqstate;
  uint8_t		ap[6];
  uint8_t		client[6];
