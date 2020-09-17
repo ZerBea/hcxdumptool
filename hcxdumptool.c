@@ -934,8 +934,11 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if(memcmp(zeiger->client, client, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &status) == status) return false;
-	if(status == OW_M1M2ROGUE) zeiger->owm1m2roguecount += 1;
-	if(zeiger->owm1m2roguecount < owm1m2roguemax) return true;
+	if(status == OW_M1M2ROGUE)
+		{
+		zeiger->owm1m2roguecount += 1;
+		if(zeiger->owm1m2roguecount < owm1m2roguemax) return true;
+		}
 	zeiger->status |= status;
 	return true;
 	}
