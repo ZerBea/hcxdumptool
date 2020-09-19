@@ -937,7 +937,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if(status == OW_M1M2ROGUE)
 		{
 		zeiger->owm1m2roguecount += 1;
-		if(zeiger->owm1m2roguecount <= owm1m2roguemax) return true;
+		if(zeiger->owm1m2roguecount < owm1m2roguemax) return true;
 		}
 	zeiger->status |= status;
 	return true;
@@ -1187,10 +1187,10 @@ if(tlvoctetslen == 0) return 0;
 while(octet < tlvoctetslen -1)
 	{
 	ieset[setcnt] = (ietag_t*)(&tlvoctets[octet]);
-    if(ieset[setcnt]->len > (tlvoctetslen -octet -2)) break;
-    octet += ieset[setcnt]->len +2;
-    setcnt++;
-    if(setcnt == IESETLEN_MAX) break;
+	if(ieset[setcnt]->len > (tlvoctetslen -octet -2)) break;
+	octet += ieset[setcnt]->len +2;
+	setcnt++;
+	if(setcnt == IESETLEN_MAX) break;
 	}
 return setcnt;
 }
