@@ -6313,7 +6313,8 @@ static inline void usage(char *eigenname)
 {
 printf("%s %s  (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
-	"         press the switch to terminate hcxdumptool\n"
+	"         press ctrl+c to terminate hcxdumptool\n"
+	"         press GPIO button to terminate hcxdumptool\n"
 	"         hardware modification is necessary, read more:\n"
 	"         https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
 	"example: %s -i wlp39s0f3u4u5 -o dump.pcapng --enable_status=31\n"
