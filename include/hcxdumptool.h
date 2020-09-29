@@ -36,6 +36,10 @@
 #define HCX_BEACONPARAMS		36
 #define HCX_WPAENT			37
 #define HCX_EAPREQ			38
+#define HCX_EAPTUN			39
+#define HCX_EAP_SERVER_CERT		40
+#define HCX_EAP_SERVER_KEY		41
+#define HCX_EAPOL_EAP_TIMEOUT		42
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -73,7 +77,11 @@
 #define MCPORT			60123
 #define SERVERSTATUS_MAX	1024
 
+#define DEBUGMSG_MAX		1024
+#define STATUSMSG_MAX		1024
+
 #define EAPOLTIMEOUT		20000
+#define EAPOLEAPTIMEOUT		2500000
 
 #define USER_EXIT_TOT		2
 #define STAYTIME		4
@@ -109,14 +117,26 @@
 #define STATUS_INTERNAL		0b0000000001000000
 #define STATUS_SERVER		0b0000000010000000
 #define STATUS_CLIENT		0b0000000100000000
+#define STATUS_EAP		0b0000001000000000
+#define STATUS_EAP_NAK		0b0000010000000000
 
 #define DISABLE_CLIENT_ATTACKS		0b00000001
 #define DISABLE_DEAUTHENTICATION	0b00000010
 #define DISABLE_AP_ATTACKS		0b00000110
 #define SILENT				0b00000111
 
+#define EAP_TLSFLAGS_VERSION		0b00000111
+#define EAP_TLSFLAGS_START		0b00100000
+#define EAP_TLSFLAGS_MORE_FRAGMENTS	0b01000000
+#define EAP_TLSFLAGS_LENGTH_INCL	0b10000000
+#define EAP_TLSFLAGS_SIZE		1
+#define EAP_TLSLENGTH_SIZE		4
+
 #define FM_PROTECT		1
 #define FI_ATTACK		2
+
+#define PACKET_RESEND_COUNT_MAX 	7
+#define PACKET_RESEND_TIMER_USEC	15500
 
 #ifdef __BYTE_ORDER__
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -178,6 +198,34 @@ else if(memcmp(ia->mac, ib->mac, 6) < 0) return -1;
 return 0;
 }
 /*===========================================================================*/
+#define EAPTLSCTX_BUF_SIZE (65535)
+typedef struct eaptlsctx_t
+{
+SSL			*ssl;
+BIO			*tls_in;
+BIO			*tls_out;
+uint32_t		tlslen;
+uint8_t			buf[EAPTLSCTX_BUF_SIZE];
+size_t			buflen;
+size_t			txpos;
+bool			fragments_rx;
+bool			fragments_tx;
+}eaptlsctx_t;
+#define EAPTLSCTX_SIZE (sizeof(eaptlsctx_t))
+#define EAPTLS_TIMEOUT (50000000)
+/*===========================================================================*/
+typedef struct eapctx_t
+{
+uint8_t			id;
+uint8_t			type;
+uint8_t			version;
+uint8_t			inner_id;
+uint8_t			inner_type;
+uint8_t			inner_version;
+bool			tlstun;
+}eapctx_t;
+#define EAPCTX_SIZE (sizeof(eapctx_t))
+/*===========================================================================*/
 typedef struct
 {
  uint64_t		timestamp;
@@ -196,6 +244,8 @@ typedef struct
  uint8_t		client[6];
  uint8_t		essidlen;
  uint8_t		essid[ESSID_LEN_MAX];
+ eapctx_t		eapctx;
+
 }ownlist_t;
 #define	OWNLIST_SIZE (sizeof(ownlist_t))
 
@@ -311,12 +361,13 @@ return 0;
 /*===========================================================================*/
 typedef struct
 {
-uint8_t         termination;
+uint8_t			termination;
+#define EAPREQLIST_ENDTLS 0xfd
 #define EAPREQLIST_DEAUTH 0xfe
 #define EAPREQLIST_NOTERM 0xff
-uint16_t        length;
-uint8_t         type;
-uint8_t         data[EAP_LEN_MAX];
+uint16_t		length;
+uint8_t			type;
+uint8_t			data[EAP_LEN_MAX];
 }eapreqlist_t;
 #define EAPREQLIST_SIZE (sizeof(eapreqlist_t))
 /*===========================================================================*/
