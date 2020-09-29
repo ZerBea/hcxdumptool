@@ -2651,7 +2651,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 				{
 				if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 				}
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP RESPONSE ID");
+			if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP RESPONSE ID");
 			}
 		return;
 		}
@@ -2672,7 +2672,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
-	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP RESPONSE ID");
+	if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP RESPONSE ID");
 	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 	return;
 	}
@@ -2693,7 +2693,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 				}
 			if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
 			}
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP RESPONSE ID");
+		if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP RESPONSE ID");
 		return;
 		}
 	memset(zeiger, 0, OWNLIST_SIZE);
@@ -2714,7 +2714,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
 	if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
-	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP RESPONSE ID");
+	if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP RESPONSE ID");
 	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 	return;
 	}
@@ -2741,7 +2741,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 				{
 				if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 				}
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP REQUEST ID");
+			if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP REQUEST ID");
 			}
 		return;
 		}
@@ -2762,7 +2762,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
-	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP REQUEST ID");
+	if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP REQUEST ID");
 	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 	return;
 	}
@@ -2783,7 +2783,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 				}
 			if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
 			}
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP REQUEST ID");
+		if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP REQUEST ID");
 		return;
 		}
 	memset(zeiger, 0, OWNLIST_SIZE);
@@ -2804,7 +2804,7 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
 	if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
-	if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printown(zeiger, "EAP REQUEST ID");
+	if((statusout &STATUS_EAP) == STATUS_EAP) printown(zeiger, "EAP REQUEST ID");
 	qsort(ownlist, zeiger -ownlist +1, OWNLIST_SIZE, sort_ownlist_by_time);
 	return;
 	}
@@ -2843,7 +2843,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 			{
 			eapctx = &zeiger->eapctx;
 			if(exteap->id > eapctx->id) return;
-			if(((statusout &STATUS_EAPOL) == STATUS_EAPOL) && (exteap->id == eapctx->id))
+			if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))) && (exteap->id == eapctx->id))
 				{
 #ifdef DEBUG_TLS
 				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapreqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapreqstate == (eapreqentries -1)) ? " FIN" : "");
@@ -2911,7 +2911,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 		}
-	if(((statusout &STATUS_EAPOL) == STATUS_EAPOL))
+	if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))))
 		{
 		sprintf(outstr, "EAP RESPONSE TYPE %s", eap_type2name(exteap->type));
 		printown(zeiger, outstr);
@@ -2950,23 +2950,23 @@ if(eapin->code == EAP_CODE_RESP)
 	if((eapin->type != eapctx->inner_type) && (eapin->type != EAP_TYPE_NAK)) return;
 	if(eapin->type == EAP_TYPE_ID)
 		{
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+		if((statusout &STATUS_EAP) == STATUS_EAP)
 			{
-			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE ID: '%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
+			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE ID:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
 			}
 		}
 	else if(eapin->type == EAP_TYPE_GTC)
 		{
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+		if((statusout &STATUS_EAP) == STATUS_EAP)
 			{
-			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE GTC: '%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
+			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE GTC:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
 			}
 		}
 	else
 		{
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+		if((((eapin->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((eapin->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))))
 			{
 			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s", eap_type2name(eapin->type), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
@@ -3076,7 +3076,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		eaptlsctx->tls_out = BIO_new(BIO_s_mem());
 		eapctx->version = ((tlsflags &EAP_TLSFLAGS_VERSION));
 		SSL_set_bio(eaptlsctx->ssl, eaptlsctx->tls_in, eaptlsctx->tls_out);
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) 
+		if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK)))) 
 			{
 #ifdef DEBUG_TLS
 			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d TLSSTART", eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapreqstate);
@@ -3175,7 +3175,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		res = SSL_accept(eaptlsctx->ssl);
 		if(res == 1)
 			{
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) 
+			if((statusout &STATUS_EAP) == STATUS_EAP) 
 				{
 				snprintf(outstr, STATUSMSG_MAX, "EAP TLS connect EAPTIME:%" PRIu64, timestamp -lastauthtimestamp);
 				printown(zeiger, outstr);
@@ -3206,7 +3206,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 					eaptlsctx->ssl = NULL;
 					eapctx->tlstun = false;
 					send_eap_status_resp(EAP_CODE_FAILURE, eapctx->id, eapctx->type);
-					if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+					if((statusout &STATUS_EAP) == STATUS_EAP)
 						{
 						snprintf(outstr, STATUSMSG_MAX, "EAP TLS abort '%s' EAPTIME:%" PRIu64, ERR_reason_error_string(tlserror), timestamp -lastauthtimestamp);
 						printown(zeiger, outstr);
@@ -7160,7 +7160,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     only once at the first occurrence due to MAC randomization of CLIENTs\n"
 	"                                     bitmask:\n"
 	"                                        0: no status (default)\n"
-	"                                        1: EAP and EAPOL\n"
+	"                                        1: EAPOL\n"
 	"                                        2: ASSOCIATION and REASSOCIATION\n"
 	"                                        4: AUTHENTICATION\n"
 	"                                        8: BEACON and PROBERESPONSE\n"
@@ -7169,9 +7169,11 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                       64: internal status (once a minute)\n"
 	"                                      128: run as server\n"
 	"                                      256: run as client\n"
+	"                                      512: EAP\n"
+	"                                     1024: EAP NAK\n"
 	"                                     characters < 0x20 && > 0x7e are replaced by .\n"
 	"                                     example: show everything but don\'t run as server or client (1+2+4+8+16 = 31)\n"
-	"                                              show only EAP and EAPOL and ASSOCIATION and REASSOCIATION (1+2 = 3)\n"
+	"                                              show only EAPOL and ASSOCIATION and REASSOCIATION (1+2 = 3)\n"
 	"--ip=<IP address>                  : define IP address for server / client (default: 224.0.0.255)\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
