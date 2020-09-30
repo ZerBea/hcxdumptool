@@ -1,3 +1,23 @@
+30.09.2020
+==========
+hcxdumptool: added new options
+--eapreq=<type><data>[:<term>],... : send max. 20 subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type
+                                     response is terminated with:
+                                      :F = EAP Failure
+                                      :S = EAP Success
+                                      :I = EAP ERP Initiate
+                                      :F = EAP ERP Finish
+                                      :D = Deauthentication
+                                      :T = TLS shutdown
+                                      :- = no packet
+                                     default behavior is terminating all responses with a EAP Failure, after last one the client is deauthenticated
+--eaptlstun                        : activate TLS tunnel negotiation and Phase 2 EAP requests when requesting PEAP using --eapreq
+                                     requires --eap_server_cert and --eap_server_key
+--eap_server_cert=<server.pem>     : EAP TLS tunnel Server cert PEM file
+--eap_server_key=<server.key>      : EAP TLS tunnel Server private key file
+
+
+
 17.09.2020
 ==========
 release v 6.1.2
