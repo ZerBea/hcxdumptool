@@ -757,7 +757,6 @@ if(nmealen < 30) return;
 if(memcmp(&gpgga, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[17], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
 else if(memcmp(&gprmc, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[19], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
 else return;
-
 gpwplptr = gpwpl+1;
 c = 0;
 cs = 0;
@@ -2271,7 +2270,7 @@ return;
 static inline void send_eap(uint8_t eapoltype, uint8_t code, uint8_t id, uint8_t eaptype, uint8_t *data, size_t data_len)
 {
 static mac_t *macftx;
-uint8_t eapdata[] =
+static uint8_t eapdata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x01, 0x00, 0x00, 0x05, 0x01, 0x63, 0x00, 0x05, 0x01
@@ -2358,6 +2357,7 @@ return;
 static inline void resend_packet()
 {
 static mac_t *macftx;
+
 if(packetsenttries == 0)
 	{
 	packetsentflag = false;
@@ -2376,6 +2376,7 @@ fsync(fd_socket);
 gettimeofday(&tvpacketsent, NULL);
 packetsenttries--;
 if(packetsenttries == 0) packetsentflag = false;
+return;
 }
 /*===========================================================================*/
 static inline void send_eap_request(uint8_t id, uint8_t eaptype, uint8_t *requestdata, size_t requestdata_len)
@@ -2403,10 +2404,11 @@ return;
 /*===========================================================================*/
 static inline void send_eap_tls(eapctx_t *eapctx, uint8_t *data, size_t datalen)
 {
-int res;
-int outlen;
-uint32_t outlen_n;
+static int res;
+static int outlen;
+static uint32_t outlen_n;
 uint8_t tlsflags = eapctx->version;
+
 #ifdef DEBUG_TLS
 snprintf(debugmsg, DEBUGMSG_MAX, "TLS connection write len=%d, id=%d:", (int)datalen, eapctx->id +1);
 debugprint((int)datalen, data, debugmsg);
@@ -2439,7 +2441,6 @@ else
 	res = BIO_read(eaptlsctx->tls_out, (void*)&eaptlsctx->buf[EAP_TLSFLAGS_SIZE], EAPTLSCTX_BUF_SIZE);
 	if(res < 0) res = 0;
 	}
-
 eaptlsctx->buf[0] = tlsflags;
 eapctx->id++;
 send_eap_request(eapctx->id, eapctx->type, &eaptlsctx->buf[0], res +EAP_TLSFLAGS_SIZE);
@@ -2448,9 +2449,10 @@ return;
 /*===========================================================================*/
 static inline void send_eap_tls_eap(eapctx_t *eapctx, uint8_t code, uint8_t id, uint8_t eaptype, uint8_t *data, size_t data_len)
 {
-uint8_t outbuf[EXTEAP_SIZE +EAP_LEN_MAX];
-exteap_t *exteap;
-size_t exteaplen = 0;
+static uint8_t outbuf[EXTEAP_SIZE +EAP_LEN_MAX];
+static exteap_t *exteap;
+static size_t exteaplen = 0;
+
 exteap = (exteap_t*)&outbuf[0];
 exteap->code = code;
 exteap->id = id;
@@ -2583,6 +2585,7 @@ return;
 static inline char *eap_type2name(uint8_t type)
 {
 static char outstr[4];
+
 switch(type)
 	{
 	case EAP_TYPE_PEAP:
@@ -2608,6 +2611,7 @@ switch(type)
 		sprintf(outstr, "%d", type);
 		return outstr;
 	}
+return outstr;
 }
 /*===========================================================================*/
 static inline char *strclean(char *str, int strlen)
@@ -2831,7 +2835,6 @@ return;
 static inline void process80211exteap_resp(uint16_t exteaplen)
 {
 static ownlist_t *zeiger;
-
 static uint8_t *eapauthptr;
 static exteap_t *exteap;
 static eapctx_t *eapctx;
@@ -2949,10 +2952,11 @@ return 1;
 /*===========================================================================*/
 static inline void process80211exteaptls_resp_eap(ownlist_t *ownzeiger, uint8_t *data, int data_len)
 {
-exteap_t *eapin;
+static exteap_t *eapin;
 int eapinlen;
 eapctx_t *eapctx = &ownzeiger->eapctx;
 static char outstr[EAP_LEN_MAX];
+
 if((data_len <= 0) && (eapctx->inner_id == 0))
 	{
 	send_eap_tls_eap_request(eapctx, eapctx->inner_id, EAP_TYPE_ID, NULL, 0);
@@ -3044,7 +3048,6 @@ return;
 static inline void process80211exteap_resp_tls(uint16_t exteaplen)
 {
 static ownlist_t *zeiger;
-
 static uint8_t *eapauthptr;
 static exteap_t *exteap;
 static exteap_t *outexteap;
