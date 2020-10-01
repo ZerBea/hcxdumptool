@@ -7504,9 +7504,9 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_STOP_CLIENT_M2_ATTACKS:
 		owm1m2roguemax = strtol(optarg, NULL, 10);
-		if((owm1m2roguemax < 0) || (owm1m2roguemax > 10000))
+		if(owm1m2roguemax < 0)
 			{
-			fprintf(stderr, "only values from 1 to 10000 allowed");
+			fprintf(stderr, "must be > 1");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -7764,6 +7764,12 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		usageerror(basename(argv[0]));
 		break;
 		}
+	}
+
+if(infinityflag == true)
+	{
+	owm1m2roguemax = 1000000;
+	attackstopcount = 1000000;
 	}
 
 setbuf(stdout, NULL);
