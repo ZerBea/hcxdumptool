@@ -216,6 +216,7 @@ bool			fragments_tx;
 /*===========================================================================*/
 typedef struct eapctx_t
 {
+uint8_t			reqstate;
 uint8_t			id;
 uint8_t			type;
 uint8_t			version;
@@ -239,7 +240,6 @@ typedef struct
 #define OW_M2M3		0b0000000001000000
 #define FILTERED	0b1000000000000000
  int			owm1m2roguecount;
- uint8_t 		eapreqstate;
  uint8_t		ap[6];
  uint8_t		client[6];
  uint8_t		essidlen;
