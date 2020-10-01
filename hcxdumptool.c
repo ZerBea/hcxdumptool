@@ -7259,10 +7259,13 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n"
 	"modified Raspberry Pi, stationary, target CLIENTs:\n"
 	"$ %s hcxdumptool --gpio_button=4 --gpio_statusled=17 -i wlan0 -o dump.pcapng --tot=1440 --bpfc=own.bpfc --disable_deauthentication --disable_ap_attacks --active_beacon -c 1,3,5,7,9,11,2,4,6,8,10 -t 120\n"
+	"\n"
+	"clients-only EAP probing attack using PEAP tunneled sequence MS-CHAP-V2, EAP-MD5, GTC\n"
+	"$ %s -i wlan0 -t 120 -o dump.pcapng --enable_status=1567 --disable_deauthentication --disable_ap_attacks --wpaent --eaptlstun --eapreq=1921:-,1a0104001810000102030405060708090a0b0c0d0e0f20:-,04010020:-,06:-\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
 	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT,
-	eigenname, eigenname, eigenname);
+	eigenname, eigenname, eigenname, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
