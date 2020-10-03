@@ -50,6 +50,7 @@
 #define HCX_SHOW_CHANNELS		'C'
 #define HCX_SET_MONITORMODE		'm'
 #define HCX_HELP			'h'
+#define HCX_EXAMPLE			'x'
 #define HCX_VERSION			'v'
 
 #define ERROR_MAX		100

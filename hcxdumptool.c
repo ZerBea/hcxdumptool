@@ -7223,6 +7223,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     to test injection on 5GHz channels use option -s 2\n"
 	"                                     the driver must support monitor mode and full packet injection\n"
 	"                                     otherwise hcxdumptool will not work as expected\n"
+	"--example                          : show some example command lines\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
 	"\n"
@@ -7248,7 +7249,16 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Important notice:\n"
 	"Using filter options, could cause that some useful frames are filtered out!\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
-	"\n"
+	"\n",
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
+	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+exit(EXIT_SUCCESS);
+}
+/*---------------------------------------------------------------------------*/
+__attribute__ ((noreturn))
+static inline void exampleusage(char *eigenname)
+{
+printf("%s %s  (C) %s ZeroBeat\n"
 	"example command lines:\n"
 	"----------------------\n"
 	"simple:\n"
@@ -7263,8 +7273,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"clients-only EAP probing attack using PEAP tunneled sequence MS-CHAP-V2, EAP-MD5, GTC\n"
 	"$ %s -i wlan0 -t 120 -o dump.pcapng --enable_status=1567 --disable_deauthentication --disable_ap_attacks --wpaent --eaptlstun --eapreq=1921:-,1a0104001810000102030405060708090a0b0c0d0e0f20:-,04010020:-,06:-\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT,
+	eigenname, VERSION_TAG, VERSION_YEAR,
 	eigenname, eigenname, eigenname, eigenname);
 exit(EXIT_SUCCESS);
 }
@@ -7343,6 +7352,7 @@ static const struct option long_options[] =
 	{"check_driver",		no_argument,		NULL,	HCX_CHECK_DRIVER},
 	{"check_injection",		no_argument,		NULL,	HCX_CHECK_INJECTION},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
+	{"example",			no_argument,		NULL,	HCX_EXAMPLE},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
 };
@@ -7757,6 +7767,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_HELP:
 		usage(basename(argv[0]));
+		break;
+
+		case HCX_EXAMPLE:
+		exampleusage(basename(argv[0]));
 		break;
 
 		case HCX_VERSION:
