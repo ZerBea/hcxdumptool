@@ -6743,7 +6743,6 @@ else
 	bcbeacondataopenlen = merge_ieset2bin(bcbeacondataopen, BEACONBODY_LEN_MAX -9, bcbeacondata_open_templ, BCBEACON_OPEN_TEMPL_SIZE, ieset, iesetlen);
 	bcbeacondataopenchanoffset = gettlvoffset_value(3, bcbeacondataopen, bcbeacondataopenlen);
 	}
-
 return;
 }
 /*===========================================================================*/
@@ -6800,10 +6799,7 @@ while(opt_ptr != NULL)
 		{
 		zeiger->length = (strlen(opt_ptr) /2) -1;
 		}
-	if(hex2bin(opt_ptr, &zeiger->type, zeiger->length +1) == false)
-		{
-		return false;
-		}
+	if(hex2bin(opt_ptr, &zeiger->type, zeiger->length +1) == false) return false;
 	eapreqentries++;
 	zeiger++;
 	if(zeiger >= eapreqlist + (EAPREQLIST_MAX *EAPREQLIST_SIZE)) break;
