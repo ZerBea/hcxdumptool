@@ -7525,7 +7525,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			}
 		break;
 
-
 		case HCX_DISABLE_DEAUTHENTICATION:
 		attackstatus |= DISABLE_DEAUTHENTICATION;
 		break;
@@ -7832,6 +7831,22 @@ if(monitormodeflag == true)
 	return EXIT_SUCCESS;
 	}
 
+if((eaptunflag == true) && ((eapservercertname == NULL) || (eapserverkeyname == NULL)))
+	{
+	fprintf(stderr, "EAP TLS tunnel Server Cert or Server Key file not given\n");
+	exit(EXIT_FAILURE);
+	}
+if((eaptunflag == true) && (eapreqflag == false))
+	{
+	fprintf(stderr, "EAP TLS tunnel activated without EAP Request sequence\n");
+	exit(EXIT_FAILURE);
+	}
+if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CLIENT_ATTACKS))
+	{
+	fprintf(stderr, "EAP requests are activated while CLIENT Attacks are disabled");
+	exit(EXIT_FAILURE);
+	}
+
 printf("initialization...\n");
 if(sl == 1)
 	{
@@ -7890,22 +7905,6 @@ if(getuid() != 0)
 	{
 	fprintf(stderr, "this program requires root privileges\n");
 	globalclose();
-	}
-
-if((eaptunflag == true) && ((eapservercertname == NULL) || (eapserverkeyname == NULL)))
-	{
-	fprintf(stderr, "EAP TLS tunnel Server Cert or Server Key file not given\n");
-	exit(EXIT_FAILURE);
-	}
-if((eaptunflag == true) && (eapreqflag == false))
-	{
-	fprintf(stderr, "EAP TLS tunnel activated without EAP Request sequence\n");
-	exit(EXIT_FAILURE);
-	}
-if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CLIENT_ATTACKS))
-	{
-	fprintf(stderr, "EAP requests are activated while Client Attacks are disabled");
-	exit(EXIT_FAILURE);
 	}
 
 loadfiles();
