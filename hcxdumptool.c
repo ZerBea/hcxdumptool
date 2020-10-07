@@ -857,8 +857,14 @@ return;
 /*===========================================================================*/
 static inline void writeepbown_peap(int fd, uint8_t *innerpacket, size_t innerpacketlen)
 {
+eapauth_t *eapauth;
+exteap_t *exteap;
+eapauth = (eapauth_t*)(epbown +EPB_SIZE +HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE);
+exteap = (exteap_t*)innerpacket;
+eapauth->len = exteap->len;
 memcpy(epbown +EPB_SIZE +HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE, innerpacket, innerpacketlen);
 packetlenown = HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +innerpacketlen;
+timestamp++;
 writeepbown(fd);
 return;	
 }
