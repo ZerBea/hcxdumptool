@@ -217,6 +217,7 @@ bool			fragments_tx;
 /*===========================================================================*/
 typedef struct eapctx_t
 {
+uint8_t			reqstate;
 uint8_t			id;
 uint8_t			type;
 uint8_t			version;
@@ -240,7 +241,6 @@ typedef struct
 #define OW_M2M3		0b0000000001000000
 #define FILTERED	0b1000000000000000
  int			owm1m2roguecount;
- uint8_t 		eapreqstate;
  uint8_t		ap[6];
  uint8_t		client[6];
  uint8_t		essidlen;
@@ -363,12 +363,14 @@ return 0;
 typedef struct
 {
 uint8_t			termination;
-#define EAPREQLIST_ENDTLS 0xfd
-#define EAPREQLIST_DEAUTH 0xfe
-#define EAPREQLIST_NOTERM 0xff
+#define EAPREQLIST_TERM_ENDTLS 0xfd
+#define EAPREQLIST_TERM_DEAUTH 0xfe
+#define EAPREQLIST_TERM_NOTERM 0xff
 uint16_t		length;
 uint8_t			type;
 uint8_t			data[EAP_LEN_MAX];
+uint8_t			mode;
+#define EAPREQLIST_MODE_TLS 1
 }eapreqlist_t;
 #define EAPREQLIST_SIZE (sizeof(eapreqlist_t))
 /*===========================================================================*/
