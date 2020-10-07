@@ -2650,12 +2650,29 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
-		if(eapreqflag == true)
+		if((eapreqflag == true) && (zeiger->eapctx.id == 0))
 			{
-			if ((zeiger->eapctx.reqstate < eapreqentries) && (zeiger->eapctx.id == 0))
+			while(zeiger->eapctx.reqstate < eapreqentries)
 				{
+				if(eapreqlist[zeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS)
+					{
+					if(zeiger->eapctx.reqstate > 0)
+						{
+						zeiger->eapctx.reqstate--;
+						continue;
+						}
+					else 
+						{
+						while(++zeiger->eapctx.reqstate < eapreqentries)
+							{
+							if(eapreqlist[zeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS) continue;
+							break;
+							}
+						}
+					}
 				zeiger->eapctx.id++;
 				send_eap_request(zeiger->eapctx.id, eapreqlist[zeiger->eapctx.reqstate].type, eapreqlist[zeiger->eapctx.reqstate].data, eapreqlist[zeiger->eapctx.reqstate].length);
+				break;
 				}
 			}
 		if((zeiger->status &OW_EAP_RESP) != OW_EAP_RESP)
@@ -2861,6 +2878,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 			{
 			eapctx = &zeiger->eapctx;
 			if(exteap->id > eapctx->id) return;
+			if(eapctx->reqstate == eapreqentries) return;
 			if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))) && (exteap->id == eapctx->id))
 				{
 #ifdef DEBUG_TLS
@@ -2870,18 +2888,18 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 #endif
 				printown(zeiger, outstr);
 				}
-			if(eapreqlist[zeiger->eapctx.reqstate].termination == 0)
+			if(eapreqlist[eapctx->reqstate].termination == 0)
 				{
-				if(zeiger->eapctx.reqstate < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[zeiger->eapctx.reqstate].type);
+				if(eapctx->reqstate < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[eapctx->reqstate].type);
 					else send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
 				}
 			else
 				{
-				if(eapreqlist[zeiger->eapctx.reqstate].termination != EAPREQLIST_NOTERM)
+				if(eapreqlist[eapctx->reqstate].termination != EAPREQLIST_TERM_NOTERM)
 					{
-					if(eapreqlist[zeiger->eapctx.reqstate].termination == EAPREQLIST_DEAUTH)
+					if(eapreqlist[eapctx->reqstate].termination == EAPREQLIST_TERM_DEAUTH)
 						send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
-					else if(eapreqlist[zeiger->eapctx.reqstate].termination == EAPREQLIST_ENDTLS)
+					else if(eapreqlist[eapctx->reqstate].termination == EAPREQLIST_TERM_ENDTLS)
 						{
 						if(eapctx->tlstun == true)
 							{
@@ -2892,21 +2910,22 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 							eapctx->tlstun = false;
 							}
 						}
-					else send_eap_status_resp(eapreqlist[zeiger->eapctx.reqstate].termination, exteap->id, eapreqlist[zeiger->eapctx.reqstate].type);
+					else send_eap_status_resp(eapreqlist[eapctx->reqstate].termination, exteap->id, eapreqlist[eapctx->reqstate].type);
 					}
 				}
 			if(exteap->id == eapctx->id)
 				{
-				zeiger->eapctx.reqstate++;
-				if(zeiger->eapctx.reqstate < eapreqentries)
+				while(++eapctx->reqstate < eapreqentries)
 					{
+					if((eapreqlist[eapctx->reqstate].mode == EAPREQLIST_MODE_TLS) && (eapctx->tlstun == false)) continue;
 					eapctx->id++;
-					eapctx->type = eapreqlist[zeiger->eapctx.reqstate].type;
-					send_eap_request(eapctx->id, eapreqlist[zeiger->eapctx.reqstate].type, eapreqlist[zeiger->eapctx.reqstate].data, eapreqlist[zeiger->eapctx.reqstate].length);
+					eapctx->type = eapreqlist[eapctx->reqstate].type;
+					send_eap_request(eapctx->id, eapreqlist[eapctx->reqstate].type, eapreqlist[eapctx->reqstate].data, eapreqlist[eapctx->reqstate].length);
+					break;
 					}
-				else
+				if(eapctx->reqstate == eapreqentries)
 					{
-					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
+					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);	
 					}
 				}
 			}
@@ -2997,24 +3016,25 @@ if(eapin->code == EAP_CODE_RESP)
 		}
 	else
 		{
-		if(eapreqlist[ownzeiger->eapctx.reqstate].termination != EAPREQLIST_NOTERM)
+		if(eapreqlist[ownzeiger->eapctx.reqstate].termination != EAPREQLIST_TERM_NOTERM)
 			{
-			if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_DEAUTH)
+			if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_TERM_DEAUTH)
 					send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
-			else if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_ENDTLS)
+			else if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_TERM_ENDTLS)
 				{
 				SSL_shutdown(eaptlsctx->ssl);
 				send_eap_tls(eapctx, NULL, 0);
 				send_eap_status_resp(EAP_CODE_FAILURE, eapctx->id, eapctx->type);
 				eapctx->tlstun = false;
-				ownzeiger->eapctx.reqstate++;
-				if(ownzeiger->eapctx.reqstate < eapreqentries)
+				while(++ownzeiger->eapctx.reqstate < eapreqentries)
 					{
+					if(eapreqlist[ownzeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS) continue;
 					eapctx->id++;
 					eapctx->type = eapreqlist[ownzeiger->eapctx.reqstate].type;
 					send_eap_request(eapctx->id, eapreqlist[ownzeiger->eapctx.reqstate].type, eapreqlist[ownzeiger->eapctx.reqstate].data, eapreqlist[ownzeiger->eapctx.reqstate].length);
+					break;
 					}
-				else
+				if(ownzeiger->eapctx.reqstate == eapreqentries)
 					{
 					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
 					}
@@ -3229,16 +3249,17 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 						snprintf(outstr, STATUSMSG_MAX, "EAP TLS abort '%s' EAPTIME:%" PRIu64, ERR_reason_error_string(tlserror), timestamp -lastauthtimestamp);
 						printown(zeiger, outstr);
 						}
-					zeiger->eapctx.reqstate++;
-					if(zeiger->eapctx.reqstate < eapreqentries)
+					while(++eapctx->reqstate < eapreqentries)
 						{
+						if(eapreqlist[eapctx->reqstate].mode == EAPREQLIST_MODE_TLS) continue;
 						eapctx->id++;
-						eapctx->type = eapreqlist[zeiger->eapctx.reqstate].type;
-						send_eap_request(eapctx->id, eapreqlist[zeiger->eapctx.reqstate].type, eapreqlist[zeiger->eapctx.reqstate].data, eapreqlist[zeiger->eapctx.reqstate].length);
+						eapctx->type = eapreqlist[eapctx->reqstate].type;
+						send_eap_request(eapctx->id, eapreqlist[eapctx->reqstate].type, eapreqlist[eapctx->reqstate].data, eapreqlist[eapctx->reqstate].length);
+						break;
 						}
-					else
+					if(eapctx->reqstate == eapreqentries)
 						{
-						send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
+						send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);	
 						}
 					return;
 					}
@@ -6757,6 +6778,17 @@ eapreqentries = 0;
 while(opt_ptr != NULL)
 	{
 	col_ptr = strchr(opt_ptr, ':');
+	if(col_ptr == opt_ptr +1)
+		{
+		switch(opt_ptr[0])
+			{
+			case 'T':
+			case 't':
+				zeiger->mode = EAPREQLIST_MODE_TLS;
+			}
+		opt_ptr = col_ptr +1;
+		col_ptr = strchr(opt_ptr, ':');
+		}
 	if(col_ptr != NULL)
 		{
 		zeiger->length = (((col_ptr -opt_ptr) /2) -1);
@@ -6782,14 +6814,14 @@ while(opt_ptr != NULL)
 				break;
 			case 'D':
 			case 'd':
-				zeiger->termination = EAPREQLIST_DEAUTH;
+				zeiger->termination = EAPREQLIST_TERM_DEAUTH;
 				break;
 			case 'T':
 			case 't':
-				zeiger->termination = EAPREQLIST_ENDTLS;
+				zeiger->termination = EAPREQLIST_TERM_ENDTLS;
 				break;
 			case '-':
-				zeiger->termination = EAPREQLIST_NOTERM;
+				zeiger->termination = EAPREQLIST_TERM_NOTERM;
 				break;
 			}
 		}
@@ -7155,7 +7187,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
-	"--eapreq=<type><data>[:<term>],... : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	"--eapreq=                          : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	" [<mode>:]<type><data>[:<term>],...  mode prefix determines layer the request is exclusively send on: T: = only if any TLS tunnel is up, ignored otherwise\n"
 	"                                     response is terminated with :F = EAP Failure, :S = EAP Success, :I = EAP ERP Initiate, :F = EAP ERP Finish,\n"
 	"                                     :D = Deauthentication, :T = TLS shutdown, :- = no packet\n"
 	"                                     default behavior is terminating all responses with a Failure packet, after last one the client is deauthenticated\n"
