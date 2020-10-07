@@ -856,8 +856,14 @@ return;
 /*===========================================================================*/
 static inline void writeepbown_peap(int fd, uint8_t *innerpacket, size_t innerpacketlen)
 {
+eapauth_t *eapauth;
+exteap_t *exteap;
+eapauth = (eapauth_t*)(epbown +EPB_SIZE +HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE);
+exteap = (exteap_t*)innerpacket;
+eapauth->len = exteap->len;
 memcpy(epbown +EPB_SIZE +HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE, innerpacket, innerpacketlen);
 packetlenown = HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +innerpacketlen;
+timestamp++;
 writeepbown(fd);
 return;	
 }
@@ -2654,12 +2660,29 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 		zeiger->timestamp = timestamp;
 		if((zeiger->status &FILTERED) == FILTERED) return;
-		if(eapreqflag == true)
+		if((eapreqflag == true) && (zeiger->eapctx.id == 0))
 			{
-			if ((zeiger->eapreqstate < eapreqentries) && (zeiger->eapctx.id == 0))
+			while(zeiger->eapctx.reqstate < eapreqentries)
 				{
+				if(eapreqlist[zeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS)
+					{
+					if(zeiger->eapctx.reqstate > 0)
+						{
+						zeiger->eapctx.reqstate--;
+						continue;
+						}
+					else 
+						{
+						while(++zeiger->eapctx.reqstate < eapreqentries)
+							{
+							if(eapreqlist[zeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS) continue;
+							break;
+							}
+						}
+					}
 				zeiger->eapctx.id++;
-				send_eap_request(zeiger->eapctx.id, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
+				send_eap_request(zeiger->eapctx.id, eapreqlist[zeiger->eapctx.reqstate].type, eapreqlist[zeiger->eapctx.reqstate].data, eapreqlist[zeiger->eapctx.reqstate].length);
+				break;
 				}
 			}
 		if((zeiger->status &OW_EAP_RESP) != OW_EAP_RESP)
@@ -2864,27 +2887,28 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 			{
 			eapctx = &zeiger->eapctx;
 			if(exteap->id > eapctx->id) return;
+			if(eapctx->reqstate == eapreqentries) return;
 			if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))) && (exteap->id == eapctx->id))
 				{
 #ifdef DEBUG_TLS
-				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapreqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapreqstate == (eapreqentries -1)) ? " FIN" : "");
+				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
 #else
-				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapreqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapreqstate == (eapreqentries -1)) ? " FIN" : "");
+				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
 #endif
 				printown(zeiger, outstr);
 				}
-			if(eapreqlist[zeiger->eapreqstate].termination == 0)
+			if(eapreqlist[eapctx->reqstate].termination == 0)
 				{
-				if(zeiger->eapreqstate < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[zeiger->eapreqstate].type);
+				if(eapctx->reqstate < (eapreqentries -1)) send_eap_status_resp(EAP_CODE_FAILURE, exteap->id, eapreqlist[eapctx->reqstate].type);
 					else send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
 				}
 			else
 				{
-				if(eapreqlist[zeiger->eapreqstate].termination != EAPREQLIST_NOTERM)
+				if(eapreqlist[eapctx->reqstate].termination != EAPREQLIST_TERM_NOTERM)
 					{
-					if(eapreqlist[zeiger->eapreqstate].termination == EAPREQLIST_DEAUTH)
+					if(eapreqlist[eapctx->reqstate].termination == EAPREQLIST_TERM_DEAUTH)
 						send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
-					else if(eapreqlist[zeiger->eapreqstate].termination == EAPREQLIST_ENDTLS)
+					else if(eapreqlist[eapctx->reqstate].termination == EAPREQLIST_TERM_ENDTLS)
 						{
 						if(eapctx->tlstun == true)
 							{
@@ -2895,21 +2919,22 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 							eapctx->tlstun = false;
 							}
 						}
-					else send_eap_status_resp(eapreqlist[zeiger->eapreqstate].termination, exteap->id, eapreqlist[zeiger->eapreqstate].type);
+					else send_eap_status_resp(eapreqlist[eapctx->reqstate].termination, exteap->id, eapreqlist[eapctx->reqstate].type);
 					}
 				}
 			if(exteap->id == eapctx->id)
 				{
-				zeiger->eapreqstate++;
-				if(zeiger->eapreqstate < eapreqentries)
+				while(++eapctx->reqstate < eapreqentries)
 					{
+					if((eapreqlist[eapctx->reqstate].mode == EAPREQLIST_MODE_TLS) && (eapctx->tlstun == false)) continue;
 					eapctx->id++;
-					eapctx->type = eapreqlist[zeiger->eapreqstate].type;
-					send_eap_request(eapctx->id, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
+					eapctx->type = eapreqlist[eapctx->reqstate].type;
+					send_eap_request(eapctx->id, eapreqlist[eapctx->reqstate].type, eapreqlist[eapctx->reqstate].data, eapreqlist[eapctx->reqstate].length);
+					break;
 					}
-				else
+				if(eapctx->reqstate == eapreqentries)
 					{
-					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
+					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);	
 					}
 				}
 			}
@@ -2974,7 +2999,7 @@ if(eapin->code == EAP_CODE_RESP)
 		{
 		if((statusout &STATUS_EAP) == STATUS_EAP)
 			{
-			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE ID:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
+			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE ID:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapctx.reqstate, (ownzeiger->eapctx.reqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
 			}
 		}
@@ -2982,7 +3007,7 @@ if(eapin->code == EAP_CODE_RESP)
 		{
 		if((statusout &STATUS_EAP) == STATUS_EAP)
 			{
-			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE GTC:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
+			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE GTC:'%s' EAPTIME:%" PRIu64 " REQ:%d%s", strclean((char*)&eapin->data[0], data_len -EXTEAP_SIZE), timestamp -lastauthtimestamp, ownzeiger->eapctx.reqstate, (ownzeiger->eapctx.reqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
 			}
 		}
@@ -2990,49 +3015,50 @@ if(eapin->code == EAP_CODE_RESP)
 		{
 		if((((eapin->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((eapin->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))))
 			{
-			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s", eap_type2name(eapin->type), timestamp -lastauthtimestamp, ownzeiger->eapreqstate, (ownzeiger->eapreqstate == eapreqentries) ? " FIN" : "");
+			snprintf(outstr, EAP_LEN_MAX, "EAP RESPONSE Phase2 TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s", eap_type2name(eapin->type), timestamp -lastauthtimestamp, ownzeiger->eapctx.reqstate, (ownzeiger->eapctx.reqstate == eapreqentries) ? " FIN" : "");
 			printown(ownzeiger, outstr);
 			}
 		}
-	if(eapreqlist[ownzeiger->eapreqstate].termination == 0)
+	if(eapreqlist[ownzeiger->eapctx.reqstate].termination == 0)
 		{
-		if(ownzeiger->eapreqstate < (eapreqentries -1)) send_eap_tls_eap(eapctx, EAP_CODE_FAILURE, eapin->id, eapreqlist[ownzeiger->eapreqstate].type, NULL, 0);
+		if(ownzeiger->eapctx.reqstate < (eapreqentries -1)) send_eap_tls_eap(eapctx, EAP_CODE_FAILURE, eapin->id, eapreqlist[ownzeiger->eapctx.reqstate].type, NULL, 0);
 			else send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
 		}
 	else
 		{
-		if(eapreqlist[ownzeiger->eapreqstate].termination != EAPREQLIST_NOTERM)
+		if(eapreqlist[ownzeiger->eapctx.reqstate].termination != EAPREQLIST_TERM_NOTERM)
 			{
-			if(eapreqlist[ownzeiger->eapreqstate].termination == EAPREQLIST_DEAUTH)
+			if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_TERM_DEAUTH)
 					send_deauthentication2client(macfrx->addr2, macfrx->addr1, reasoncode);
-			else if(eapreqlist[ownzeiger->eapreqstate].termination == EAPREQLIST_ENDTLS)
+			else if(eapreqlist[ownzeiger->eapctx.reqstate].termination == EAPREQLIST_TERM_ENDTLS)
 				{
 				SSL_shutdown(eaptlsctx->ssl);
 				send_eap_tls(eapctx, NULL, 0);
 				send_eap_status_resp(EAP_CODE_FAILURE, eapctx->id, eapctx->type);
 				eapctx->tlstun = false;
-				ownzeiger->eapreqstate++;
-				if(ownzeiger->eapreqstate < eapreqentries)
+				while(++ownzeiger->eapctx.reqstate < eapreqentries)
 					{
+					if(eapreqlist[ownzeiger->eapctx.reqstate].mode == EAPREQLIST_MODE_TLS) continue;
 					eapctx->id++;
-					eapctx->type = eapreqlist[ownzeiger->eapreqstate].type;
-					send_eap_request(eapctx->id, eapreqlist[ownzeiger->eapreqstate].type, eapreqlist[ownzeiger->eapreqstate].data, eapreqlist[ownzeiger->eapreqstate].length);
+					eapctx->type = eapreqlist[ownzeiger->eapctx.reqstate].type;
+					send_eap_request(eapctx->id, eapreqlist[ownzeiger->eapctx.reqstate].type, eapreqlist[ownzeiger->eapctx.reqstate].data, eapreqlist[ownzeiger->eapctx.reqstate].length);
+					break;
 					}
-				else
+				if(ownzeiger->eapctx.reqstate == eapreqentries)
 					{
 					send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
 					}
 				return;
 				}
-			else send_eap_tls_eap(eapctx, eapreqlist[ownzeiger->eapreqstate].termination, eapin->id, eapin->type, NULL, 0);
+			else send_eap_tls_eap(eapctx, eapreqlist[ownzeiger->eapctx.reqstate].termination, eapin->id, eapin->type, NULL, 0);
 			}
 		}
-	ownzeiger->eapreqstate++;
-	if(ownzeiger->eapreqstate < eapreqentries)
+	ownzeiger->eapctx.reqstate++;
+	if(ownzeiger->eapctx.reqstate < eapreqentries)
 		{
 		eapctx->inner_id++;
-		eapctx->inner_type = eapreqlist[ownzeiger->eapreqstate].type;
-		send_eap_tls_eap_request(eapctx, eapctx->inner_id, eapreqlist[ownzeiger->eapreqstate].type, eapreqlist[ownzeiger->eapreqstate].data, eapreqlist[ownzeiger->eapreqstate].length);
+		eapctx->inner_type = eapreqlist[ownzeiger->eapctx.reqstate].type;
+		send_eap_tls_eap_request(eapctx, eapctx->inner_id, eapreqlist[ownzeiger->eapctx.reqstate].type, eapreqlist[ownzeiger->eapctx.reqstate].data, eapreqlist[ownzeiger->eapctx.reqstate].length);
 		}
 	else
 		{
@@ -3100,9 +3126,9 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK)))) 
 			{
 #ifdef DEBUG_TLS
-			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d TLSSTART", eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapreqstate);
+			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d TLSSTART", eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate);
 #else
-			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d", eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapreqstate);
+			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d", eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapctx.reqstate);
 #endif
 			printown(zeiger, outstr);
 			}
@@ -3232,16 +3258,17 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 						snprintf(outstr, STATUSMSG_MAX, "EAP TLS abort '%s' EAPTIME:%" PRIu64, ERR_reason_error_string(tlserror), timestamp -lastauthtimestamp);
 						printown(zeiger, outstr);
 						}
-					zeiger->eapreqstate++;
-					if(zeiger->eapreqstate < eapreqentries)
+					while(++eapctx->reqstate < eapreqentries)
 						{
+						if(eapreqlist[eapctx->reqstate].mode == EAPREQLIST_MODE_TLS) continue;
 						eapctx->id++;
-						eapctx->type = eapreqlist[zeiger->eapreqstate].type;
-						send_eap_request(eapctx->id, eapreqlist[zeiger->eapreqstate].type, eapreqlist[zeiger->eapreqstate].data, eapreqlist[zeiger->eapreqstate].length);
+						eapctx->type = eapreqlist[eapctx->reqstate].type;
+						send_eap_request(eapctx->id, eapreqlist[eapctx->reqstate].type, eapreqlist[eapctx->reqstate].data, eapreqlist[eapctx->reqstate].length);
+						break;
 						}
-					else
+					if(eapctx->reqstate == eapreqentries)
 						{
-						send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);
+						send_deauthentication2client(macfrx->addr2, macfrx->addr1, WLAN_REASON_IEEE_802_1X_AUTH_FAILED);	
 						}
 					return;
 					}
@@ -4432,7 +4459,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	gettags(clientinfolen, clientinfoptr, &tags);
 	if(eapreqflag == true && ((zeiger->essidlen != tags.essidlen) || (memcmp(zeiger->essid, tags.essid, zeiger->essidlen) != 0)))
 		{
-		zeiger->eapreqstate = 0;
+		zeiger->eapctx.reqstate = 0;
 		}
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
 		{
@@ -4464,13 +4491,13 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				}
 			}
 		}
-	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_EAP_RESP) || ((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))))
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_EAP_RESP) || ((eapreqflag == true) && (zeiger->eapctx.reqstate < eapreqentries))))
 		{
 		if(((tags.akm &TAK_PMKSA) == TAK_PMKSA) || ((tags.akm &TAK_PMKSA256) == TAK_PMKSA256))
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
-				if((eapreqflag == true) && (zeiger->eapreqstate == eapreqentries)) return;
+				if((eapreqflag == true) && (zeiger->eapctx.reqstate == eapreqentries)) return;
 				send_ack();
 				if((timestamp -lastauthtimestamp) <= PACKET_RESEND_TIMER_USEC) return;
 				send_association_resp();
@@ -4483,7 +4510,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
-				if((eapreqflag == true) && (zeiger->eapreqstate == eapreqentries)) return;
+				if((eapreqflag == true) && (zeiger->eapctx.reqstate == eapreqentries)) return;
 				send_ack();
 				if((timestamp -lastauthtimestamp) <= PACKET_RESEND_TIMER_USEC) return;
 				send_association_resp();
@@ -4651,7 +4678,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if(memcmp(zeiger->client, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
-	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true) && (zeiger->eapreqstate < eapreqentries))))
+	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true) && (zeiger->eapctx.reqstate < eapreqentries))))
 		{
 		if(auth->algorithm == OPEN_SYSTEM)
 			{
@@ -6759,6 +6786,17 @@ eapreqentries = 0;
 while(opt_ptr != NULL)
 	{
 	col_ptr = strchr(opt_ptr, ':');
+	if(col_ptr == opt_ptr +1)
+		{
+		switch(opt_ptr[0])
+			{
+			case 'T':
+			case 't':
+				zeiger->mode = EAPREQLIST_MODE_TLS;
+			}
+		opt_ptr = col_ptr +1;
+		col_ptr = strchr(opt_ptr, ':');
+		}
 	if(col_ptr != NULL)
 		{
 		zeiger->length = (((col_ptr -opt_ptr) /2) -1);
@@ -6784,14 +6822,14 @@ while(opt_ptr != NULL)
 				break;
 			case 'D':
 			case 'd':
-				zeiger->termination = EAPREQLIST_DEAUTH;
+				zeiger->termination = EAPREQLIST_TERM_DEAUTH;
 				break;
 			case 'T':
 			case 't':
-				zeiger->termination = EAPREQLIST_ENDTLS;
+				zeiger->termination = EAPREQLIST_TERM_ENDTLS;
 				break;
 			case '-':
-				zeiger->termination = EAPREQLIST_NOTERM;
+				zeiger->termination = EAPREQLIST_TERM_NOTERM;
 				break;
 			}
 		}
@@ -7153,7 +7191,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
-	"--eapreq=<type><data>[:<term>],... : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	"--eapreq=                          : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	" [<mode>:]<type><data>[:<term>],...  mode prefix determines layer the request is exclusively send on:\n"
+	"                                      T: = only if any TLS tunnel is up, ignored otherwise\n"
 	"                                     response is terminated with:\n"
 	"                                      :F = EAP Failure\n"
 	"                                      :S = EAP Success\n"
@@ -7268,7 +7308,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"$ %s hcxdumptool --gpio_button=4 --gpio_statusled=17 -i wlan0 -o dump.pcapng --tot=1440 --bpfc=own.bpfc --disable_deauthentication --disable_ap_attacks --active_beacon -c 1,3,5,7,9,11,2,4,6,8,10 -t 120\n"
 	"\n"
 	"clients-only EAP probing attack using PEAP tunneled sequence MS-CHAP-V2, EAP-MD5, GTC\n"
-	"$ %s -i wlan0 -t 120 -o dump.pcapng --enable_status=1567 --disable_deauthentication --disable_ap_attacks --wpaent --eaptlstun --eapreq=1921:-,1a0104001810000102030405060708090a0b0c0d0e0f20:-,04010020:-,06:-\n"
+	"$ %s -i wlan0 -t 120 -o dump.pcapng --enable_status=1567 --disable_deauthentication --disable_ap_attacks --wpaent --eaptlstun --eap_server_cert=server.crt --eap_server_key=server.key --eapreq=1921:-,T:1a0104001810000102030405060708090a0b0c0d0e0f20:-,T:04010020:-,T:06:-\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR,
 	eigenname, eigenname, eigenname, eigenname);
