@@ -5115,7 +5115,7 @@ static char *nmeaptr;
 static const char *gpgga = "$GPGGA";
 static const char *gprmc = "$GPRMC";
 
-nmeatemplen = recvfrom(fd_gps, nmeatempsentence, NMEA_MAX -1, 0, NULL, NULL);
+nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
 if(nmeatemplen < 44) return;
 nmeatempsentence[nmeatemplen] = 0;
 nmeaptr = strstr(nmeatempsentence, gpgga);
@@ -5355,6 +5355,7 @@ if(beaconactiveflag == true)
 	send_beacon_hidden();
 	}
 if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
+
 while(1)
 	{
 	gettimeofday(&tv, NULL);
