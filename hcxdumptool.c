@@ -5116,6 +5116,12 @@ static const char *gpgga = "$GPGGA";
 static const char *gprmc = "$GPRMC";
 
 nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
+if(nmeatemplen < 0)
+	{
+	perror("\nfailed to read NMEA sentence");
+	errorcount++;
+	return;
+	}
 if(nmeatemplen < 44) return;
 nmeatempsentence[nmeatemplen] = 0;
 nmeaptr = strstr(nmeatempsentence, gpgga);
