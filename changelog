@@ -1,3 +1,10 @@
+09.10.2020
+==========
+release v 6.1.2
+fixed broken GPS handling
+added better GPS error handling
+
+
 03.10.2020
 ==========
 hcxdumptool: added new option
