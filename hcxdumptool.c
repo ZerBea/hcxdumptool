@@ -3910,9 +3910,12 @@ if(authlen >= WPAKEY_SIZE +PMKID_SIZE)
 	if(pmkid->id != TAG_VENDOR) return;
 	if(memcmp(pmkid->pmkid, &zeroed32, 16) != 0)
 		{
-		if(addownap(AP_PMKID, macfrx->addr3) == false) return;
-		pmkidcount++;
-		if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr3, pmkid->pmkid, lastkeyver, "PMKID");
+		if((pmkid->len == 0x14) && (pmkid->type == 0x04))
+			{
+			if(addownap(AP_PMKID, macfrx->addr3) == false) return;
+			pmkidcount++;
+			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printpmkid(macfrx->addr1, macfrx->addr3, pmkid->pmkid, lastkeyver, "PMKID");
+			}
 		}
 	}
 return;
