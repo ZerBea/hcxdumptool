@@ -4629,10 +4629,10 @@ auth = (authf_t*)payloadptr;
 if(payloadlen < AUTHENTICATIONFRAME_SIZE) return;
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
-	if(zeiger->timestamp == 0) return;
+	if(zeiger->timestamp == 0) break;
+	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	zeiger->timestamp = timestamp;
 	if((zeiger->status &FILTERED) == FILTERED) return;
-	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0) && (auth->algorithm == OPEN_SYSTEM) && (memcmp(&mac_myclient, macfrx->addr1, 6) == 0))
 		{
 		send_ack();
