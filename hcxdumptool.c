@@ -223,19 +223,6 @@ static const uint8_t hdradiotap[] =
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
-const int channeldefaultlist[] =
-{
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
-36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68,
-96,
-100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128,
-132, 134, 136, 138, 140, 142, 144,
-149, 151, 153, 155, 157, 159, 161,
-161, 165, 169, 173,
-0
-};
-
 const int channelscanlist1[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
@@ -6428,19 +6415,6 @@ if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
-static inline bool ischannelindefaultlist(uint8_t userchannel)
-{
-static int cpd;
-
-cpd = 0;
-while(channeldefaultlist[cpd] != 0)
-	{
-	if(userchannel == channeldefaultlist[cpd]) return true;
-	cpd++;
-	}
-return false;
-}
-/*===========================================================================*/
 static inline bool processuserscanlist(char *optarglist)
 {
 static char *ptr;
@@ -6452,7 +6426,11 @@ ptr = strtok(userscanlist, ",");
 while(ptr != NULL)
 	{
 	channelscanlist[cpa] = atoi(ptr);
-	if(ischannelindefaultlist(channelscanlist[cpa]) == false) return false;
+	if(set_channel() == false) 
+		{
+		fprintf(stderr, "channel %d is not available\n", channelscanlist[cpa]);
+		return false;
+		}
 	ptr = strtok(NULL, ",");
 	cpa++;
 	if(cpa > 127) return false;
@@ -7356,6 +7334,7 @@ static bool showinterfaceflag;
 static bool monitormodeflag;
 static bool showchannelsflag;
 static bool beaconparamsflag;
+static char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static char *eapreqhex;
@@ -7424,6 +7403,7 @@ bpfcname = NULL;
 extaplistname = NULL;
 eapservercertname = NULL;
 eapserverkeyname = NULL;
+userscanliststring = NULL;
 gpsname = NULL;
 nmeaoutname = NULL;
 weakcandidateuser = NULL;
@@ -7492,11 +7472,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_CHANNEL:
-		if(processuserscanlist(optarg) == false)
-			{
-			fprintf(stderr, "unknown channel selected\n");
-			exit (EXIT_FAILURE);
-			}
+		userscanliststring = optarg;
 		break;
 
 		case HCX_SCANLIST:
@@ -7973,6 +7949,7 @@ if(eapreqflag == true)
 	}
 
 if(checkdriverflag == true) printf("starting driver test...\n");
+
 if(opensocket() == false)
 	{
 	fprintf(stderr, "warning: failed to init socket\n"
@@ -7990,6 +7967,16 @@ if((statusout &STATUS_SERVER) == STATUS_SERVER)
 		globalclose();
 		}
 	}
+
+if(userscanliststring != NULL)
+	{
+	if(processuserscanlist(userscanliststring) == false)
+		{
+		errorcount++;
+		globalclose();
+		}
+	}
+
 if(showchannelsflag == true)
 	{
 	show_channels();

@@ -1,8 +1,11 @@
 24.10.2020
 ==========
-Some 2 GHz ath9k radios are actually tunable on 2312-2732 on 5 MHz steps:
+hcxdumptool: Default channels are not longer hard coded.
 
-hcxdumptool: exanded channel range on 2.4GHz
+Now hcxdumptool test if channel is available. That allow handling of channels
+from a patched driver.
+
+Some 2 GHz ath9k radios are actually tunable on 2312-2732 on 5 MHz steps
 
 CHAN2G(2407, 14)
 CHAN2G(2402, 15)
