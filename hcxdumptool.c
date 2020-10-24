@@ -6415,28 +6415,18 @@ if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
-static inline bool processuserscanlist(char *optarglist)
+static inline bool testscanlist()
 {
-static char *ptr;
-static char *userscanlist;
-
-userscanlist = strdupa(optarglist);
 cpa = 0;
-ptr = strtok(userscanlist, ",");
-while(ptr != NULL)
+while(channelscanlist[cpa] != 0)
 	{
-	channelscanlist[cpa] = atoi(ptr);
 	if(set_channel() == false) 
 		{
 		fprintf(stderr, "channel %d is not available\n", channelscanlist[cpa]);
 		return false;
 		}
-	ptr = strtok(NULL, ",");
 	cpa++;
-	if(cpa > 127) return false;
 	}
-channelscanlist[cpa] = 0;
-cpa = 0;
 return true;
 }
 /*===========================================================================*/
@@ -7017,7 +7007,9 @@ bpf.filter = NULL;
 bpf.len = 0;
 aktchannel = 0;
 if(eaptunflag == true)
+	{
 	if(tlsinit() == false) return false;
+	}
 packetsentflag = false;
 packetsenttries = 0;
 packetsentlen = 0;
@@ -7338,6 +7330,7 @@ static char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static char *eapreqhex;
+static char *tokptr;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
@@ -7472,7 +7465,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_CHANNEL:
-		userscanliststring = optarg;
+		userscanliststring = strdupa(optarg);
 		break;
 
 		case HCX_SCANLIST:
@@ -7836,6 +7829,50 @@ if(showinterfaceflag == true)
 	return EXIT_SUCCESS;
 	}
 
+cpa = 0;
+if(sl == 1)
+	{
+	while(channelscanlist1[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist1[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+else if(sl == 2)
+	{
+	while(channelscanlist2[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist2[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+else if(sl == 3)
+	{
+	while(channelscanlist3[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist3[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+else if(userscanliststring != NULL)
+	{
+	tokptr = strtok(userscanliststring, ",");
+	while(tokptr != NULL)
+		{
+		channelscanlist[cpa] = atoi(tokptr);
+		tokptr = strtok(NULL, ",");
+		cpa++;
+		if(cpa > 127)
+			{
+			fprintf(stderr, "only 127 channels allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		}
+	channelscanlist[cpa] = 0;
+	}
 if(monitormodeflag == true)
 	{
 	if(getuid() != 0)
@@ -7876,33 +7913,6 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	}
 
 printf("initialization...\n");
-if(sl == 1)
-	{
-	while(channelscanlist1[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist1[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-if(sl == 2)
-	{
-	while(channelscanlist2[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist2[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-if(sl == 3)
-	{
-	while(channelscanlist3[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist3[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
@@ -7968,18 +7978,15 @@ if((statusout &STATUS_SERVER) == STATUS_SERVER)
 		}
 	}
 
-if(userscanliststring != NULL)
-	{
-	if(processuserscanlist(userscanliststring) == false)
-		{
-		errorcount++;
-		globalclose();
-		}
-	}
-
 if(showchannelsflag == true)
 	{
 	show_channels();
+	globalclose();
+	}
+
+if(testscanlist() == false)
+	{
+	errorcount++;
 	globalclose();
 	}
 
