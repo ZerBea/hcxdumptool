@@ -129,7 +129,7 @@ static struct timeval tv;
 static struct timeval tvold;
 static struct timeval tvtot;
 static struct timeval tvpacketsent;
-static uint8_t cpa;
+static int cpa;
 static uint32_t staytime;
 static uint16_t reasoncode;
 static uint32_t attackcount;
@@ -6429,7 +6429,7 @@ return gpioperibase;
 /*===========================================================================*/
 static inline bool ischannelindefaultlist(uint8_t userchannel)
 {
-static uint8_t cpd;
+static int cpd;
 
 cpd = 0;
 while(channeldefaultlist[cpd] != 0)
