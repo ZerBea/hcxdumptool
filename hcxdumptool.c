@@ -7829,7 +7829,6 @@ if(showinterfaceflag == true)
 	return EXIT_SUCCESS;
 	}
 
-cpa = 0;
 if(sl == 1)
 	{
 	while(channelscanlist1[cpa] != 0)
@@ -7984,12 +7983,6 @@ if(showchannelsflag == true)
 	globalclose();
 	}
 
-if(testscanlist() == false)
-	{
-	errorcount++;
-	globalclose();
-	}
-
 if(checkdriverflag == true)
 	{
 	cpa = 0;
@@ -7997,6 +7990,12 @@ if(checkdriverflag == true)
 	if(errorcount == 0) printf("driver tests passed...\nall required ioctl() system calls are supported by driver\n");
 	globalclose();
 	return EXIT_SUCCESS;
+	}
+
+if(testscanlist() == false)
+	{
+	errorcount++;
+	globalclose();
 	}
 
 if(pcapngoutname != NULL)
