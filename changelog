@@ -1,3 +1,31 @@
+24.10.2020
+==========
+Some 2 GHz ath9k radios are actually tunable on 2312-2732 on 5 MHz steps:
+
+hcxdumptool: exanded channel range on 2.4GHz
+
+CHAN2G(2407, 14)
+CHAN2G(2402, 15)
+CHAN2G(2397, 16)
+CHAN2G(2392, 17)
+CHAN2G(2387, 18)
+CHAN2G(2382, 19)
+CHAN2G(2377, 20)
+CHAN2G(2372, 21)
+CHAN2G(2367, 22)
+CHAN2G(2362, 23)
+CHAN2G(2357, 24)
+CHAN2G(2352, 25)
+CHAN2G(2347, 26)
+CHAN2G(2342, 27)
+CHAN2G(2337, 28)
+CHAN2G(2332, 29)
+CHAN2G(2327, 30)
+CHAN2G(2322, 31)
+CHAN2G(2317, 32)
+CHAN2G(2312, 33)
+
+
 09.10.2020
 ==========
 release v 6.1.2
