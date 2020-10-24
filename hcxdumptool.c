@@ -223,7 +223,7 @@ static const uint8_t hdradiotap[] =
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
-const uint8_t channeldefaultlist[] =
+const int channeldefaultlist[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 68,
@@ -235,25 +235,25 @@ const uint8_t channeldefaultlist[] =
 0
 };
 
-const uint8_t channelscanlist1[] =
+const int channelscanlist1[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
 };
 
-const uint8_t channelscanlist2[] =
+const int channelscanlist2[] =
 {
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
-const uint8_t channelscanlist3[] =
+const int channelscanlist3[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
-static uint8_t channelscanlist[128] =
+static int channelscanlist[128] =
 {
 1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
 6, 11 ,8, 10, 1, 6, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0,
