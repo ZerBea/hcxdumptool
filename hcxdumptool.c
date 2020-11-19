@@ -52,7 +52,6 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/bio.h>
-#include <openssl/bioerr.h>
 
 #include "include/hcxdumptool.h"
 #include "include/rpigpio.h"
@@ -6853,9 +6852,13 @@ memset(eaptlsctx, 0, EAPTLSCTX_SIZE);
 SSL_CTX_set_session_cache_mode(tlsctx, SSL_SESS_CACHE_OFF);
 SSL_CTX_set_ecdh_auto(tlsctx, 1);
 SSL_CTX_set_verify(tlsctx, (SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE), eap_tls_clientverify_cb);
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+SSL_CTX_set_min_proto_version(tlsctx, TLS1_VERSION);
+SSL_CTX_set_max_proto_version(tlsctx, TLS1_2_VERSION);
+#else
 SSL_CTX_set_options(tlsctx, SSL_OP_NO_SSLv2);
 SSL_CTX_set_options(tlsctx, SSL_OP_NO_SSLv3);
-SSL_CTX_set_max_proto_version(tlsctx, TLS1_2_VERSION);
+#endif
 SSL_CTX_set_quiet_shutdown(tlsctx, 0);
 return true;
 }
