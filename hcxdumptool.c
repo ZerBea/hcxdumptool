@@ -46,6 +46,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> 
 #include <netpacket/packet.h>
+#include <openssl/opensslv.h>
+#include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/cmac.h>
@@ -6921,6 +6923,12 @@ if(gpiostatusled > 0)
 		nanosleep(&sleepled2, NULL);
 		}
 	}
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+SSL_library_init();
+#else
+OPENSSL_init_ssl(0, NULL);
+#endif
+
 if((filteraplist = (maclist_t*)calloc((FILTERLIST_MAX +1), MACLIST_SIZE)) == NULL) return false;
 if((filterclientlist = (maclist_t*)calloc((FILTERLIST_MAX +1), MACLIST_SIZE)) == NULL) return false;
 if((aplist = (macessidlist_t*)calloc((APLIST_MAX +1), MACESSIDLIST_SIZE)) == NULL) return false;
