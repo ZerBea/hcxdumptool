@@ -6874,6 +6874,7 @@ static inline bool globalinit()
 {
 static int c;
 static int gpiobasemem = 0;
+static unsigned long opensslversion;
 static const char notavailable[] = { "N/A" };
 static const char weakcandidatedefault[] = { "12345678" };
 
@@ -6929,7 +6930,9 @@ if(gpiostatusled > 0)
 		}
 	}
 
-unsigned long opensslversion;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+SSL_library_init();
+#endif
 opensslversion = OpenSSL_version_num();
 opensslversionmajor = (opensslversion & 0x10000000L) >> 28;
 opensslversionminor = (opensslversion & 0x01100000L) >> 20;
