@@ -1,3 +1,8 @@
+02.12.2020
+==========
+release v 6.1.4
+
+
 27.11.2020
 ==========
 hcxdumptool: show openSSL version in status
@@ -36,7 +41,7 @@ CHAN2G(2312, 33)
 
 09.10.2020
 ==========
-release v 6.1.2
+release v 6.1.3
 fixed broken GPS handling
 added better GPS error handling
 
