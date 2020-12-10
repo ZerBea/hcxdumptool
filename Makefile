@@ -11,7 +11,6 @@ VERSION_YEAR		:= $(shell echo $(PRODUCTION_YEAR))
 
 PREFIX		?= /usr/local
 BINDIR		= $(DESTDIR)$(PREFIX)/bin
-MANDIR		= $(DESTDIR)$(PREFIX)/share/man
 
 HOSTOS		:= $(shell uname -s)
 
