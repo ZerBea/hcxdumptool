@@ -88,6 +88,8 @@ Requirements
 
 * libopenssl and openssl-dev installed
 
+* pkg-config installed
+
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops may work, too.
 
 * GPIO hardware mod recommended (push button and LED).
