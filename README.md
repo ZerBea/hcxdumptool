@@ -38,8 +38,7 @@ Solve dependencies (Debian based distributions: KALI, UBUNTU, ...)
 You need to install missing dependencies before running `make`:
 
 ```
-sudo apt-get install libcurl4-openssl-dev
-sudo apt-get install libssl-dev
+sudo apt-get install libcurl4-openssl-dev libssl-dev pkg-config
 ```
 
 Compile
