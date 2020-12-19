@@ -245,6 +245,11 @@ const int channelscanlist3[] =
 132, 136, 140, 149, 153, 157, 161, 165, 0
 };
 
+const int channelscanlist4[] =
+{
+201, 205, 209, 213, 217, 221, 225, 229, 233, 0
+};
+
 static int channelscanlist[128] =
 {
 1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
@@ -7096,6 +7101,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 1 = 1,2,3,4,5,6,7,8,9,10,11,12,13\n"
 	"                 2 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
 	"                 3 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
+	"                 4 = 201,205,209,213,217,221,225,229,233\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default %d seconds\n"
 	"-m <interface> : set monitor mode by ioctl() system call and quit\n"
@@ -7369,7 +7375,7 @@ static const struct option long_options[] =
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
-	{"filtermode	",		required_argument,	NULL,	HCX_FILTERMODE},
+	{"filtermode",			required_argument,	NULL,	HCX_FILTERMODE},
 	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
 	{"eapoltimeout",		required_argument,	NULL,	HCX_EAPOL_TIMEOUT},
@@ -7493,7 +7499,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_SCANLIST:
 		sl = strtol(optarg, NULL, 10); 
-		if(sl > 3)
+		if(sl > 4)
 			{
 			fprintf(stderr, "no predefined scanlist available\n");
 			exit (EXIT_FAILURE);
@@ -7875,6 +7881,15 @@ else if(sl == 3)
 	while(channelscanlist3[cpa] != 0)
 		{
 		channelscanlist[cpa] = channelscanlist3[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
+else if(sl == 4)
+	{
+	while(channelscanlist4[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist4[cpa];
 		cpa++;
 		}
 	channelscanlist[cpa] = 0;
