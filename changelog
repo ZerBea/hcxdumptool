@@ -1,3 +1,13 @@
+20.12.2020
+==========
+hcxdumptool: added tot (transmission timeout timer)
+             hcxdumptool will no longer freeze if driver died
+             this is a workaround on ath9k driver issue:
+             https://github.com/ZerBea/hcxdumptool/issues/80#issuecomment-748622644
+             not caused by hcxdumptool:
+             https://bugs.archlinux.org/task/68578
+
+
 19.12.2020
 ==========
 hcxdumptool: added support for 6GHz channels 201,205,209,213,217,221,225,229,233 on option -c and option -s
