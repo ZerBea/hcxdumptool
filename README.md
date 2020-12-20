@@ -118,7 +118,6 @@ This list is for information purposes only and should not be regarded as a bindi
 | ALFA AWUS036H        | ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter                                |
 | ALFA AWUS036NH       | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter                             |
 | LogiLink WL0151      | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter                                    |
-| TP-LINK TL-WN722N v1 | ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n                                      |
 | TP-LINK Archer T2UH  | ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter)                |
 | ASUS USB-AC51        | ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]    |
 | RTL8821AE            | Realtek Semiconductor Co., Ltd. RTL8821AE 802.11ac PCIe Wireless Network Adapter (kernel >= 5.9) |
