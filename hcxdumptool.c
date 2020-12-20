@@ -1270,6 +1270,41 @@ for(setcnt = 0; setcnt < iesetlen; setcnt++)
 return destdatalen;
 }
 /*===========================================================================*/
+static inline void send_packet(int txsocket, int txsize, char *errormessage)
+{
+static int fdnum;
+static fd_set txfds;
+static struct timeval tvfd;
+
+tvfd.tv_sec = FDTXTIMER;
+tvfd.tv_usec = 0;
+FD_ZERO(&txfds);
+FD_SET(txsocket, &txfds);
+fdnum = select(txsocket +1, &txfds, NULL, NULL, &tvfd);
+if(fdnum < 0)
+	{
+	errorcount++;
+	return;
+	}
+if(FD_ISSET(txsocket, &txfds))
+	{
+	if(write(txsocket, packetoutptr,  txsize) < 0)
+		{
+		printf("\n%s\n", errormessage);
+		errorcount++;
+		return;
+		}
+	fsync(txsocket);
+	outgoingcount++;
+	}
+else
+	{
+	printf("\n%s\n", errormessage);
+	errorcount++;
+	return;
+	}
+return;
+}
 /*===========================================================================*/
 static inline void send_disassociation(uint8_t *macsta, uint8_t *macap, uint8_t reason)
 {
@@ -1288,13 +1323,7 @@ macftx->duration = 0x013a;
 macftx->sequence = mydisassociationsequence++ << 4;
 if(mydisassociationsequence >= 4096) mydisassociationsequence = 1;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
-	{
-	perror("\nfailed to transmit deuthentication");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deuthentication");
 return;
 }
 /*===========================================================================*/
@@ -1315,13 +1344,7 @@ macftx->duration = 0x013a;
 macftx->sequence = mydeauthenticationsequence++ << 4;
 if(mydeauthenticationsequence >= 4096) mydeauthenticationsequence = 1;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_NORM +2) < 0)
-	{
-	perror("\nfailed to transmit deuthentication");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deuthentication");
 return;
 }
 /*===========================================================================*/
@@ -1372,13 +1395,7 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger-
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x29] = CS_TKIP;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x2f] = CS_TKIP;
 if((zeiger->akm &TAK_PSK) == TAK_PSK) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x35] = AK_PSK;
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA1_SIZE ) < 0)
-	{
-	perror("\nfailed to transmit reassociationrequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA1_SIZE, "failed to transmit reassociationrequest");
 return;
 }
 /*===========================================================================*/
@@ -1432,13 +1449,7 @@ else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->es
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x2b] = CS_CCMP;
 if((zeiger->akm &TAK_PSK) == TAK_PSK) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x31] = AK_PSK;
 else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +0x31] = AK_PSKSHA256;
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA2_SIZE ) < 0)
-	{
-	perror("\nfailed to transmit reassociationrequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeiger->essidlen +IETAG_SIZE +REASSOCIATIONREQUESTWPA2_SIZE, "failed to transmit reassociationrequest");
 return;
 }
 /*===========================================================================*/
@@ -1453,13 +1464,7 @@ macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_CTL;
 macftx->subtype = IEEE80211_STYPE_ACK;
 memcpy(macftx->addr1, macfrx->addr2, 6);
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_ACK) < 0)
-	{
-	perror("\nfailed to transmit acknowledgement");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_ACK, "failed to transmit acknowledgement");
 return;
 }
 /*===========================================================================*/
@@ -1495,13 +1500,7 @@ macftx->duration = 0x013a;
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &reassociationresponsedata, REASSOCIATIONRESPONSE_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +REASSOCIATIONRESPONSE_SIZE) < 0)
-	{
-	perror("\nfailed to transmit associationresponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +REASSOCIATIONRESPONSE_SIZE, "failed to transmit associationresponse");
 return;
 }
 /*===========================================================================*/
@@ -1550,13 +1549,7 @@ if(fd_pcapng > 0)
 		writeepbown(fd_pcapng);
 		}
 	}
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99) < 0)
-	{
-	perror("\nfailed to transmit proberesponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99, "failed to transmit proberesponse");
 lastauthtimestamp = timestamp;
 return;
 }
@@ -1606,13 +1599,7 @@ if(fd_pcapng > 0)
 		writeepbown(fd_pcapng);
 		}
 	}
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99) < 0)
-	{
-	perror("\nfailed to transmit proberesponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +LLC_SIZE +99, "failed to transmit proberesponse");
 lastauthtimestamp = timestamp;
 return;
 }
@@ -1675,13 +1662,7 @@ else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1d] = CS_CCMP;
 if((zeiger->akm &TAK_PSK) == TAK_PSK) packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x23] = AK_PSK;
 else packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x23] = AK_PSKSHA256;
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA2_SIZE) < 0)
-	{
-	perror("\nfailed to transmit associationrequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA2_SIZE, "failed to transmit associationrequest");
 return;
 }
 /*===========================================================================*/
@@ -1737,13 +1718,7 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zei
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x1b] = CS_TKIP;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x21] = CS_TKIP;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +0x27] = AK_PSK;
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA1_SIZE) < 0)
-	{
-	perror("\nfailed to transmit associationrequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONREQUESTCAPA_SIZE +zeiger->essidlen +IETAG_SIZE +ASSOCIATIONREQUESTWPA1_SIZE, "failed to transmit associationrequest");
 return;
 }
 /*===========================================================================*/
@@ -1778,13 +1753,7 @@ macftx->duration = 0x013a;
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &associationresponsedata, ASSOCIATIONRESPONSE_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONRESPONSE_SIZE) < 0)
-	{
-	perror("\nfailed to transmit associationresponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +ASSOCIATIONRESPONSE_SIZE, "failed to transmit associationresponse");
 return;
 }
 /*===========================================================================*/
@@ -1807,13 +1776,7 @@ memcpy(macftx->addr3, ap, 6);
 macftx->duration = 0x013a;
 macftx->sequence = mydeauthenticationsequence++ << 4;
 if(mydeauthenticationsequence >= 4096) mydeauthenticationsequence = 1;
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_NORM) < 0)
-	{
-	perror("\nfailed to transmit null");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM, "failed to transmit null");
 return;
 }
 */
@@ -1840,13 +1803,7 @@ macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
 if(myclientsequence >= 4096) myclientsequence = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +AUTHENTICATIONRESPONSE_SIZE) < 0)
-	{
-	perror("\nfailed to transmit authenticationresponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +AUTHENTICATIONRESPONSE_SIZE, "failed to transmit authenticationresponse");
 return;
 }
 /*===========================================================================*/
@@ -1873,13 +1830,7 @@ macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
 if(myclientsequence >= 4096) myclientsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationrequestdata, MYAUTHENTICATIONREQUEST_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE) < 0)
-	{
-	perror("\nfailed to transmit authenticationrequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE, "failed to transmit authenticationrequest");
 return;
 }
 /*===========================================================================*/
@@ -1925,13 +1876,7 @@ capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &proberesponsedata, PROBERESPONSE_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +0x15] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +PROBERESPONSE_SIZE) < 0)
-	{
-	perror("\nfailed to transmit proberesponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +PROBERESPONSE_SIZE, "failed to transmit proberesponse");
 return;
 }
 /*===========================================================================*/
@@ -2033,13 +1978,7 @@ else
 	}
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size], &proberesponse_ie_extcap, PROBERESPONSE_IE_EXTCAP_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +0x0c] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size +PROBERESPONSE_IE_EXTCAP_SIZE) < 0)
-	{
-	perror("\nfailed to transmit proberesponse");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size +PROBERESPONSE_IE_EXTCAP_SIZE, "failed to transmit proberesponse");
 return;
 }
 /*===========================================================================*/
@@ -2069,13 +2008,7 @@ packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +1] = essid_len;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE], essid, essid_len);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len], &directedproberequestdata, DIRECTEDPROBEREQUEST_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len +DIRECTEDPROBEREQUEST_SIZE) < 0)
-	{
-	perror("\nfailed to transmit directed proberequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +IETAG_SIZE +essid_len +DIRECTEDPROBEREQUEST_SIZE, "failed to transmit directed proberequest");
 return;
 }
 /*===========================================================================*/
@@ -2103,13 +2036,7 @@ memcpy(macftx->addr3, &mac_broadcast, 6);
 macftx->sequence = myclientsequence++ << 4;
 if(myclientsequence >= 4096) myclientsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &undirectedproberequestdata, UNDIRECTEDPROBEREQUEST_SIZE);
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE) < 0)
-	{
-	perror("\nfailed to transmit undirected proberequest");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +UNDIRECTEDPROBEREQUEST_SIZE, "failed to transmit undirected proberequest");
 return;
 }
 /*===========================================================================*/
@@ -2137,13 +2064,7 @@ packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconptr->e
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconptr->essid, rgbeaconptr->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen) < 0)
-	{
-	perror("\nfailed to transmit internal beacon");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 rgbeaconptr++;
 if(rgbeaconptr >= rglist +RGLIST_MAX) rgbeaconptr = rglist;
 if(rgbeaconptr->timestamp == 0) rgbeaconptr = rglist;
@@ -2174,13 +2095,7 @@ packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconlistpt
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconlistptr->essid, rgbeaconlistptr->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen) < 0)
-	{
-	perror("\nfailed to transmit internal beacon");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 rgbeaconlistptr++;
 if(rgbeaconlistptr >= rgbeaconlist +RGLIST_MAX) rgbeaconlistptr = rgbeaconlist;
 if(rgbeaconlistptr->timestamp == 0) rgbeaconlistptr = rgbeaconlist;
@@ -2209,13 +2124,7 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondatahidden, bcbeacondatahiddenlen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenchanoffset] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen) < 0)
-	{
-	perror("\nfailed to transmit internal beacon");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen, "failed to transmit internal beacon");
 return;
 }
 /*===========================================================================*/
@@ -2241,13 +2150,7 @@ capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondataopen, bcbeacondataopenlen);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenchanoffset] = channelscanlist[cpa];
-if(write(fd_socket, packetoutptr, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen) < 0)
-	{
-	perror("\nfailed to transmit internal beacon");
-	errorcount++;
-	}
-fsync(fd_socket);
-outgoingcount++;
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen, "failed to transmit internal beacon");
 return;
 }
 /*===========================================================================*/
@@ -2326,7 +2229,6 @@ else
 	exteap->id = id;
 	exteap->type = eaptype;
 	}
-
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +data_len +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
@@ -2342,12 +2244,7 @@ if(myapsequence >= 4096) myapsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS], &eapdata, eapdata_len);
 if(data_len > 0) memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len], data, data_len);
 packetlenown = HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len;
-if(write(fd_socket, packetoutptr,  HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len) < 0)
-	{
-	perror("\nfailed to transmit EAP frame");
-	errorcount++;
-	}
-fsync(fd_socket);
+send_packet(fd_socket,  HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len, "failed to transmit EAP packet");
 gettimeofday(&tvpacketsent, NULL);
 memcpy(packetsent, packetoutptr, packetlenown);
 packetsentlen = packetlenown;
@@ -2359,8 +2256,15 @@ return;
 /*===========================================================================*/
 static inline void resend_packet()
 {
+static int fdnum;
+static fd_set txfds;
+static struct timeval tvfd;
 static mac_t *macftx;
 
+tvfd.tv_sec = FDTXTIMER;
+tvfd.tv_usec = 0;
+FD_ZERO(&txfds);
+FD_SET(fd_socket, &txfds);
 if(packetsenttries == 0)
 	{
 	packetsentflag = false;
@@ -2370,12 +2274,29 @@ macftx = (mac_t*)(&packetsent[HDRRT_SIZE]);
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 macftx->retry = 1;
-if(write(fd_socket, &packetsent,  packetsentlen) < 0)
+fdnum = select(fd_socket +1, &txfds, NULL, NULL, &tvfd);
+if(fdnum < 0)
 	{
-	perror("\nfailed to retransmit frame");
 	errorcount++;
+	return;
 	}
-fsync(fd_socket);
+if(FD_ISSET(fd_socket, &txfds))
+	{
+	if(write(fd_socket, &packetsent, packetsentlen) < 0)
+		{
+		printf("\nfailed to retransmit packet\n");
+		errorcount++;
+		return;
+		}
+	fsync(fd_socket);
+	outgoingcount++;
+	}
+else
+	{
+	printf("\nfailed to retransmit packet\n");
+	errorcount++;
+	return;
+	}
 gettimeofday(&tvpacketsent, NULL);
 packetsenttries--;
 if(packetsenttries == 0) packetsentflag = false;
