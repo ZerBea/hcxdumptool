@@ -1290,7 +1290,7 @@ if(FD_ISSET(txsocket, &txfds))
 	{
 	if(write(txsocket, packetoutptr,  txsize) < 0)
 		{
-		printf("\n%s\n", errormessage);
+		printf("\n%s - driver doesn't respond\n", errormessage);
 		errorcount++;
 		return;
 		}
@@ -1299,7 +1299,7 @@ if(FD_ISSET(txsocket, &txfds))
 	}
 else
 	{
-	printf("\n%s\n", errormessage);
+	printf("\n%s - driver doesn't respond\n", errormessage);
 	errorcount++;
 	return;
 	}
@@ -2284,7 +2284,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	{
 	if(write(fd_socket, &packetsent, packetsentlen) < 0)
 		{
-		printf("\nfailed to retransmit packet\n");
+		printf("\nfailed to retransmit EAP packet - driver doesn't respond\n");
 		errorcount++;
 		return;
 		}
@@ -2293,7 +2293,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	}
 else
 	{
-	printf("\nfailed to retransmit packet\n");
+	printf("\nfailed to retransmit EAP packet - driver doesn't respond\n");
 	errorcount++;
 	return;
 	}
