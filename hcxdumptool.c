@@ -5786,7 +5786,7 @@ return;
 static inline void process_server()
 {
 static fd_set readfds;
-static struct timeval tvfd;
+static struct timespec tsfd;
 static int fdnum;
 static int msglen;
 static uint32_t statuscount;
@@ -5799,8 +5799,8 @@ timestamp = timestampstart;
 wantstopflag = false;
 signal(SIGINT, programmende);
 statuscount = 1;
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
+tsfd.tv_sec = 1;
+tsfd.tv_nsec = 0;
 while(1)
 	{
 	if(gpiobutton > 0)
@@ -5816,7 +5816,7 @@ while(1)
 		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket_mccli, &readfds);
-	fdnum = select(fd_socket_mccli +1, &readfds, NULL, NULL, &tvfd);
+	fdnum = pselect(fd_socket_mccli +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
 		errorcount++;
@@ -5845,8 +5845,6 @@ while(1)
 				}
 			}
 		statuscount++;
-		tvfd.tv_sec = 1;
-		tvfd.tv_usec = 0;
 		}
 	}
 return;
