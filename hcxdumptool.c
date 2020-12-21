@@ -168,7 +168,7 @@ static mac_t *macfrx;
 static uint8_t *payloadptr;
 static uint32_t payloadlen;
 
-static uint32_t packetsentlen;
+static int packetsentlen;
 static uint8_t packetsenttries;
 
 static maclist_t *filteraplist;
@@ -2135,6 +2135,7 @@ static void send_beacon_open()
 {
 static mac_t *macftx;
 static capap_t *capap;
+
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
@@ -2179,6 +2180,10 @@ return;
 static inline void send_eap(uint8_t eapoltype, uint8_t code, uint8_t id, uint8_t eaptype, uint8_t *data, size_t data_len)
 {
 static mac_t *macftx;
+static eapauth_t *eapauth;
+static exteap_t *exteap;
+static size_t eapdata_len = 0;
+
 static uint8_t eapdata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
@@ -2186,14 +2191,11 @@ static uint8_t eapdata[] =
 };
 #define EAP_DATA_SIZE sizeof(eapdata)
 
-size_t eapdata_len = 0;
-eapauth_t *eapauth;
-exteap_t *exteap;
 packetoutptr = epbown +EPB_SIZE;
 eapauth = (eapauth_t*)&eapdata[LLC_SIZE];
 exteap = (exteap_t*)&eapdata[LLC_SIZE +EAPAUTH_SIZE];
-
 eapauth->type = eapoltype;
+eapdata_len = 0;
 if(eapoltype == EAPOL_START || eapoltype == EAPOL_LOGOFF)
 	{
 	eapdata_len = (LLC_SIZE +EAPAUTH_SIZE);
