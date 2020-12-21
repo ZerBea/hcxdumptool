@@ -1293,7 +1293,7 @@ if(FD_ISSET(txsocket, &txfds))
 	if(txsize != write(txsocket, packetoutptr, txsize))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %3d socket error: %s\n", timestring, channelscanlist[cpa], errormessage);
+		printf("%s %3d socket write error: %s\n", timestring, channelscanlist[cpa], errormessage);
 		errorcount++;
 		return;
 		}
@@ -2266,10 +2266,6 @@ static mac_t *macftx;
 
 static char timestring[16];
 
-tvfd.tv_sec = FDTXTIMER;
-tvfd.tv_usec = 0;
-FD_ZERO(&txfds);
-FD_SET(fd_socket, &txfds);
 if(packetsenttries == 0)
 	{
 	packetsentflag = false;
@@ -2279,6 +2275,10 @@ macftx = (mac_t*)(&packetsent[HDRRT_SIZE]);
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 macftx->retry = 1;
+tvfd.tv_sec = FDTXTIMER;
+tvfd.tv_usec = 0;
+FD_ZERO(&txfds);
+FD_SET(fd_socket, &txfds);
 fdnum = select(fd_socket +1, &txfds, NULL, NULL, &tvfd);
 if(fdnum < 0)
 	{
