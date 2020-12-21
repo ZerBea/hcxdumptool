@@ -1299,13 +1299,10 @@ if(FD_ISSET(txsocket, &txfds))
 		}
 	fsync(txsocket);
 	outgoingcount++;
-	}
-else
-	{
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-	printf("%s %3d driver is busy: %s\n", timestring, channelscanlist[cpa], errormessage);
 	return;
 	}
+strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+printf("%s %3d driver is busy: %s\n", timestring, channelscanlist[cpa], errormessage);
 return;
 }
 /*===========================================================================*/
@@ -2298,16 +2295,13 @@ if(FD_ISSET(fd_socket, &txfds))
 		}
 	fsync(fd_socket);
 	outgoingcount++;
-	}
-else
-	{
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-	printf("%s %3d driver is busy: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
+	gettimeofday(&tvpacketsent, NULL);
+	packetsenttries--;
+	if(packetsenttries == 0) packetsentflag = false;
 	return;
 	}
-gettimeofday(&tvpacketsent, NULL);
-packetsenttries--;
-if(packetsenttries == 0) packetsentflag = false;
+strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+printf("%s %3d driver is busy: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
 return;
 }
 /*===========================================================================*/
