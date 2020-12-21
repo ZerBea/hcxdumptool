@@ -2182,7 +2182,7 @@ static inline void send_eap(uint8_t eapoltype, uint8_t code, uint8_t id, uint8_t
 static mac_t *macftx;
 static eapauth_t *eapauth;
 static exteap_t *exteap;
-static size_t eapdata_len = 0;
+static size_t eapdata_len;
 
 static uint8_t eapdata[] =
 {
