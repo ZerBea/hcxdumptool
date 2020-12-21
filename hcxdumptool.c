@@ -1276,6 +1276,8 @@ static int fdnum;
 static fd_set txfds;
 static struct timeval tvfd;
 
+static char timestring[16];
+
 tvfd.tv_sec = FDTXTIMER;
 tvfd.tv_usec = 0;
 FD_ZERO(&txfds);
@@ -1288,9 +1290,10 @@ if(fdnum < 0)
 	}
 if(FD_ISSET(txsocket, &txfds))
 	{
-	if(write(txsocket, packetoutptr,  txsize) < 0)
+	if(txsize != write(txsocket, packetoutptr, txsize))
 		{
-		printf("\ndriver is busy: %s\n", errormessage);
+		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+		printf("%s %3d socket error: %s\n", timestring, channelscanlist[cpa], errormessage);
 		errorcount++;
 		return;
 		}
@@ -1299,8 +1302,8 @@ if(FD_ISSET(txsocket, &txfds))
 	}
 else
 	{
-	printf("\ndriver is busy: %s\n", errormessage);
-	errorcount++;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+	printf("%s %3d driver is busy: %s\n", timestring, channelscanlist[cpa], errormessage);
 	return;
 	}
 return;
@@ -2261,6 +2264,8 @@ static fd_set txfds;
 static struct timeval tvfd;
 static mac_t *macftx;
 
+static char timestring[16];
+
 tvfd.tv_sec = FDTXTIMER;
 tvfd.tv_usec = 0;
 FD_ZERO(&txfds);
@@ -2282,9 +2287,10 @@ if(fdnum < 0)
 	}
 if(FD_ISSET(fd_socket, &txfds))
 	{
-	if(write(fd_socket, &packetsent, packetsentlen) < 0)
+	if(packetsentlen != write(fd_socket, &packetsent, packetsentlen))
 		{
-		printf("\ndriver is busy: failed to retransmit EAP packet\n");
+		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+		printf("%s %3d socket write error: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
 		errorcount++;
 		return;
 		}
@@ -2293,8 +2299,8 @@ if(FD_ISSET(fd_socket, &txfds))
 	}
 else
 	{
-	printf("\ndriver is busy: failed to retransmit EAP packet\n");
-	errorcount++;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+	printf("%s %3d driver is busy: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
 	return;
 	}
 gettimeofday(&tvpacketsent, NULL);
