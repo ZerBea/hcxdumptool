@@ -1274,15 +1274,15 @@ static inline void send_packet(int txsocket, int txsize, char *errormessage)
 {
 static int fdnum;
 static fd_set txfds;
-static struct timeval tvfd;
+static struct timespec tsfdtx;
 
 static char timestring[16];
 
-tvfd.tv_sec = FDTXTIMER;
-tvfd.tv_usec = 0;
+tsfdtx.tv_sec = 0;
+tsfdtx.tv_nsec = FDNSECTXTIMER;
 FD_ZERO(&txfds);
 FD_SET(txsocket, &txfds);
-fdnum = select(txsocket +1, &txfds, NULL, NULL, &tvfd);
+fdnum = pselect(txsocket +1, NULL, &txfds, NULL, &tsfdtx, NULL);
 if(fdnum < 0)
 	{
 	errorcount++;
@@ -1293,7 +1293,7 @@ if(FD_ISSET(txsocket, &txfds))
 	if(txsize != write(txsocket, packetoutptr, txsize))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %3d socket write error: %s\n", timestring, channelscanlist[cpa], errormessage);
+		printf("%s %3d socket error: %s\n", timestring, channelscanlist[cpa], errormessage);
 		errorcount++;
 		return;
 		}
@@ -2263,11 +2263,15 @@ static inline void resend_packet()
 {
 static int fdnum;
 static fd_set txfds;
-static struct timeval tvfd;
+static struct timespec tsfdtx;
 static mac_t *macftx;
 
 static char timestring[16];
 
+tsfdtx.tv_sec = 0;
+tsfdtx.tv_nsec = FDNSECTXTIMER;
+FD_ZERO(&txfds);
+FD_SET(fd_socket, &txfds);
 if(packetsenttries == 0)
 	{
 	packetsentflag = false;
@@ -2277,11 +2281,7 @@ macftx = (mac_t*)(&packetsent[HDRRT_SIZE]);
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 macftx->retry = 1;
-tvfd.tv_sec = FDTXTIMER;
-tvfd.tv_usec = 0;
-FD_ZERO(&txfds);
-FD_SET(fd_socket, &txfds);
-fdnum = select(fd_socket +1, &txfds, NULL, NULL, &tvfd);
+fdnum = pselect(fd_socket +1, NULL, &txfds, NULL, &tsfdtx, NULL);
 if(fdnum < 0)
 	{
 	errorcount++;
@@ -5229,7 +5229,7 @@ static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
-static struct timeval tvfd;
+static struct timespec tsfd;
 static const char *fimtempl;
 static const char *fimtemplprotect = "protect";
 static const char *fimtemplattack = "attack";
@@ -5286,8 +5286,8 @@ if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendt
 else printf("%s", servermsg);
 incomingcountold = 0;
 gettimeofday(&tv, NULL);
-tvfd.tv_sec = 0;
-tvfd.tv_usec = FDUSECTIMER;
+tsfd.tv_sec = 0;
+tsfd.tv_nsec = FDNSECTIMER;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if(beaconactiveflag == true)
@@ -5373,7 +5373,7 @@ while(1)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
-	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
+	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
 		errorcount++;
@@ -5598,13 +5598,13 @@ static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
-static struct timeval tvfd;
+static struct timespec tsfd;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
-tvfd.tv_sec = 0;
-tvfd.tv_usec = FDUSECTIMER;
+tsfd.tv_sec = 0;
+tsfd.tv_nsec = FDNSECTIMER;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
@@ -5666,7 +5666,7 @@ while(1)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
-	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
+	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
 		errorcount++;
@@ -5698,13 +5698,13 @@ static fd_set readfds;
 static uint64_t injectionhit;
 static uint64_t injectioncount;
 static scanlist_t *zeiger;
-static struct timeval tvfd;
+static struct timespec tsfd;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
-tvfd.tv_sec = 0;
-tvfd.tv_usec = FDUSECTIMER;
+tsfd.tv_sec = 0;
+tsfd.tv_nsec = FDNSECTIMER;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
@@ -5761,7 +5761,7 @@ while(1)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
-	fdnum = select(sd +1, &readfds, NULL, NULL, &tvfd);
+	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
 		errorcount++;
@@ -5973,7 +5973,7 @@ static int havegps;
 static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
-static struct timeval tvfd;
+static struct timespec tsfd;
 static const char *nogps = "N/A";
 static const char gpgga[] = "$GPGGA";
 static const char gprmc[] = "$GPRMC";
@@ -6019,8 +6019,8 @@ if(gpsdflag == true)
 		return;
 		}
 	}
-tvfd.tv_sec = 1;
-tvfd.tv_usec = 0;
+tsfd.tv_sec = 1;
+tsfd.tv_nsec = 0;
 havegps = 0;
 while(1)
 	{
@@ -6034,7 +6034,7 @@ while(1)
 		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_gps, &readfds);
-	fdnum = select(fd_gps +1, &readfds, NULL, NULL, &tvfd);
+	fdnum = pselect(fd_gps +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
 		errorcount++;
@@ -6052,8 +6052,6 @@ while(1)
 		{
 		if(havegps > 120) return;
 		havegps++;
-		tvfd.tv_sec = 1;
-		tvfd.tv_usec = 0;
 		}
 	}
 return;
@@ -7116,7 +7114,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default: %s\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
 	"                                     maximum entries: %d ESSIDs\n"
-	"--active_beacon                    : transmit beacon from collected ESSIDs and from essidlist once every %d usec\n"
+	"--active_beacon                    : transmit beacon from collected ESSIDs and from essidlist once every %d nsec\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
 	"                                     affected: ap-less\n"
@@ -7212,7 +7210,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDUSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
