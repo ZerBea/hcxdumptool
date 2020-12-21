@@ -1290,7 +1290,7 @@ if(FD_ISSET(txsocket, &txfds))
 	{
 	if(write(txsocket, packetoutptr,  txsize) < 0)
 		{
-		printf("\n%s - driver doesn't respond\n", errormessage);
+		printf("\ndriver is busy: %s\n", errormessage);
 		errorcount++;
 		return;
 		}
@@ -1299,7 +1299,7 @@ if(FD_ISSET(txsocket, &txfds))
 	}
 else
 	{
-	printf("\n%s - driver doesn't respond\n", errormessage);
+	printf("\ndriver is busy: %s\n", errormessage);
 	errorcount++;
 	return;
 	}
@@ -2284,7 +2284,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	{
 	if(write(fd_socket, &packetsent, packetsentlen) < 0)
 		{
-		printf("\nfailed to retransmit EAP packet - driver doesn't respond\n");
+		printf("\ndriver is busy: failed to retransmit EAP packet\n");
 		errorcount++;
 		return;
 		}
@@ -2293,7 +2293,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	}
 else
 	{
-	printf("\nfailed to retransmit EAP packet - driver doesn't respond\n");
+	printf("\ndriver is busy: failed to retransmit EAP packet\n");
 	errorcount++;
 	return;
 	}
@@ -5378,8 +5378,6 @@ while(1)
 		get_channel();
 		if(beaconactiveflag == true) send_beacon_active();
 		if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
-		tvfd.tv_sec = 0;
-		tvfd.tv_usec = FDUSECTIMER;
 		}
 	}
 return;
@@ -5678,8 +5676,6 @@ while(1)
 			continue;
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
-		tvfd.tv_sec = 0;
-		tvfd.tv_usec = FDUSECTIMER;
 		}
 	}
 return;
@@ -5771,8 +5767,6 @@ while(1)
 		if(channelscanlist[cpa] == 0) break;
 		if(set_channel() == false) continue;
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
-		tvfd.tv_sec = 0;
-		tvfd.tv_usec = FDUSECTIMER;
 		}
 	}
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
