@@ -1,6 +1,7 @@
 21.12.2020
 ==========
 removed TP-LINK TL-WN722N v1 (ath9k driver) from list of working devices due to driver issue
+hcxdumptool: moved from select() to pselect()
 
 
 20.12.2020
