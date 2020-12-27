@@ -5074,20 +5074,20 @@ static uint32_t *pp;
 
 rth = (rth_t*)packetptr;
 pf = RTH_SIZE;
-if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_EXT) & 1) == 1)
+if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
 	{
 	pp = (uint32_t*)packetptr;
 	for(i = 2; i < rthlen /4; i++)
 		{
 		pf += 4;
-		if(((le32toh(pp[i]) >> IEEE80211_RADIOTAP_EXT) & 1) == 0) break;
+		if((le32toh(pp[i]) & IEEE80211_RADIOTAP_EXT) != IEEE80211_RADIOTAP_EXT) break;
 		}
 	}
 if((pf %8) != 0) pf +=4;
-if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_TSFT) & 1) == 1) pf += 8;
-if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_FLAGS) & 1) == 0) return 0;
+if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_TSFT) == IEEE80211_RADIOTAP_TSFT) pf += 8;
+if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_FLAGS) != IEEE80211_RADIOTAP_FLAGS) return 0;
 if(pf > packetlen) return 0;
-if((packetptr[pf] & IEEE80211_RADIOTAP_F_FCS) == 0) return 0;
+if((packetptr[pf] & IEEE80211_RADIOTAP_F_FCS) != IEEE80211_RADIOTAP_F_FCS) return 0;
 return 4;
 }
 /*===========================================================================*/
