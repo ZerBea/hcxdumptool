@@ -5064,6 +5064,33 @@ gpscount++;
 return;
 }
 /*===========================================================================*/
+/*===========================================================================*/
+static uint32_t getradiotapfield(uint16_t rthlen, uint32_t packetlen, uint8_t *packetptr)
+{
+static int i;
+static uint16_t pf;
+static rth_t *rth;
+static uint32_t *pp;
+
+rth = (rth_t*)packetptr;
+pf = RTH_SIZE;
+if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_EXT) & 1) == 1)
+	{
+	pp = (uint32_t*)packetptr;
+	for(i = 2; i < rthlen /4; i++)
+		{
+		pf += 4;
+		if(((le32toh(pp[i]) >> IEEE80211_RADIOTAP_EXT) & 1) == 0) break;
+		}
+	}
+if((pf %8) != 0) pf +=4;
+if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_TSFT) & 1) == 1) pf += 8;
+if(((le32toh(rth->it_present) >> IEEE80211_RADIOTAP_FLAGS) & 1) == 0) return 0;
+if(pf > packetlen) return 0;
+if((packetptr[pf] & IEEE80211_RADIOTAP_F_FCS) == 0) return 0;
+return 4;
+}
+/*===========================================================================*/
 static inline void process_packet()
 {
 static uint32_t rthl;
@@ -5113,7 +5140,7 @@ if(rthl <= HDRRT_SIZE) return; /* outgoing packet */
 
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
+ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -5564,7 +5591,7 @@ rthl = le16toh(rth->it_len);
 if(rthl <= 14) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-if(((le32toh(rth->it_present) &0x80000003) == 0x80000003) && ((packetptr[0x18] &0x10) == 0x10)) ieee82011len -= 4; /* Atheros FCS quick and dirty */
+ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
