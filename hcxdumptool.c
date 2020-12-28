@@ -4632,6 +4632,11 @@ static ownlist_t *zeiger;
 
 auth = (authf_t*)payloadptr;
 if(payloadlen < AUTHENTICATIONFRAME_SIZE) return;
+
+if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+	{
+	if(auth->algorithm == SAE) send_authentication_req_sae();
+	}
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -4646,7 +4651,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			send_ack();
 			send_authentication_resp_opensystem();
 			}
-		if(auth->algorithm == SAE) send_authentication_req_sae();
 		}
 	if((zeiger->status &OW_AUTH) != OW_AUTH)
 		{
@@ -4679,7 +4683,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		send_ack();
 		send_authentication_resp_opensystem();
 		}
-	if(auth->algorithm == SAE) send_authentication_req_sae();
 	}
 if(fd_pcapng > 0)
 	{
