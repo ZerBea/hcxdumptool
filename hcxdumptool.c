@@ -1781,6 +1781,40 @@ return;
 }
 */
 /*===========================================================================*/
+static inline void send_authentication_req_sae()
+{
+static mac_t *macftx;
+
+static const uint8_t authenticationrequestdata[] =
+{
+0x03, 0x00, 0x01, 0x00, 0x00, 0x00,
+0x13, 0x00,
+0x3c, 0x01, 0xa7, 0xb8, 0x9a, 0x46, 0x31, 0x1b, 0xd6, 0x9c, 0x23, 0xef, 0x3a, 0xa5, 0xed, 0xb8,
+0xed, 0xbe, 0x68, 0xf8, 0xc6, 0x57, 0x52, 0xa3, 0x6d, 0x8e, 0xe1, 0xee, 0x6e, 0x01, 0xef, 0x21,
+0x43, 0xda, 0x71, 0x75, 0xe0, 0xe7, 0x43, 0x38, 0xa6, 0x33, 0xa1, 0x2c, 0xd3, 0x52, 0xcd, 0xbe,
+0xd6, 0xd9, 0xc4, 0x19, 0x22, 0xdd, 0xb3, 0x3d, 0xd1, 0xaf, 0x85, 0xb0, 0x81, 0x7d, 0xdb, 0x8d,
+0x5d, 0x73, 0xe2, 0x4e, 0x19, 0x24, 0x6b, 0x93, 0x4b, 0x2f, 0xff, 0x7f, 0x15, 0x42, 0x5f, 0x88,
+0xe5, 0x56, 0xc8, 0x83, 0xa4, 0x82, 0x8a, 0xa3, 0x12, 0x73, 0x51, 0x02, 0xe9, 0x56, 0xaa, 0xa6
+};
+#define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
+
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_AUTH;
+memcpy(macftx->addr1, macfrx->addr1, 6);
+memcpy(macftx->addr2, macfrx->addr2, 6);
+memcpy(macftx->addr3, macfrx->addr1, 6);
+macftx->duration = 0x013a;
+macftx->sequence = myclientsequence++ << 4;
+if(myclientsequence >= 4096) myclientsequence = 1;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationrequestdata, MYAUTHENTICATIONREQUEST_SIZE);
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE, "failed to transmit authenticationrequest sae");
+return;
+}
+/*===========================================================================*/
 static inline void send_authentication_resp_opensystem()
 {
 static mac_t *macftx;
@@ -4612,6 +4646,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			send_ack();
 			send_authentication_resp_opensystem();
 			}
+		if(auth->algorithm == SAE) send_authentication_req_sae();
 		}
 	if((zeiger->status &OW_AUTH) != OW_AUTH)
 		{
@@ -4644,6 +4679,7 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		send_ack();
 		send_authentication_resp_opensystem();
 		}
+	if(auth->algorithm == SAE) send_authentication_req_sae();
 	}
 if(fd_pcapng > 0)
 	{
