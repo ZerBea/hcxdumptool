@@ -5055,9 +5055,9 @@ nmeaptr = strstr(nmeatempsentence, gpgga);
 if(nmeaptr == NULL) nmeaptr = strstr(nmeatempsentence, gprmc);
 if(nmeaptr == NULL) return;
 nmealen = 0;
-while((nmeaptr[nmealen] != 0x0) && ( nmeaptr[nmealen] != 0x0a) && ( nmeaptr[nmealen] != 0xd)) nmealen++;
+while((nmeaptr[nmealen] != 0x0) && (nmeaptr[nmealen] != 0x0a) && (nmeaptr[nmealen] != 0xd)) nmealen++;
 nmeaptr[nmealen] = 0;
-memcpy(&nmeasentence,  nmeaptr, nmealen +1);
+memcpy(&nmeasentence, nmeaptr, nmealen +1);
 if(fd_pcapng > 0) writecbnmea(fd_pcapng);
 if(fh_nmea != NULL) fprintf(fh_nmea, "%s\n", nmeasentence);
 gpscount++;
@@ -5192,13 +5192,11 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	{
 	if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC)
 		{
-		if(((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) || ((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS))
-			process80211null();
+		if(((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) || ((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)) process80211null();
 		}
 	else if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC)
 		{
-		if(((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) || ((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS))
-			process80211qosnull();
+		if(((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) || ((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)) process80211qosnull();
 		return;
 		}
 	qosflag = false;
@@ -5211,10 +5209,7 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	if(payloadlen < LLC_SIZE) return;
 	llcptr = payloadptr;
 	llc = (llc_t*)llcptr;
-	if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
-		{
-		process80211eap();
-		}
+	if(((ntohs(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP)) process80211eap();
 	else if(((ntohs(llc->type)) == LLC_TYPE_IPV4) && (llc->dsap == LLC_SNAP) && (llc->ssap == LLC_SNAP))
 		{
 		if((pcapngframesout &PCAPNG_FRAME_IPV4) == PCAPNG_FRAME_IPV4)
@@ -5317,7 +5312,6 @@ if(beaconactiveflag == true)
 	send_beacon_hidden();
 	}
 if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
-
 while(1)
 	{
 	gettimeofday(&tv, NULL);
@@ -5377,10 +5371,7 @@ while(1)
 		}
 	if(wantstopflag == true) globalclose();
 	if(reloadfilesflag == true) loadfiles();
-	if((packetsentflag == true) && ((tv.tv_usec -tvpacketsent.tv_usec) > PACKET_RESEND_TIMER_USEC))
-		{
-		resend_packet();
-		}
+	if((packetsentflag == true) && ((tv.tv_usec -tvpacketsent.tv_usec) > PACKET_RESEND_TIMER_USEC)) resend_packet();
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
