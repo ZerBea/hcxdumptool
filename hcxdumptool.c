@@ -1781,7 +1781,39 @@ return;
 }
 */
 /*===========================================================================*/
-static inline void send_authentication_req_sae()
+/*===========================================================================*/
+static inline void send_authentication_sae_confirm(uint8_t *macto, uint8_t *macfm)
+{
+static mac_t *macftx;
+
+static const uint8_t authenticationrequestdata[] =
+{
+0x03, 0x00, 0x02, 0x00, 0x00, 0x00,
+0x00, 0x00,
+0xdf, 0xcf, 0x7e, 0x3f, 0x9e, 0xc0, 0x46, 0x68, 0x34, 0x9e, 0x76, 0x07, 0x08, 0x0f, 0xad, 0x78,
+0x5a, 0xf8, 0xa4, 0x27, 0x20, 0x2b, 0xd8, 0x13, 0xc1, 0xd1, 0x34, 0x11, 0x54, 0x39, 0x3c, 0x76
+};
+
+#define MYAUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
+
+packetoutptr = epbown +EPB_SIZE;
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_AUTH;
+memcpy(macftx->addr1, macto, 6);
+memcpy(macftx->addr2, macfm, 6);
+memcpy(macftx->addr3, macfrx->addr3, 6);
+macftx->duration = 0x013a;
+macftx->sequence = myclientsequence++ << 4;
+if(myclientsequence >= 4096) myclientsequence = 1;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationrequestdata, MYAUTHENTICATIONREQUEST_SIZE);
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE, "failed to transmit sae confirm");
+return;
+}
+/*===========================================================================*/
+static inline void send_authentication_sae_commit(uint8_t *macto, uint8_t *macfm)
 {
 static mac_t *macftx;
 
@@ -1804,14 +1836,14 @@ memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
-memcpy(macftx->addr1, macfrx->addr1, 6);
-memcpy(macftx->addr2, macfrx->addr2, 6);
-memcpy(macftx->addr3, macfrx->addr1, 6);
+memcpy(macftx->addr1, macto, 6);
+memcpy(macftx->addr2, macfm, 6);
+memcpy(macftx->addr3, macfrx->addr3, 6);
 macftx->duration = 0x013a;
 macftx->sequence = myclientsequence++ << 4;
 if(myclientsequence >= 4096) myclientsequence = 1;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM], &authenticationrequestdata, MYAUTHENTICATIONREQUEST_SIZE);
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE, "failed to transmit authenticationrequest sae");
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +MYAUTHENTICATIONREQUEST_SIZE, "failed to transmit sae commit");
 return;
 }
 /*===========================================================================*/
@@ -4574,6 +4606,27 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
+static inline void process80211authentication_sae()
+{
+static authf_t *auth;
+
+if((attackstatus &DISABLE_AP_ATTACKS) == DISABLE_AP_ATTACKS) return;
+if((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CLIENT_ATTACKS) return;
+auth = (authf_t*)payloadptr;
+if(ntohs(auth->sequence) == 1)
+	{
+	send_ack();
+	if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) send_authentication_sae_commit(macfrx->addr2, macfrx->addr1);
+	else if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0) send_authentication_sae_confirm(macfrx->addr2, macfrx->addr1);
+	}
+if(ntohs(auth->sequence) == 2)
+	{
+	send_ack();
+	if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) send_authentication_sae_confirm(macfrx->addr2 ,macfrx->addr1);
+	}
+return;
+}
+/*===========================================================================*/
 static inline void process80211authentication_resp()
 {
 static authf_t *auth;
@@ -4632,11 +4685,6 @@ static ownlist_t *zeiger;
 
 auth = (authf_t*)payloadptr;
 if(payloadlen < AUTHENTICATIONFRAME_SIZE) return;
-
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
-	{
-	if(auth->algorithm == SAE) send_authentication_req_sae();
-	}
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -5133,6 +5181,7 @@ return 4;
 static inline void process_packet()
 {
 static uint32_t rthl;
+static authf_t *auth;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
@@ -5209,7 +5258,9 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211probe_resp();
 	else if(macfrx->subtype == IEEE80211_STYPE_AUTH)
 		{
-		if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) process80211authentication_req();
+		auth = (authf_t*)payloadptr;
+		if(auth->algorithm == SAE) process80211authentication_sae();
+		else if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) process80211authentication_req();
 		else if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0) process80211authentication_resp();
 		}
 	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_REQ) process80211association_req();
