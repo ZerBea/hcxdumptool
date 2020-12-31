@@ -5136,8 +5136,8 @@ if(nmeatemplen < 0)
 	errorcount++;
 	return;
 	}
-if(nmeatemplen < 44) return;
 nmeatempsentence[nmeatemplen] = 0;
+if(nmeatemplen < 44)return;
 nmeaptr = strstr(nmeatempsentence, gpgga);
 if(nmeaptr == NULL) nmeaptr = strstr(nmeatempsentence, gprmc);
 if(nmeaptr == NULL) return;
