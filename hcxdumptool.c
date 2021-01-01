@@ -5893,8 +5893,8 @@ if(injectionhit > 0)
 	if(injectionratio < 25) printf(" your ratio is poor - improve your antenna and get closer to the target\n");
 	if((injectionratio >= 25) && (injectionratio < 50)) printf(" your ratio is average, but there is still room for improvement\n");
 	if((injectionratio >= 50) && (injectionratio < 75)) printf(" your ratio is good\n");
-	if((injectionratio >= 75) && (injectionratio < 90)) printf(" your ratio is excellent, let's ride\n");
-	if(injectionratio > 90) printf(" ratio is huge - say kids what time is it: It's showtime\n");
+	if((injectionratio >= 75) && (injectionratio < 90)) printf(" your ratio is excellent, let's ride!\n");
+	if(injectionratio > 90) printf(" ratio is huge - say kids what time is it?\n");
 
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
