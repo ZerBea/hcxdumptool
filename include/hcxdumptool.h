@@ -351,11 +351,13 @@ typedef struct
 }scanlist_t;
 #define	SCANLIST_SIZE (sizeof(scanlist_t))
 
-static int sort_scanlist_by_count(const void *a, const void *b)
+static int sort_scanlist_by_counthit(const void *a, const void *b)
 {
 const scanlist_t *ia = (const scanlist_t *)a;
 const scanlist_t *ib = (const scanlist_t *)b;
 
+if(ia->counthit < ib->counthit) return 1;
+else if(ia->counthit > ib->counthit) return -1;
 if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
 return 0;

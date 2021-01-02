@@ -5498,7 +5498,7 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
+qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
@@ -5561,7 +5561,7 @@ memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_counthit);
 return;
 }
 /*===========================================================================*/
@@ -5614,7 +5614,7 @@ memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_count);
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_counthit);
 return;
 }
 /*===========================================================================*/
