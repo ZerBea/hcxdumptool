@@ -360,6 +360,8 @@ if(ia->counthit < ib->counthit) return 1;
 else if(ia->counthit > ib->counthit) return -1;
 if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
+if(ia->channel < ib->channel) return 1;
+else if(ia->channel > ib->channel) return -1;
 return 0;
 }
 /*===========================================================================*/
