@@ -6429,7 +6429,7 @@ while(1)
 				rpi |= 2;
 				continue;
 				}
-			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d) || (rev == 0x0e) || (rev == 0x11))
+			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d) || (rev == 0x0e) || (rev == 0x11) || (rev == 0x13))
 				{
 				gpioperibase = GPIO_PERI_BASE_NEW;
 				rpi |= 2;
