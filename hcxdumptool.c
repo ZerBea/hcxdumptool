@@ -186,6 +186,8 @@ static pagidlist_t *pagidlist;
 static scanlist_t *scanlist;
 static eapreqlist_t *eapreqlist;
 
+static int scanlistmax;
+
 static int filteraplistentries;
 static int filterclientlistentries;
 static int filtermode;
@@ -5503,7 +5505,7 @@ strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
 	timestring);
-for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
+for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
 	if(zeiger->count == 0) return;
 	printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
@@ -7153,6 +7155,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     use this mode to collect data for the filter list\n"
 	"                                     run this mode at least for 2 minutes\n"
 	"                                     to save all received raw packets use option -o\n"
+	"--rcascan_max=digit>               : show only n highest ranking lines\n"
+	"                                     default: %d lines\n"
 	"--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66\n"
 	"--reason_code=<digit>              : deauthentication reason code\n"
@@ -7238,8 +7242,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
-	"--eapreq=                          : send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
-	" [<mode>:]<type><data>[:<term>],...  mode prefix determines layer the request is exclusively send on:\n"
+	"--eapreq=[<mode>:]<type><data>[:<term>],...\n"
+	"                                     send max. %d subsequent EAP requests after initial EAP ID request, hex string starting with EAP Type\n"
+	"                                     mode prefix determines layer the request is exclusively send on:\n"
 	"                                      T: = only if any TLS tunnel is up, ignored otherwise\n"
 	"                                     response is terminated with:\n"
 	"                                      :F = EAP Failure\n"
@@ -7321,7 +7326,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -7396,6 +7401,7 @@ static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
 	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
+	{"rcascan_max",			required_argument,	NULL,	HCX_RCASCAN_MAX},
 	{"do_targetscan",		required_argument,	NULL,	HCX_DO_TARGETSCAN},
 	{"reason_code",			required_argument,	NULL,	HCX_DEAUTH_REASON_CODE},
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
@@ -7501,6 +7507,7 @@ tvtot.tv_sec = 2147483647L;
 tvtot.tv_usec = 0;
 eapoltimeoutvalue = EAPOLTIMEOUT;
 eapoleaptimeoutvalue = EAPOLEAPTIMEOUT;
+scanlistmax = SCANLIST_MAX;
 tlsctx = NULL;
 
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
@@ -7558,6 +7565,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_DO_RCASCAN:
 		rcascanflag = true;
+		break;
+
+		case HCX_RCASCAN_MAX:
+		scanlistmax = strtol(optarg, NULL, 10);
+		if(scanlistmax > SCANLIST_MAX)
+			{
+			fprintf(stderr, "only 1...%d lines allowed\n", SCANLIST_MAX);
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		case HCX_DO_TARGETSCAN:
