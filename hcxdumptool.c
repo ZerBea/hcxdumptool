@@ -1325,7 +1325,7 @@ macftx->duration = 0x013a;
 macftx->sequence = mydisassociationsequence++ << 4;
 if(mydisassociationsequence >= 4096) mydisassociationsequence = 1;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deuthentication");
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deauthentication");
 return;
 }
 /*===========================================================================*/
@@ -1346,7 +1346,7 @@ macftx->duration = 0x013a;
 macftx->sequence = mydeauthenticationsequence++ << 4;
 if(mydeauthenticationsequence >= 4096) mydeauthenticationsequence = 1;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM] = reason;
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deuthentication");
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +2, "failed to transmit deauthentication");
 return;
 }
 /*===========================================================================*/
