@@ -5889,13 +5889,13 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 if(injectionhit > 0)
 	{
 	injectionratio = (injectionhit *100) /injectioncount;
-	printf("packet injection is working!\nratio: %" PRIu64 "%% (count: %" PRIu64 " hit: %" PRIu64 ")", injectionratio, injectioncount, injectionhit);
-	if(injectionratio < 25) printf(" your ratio is poor - improve your antenna and get closer to the target\n");
-	if((injectionratio >= 25) && (injectionratio < 50)) printf(" your ratio is average, but there is still room for improvement\n");
-	if((injectionratio >= 50) && (injectionratio < 75)) printf(" your ratio is good\n");
-	if((injectionratio >= 75) && (injectionratio < 90)) printf(" your ratio is excellent, let's ride!\n");
-	if(injectionratio > 90) printf(" ratio is huge - say kids what time is it?\n");
-
+	printf("packet injection is working!\nratio: %" PRIu64 "%% (count: %" PRIu64 " hit: %" PRIu64 ")\n", injectionratio, injectioncount, injectionhit);
+	if(errorcount > 0) printf("but several driver errors encountered during the test\n");
+	else if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
+	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your ratio is average, but there is still room for improvement\n");
+	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your ratio is good\n");
+	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your ratio is excellent, let's ride!\n");
+	else if(injectionratio > 90) printf(" ratio is huge - say kids what time is it?\n");
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 globalclose();
@@ -8058,6 +8058,7 @@ if(checkdriverflag == true)
 	cpa = 0;
 	if(set_channel() == false) errorcount++;
 	if(errorcount == 0) printf("driver tests passed...\nall required ioctl() system calls are supported by driver\n");
+	else printf("several driver errors encountered during the test - monitor mode and ioctl() system calls failed\n");
 	globalclose();
 	return EXIT_SUCCESS;
 	}
