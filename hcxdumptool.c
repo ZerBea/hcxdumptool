@@ -5525,9 +5525,9 @@ printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
 	if(zeiger->count == 0) return;
-	printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
-		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-		zeiger->channel, zeiger->count, zeiger->counthit, zeiger->essid);
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
+					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+					zeiger->channel, zeiger->count, zeiger->counthit, zeiger->essid);
 	}
 return;
 }
