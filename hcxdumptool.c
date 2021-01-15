@@ -252,10 +252,27 @@ const int channelscanlist4[] =
 201, 205, 209, 213, 217, 221, 225, 229, 233, 0
 };
 
-static int channelscanlist[128] =
+const int channelscanlistrca[] =
+{
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
+132, 136, 140, 144, 149, 153, 157, 161, 165,
+201, 205, 209, 213, 217, 221, 225, 229, 233, 0
+};
+
+
+static int channelscanlist[256] =
 {
 1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
 6, 11 ,8, 10, 1, 6, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -5535,7 +5552,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
 	if(tags.channel != 0) zeiger->channel = tags.channel;
-	else zeiger->channel = channelscanlist[cpa];
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
 	zeiger->essidlen = tags.essidlen;
@@ -5546,17 +5562,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 memset(zeiger, 0, SCANLIST_SIZE);
 gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
-if((sl == 1) && (zeiger->channel) > 14)
-	{
-	zeiger->channel = 0;
-	return;
-	}
-if((sl == 2) && (zeiger->channel) <= 14)
-	{
-	zeiger->channel = 0;
-	return;
-	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
@@ -5587,7 +5592,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
 	if(tags.channel != 0) zeiger->channel = tags.channel;
-	else zeiger->channel = channelscanlist[cpa];
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
 	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
@@ -5599,17 +5603,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 memset(zeiger, 0, SCANLIST_SIZE);
 gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
-if((sl == 1) && (zeiger->channel) > 14)
-	{
-	zeiger->channel = 0;
-	return;
-	}
-if((sl == 2) && (zeiger->channel) <= 14)
-	{
-	zeiger->channel = 0;
-	return;
-	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 memcpy(zeiger->ap, macfrx->addr2, 6);
@@ -5804,6 +5797,9 @@ static uint64_t injectioncount;
 static uint64_t injectionratio;
 static scanlist_t *zeiger;
 static struct timespec tsfd;
+static bool inject24 = false;
+static bool inject5 = false;
+static bool inject6 = false;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -5811,6 +5807,12 @@ tvold.tv_usec = tv.tv_usec;
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMER;
 cpa = 0;
+while(channelscanlistrca[cpa] != 0)
+	{
+	channelscanlist[cpa] = channelscanlist1[cpa];
+	cpa++;
+	}
+channelscanlist[cpa] = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
@@ -5885,21 +5887,28 @@ while(1)
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
+	if((zeiger->channel < 36) && (zeiger->counthit > 0)) inject24 = true; 
+	if((zeiger->channel >= 36) && (zeiger->channel < 200) && (zeiger->counthit > 0)) inject5 = true; 
+	if((zeiger->channel >= 200)  && (zeiger->counthit > 0)) inject6 = true; 
 	injectionhit += zeiger->counthit;
 	injectioncount += zeiger->count;
 	}
 if(injectionhit > 0)
 	{
 	injectionratio = (injectionhit *100) /injectioncount;
-	printf("packet injection is working!\nratio: %" PRIu64 "%% (count: %" PRIu64 " hit: %" PRIu64 ")\n", injectionratio, injectioncount, injectionhit);
-	if(errorcount > 0) printf("but several driver errors encountered during the test\n");
-	else if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
+	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
+	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
+	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
+	printf("ratio: %" PRIu64 "%% (count: %" PRIu64 " hit: %" PRIu64 ")\n", injectionratio, injectioncount, injectionhit);
+	if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
 	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your ratio is average, but there is still room for improvement\n");
 	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your ratio is good\n");
 	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your ratio is excellent, let's ride!\n");
 	else if(injectionratio > 90) printf(" ratio is huge - say kids what time is it?\n");
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
+if(errorcount == 1) printf("%d driver error encountered during the test\n", errorcount);
+if(errorcount > 1) printf("%d driver errors encountered during the test\n", errorcount);
 globalclose();
 return;
 }
@@ -7123,7 +7132,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
 	"-c <digit>     : set channel (1,2,3, ...)\n"
 	"                 default channels: 1...13\n"
-	"                 maximum entries: 127\n"
+	"                 maximum entries: 255\n"
 	"                 standard 802.11 channels (depends on device, driver and world regulatory domain):\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
 	"                 36, 38, 40, 44, 48, 52, 56, 60, 64\n"
@@ -7951,9 +7960,9 @@ else if(userscanliststring != NULL)
 		channelscanlist[cpa] = atoi(tokptr);
 		tokptr = strtok(NULL, ",");
 		cpa++;
-		if(cpa > 127)
+		if(cpa > 255)
 			{
-			fprintf(stderr, "only 127 channels allowed\n");
+			fprintf(stderr, "only 255 channels allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		}
