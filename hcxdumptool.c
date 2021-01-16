@@ -121,9 +121,13 @@ static int eapolmp23count;
 static int eapolmp34count;
 static int eapolmp34zeroedcount;
 static int owm1m2roguemax;
-static int rcaorder;
 
 static int gpscount;
+
+static int rcaorder;
+static uint64_t injectionhit;
+static uint64_t injectioncount;
+static uint64_t injectionratio;
 
 static int gpiostatusled;
 static int gpiobutton;
@@ -5526,12 +5530,15 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sor
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
-	"---------------------------------------------------------------\n",
-	timestring);
+printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 injection ratio: %" PRIu64 "%% [%s]\n"
+	"------------------------------------------------------------------------------------\n",
+	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
 	if(zeiger->count == 0) return;
+	injectionhit += zeiger->counthit;
+	injectioncount += zeiger->count;
+	injectionratio = (injectionhit *100) /injectioncount;
 	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->channel, zeiger->count, zeiger->counthit, zeiger->essid);
@@ -5804,9 +5811,6 @@ static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
-static uint64_t injectionhit;
-static uint64_t injectioncount;
-static uint64_t injectionratio;
 static scanlist_t *zeiger;
 static struct timespec tsfd;
 static bool inject24 = false;
@@ -5828,8 +5832,6 @@ channelscanlist[cpa] = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
-injectionhit = 0;
-injectioncount = 0;
 printf("starting packet injection test (that can take up to two minutes)...\n");
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -7081,6 +7083,9 @@ eapolmp12roguecount = 0;
 eapolmp23count = 0;
 eapolmp34count = 0;
 eapolmp34zeroedcount = 0;
+injectionhit = 0;
+injectioncount = 0;
+injectionratio = 0;
 gpscount = 0;
 bpf.filter = NULL;
 bpf.len = 0;
