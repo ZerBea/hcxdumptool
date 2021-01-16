@@ -1,46 +1,47 @@
 #define HCX_DO_RCASCAN			1
 #define HCX_RCASCAN_MAX			2
-#define HCX_DO_TARGETSCAN		3
-#define HCX_DEAUTH_REASON_CODE		4
-#define HCX_DISABLE_DEAUTHENTICATION	5
-#define HCX_DISABLE_AP_ATTACKS		6
-#define HCX_STOP_AP_ATTACKS		7
-#define HCX_RESUME_AP_ATTACKS		8
-#define HCX_DISABLE_CLIENT_ATTACKS	9
-#define HCX_STOP_CLIENT_M2_ATTACKS	10
-#define HCX_SILENT			11
-#define HCX_GPS_DEVICE			12
-#define HCX_GPSD			13
-#define HCX_NMEA_NAME			14
-#define HCX_EAPOL_TIMEOUT		15
-#define HCX_ACTIVE_BEACON		16
-#define HCX_FLOOD_BEACON		17
-#define HCX_EXTAP_BEACON		18
-#define HCX_INFINITY			19
-#define HCX_FILTERLIST_AP		20
-#define HCX_FILTERLIST_CLIENT		21
-#define HCX_FILTERMODE			22
-#define HCX_BPFC			23
-#define HCX_WEAKCANDIDATE		24
-#define HCX_TOT				25
-#define HCX_REBOOT			26
-#define HCX_POWER_OFF			27
-#define HCX_GPIO_BUTTON			28
-#define HCX_GPIO_STATUSLED		29
-#define HCX_IP				30
-#define HCX_SERVER_PORT			31
-#define HCX_CLIENT_PORT			32
-#define HCX_CHECK_DRIVER		33
-#define HCX_CHECK_INJECTION		34
-#define HCX_ERROR_MAX			35
-#define HCX_STATUS			36
-#define HCX_BEACONPARAMS		37
-#define HCX_WPAENT			38
-#define HCX_EAPREQ			39
-#define HCX_EAPTUN			40
-#define HCX_EAP_SERVER_CERT		41
-#define HCX_EAP_SERVER_KEY		42
-#define HCX_EAPOL_EAP_TIMEOUT		43
+#define HCX_RCASCAN_ORDER		3
+#define HCX_DO_TARGETSCAN		4
+#define HCX_DEAUTH_REASON_CODE		5
+#define HCX_DISABLE_DEAUTHENTICATION	6
+#define HCX_DISABLE_AP_ATTACKS		7
+#define HCX_STOP_AP_ATTACKS		8
+#define HCX_RESUME_AP_ATTACKS		9
+#define HCX_DISABLE_CLIENT_ATTACKS	10
+#define HCX_STOP_CLIENT_M2_ATTACKS	11
+#define HCX_SILENT			12
+#define HCX_GPS_DEVICE			13
+#define HCX_GPSD			14
+#define HCX_NMEA_NAME			15
+#define HCX_EAPOL_TIMEOUT		16
+#define HCX_ACTIVE_BEACON		17
+#define HCX_FLOOD_BEACON		18
+#define HCX_EXTAP_BEACON		19
+#define HCX_INFINITY			20
+#define HCX_FILTERLIST_AP		21
+#define HCX_FILTERLIST_CLIENT		22
+#define HCX_FILTERMODE			23
+#define HCX_BPFC			24
+#define HCX_WEAKCANDIDATE		25
+#define HCX_TOT				26
+#define HCX_REBOOT			27
+#define HCX_POWER_OFF			28
+#define HCX_GPIO_BUTTON			29
+#define HCX_GPIO_STATUSLED		30
+#define HCX_IP				31
+#define HCX_SERVER_PORT			32
+#define HCX_CLIENT_PORT			33
+#define HCX_CHECK_DRIVER		34
+#define HCX_CHECK_INJECTION		35
+#define HCX_ERROR_MAX			36
+#define HCX_STATUS			37
+#define HCX_BEACONPARAMS		38
+#define HCX_WPAENT			39
+#define HCX_EAPREQ			40
+#define HCX_EAPTUN			41
+#define HCX_EAP_SERVER_CERT		42
+#define HCX_EAP_SERVER_KEY		43
+#define HCX_EAPOL_EAP_TIMEOUT		44
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'
@@ -70,6 +71,10 @@
 #define BEACONEXTLIST_MAX	256
 #define FDNSECTIMER		200000000
 #define FDNSECTXTIMER		500000000
+
+#define RCA_SORT_BY_HIT		0
+#define RCA_SORT_BY_COUNT	1
+#define RCA_SORT_BY_CHANNEL	2
 
 #define ATTACKSTOP_MAX		600
 #define ATTACKRESUME_MAX	864000
@@ -363,6 +368,40 @@ if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
 if(ia->channel < ib->channel) return 1;
 else if(ia->channel > ib->channel) return -1;
+if(memcmp(ia->ap, ib->ap, 6) < 0) return 1;
+else if(memcmp(ia->ap, ib->ap, 6) > 0) return -1;
+return 0;
+}
+
+static int sort_scanlist_by_count(const void *a, const void *b)
+{
+const scanlist_t *ia = (const scanlist_t *)a;
+const scanlist_t *ib = (const scanlist_t *)b;
+
+if(ia->count < ib->count) return 1;
+else if(ia->count > ib->count) return -1;
+if(ia->counthit < ib->counthit) return 1;
+else if(ia->counthit > ib->counthit) return -1;
+if(ia->channel < ib->channel) return 1;
+else if(ia->channel > ib->channel) return -1;
+if(memcmp(ia->ap, ib->ap, 6) < 0) return 1;
+else if(memcmp(ia->ap, ib->ap, 6) > 0) return -1;
+return 0;
+}
+
+static int sort_scanlist_by_channel(const void *a, const void *b)
+{
+const scanlist_t *ia = (const scanlist_t *)a;
+const scanlist_t *ib = (const scanlist_t *)b;
+
+if(ia->channel < ib->channel) return 1;
+else if(ia->channel > ib->channel) return -1;
+if(ia->counthit < ib->counthit) return 1;
+else if(ia->counthit > ib->counthit) return -1;
+if(ia->count < ib->count) return 1;
+else if(ia->count > ib->count) return -1;
+if(memcmp(ia->ap, ib->ap, 6) < 0) return 1;
+else if(memcmp(ia->ap, ib->ap, 6) > 0) return -1;
 return 0;
 }
 /*===========================================================================*/

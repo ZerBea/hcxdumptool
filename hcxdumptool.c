@@ -121,6 +121,7 @@ static int eapolmp23count;
 static int eapolmp34count;
 static int eapolmp34zeroedcount;
 static int owm1m2roguemax;
+static int rcaranking;
 
 static int gpscount;
 
@@ -5521,7 +5522,9 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
+if(rcaranking == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
+else if(rcaranking == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
+else if(rcaranking == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
@@ -7492,6 +7495,7 @@ maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
 fh_nmea = NULL;
 fd_pcapng = 0;
+rcaranking = 0;
 sl = 0;
 cpa = 0;
 staytime = STAYTIME;
