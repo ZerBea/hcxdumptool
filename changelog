@@ -2,7 +2,7 @@
 ==========
 hcxdumptool: added new option - rcascan ranking is no longer hard coded
 --rcascan_order=digit>             : rcascan sorting order:
-                                      0 = sort by HIT (PROBERESPONSE)
+                                      0 = sort by HIT (PROBERESPONSE) (default)
                                       1 = sort by COUNT (BEACON)
                                       2 = sort by CHANNEL
 
