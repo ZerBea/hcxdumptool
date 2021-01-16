@@ -260,8 +260,12 @@ const int channelscanlist4[] =
 const int channelscanlistrca[] =
 {
 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 144, 149, 153, 157, 161, 165,
+132, 136, 140, 144, 149, 153, 157, 161, 165,
+201, 205, 209, 213, 217, 221, 225, 229, 233,
 201, 205, 209, 213, 217, 221, 225, 229, 233, 0
 };
 
@@ -5530,8 +5534,8 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sor
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 injection ratio: %" PRIu64 "%% [%s]\n"
-	"------------------------------------------------------------------------------------\n",
+printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID           injection ratio: %3" PRIu64 "%% [%s]\n"
+	"-------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
