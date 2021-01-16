@@ -121,7 +121,7 @@ static int eapolmp23count;
 static int eapolmp34count;
 static int eapolmp34zeroedcount;
 static int owm1m2roguemax;
-static int rcaranking;
+static int rcaorder;
 
 static int gpscount;
 
@@ -5522,9 +5522,9 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-if(rcaranking == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
-else if(rcaranking == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
-else if(rcaranking == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
+if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
+else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
+else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID                 [%s]\n"
 	"---------------------------------------------------------------\n",
@@ -7178,6 +7178,10 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     to save all received raw packets use option -o\n"
 	"--rcascan_max=digit>               : show only n highest ranking lines\n"
 	"                                     default: %d lines\n"
+	"--rcascan_order=digit>             : rcascan sorting order:\n"
+	"                                      0 = sort by HIT (PROBERESPONSE)\n" 
+	"                                      1 = sort by COUNT (BEACON)\n" 
+	"                                      2 = sort by CHANNEL\n" 
 	"--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66\n"
 	"--reason_code=<digit>              : deauthentication reason code\n"
@@ -7424,6 +7428,7 @@ static const struct option long_options[] =
 {
 	{"do_rcascan",			no_argument,		NULL,	HCX_DO_RCASCAN},
 	{"rcascan_max",			required_argument,	NULL,	HCX_RCASCAN_MAX},
+	{"rcascan_order",		required_argument,	NULL,	HCX_RCASCAN_ORDER},
 	{"do_targetscan",		required_argument,	NULL,	HCX_DO_TARGETSCAN},
 	{"reason_code",			required_argument,	NULL,	HCX_DEAUTH_REASON_CODE},
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
@@ -7495,7 +7500,7 @@ maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
 fh_nmea = NULL;
 fd_pcapng = 0;
-rcaranking = 0;
+rcaorder = 0;
 sl = 0;
 cpa = 0;
 staytime = STAYTIME;
@@ -7595,6 +7600,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		if(scanlistmax > SCANLIST_MAX)
 			{
 			fprintf(stderr, "only 1...%d lines allowed\n", SCANLIST_MAX);
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCX_RCASCAN_ORDER:
+		rcaorder = strtol(optarg, NULL, 10);
+		if(rcaorder > 2)
+			{
+			fprintf(stderr, "only 0, 1, 2, allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
