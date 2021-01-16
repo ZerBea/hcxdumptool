@@ -5199,7 +5199,7 @@ return 4;
 /*===========================================================================*/
 static inline void process_packet()
 {
-static uint32_t rthl;
+static int rthl;
 static authf_t *auth;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
@@ -5243,8 +5243,12 @@ if(rth->it_present == 0)
 	return;
 	}
 rthl = le16toh(rth->it_len);
-if(rthl <= HDRRT_SIZE) return; /* outgoing packet */
-
+if(rthl > packetlen)
+	{
+	errorcount++;
+	return;
+	}
+if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
 ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
@@ -5615,7 +5619,7 @@ return;
 /*===========================================================================*/
 static inline void process_packet_rca()
 {
-static uint32_t rthl;
+static int rthl;
 
 packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
 if(packetlen == 0)
@@ -5664,7 +5668,12 @@ if(rth->it_present == 0)
 	return;
 	}
 rthl = le16toh(rth->it_len);
-if(rthl <= 14) return; /* outgoing packet */
+if(rthl > packetlen)
+	{
+	errorcount++;
+	return;
+	}
+if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
 ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
