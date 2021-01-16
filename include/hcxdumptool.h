@@ -351,6 +351,7 @@ typedef struct
  uint8_t		ap[6];
  int			count;
  int			counthit;
+ char			rssi;
  uint8_t		channel;
  uint8_t		essidlen;
  uint8_t		essid[ESSID_LEN_MAX];

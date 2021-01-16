@@ -292,6 +292,7 @@ static int channelscanlist[256] =
 
 static uint8_t myessid[] = { "home" };
 
+static char rssi;
 static uint32_t myoui_client;
 static uint32_t myoui_ap;
 static uint32_t mynic_ap;
@@ -5180,16 +5181,19 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-static uint32_t getradiotapfield(uint16_t rthlen, uint32_t packetlen, uint8_t *packetptr)
+static uint32_t getradiotapfield(uint16_t rthlen, uint8_t *packetptr)
 {
 static int i;
 static uint16_t pf;
+static uint16_t pfc;
 static rth_t *rth;
 static uint32_t *pp;
+static uint32_t rthp;
 
 rth = (rth_t*)packetptr;
+rthp = le32toh(rth->it_present);
 pf = RTH_SIZE;
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
+if((rthp & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
 	{
 	pp = (uint32_t*)packetptr;
 	for(i = 2; i < rthlen /4; i++)
@@ -5199,11 +5203,19 @@ if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT
 		}
 	}
 if((pf %8) != 0) pf +=4;
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_TSFT) == IEEE80211_RADIOTAP_TSFT) pf += 8;
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_FLAGS) != IEEE80211_RADIOTAP_FLAGS) return 0;
-if(pf > packetlen) return 0;
-if((packetptr[pf] & IEEE80211_RADIOTAP_F_FCS) != IEEE80211_RADIOTAP_F_FCS) return 0;
-return 4;
+if((rthp & IEEE80211_RADIOTAP_TSFT) == IEEE80211_RADIOTAP_TSFT) pf += 8;
+pfc = 0;
+if((rthp & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
+	{
+	if((packetptr[pf] & IEEE80211_RADIOTAP_F_FCS) == IEEE80211_RADIOTAP_F_FCS) pfc = 4;
+	pf +=1;
+	}
+if((rthp & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
+if((rthp & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL) pf += 4;
+if((rthp & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS) pf += 2;
+rssi = 0;
+if(pf < rthlen) rssi = packetptr[pf];
+return pfc;
 }
 /*===========================================================================*/
 static inline void process_packet()
@@ -5260,7 +5272,7 @@ if(rthl > packetlen)
 if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
+ieee82011len -= getradiotapfield(rthl, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -5530,12 +5542,12 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_counthit);
-else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_count);
-else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, SCANLIST_MAX, SCANLIST_SIZE, sort_scanlist_by_channel);
+if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_counthit);
+else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_count);
+else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID         CH COUNT   HIT ESSID           injection ratio: %3" PRIu64 "%% [%s]\n"
-	"-------------------------------------------------------------------------------\n",
+printf("\033[2J\033[0;0H BSSID          CH RSSI COUNT   HIT ESSID           injection ratio: %3" PRIu64 "%% [%s]\n"
+	"-------------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
@@ -5543,9 +5555,9 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	injectionhit += zeiger->counthit;
 	injectioncount += zeiger->count;
 	injectionratio = (injectionhit *100) /injectioncount;
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d %5d %5d %s\n",
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x  %3d  %3d %5d %5d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-					zeiger->channel, zeiger->count, zeiger->counthit, zeiger->essid);
+					zeiger->channel,  zeiger->rssi, zeiger->count, zeiger->counthit, zeiger->essid);
 	}
 return;
 }
@@ -5572,6 +5584,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
+	zeiger->rssi = rssi;
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
 	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
@@ -5582,6 +5595,7 @@ gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->rssi = rssi;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
@@ -5612,6 +5626,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
+	zeiger->rssi = rssi;
 	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		{
 		if((zeiger->count %10) == 0) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
@@ -5623,6 +5638,7 @@ gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->rssi = rssi;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
@@ -5690,7 +5706,7 @@ if(rthl > packetlen)
 if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-ieee82011len -= getradiotapfield(rthl, packetlen, packetptr);
+ieee82011len -= getradiotapfield(rthl, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -7617,7 +7633,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		rcaorder = strtol(optarg, NULL, 10);
 		if(rcaorder > 2)
 			{
-			fprintf(stderr, "only 0, 1, 2, allowed\n");
+			fprintf(stderr, "only 0, 1, 2 allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
