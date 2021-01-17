@@ -5953,11 +5953,11 @@ if(injectionhit > 0)
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
 	printf("injection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
-	if(injectionratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
-	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your incection ratio is average, but there is still room for improvement\n");
-	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your incection ratio is good\n");
-	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your incection ratio is excellent, let's ride!\n");
-	else if(injectionratio > 90) printf("your incection ratio is huge - say kids what time is it?\n");
+	if(injectionratio < 25) printf("your injection ratio is poor - improve your equipment and/or get closer to the target\n");
+	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your injection ratio is average, but there is still room for improvement\n");
+	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your injection ratio is good\n");
+	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your injection ratio is excellent, let's ride!\n");
+	else if(injectionratio > 90) printf("your injection ratio is huge - say kids what time is it?\n");
 	networkratio = (networkhit *100) /networkcount;
 	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
 	if(networkratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
