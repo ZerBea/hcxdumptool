@@ -5860,10 +5860,11 @@ tsfd.tv_nsec = FDNSECTIMER;
 cpa = 0;
 while(channelscanlistrca[cpa] != 0)
 	{
-	channelscanlist[cpa] = channelscanlist1[cpa];
+	channelscanlist[cpa] = channelscanlistrca[cpa];
 	cpa++;
 	}
 channelscanlist[cpa] = 0;
+cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
