@@ -5952,7 +5952,7 @@ if(injectionhit > 0)
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
-	printf("incection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
+	printf("injection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
 	if(injectionratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
 	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your incection ratio is average, but there is still room for improvement\n");
 	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your incection ratio is good\n");
