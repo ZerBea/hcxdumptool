@@ -5867,7 +5867,7 @@ channelscanlist[cpa] = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
-printf("starting packet injection test (that can take up to two minutes)...\n");
+printf("starting antenna test and packet injection test (that can take up to two minutes)...\n");
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 while(1)
@@ -5933,6 +5933,7 @@ while(1)
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
 	}
+qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_hit);
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
@@ -5957,8 +5958,8 @@ if(injectionhit > 0)
 	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your incection ratio is excellent, let's ride!\n");
 	else if(injectionratio > 90) printf("your incection ratio is huge - say kids what time is it?\n");
 	networkratio = (networkhit *100) /networkcount;
-	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkcount, networkhit, networkratio);
-	if(injectionratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
+	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
+	if(networkratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
 	else if((networkratio >= 25) && (networkratio < 50)) printf("your antenna ratio is average, but there is still room for improvement\n");
 	else if((networkratio >= 50) && (networkratio < 75)) printf("your antenna ratio is good\n");
 	else if((networkratio >= 75) && (networkratio < 90)) printf("your antenna ratio is excellent, let's ride!\n");
