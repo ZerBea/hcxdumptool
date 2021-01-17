@@ -5542,22 +5542,22 @@ static inline void printrcascan()
 static scanlist_t *zeiger;
 static char timestring[16];
 
-if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_counthit);
-else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_count);
+if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_hit);
+else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_beacon);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID          CH RSSI  COUNT    HIT ESSID        injection ratio: %3d%% [%s]\n"
+printf("\033[2J\033[0;0H BSSID         CH RSSI BEACON RESPONSE ESSID       INJECTION-RATIO: %3d%% [%s]\n"
 	"------------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
 	if(zeiger->count == 0) return;
-	injectionhit += zeiger->counthit;
-	injectioncount += zeiger->count;
+	injectionhit += zeiger->hit;
+	injectioncount += zeiger->beacon;
 	injectionratio = (injectionhit *100) /injectioncount;
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x  %3d  %3d %6d %6d %s\n",
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %3d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-					zeiger->channel,  zeiger->rssi, zeiger->count, zeiger->counthit, zeiger->essid);
+					zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
 	}
 return;
 }
@@ -5584,10 +5584,11 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
+	zeiger->proberesponse +=1;
 	zeiger->rssi = rssi;
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->hit += 1;
 	return;
 	}
 memset(zeiger, 0, SCANLIST_SIZE);
@@ -5595,12 +5596,13 @@ gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->proberesponse =1;
 zeiger->rssi = rssi;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->counthit += 1;
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_counthit);
+if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->hit += 1;
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_hit);
 return;
 }
 /*===========================================================================*/
@@ -5626,10 +5628,15 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(tags.channel != 0) zeiger->channel = tags.channel;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
+	zeiger->beacon += 1;
 	zeiger->rssi = rssi;
 	if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 		{
-		if((zeiger->count %10) == 0) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+		if((zeiger->beacon %10) == 0)
+			{
+			zeiger->proberequest +=1;
+			send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+			}
 		}
 	return;
 	}
@@ -5638,12 +5645,17 @@ gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel != 0) zeiger->channel = tags.channel;
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
+zeiger->beacon = 1;
 zeiger->rssi = rssi;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
-qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_counthit);
+if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
+	{
+	zeiger->proberequest +=1;
+	send_proberequest_directed(macfrx->addr2, zeiger->essidlen, zeiger->essid);
+	}
+qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_hit);
 return;
 }
 /*===========================================================================*/
@@ -5921,11 +5933,11 @@ while(1)
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
-	if((zeiger->channel < 36) && (zeiger->counthit > 0)) inject24 = true; 
-	if((zeiger->channel >= 36) && (zeiger->channel < 200) && (zeiger->counthit > 0)) inject5 = true; 
-	if((zeiger->channel >= 200)  && (zeiger->counthit > 0)) inject6 = true; 
-	injectionhit += zeiger->counthit;
-	injectioncount += zeiger->count;
+	if((zeiger->channel < 36) && (zeiger->hit > 0)) inject24 = true; 
+	if((zeiger->channel >= 36) && (zeiger->channel < 200) && (zeiger->hit > 0)) inject5 = true; 
+	if((zeiger->channel >= 200)  && (zeiger->hit > 0)) inject6 = true; 
+	injectionhit += zeiger->hit;
+	injectioncount += zeiger->beacon;
 	}
 if(injectionhit > 0)
 	{
@@ -5933,7 +5945,7 @@ if(injectionhit > 0)
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
-	printf("ratio: %d%% (count: %d hit: %d)\n", injectionratio, injectioncount, injectionhit);
+	printf("ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
 	if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
 	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your ratio is average, but there is still room for improvement\n");
 	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your ratio is good\n");
@@ -7204,8 +7216,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"--rcascan_max=digit>               : show only n highest ranking lines\n"
 	"                                     default: %d lines\n"
 	"--rcascan_order=digit>             : rcascan sorting order:\n"
-	"                                      0 = sort by HIT (PROBERESPONSE) (default)\n" 
-	"                                      1 = sort by COUNT (BEACON)\n" 
+	"                                      0 = sort by PROBERESPONSE count (default)\n" 
+	"                                      1 = sort by BEACON count\n" 
 	"                                      2 = sort by CHANNEL\n" 
 	"--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66\n"

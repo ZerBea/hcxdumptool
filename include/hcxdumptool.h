@@ -350,7 +350,10 @@ typedef struct
  uint64_t		timestamp;
  uint8_t		ap[6];
  unsigned int		count;
- unsigned int		counthit;
+ unsigned int		beacon;
+ unsigned int		proberesponse;
+ unsigned int		proberequest;
+ unsigned int		hit;
  char			rssi;
  uint8_t		channel;
  uint8_t		essidlen;
@@ -358,13 +361,13 @@ typedef struct
 }scanlist_t;
 #define	SCANLIST_SIZE (sizeof(scanlist_t))
 
-static int sort_scanlist_by_counthit(const void *a, const void *b)
+static int sort_scanlist_by_hit(const void *a, const void *b)
 {
 const scanlist_t *ia = (const scanlist_t *)a;
 const scanlist_t *ib = (const scanlist_t *)b;
 
-if(ia->counthit < ib->counthit) return 1;
-else if(ia->counthit > ib->counthit) return -1;
+if(ia->hit < ib->hit) return 1;
+else if(ia->hit > ib->hit) return -1;
 if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
 if(ia->channel > ib->channel) return 1;
@@ -374,15 +377,15 @@ else if(memcmp(ia->ap, ib->ap, 6) > 0) return -1;
 return 0;
 }
 
-static int sort_scanlist_by_count(const void *a, const void *b)
+static int sort_scanlist_by_beacon(const void *a, const void *b)
 {
 const scanlist_t *ia = (const scanlist_t *)a;
 const scanlist_t *ib = (const scanlist_t *)b;
 
-if(ia->count < ib->count) return 1;
-else if(ia->count > ib->count) return -1;
-if(ia->counthit < ib->counthit) return 1;
-else if(ia->counthit > ib->counthit) return -1;
+if(ia->beacon < ib->beacon) return 1;
+else if(ia->beacon > ib->beacon) return -1;
+if(ia->hit < ib->hit) return 1;
+else if(ia->hit > ib->hit) return -1;
 if(ia->channel > ib->channel) return 1;
 else if(ia->channel < ib->channel) return -1;
 if(memcmp(ia->ap, ib->ap, 6) < 0) return 1;
@@ -397,8 +400,8 @@ const scanlist_t *ib = (const scanlist_t *)b;
 
 if(ia->channel < ib->channel) return 1;
 else if(ia->channel > ib->channel) return -1;
-if(ia->counthit < ib->counthit) return 1;
-else if(ia->counthit > ib->counthit) return -1;
+if(ia->hit < ib->hit) return 1;
+else if(ia->hit > ib->hit) return -1;
 if(ia->count < ib->count) return 1;
 else if(ia->count > ib->count) return -1;
 if(memcmp(ia->ap, ib->ap, 6) < 0) return 1;
