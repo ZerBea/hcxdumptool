@@ -5848,6 +5848,9 @@ static struct timespec tsfd;
 static bool inject24 = false;
 static bool inject5 = false;
 static bool inject6 = false;
+static int networkcount = 0;
+static int networkhit = 0;
+static int networkratio = 0;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -5938,6 +5941,8 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	if((zeiger->channel >= 200)  && (zeiger->hit > 0)) inject6 = true; 
 	injectionhit += zeiger->hit;
 	injectioncount += zeiger->beacon;
+	networkcount++;
+	if(zeiger->hit > 0) networkhit ++;
 	}
 if(injectionhit > 0)
 	{
@@ -5945,12 +5950,19 @@ if(injectionhit > 0)
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
-	printf("ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
-	if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
-	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your ratio is average, but there is still room for improvement\n");
-	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your ratio is good\n");
-	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your ratio is excellent, let's ride!\n");
-	else if(injectionratio > 90) printf(" ratio is huge - say kids what time is it?\n");
+	printf("incection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
+	if(injectionratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
+	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your incection ratio is average, but there is still room for improvement\n");
+	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your incection ratio is good\n");
+	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your incection ratio is excellent, let's ride!\n");
+	else if(injectionratio > 90) printf("your incection ratio is huge - say kids what time is it?\n");
+	networkratio = (networkhit *100) /networkcount;
+	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkcount, networkhit, networkratio);
+	if(injectionratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
+	else if((networkratio >= 25) && (networkratio < 50)) printf("your antenna ratio is average, but there is still room for improvement\n");
+	else if((networkratio >= 50) && (networkratio < 75)) printf("your antenna ratio is good\n");
+	else if((networkratio >= 75) && (networkratio < 90)) printf("your antenna ratio is excellent, let's ride!\n");
+	else if(networkratio > 90) printf("your antenna ratio is huge - say kids what time is it?\n");
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 if(errorcount == 1) printf("%d driver error encountered during the test\n", errorcount);
@@ -7369,11 +7381,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default IP: %s\n"
 	"                                     default port: %d\n"
 	"--check_driver                     : run several tests to determine that driver support all(!) required ioctl() system calls\n"
-	"--check_injection                  : run packet injection test to determine that driver support full packet injection\n"
-	"                                     default test list: 1...13\n"
-	"                                     to test injection on 5GHz channels use option -s 2\n"
 	"                                     the driver must support monitor mode and full packet injection\n"
 	"                                     otherwise hcxdumptool will not work as expected\n"
+	"--check_injection                  : run antenna test and packet injection test to determine that driver support full packet injection\n"
 	"--example                          : show abbreviations and example command lines\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
