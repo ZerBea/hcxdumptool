@@ -125,9 +125,9 @@ static int owm1m2roguemax;
 static int gpscount;
 
 static int rcaorder;
-static uint64_t injectionhit;
-static uint64_t injectioncount;
-static uint64_t injectionratio;
+static unsigned int injectionhit;
+static unsigned int injectioncount;
+static unsigned int injectionratio;
 
 static int gpiostatusled;
 static int gpiobutton;
@@ -5546,8 +5546,8 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_count);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID          CH RSSI COUNT   HIT ESSID           injection ratio: %3" PRIu64 "%% [%s]\n"
-	"-------------------------------------------------------------------------------------\n",
+printf("\033[2J\033[0;0H BSSID          CH RSSI  COUNT    HIT ESSID       injection ratio: %3d %% [%s]\n"
+	"------------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
@@ -5555,7 +5555,7 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	injectionhit += zeiger->counthit;
 	injectioncount += zeiger->count;
 	injectionratio = (injectionhit *100) /injectioncount;
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x  %3d  %3d %5d %5d %s\n",
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x  %3d  %3d %6d %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->channel,  zeiger->rssi, zeiger->count, zeiger->counthit, zeiger->essid);
 	}
@@ -5933,7 +5933,7 @@ if(injectionhit > 0)
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
-	printf("ratio: %" PRIu64 "%% (count: %" PRIu64 " hit: %" PRIu64 ")\n", injectionratio, injectioncount, injectionhit);
+	printf("ratio: %d%% (count: %d hit: %d)\n", injectionratio, injectioncount, injectionhit);
 	if(injectionratio < 25) printf("your ratio is poor - improve your antenna and get closer to the target\n");
 	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your ratio is average, but there is still room for improvement\n");
 	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your ratio is good\n");

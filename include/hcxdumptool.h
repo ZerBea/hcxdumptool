@@ -349,8 +349,8 @@ typedef struct
 {
  uint64_t		timestamp;
  uint8_t		ap[6];
- int			count;
- int			counthit;
+ unsigned int		count;
+ unsigned int		counthit;
  char			rssi;
  uint8_t		channel;
  uint8_t		essidlen;
