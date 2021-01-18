@@ -236,39 +236,32 @@ static const uint8_t hdradiotap[] =
 
 const int channelscanlist1[] =
 {
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
+1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
+6, 11 ,8, 10, 1, 6, 11, 12, 13, 0
 };
 
 const int channelscanlist2[] =
 {
-36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
-132, 136, 140, 144, 149, 153, 157, 161, 165, 0
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
 };
 
 const int channelscanlist3[] =
 {
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 132, 136, 140, 144, 149, 153, 157, 161, 165, 0
 };
 
 const int channelscanlist4[] =
 {
-201, 205, 209, 213, 217, 221, 225, 229, 233, 0
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
+132, 136, 140, 144, 149, 153, 157, 161, 165, 0
 };
 
-const int channelscanlistrca[] =
+const int channelscanlist5[] =
 {
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
-36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
-132, 136, 140, 144, 149, 153, 157, 161, 165,
-132, 136, 140, 144, 149, 153, 157, 161, 165,
-201, 205, 209, 213, 217, 221, 225, 229, 233,
 201, 205, 209, 213, 217, 221, 225, 229, 233, 0
 };
-
 
 static int channelscanlist[256] =
 {
@@ -5554,7 +5547,7 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	if(zeiger->count == 0) return;
 	injectionhit += zeiger->hit;
 	injectioncount += zeiger->beacon;
-	injectionratio = (injectionhit *100) /injectioncount;
+	if((injectionhit > 0) && (injectioncount > 0)) injectionratio = (injectionhit *100) /injectioncount;
 	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %3d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
@@ -5857,18 +5850,19 @@ tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMER;
-cpa = 0;
-while(channelscanlistrca[cpa] != 0)
-	{
-	channelscanlist[cpa] = channelscanlistrca[cpa];
-	cpa++;
-	}
-channelscanlist[cpa] = 0;
-cpa = 0;
-if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
-printf("starting antenna test and packet injection test (that can take up to two minutes)...\n");
+fprintf(stdout, "starting antenna test and packet injection test (that can take up to two minutes)...\n");
+cpa = 0;
+fprintf(stdout, "available channels: ");
+while(channelscanlist[cpa] != 0)
+	{
+	if(channelscanlist[cpa +1] != 0) fprintf(stdout, "%d,", channelscanlist[cpa]);
+	else fprintf(stdout, "%d\n", channelscanlist[cpa]);
+	cpa++;
+	}
+cpa = 0;
+if(set_channel() == false) errorcount++;
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 while(1)
@@ -5948,7 +5942,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	}
 if(injectionhit > 0)
 	{
-	injectionratio = (injectionhit *100) /injectioncount;
+	if((injectionhit > 0) && (injectioncount > 0)) injectionratio = (injectionhit *100) /injectioncount;
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
@@ -5958,7 +5952,7 @@ if(injectionhit > 0)
 	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your injection ratio is good\n");
 	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your injection ratio is excellent, let's ride!\n");
 	else if(injectionratio > 90) printf("your injection ratio is huge - say kids what time is it?\n");
-	networkratio = (networkhit *100) /networkcount;
+	if((networkhit > 0) && (networkcount > 0)) networkratio = (networkhit *100) /networkcount;
 	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
 	if(networkratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
 	else if((networkratio >= 25) && (networkratio < 50)) printf("your antenna ratio is average, but there is still room for improvement\n");
@@ -6529,19 +6523,55 @@ if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
-static inline bool testscanlist()
+static inline void auto_channel()
 {
+static int c;
+static struct iwreq pwrq;
+
 cpa = 0;
-while(channelscanlist[cpa] != 0)
+for(c = 1; c < 256; c++)
 	{
-	if(set_channel() == false) 
-		{
-		fprintf(stderr, "channel %d is not available\n", channelscanlist[cpa]);
-		return false;
-		}
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 0;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
+	channelscanlist[cpa] = c;
 	cpa++;
 	}
-return true;
+channelscanlist[cpa] = 0;
+return;
+}
+/*===========================================================================*/
+static inline void testscanlist()
+{
+static int c;
+static struct iwreq pwrq;
+
+c = 0;
+cpa = 0;
+while(channelscanlist[c] != 0)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = channelscanlist[c];
+	pwrq.u.freq.e = 0;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+		{
+		fprintf(stdout, "channel %d not available\n", channelscanlist[c]);
+		c++;
+		continue;
+		}
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
+	channelscanlist[cpa] = channelscanlist[c];
+	cpa++;
+	c++;
+	}
+channelscanlist[cpa] = 0;
+return;
 }
 /*===========================================================================*/
 static inline void show_channels()
@@ -7194,7 +7224,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
 	"-c <digit>     : set channel (1,2,3, ...)\n"
-	"                 default channels: 1...13\n"
+	"                 default channels: auto channel/auto band\n"
 	"                 maximum entries: 255\n"
 	"                 standard 802.11 channels (depends on device, driver and world regulatory domain):\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
@@ -7203,11 +7233,12 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 132, 136, 140, 144, 149, 153, 157, 161, 165\n"
 	"                 201, 205, 209, 213, 217, 221, 225, 229, 233\n"
 	"-s <digit>     : set predefined scanlist\n"
-	"                 0 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (default)\n"
-	"                 1 = 1,2,3,4,5,6,7,8,9,10,11,12,13\n"
-	"                 2 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
-	"                 3 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165\n"
-	"                 4 = 201,205,209,213,217,221,225,229,233\n"
+	"                 0 = auto channel/auto band (default)\n"
+	"                 1 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (optimized 2.4GHz)\n"
+	"                 2 = 1,2,3,4,5,6,7,8,9,10,11,12,13 (standard 2.4 GHz)\n"
+	"                 3 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 5GHz)\n"
+	"                 4 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 2.4GHz/5GHz)\n"
+	"                 5 = 201,205,209,213,217,221,225,229,233 (standard 6GHz)\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default %d seconds\n"
 	"-m <interface> : set monitor mode by ioctl() system call and quit\n"
@@ -7616,7 +7647,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_SCANLIST:
 		sl = strtol(optarg, NULL, 10); 
-		if(sl > 4)
+		if(sl > 5)
 			{
 			fprintf(stderr, "no predefined scanlist available\n");
 			exit (EXIT_FAILURE);
@@ -8029,6 +8060,15 @@ else if(sl == 4)
 		}
 	channelscanlist[cpa] = 0;
 	}
+else if(sl == 5)
+	{
+	while(channelscanlist5[cpa] != 0)
+		{
+		channelscanlist[cpa] = channelscanlist5[cpa];
+		cpa++;
+		}
+	channelscanlist[cpa] = 0;
+	}
 else if(userscanliststring != NULL)
 	{
 	tokptr = strtok(userscanliststring, ",");
@@ -8165,12 +8205,9 @@ if(checkdriverflag == true)
 	globalclose();
 	return EXIT_SUCCESS;
 	}
-
-if(testscanlist() == false)
-	{
-	errorcount++;
-	globalclose();
-	}
+if(injectionflag == true) auto_channel();
+else if(sl == 0) auto_channel();
+else testscanlist();
 
 if(pcapngoutname != NULL)
 	{

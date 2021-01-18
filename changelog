@@ -1,3 +1,16 @@
+18.01.2021
+==========
+hcxdumptool: added auto channel/auto band.
+             therefore default channel list and predefined channel lists changed!
+
+-s <digit>     : set predefined scanlist
+                 0 = auto channel/auto band (default)
+                 1 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (optimized 2.4GHz)
+                 2 = 1,2,3,4,5,6,7,8,9,10,11,12,13 (standard 2.4 GHz)
+                 3 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 5GHz)
+                 4 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (stan
+
+
 16.01.2021
 ==========
 hcxdumptool: added new option - rcascan ranking is no longer hard coded
