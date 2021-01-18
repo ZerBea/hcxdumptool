@@ -7224,7 +7224,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
 	"-c <digit>     : set channel (1,2,3, ...)\n"
-	"                 default channels: auto channel/auto band\n"
+	"                 default: auto channel/auto band\n"
 	"                 maximum entries: 255\n"
 	"                 standard 802.11 channels (depends on device, driver and world regulatory domain):\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
@@ -8205,9 +8205,10 @@ if(checkdriverflag == true)
 	globalclose();
 	return EXIT_SUCCESS;
 	}
+
 if(injectionflag == true) auto_channel();
-else if(sl == 0) auto_channel();
-else testscanlist();
+else if((sl == 0) && (userscanliststring == NULL)) auto_channel();
+testscanlist();
 
 if(pcapngoutname != NULL)
 	{
