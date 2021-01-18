@@ -5981,7 +5981,6 @@ gettimeofday(&tv, NULL);
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 wantstopflag = false;
-signal(SIGINT, programmende);
 statuscount = 1;
 tsfd.tv_sec = 1;
 tsfd.tv_nsec = 0;
