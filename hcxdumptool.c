@@ -285,6 +285,8 @@ static int channelscanlist[256] =
 
 static uint8_t myessid[] = { "home" };
 
+static char interfaceprotocol[IFNAMSIZ];
+
 static char rssi;
 static uint32_t myoui_client;
 static uint32_t myoui_ap;
@@ -5384,6 +5386,7 @@ if(filtermode == 2) fimtempl = fimtemplattack;
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"NMEA 0183 SENTENCE........: %s\n"
 	"INTERFACE NAME............: %s\n"
+	"INTERFACE PROTOCOL........: %s\n"
 	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x\n"
 	"DRIVER....................: %s\n"
 	"DRIVER VERSION............: %s\n"
@@ -5406,7 +5409,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"ANONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
-	nmeasentence, interfacename, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
+	nmeasentence, interfacename, interfaceprotocol, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
 	drivername, driverversion, driverfwversion,
 	opensslversionmajor, opensslversionminor,
 	maxerrorcount, bpf.len, filteraplistentries, filterclientlistentries, fimtempl, weakcandidate,
@@ -6254,12 +6257,18 @@ if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	perror("socket failed");
 	return false;
 	}
+memset(interfaceprotocol, 0, IFNAMSIZ);
+memset(&iwr, 0, sizeof(iwr));
+strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
+	{
+	perror("failed to detect wlan interface");
+	return false;
+	}
+strncpy(interfaceprotocol, iwr.u.name, IFNAMSIZ);
 if(bpf.len > 0)
 	{
-	if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0)
-		{
-		perror("failed to set Berkeley Packet Filter");
-		}
+	if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to set Berkeley Packet Filter");
 	}
 memset(&ifr_old, 0, sizeof(ifr));
 strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
@@ -8173,9 +8182,9 @@ if(checkdriverflag == true) printf("starting driver test...\n");
 
 if(opensocket() == false)
 	{
-	fprintf(stderr, "warning: failed to init socket\n"
-			"try to use iw to set monitor mode\n"
-			"try to use ip link to bring interface up\n");
+ 	fprintf(stderr, "warning: failed to init socket\n");
+	if(interfaceprotocol[0] != 0) fprintf(stderr,	"try to use iw to set monitor mode\n"
+							"try to use ip link to bring interface up\n");
 	errorcount++;
 	globalclose();
 	}
