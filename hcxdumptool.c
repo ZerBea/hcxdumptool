@@ -114,6 +114,7 @@ static int sl;
 static int errorcount;
 static int maxerrorcount;
 static int radiotaperrorcount;
+static int gpserrorcount;
 
 static int pmkidcount;
 static int pmkidroguecount;
@@ -390,10 +391,14 @@ static const char *gpsd_disable = "?WATCH={\"enable\":false}";
 printf("\nterminating...\e[?25h\n");
 sync();
 errorcount -= radiotaperrorcount;
+errorcount -= gpserrorcount;
 if(errorcount == 1) printf("%d driver error encountered\n", errorcount);
 if(errorcount > 1) printf("%d driver errors encountered\n", errorcount);
 if(radiotaperrorcount == 1) printf("%d radiotap error encountered\n", radiotaperrorcount);
 if(radiotaperrorcount > 1) printf("%d radiotap errors encountered\n", radiotaperrorcount);
+if(gpserrorcount == 1) printf("%d GPS error encountered\n", gpserrorcount);
+if(gpserrorcount > 1) printf("%d GPS errors encountered\n", gpserrorcount);
+
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, "bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 if(gpiostatusled > 0)
 	{
@@ -5164,6 +5169,7 @@ nmeatemplen = read(fd_gps, nmeatempsentence, NMEA_MAX -1);
 if(nmeatemplen < 0)
 	{
 	perror("\nfailed to read NMEA sentence");
+	gpserrorcount++;
 	errorcount++;
 	return;
 	}
@@ -5980,10 +5986,13 @@ if(injectionhit > 0)
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 errorcount -= radiotaperrorcount;
+errorcount -= gpserrorcount;
 if(errorcount == 1) printf("%d driver error encountered during the test\n", errorcount);
 if(errorcount > 1) printf("%d driver errors encountered during the test\n", errorcount);
 if(radiotaperrorcount == 1) printf("%d radiotap error encountered during the test\n", radiotaperrorcount);
 if(radiotaperrorcount > 1) printf("%d radiotap errors encountered during the test\n", radiotaperrorcount);
+if(gpserrorcount == 1) printf("%d GPS error encountered during the test\n", gpserrorcount);
+if(gpserrorcount > 1) printf("%d GPS errors encountered during the test\n", gpserrorcount);
 globalclose();
 return;
 }
@@ -6224,15 +6233,13 @@ while(1)
 		{
 		if(GET_GPIO(gpiobutton) > 0) globalclose();
 		}
-	if(wantstopflag == true)
-		{
-		globalclose();
-		}
+	if(wantstopflag == true) globalclose();
 	FD_ZERO(&readfds);
 	FD_SET(fd_gps, &readfds);
 	fdnum = pselect(fd_gps +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
+		gpserrorcount++;
 		errorcount++;
 		continue;
 		}
@@ -7177,6 +7184,7 @@ wantstopflag = false;
 reloadfilesflag = false;
 errorcount = 0;
 radiotaperrorcount = 0;
+gpserrorcount = 0;
 incomingcount = 0;
 outgoingcount = 0;
 pmkidcount = 0;
