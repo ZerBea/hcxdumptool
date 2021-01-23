@@ -5868,6 +5868,7 @@ static bool inject6 = false;
 static int networkcount = 0;
 static int networkhit = 0;
 static int networkratio = 0;
+static int stagecount = 2;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -5896,7 +5897,8 @@ while(1)
 		{
 		get_channel();
 		cpa++;
-		if(channelscanlist[cpa] == 0) break;
+		if(channelscanlist[cpa] == 0) stagecount--;
+		if(stagecount == 0) break;
 		if(set_channel() == false) continue;
 		tvold.tv_sec = tv.tv_sec;
 		if((tv.tv_sec %5) == 0)
@@ -5947,7 +5949,8 @@ while(1)
 	else
 		{
 		cpa++;
-		if(channelscanlist[cpa] == 0) break;
+		if(channelscanlist[cpa] == 0) stagecount--;
+		if(stagecount == 0) break;
 		if(set_channel() == false) continue;
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
