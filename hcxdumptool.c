@@ -113,6 +113,8 @@ static bool packetsentflag;
 static int sl;
 static int errorcount;
 static int maxerrorcount;
+static int radiotaperrorcount;
+
 static int pmkidcount;
 static int pmkidroguecount;
 static int eapolmp12count;
@@ -387,6 +389,11 @@ static const char *gpsd_disable = "?WATCH={\"enable\":false}";
 
 printf("\nterminating...\e[?25h\n");
 sync();
+errorcount -= radiotaperrorcount;
+if(errorcount == 1) printf("%d driver error encountered\n", errorcount);
+if(errorcount > 1) printf("%d driver errors encountered\n", errorcount);
+if(radiotaperrorcount == 1) printf("%d radiotap error encountered\n", radiotaperrorcount);
+if(radiotaperrorcount > 1) printf("%d radiotap errors encountered\n", radiotaperrorcount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, "bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 if(gpiostatusled > 0)
 	{
@@ -5245,22 +5252,26 @@ packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 if(rth->it_pad != 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 if(rth->it_present == 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 rthl = le16toh(rth->it_len);
 if(rthl > packetlen)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
@@ -5692,22 +5703,26 @@ packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 if(rth->it_pad != 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 if(rth->it_present == 0)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
 rthl = le16toh(rth->it_len);
 if(rthl > packetlen)
 	{
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
@@ -5964,8 +5979,11 @@ if(injectionhit > 0)
 	else if(networkratio > 90) printf("your antenna ratio is huge - say kids what time is it?\n");
 	}
 else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
+errorcount -= radiotaperrorcount;
 if(errorcount == 1) printf("%d driver error encountered during the test\n", errorcount);
 if(errorcount > 1) printf("%d driver errors encountered during the test\n", errorcount);
+if(radiotaperrorcount == 1) printf("%d radiotap error encountered during the test\n", radiotaperrorcount);
+if(radiotaperrorcount > 1) printf("%d radiotap errors encountered during the test\n", radiotaperrorcount);
 globalclose();
 return;
 }
@@ -7158,6 +7176,7 @@ memcpy(&weakcandidate, weakcandidatedefault, 8);
 wantstopflag = false;
 reloadfilesflag = false;
 errorcount = 0;
+radiotaperrorcount = 0;
 incomingcount = 0;
 outgoingcount = 0;
 pmkidcount = 0;
