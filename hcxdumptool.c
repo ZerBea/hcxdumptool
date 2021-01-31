@@ -5461,6 +5461,16 @@ if(beaconactiveflag == true)
 if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 while(1)
 	{
+	if(wantstopflag == true) globalclose();
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
@@ -5512,18 +5522,8 @@ while(1)
 			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();
 			}
 		}
-	if(gpiobutton > 0)
-		{
-		if(GET_GPIO(gpiobutton) > 0) globalclose();
-		}
-	if(wantstopflag == true) globalclose();
 	if(reloadfilesflag == true) loadfiles();
 	if((packetsentflag == true) && ((tv.tv_usec -tvpacketsent.tv_usec) > PACKET_RESEND_TIMER_USEC)) resend_packet();
-	if(errorcount >= maxerrorcount)
-		{
-		fprintf(stderr, "\nmaximum number of errors is reached\n");
-		globalclose();
-		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
 	sd = fd_socket;
@@ -5778,6 +5778,16 @@ if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_u
 printrcascan();
 while(1)
 	{
+	if(wantstopflag == true) globalclose();
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
@@ -5814,16 +5824,6 @@ while(1)
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		printrcascan();
-		}
-	if(gpiobutton > 0)
-		{
-		if(GET_GPIO(gpiobutton) > 0) globalclose();
-		}
-	if(wantstopflag == true) globalclose();
-	if(errorcount >= maxerrorcount)
-		{
-		fprintf(stderr, "\nmaximum number of errors is reached\n");
-		globalclose();
 		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
@@ -5894,6 +5894,16 @@ while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 while(1)
 	{
+	if(wantstopflag == true) globalclose();
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		globalclose();
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
 	gettimeofday(&tv, NULL);
 	if(tv.tv_sec != tvold.tv_sec)
 		{
@@ -5921,16 +5931,6 @@ while(1)
 			incomingcountold = incomingcount;
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
-		}
-	if(gpiobutton > 0)
-		{
-		if(GET_GPIO(gpiobutton) > 0) globalclose();
-		}
-	if(wantstopflag == true) globalclose();
-	if(errorcount >= maxerrorcount)
-		{
-		fprintf(stderr, "\nmaximum number of errors is reached\n");
-		globalclose();
 		}
 	FD_ZERO(&readfds);
 	FD_SET(fd_socket, &readfds);
