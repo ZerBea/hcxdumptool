@@ -5559,7 +5559,7 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_beacon);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID         CH RSSI BEACON RESPONSE ESSID       INJECTION-RATIO: %3d%% [%s]\n"
+printf("\033[2J\033[0;0H BSSID         CH  RSSI BEACON RESPONSE ESSID       INJECTION-RATIO: %3d%% [%s]\n"
 	"------------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
@@ -5572,7 +5572,7 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 		injectionratio = (injectionhit *100) /injectioncount;
 		if(injectionratio > 100) injectionratio = 100;
 		}
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %3d %6d   %6d %s\n",
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %4d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
 	}
