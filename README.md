@@ -109,14 +109,14 @@ Manufacturers do change chipsets without changing model numbers. Sometimes they 
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
-| VENDOR MODEL            | ID                                                                                                    |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| CSL 300MBit 300649      | ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter                                         |
-| EDIMAX EW-7711UAN       | ID 7392:7710 Edimax Technology Co., Ltd                                                               |
-| ALLNET ALL-WA0150N      | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter                                        |
-| SEMPRE WU150-1          | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter                                        |
-| TENDA W311U+            | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter                                  |
-| ALFA AWUS036H           | ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter                                     |
+| VENDOR MODEL            | ID                                                            |
+| ----------------------- | ------------------------------------------------------------- |
+| CSL 300MBit 300649      | ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter |
+| EDIMAX EW-7711UAN       | ID 7392:7710 Edimax Technology Co., Ltd |
+| ALLNET ALL-WA0150N      | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter |
+| SEMPRE WU150-1          | ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter |
+| TENDA W311U+            | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
+| ALFA AWUS036H           | ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter |
 | ALFA AWUS036NH          | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
 | LogiLink WL0151         | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter |
 | WiFi N (noname)         | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter |
