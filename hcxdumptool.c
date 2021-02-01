@@ -5643,7 +5643,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
 	if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
-//	if(tags.channel != 0) zeiger->channel = tags.channel;
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
 	zeiger->beacon += 1;
@@ -5661,7 +5660,6 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 memset(zeiger, 0, SCANLIST_SIZE);
 gettags(apinfolen, apinfoptr, &tags);
 if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
-//if(tags.channel != 0) zeiger->channel = tags.channel;
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 zeiger->beacon = 1;
