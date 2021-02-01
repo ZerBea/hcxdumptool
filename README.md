@@ -122,7 +122,7 @@ This list is for information purposes only and should not be regarded as a bindi
 | WiFi N (noname)         | ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter |
 | TP-LINK Archer T2UH     | ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter) |
 | ASUS USB-AC51           | ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U] |
-| TP-Link TL-WN722N v2/v3 | ID 2357:010c TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS] recommended driver https://github.com/kimocoder/realtek_rtwifi |
+| TP-Link TL-WN722N v2/v3 | ID 2357:010c TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS]    Recommended driver: https://github.com/kimocoder/realtek_rtwifi |
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
