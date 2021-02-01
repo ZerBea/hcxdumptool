@@ -5567,7 +5567,11 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	if(zeiger->count == 0) return;
 	injectionhit += zeiger->hit;
 	injectioncount += zeiger->beacon;
-	if((injectionhit > 0) && (injectioncount > 0)) injectionratio = (injectionhit *100) /injectioncount;
+	if((injectionhit > 0) && (injectioncount > 0))
+		{
+		injectionratio = (injectionhit *100) /injectioncount;
+		if(injectionratio > 100) injectionratio = 100;
+		}
 	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %3d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
@@ -5972,6 +5976,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 if(injectionhit > 0)
 	{
 	if((injectionhit > 0) && (injectioncount > 0)) injectionratio = (injectionhit *100) /injectioncount;
+	if(injectionratio > 100) injectionratio = 100;
 	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
 	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
 	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
@@ -5982,6 +5987,7 @@ if(injectionhit > 0)
 	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your injection ratio is excellent, let's ride!\n");
 	else if(injectionratio > 90) printf("your injection ratio is huge - say kids what time is it?\n");
 	if((networkhit > 0) && (networkcount > 0)) networkratio = (networkhit *100) /networkcount;
+	if(networkratio > 100) networkratio = 100;
 	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
 	if(networkratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
 	else if((networkratio >= 25) && (networkratio < 50)) printf("your antenna ratio is average, but there is still room for improvement\n");
