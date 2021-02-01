@@ -7246,11 +7246,6 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"\n"
 	"short options:\n"
 	"-i <interface> : interface (monitor mode will be enabled by hcxdumptool)\n"
-	"                 some Realtek interfaces require NETLINK to set monitor mode\n"
-	"                 in this case try iw:\n"
-	"                 ip link set <interface> down\n"
-	"                 iw dev <interface> set type monitor\n"
-	"                 ip link set <interface> up\n"
 	"                 WARNING:\n"
 	"                  hcxdumptool may not work as expected on virtual NETLINK interfaces\n"
 	"                  do not report issues related to iw\n"
@@ -8145,9 +8140,7 @@ if(monitormodeflag == true)
 		}
 	if(opensocket() == false)
 		{
-		fprintf(stderr, "failed to init socket\n"
-				"try to use iw to set monitor mode\n"
-				"try to use ip link to bring interface up\n");
+		fprintf(stderr, "failed to init socket\n");
 		exit(EXIT_FAILURE);
 		}
 	printf("setting interface %s to monitor mode\n", interfacename); 
@@ -8221,8 +8214,6 @@ if(checkdriverflag == true) printf("starting driver test...\n");
 if(opensocket() == false)
 	{
  	fprintf(stderr, "warning: failed to init socket\n");
-	if(interfaceprotocol[0] != 0) fprintf(stderr,	"try to use iw to set monitor mode\n"
-							"try to use ip link to bring interface up\n");
 	errorcount++;
 	globalclose();
 	}
