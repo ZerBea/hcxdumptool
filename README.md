@@ -126,7 +126,7 @@ This list is for information purposes only and should not be regarded as a bindi
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
-Due to a bug in xhci subsystem other devices may not work at the moment: https://bugzilla.kernel.org/show_bug.cgi?id=202541
+Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
 
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/)
 
