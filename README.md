@@ -197,7 +197,7 @@ Raspberry Pi turned off and can be disconnected from power supply
 Do not use hcxdumptool and hcxpioff together!
 
 
-Hardware mod - see docs gpiowait.odg
+Hardware mod - see docs gpiowait.odg (hcxpioff)
 --------------
 
 LED flashes every 5 seconds 2 times if hcxpioff successfully started
