@@ -5124,6 +5124,37 @@ qsort(aplist, zeiger -aplist +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return;
 }
 /*===========================================================================*/
+static inline void checkunwanted(const char *unwantedname)
+{
+static FILE *fp;
+static char pidline[1024];
+static char *pidptr = NULL;
+
+memset(&pidline, 0, 1024);
+fp = popen(unwantedname,"r");
+if(fp)
+	{
+	pidptr = fgets(pidline, 1024, fp);
+	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s\n", &unwantedname[6], pidline);
+	pclose(fp);
+	}
+return;
+}
+/*===========================================================================*/
+static inline void checkallunwanted()
+{
+static const char *networkmanager = "pidof NetworkManager";
+static const char *wpasupplicant = "pidof wpa_supplicant";
+static const char *airodumpng = "pidof lt-airodump-ng";
+static const char *kismet = "pidof kismet";
+
+checkunwanted(networkmanager);
+checkunwanted(wpasupplicant);
+checkunwanted(airodumpng);
+checkunwanted(kismet);
+return;
+}
+/*===========================================================================*/
 static inline void get_channel()
 {
 static struct iwreq pwrq;
@@ -5139,6 +5170,7 @@ if(aktchannel != pwrq.u.freq.m)
 	errorcount++;
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL]\n", timestring, errorcount);
+	checkallunwanted();
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 	else printf("%s", servermsg);
 	}
@@ -6080,37 +6112,6 @@ static const char *monstr = "mon";
 if(checkinterfacename == NULL) return true;
 if(strstr(checkinterfacename, monstr) == NULL) return false;
 return true;
-}
-/*===========================================================================*/
-static inline void checkunwanted(const char *unwantedname)
-{
-static FILE *fp;
-static char pidline[1024];
-static char *pidptr = NULL;
-
-memset(&pidline, 0, 1024);
-fp = popen(unwantedname,"r");
-if(fp)
-	{
-	pidptr = fgets(pidline, 1024, fp);
-	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s (possible interfering hcxdumptool)\n", &unwantedname[6], pidline);
-	pclose(fp);
-	}
-return;
-}
-/*===========================================================================*/
-static inline void checkallunwanted()
-{
-static const char *networkmanager = "pidof NetworkManager";
-static const char *wpasupplicant = "pidof wpa_supplicant";
-static const char *airodumpng = "pidof lt-airodump-ng";
-static const char *kismet = "pidof kismet";
-
-checkunwanted(networkmanager);
-checkunwanted(wpasupplicant);
-checkunwanted(airodumpng);
-checkunwanted(kismet);
-return;
 }
 /*===========================================================================*/
 static inline bool openmcclisocket(int mccliport)
