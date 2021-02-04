@@ -5139,7 +5139,7 @@ if(aktchannel != pwrq.u.freq.m)
 	{
 	errorcount++;
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL - UNABLE TO SET CHANNEL]\n", timestring, errorcount);
+	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 	else printf("%s", servermsg);
 	}
@@ -6380,7 +6380,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	}
 else
 	{
-	fprintf(stderr, "interface is already in monitor mode\n");
+	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
