@@ -5561,7 +5561,7 @@ else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZ
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 printf("\033[2J\033[0;0H BSSID         CH  RSSI BEACON RESPONSE ESSID       INJECTION-RATIO: %3d%% [%s]\n"
-	"------------------------------------------------------------------------------------\n",
+	"-------------------------------------------------------------------------------------\n",
 	injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
