@@ -6094,7 +6094,7 @@ fp = popen(unwantedname,"r");
 if(fp)
 	{
 	pidptr = fgets(pidline, 1024, fp);
-	if(pidptr != NULL) fprintf(stderr, "warning: %s is running with pid %s\n", &unwantedname[6], pidline);
+	if(pidptr != NULL) fprintf(stderr, "warning possible interfere: %s is running with pid %s\n", &unwantedname[6], pidline);
 	pclose(fp);
 	}
 return;
