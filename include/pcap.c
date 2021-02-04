@@ -234,7 +234,6 @@ shbhdr->byte_order_magic = PCAPNGMAGICNUMBERBE;
 #else
 shbhdr->byte_order_magic = PCAPNGMAGICNUMBER;
 #endif
-shbhdr->byte_order_magic = PCAPNGMAGICNUMBER;
 shbhdr->major_version = PCAPNG_MAJOR_VER;
 shbhdr->minor_version = PCAPNG_MINOR_VER;
 shbhdr->section_length = -1;
