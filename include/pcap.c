@@ -229,11 +229,7 @@ memset(&shb, 0, 256);
 shblen = SHB_SIZE;
 shbhdr = (section_header_block_t*)shb;
 shbhdr->block_type = PCAPNGBLOCKTYPE;
-#ifdef BIG_ENDIAN_HOST
-shbhdr->byte_order_magic = PCAPNGMAGICNUMBERBE;
-#else
 shbhdr->byte_order_magic = PCAPNGMAGICNUMBER;
-#endif
 shbhdr->major_version = PCAPNG_MAJOR_VER;
 shbhdr->minor_version = PCAPNG_MINOR_VER;
 shbhdr->section_length = -1;
