@@ -1033,18 +1033,26 @@ static inline void gettagwpa(int wpalen, uint8_t *ieptr, tags_t *zeiger)
 {
 static int c;
 static wpaie_t *wpaptr;
+static int wpatype;
 static suite_t *gsuiteptr;
 static suitecount_t *csuitecountptr;
 static suite_t *csuiteptr;
+static int csuitecount;
 static suitecount_t *asuitecountptr;
 static suite_t *asuiteptr;
+static int asuitecount;
 
 wpaptr = (wpaie_t*)ieptr;
 wpalen -= WPAIE_SIZE;
 ieptr += WPAIE_SIZE;
 if(memcmp(wpaptr->oui, &ouimscorp, 3) != 0) return;
 if(wpaptr->ouitype != 1) return;
-if(wpaptr->type != VT_WPA_IE) return;
+#ifndef BIG_ENDIAN_HOST
+wpatype = wpaptr->type;
+#else
+wpatype = byte_swap_16(wpaptr->type);
+#endif
+if(wpatype != VT_WPA_IE) return;
 zeiger->kdversion |= KV_WPAIE;
 gsuiteptr = (suite_t*)ieptr;
 if(memcmp(gsuiteptr->oui, &ouimscorp, 3) == 0)
@@ -1062,7 +1070,12 @@ ieptr += SUITE_SIZE;
 csuitecountptr = (suitecount_t*)ieptr;
 wpalen -= SUITECOUNT_SIZE;
 ieptr += SUITECOUNT_SIZE;
-for(c = 0; c < csuitecountptr->count; c++)
+#ifndef BIG_ENDIAN_HOST
+csuitecount = csuitecountptr->count;
+#else
+csuitecount = byte_swap_16(csuitecountptr->count);
+#endif
+for(c = 0; c < csuitecount; c++)
 	{
 	csuiteptr = (suite_t*)ieptr;
 	if(memcmp(csuiteptr->oui, &ouimscorp, 3) == 0)
@@ -1082,7 +1095,12 @@ for(c = 0; c < csuitecountptr->count; c++)
 asuitecountptr = (suitecount_t*)ieptr;
 wpalen -= SUITECOUNT_SIZE;
 ieptr += SUITECOUNT_SIZE;
-for(c = 0; c < asuitecountptr->count; c++)
+#ifndef BIG_ENDIAN_HOST
+asuitecount = asuitecountptr->count;
+#else
+asuitecount = byte_swap_16(asuitecountptr->count);
+#endif
+for(c = 0; c < asuitecount; c++)
 	{
 	asuiteptr = (suite_t*)ieptr;
 	if(memcmp(asuiteptr->oui, &ouimscorp, 3) == 0)
@@ -1118,15 +1136,24 @@ static inline void gettagrsn(int rsnlen, uint8_t *ieptr, tags_t *zeiger)
 {
 static int c;
 static rsnie_t *rsnptr;
+static int rsnver;
 static suite_t *gsuiteptr;
 static suitecount_t *csuitecountptr;
 static suite_t *csuiteptr;
+static int csuitecount;
 static suitecount_t *asuitecountptr;
 static suite_t *asuiteptr;
+static int asuitecount;
 static rsnpmkidlist_t *rsnpmkidlistptr;
+static int rsnpmkidcount;
 
 rsnptr = (rsnie_t*)ieptr;
-if(rsnptr->version != 1) return;
+#ifndef BIG_ENDIAN_HOST
+rsnver = rsnptr->version;
+#else
+rsnver = byte_swap_16(rsnptr->version);
+#endif
+if(rsnver != 1) return;
 zeiger->kdversion |= KV_RSNIE;
 rsnlen -= RSNIE_SIZE;
 ieptr += RSNIE_SIZE;
@@ -1146,7 +1173,12 @@ ieptr += SUITE_SIZE;
 csuitecountptr = (suitecount_t*)ieptr;
 rsnlen -= SUITECOUNT_SIZE;
 ieptr += SUITECOUNT_SIZE;
-for(c = 0; c < csuitecountptr->count; c++)
+#ifndef BIG_ENDIAN_HOST
+csuitecount = csuitecountptr->count;
+#else
+csuitecount = byte_swap_16(csuitecountptr->count);
+#endif
+for(c = 0; c < csuitecount; c++)
 	{
 	csuiteptr = (suite_t*)ieptr;
 	if(memcmp(csuiteptr->oui, &suiteoui, 3) == 0)
@@ -1166,7 +1198,12 @@ for(c = 0; c < csuitecountptr->count; c++)
 asuitecountptr = (suitecount_t*)ieptr;
 rsnlen -= SUITECOUNT_SIZE;
 ieptr += SUITECOUNT_SIZE;
-for(c = 0; c < asuitecountptr->count; c++)
+#ifndef BIG_ENDIAN_HOST
+asuitecount = asuitecountptr->count;
+#else
+asuitecount = byte_swap_16(asuitecountptr->count);
+#endif
+for(c = 0; c < asuitecount; c++)
 	{
 	asuiteptr = (suite_t*)ieptr;
 	if(memcmp(asuiteptr->oui, &suiteoui, 3) == 0)
@@ -1189,7 +1226,12 @@ rsnlen -= RSNCAPABILITIES_SIZE;
 ieptr += RSNCAPABILITIES_SIZE;
 if(rsnlen <= 0) return;
 rsnpmkidlistptr = (rsnpmkidlist_t*)ieptr;
-if(rsnpmkidlistptr->count == 0) return;
+#ifndef BIG_ENDIAN_HOST
+rsnpmkidcount = rsnpmkidlistptr->count;
+#else
+rsnpmkidcount = byte_swap_16(rsnpmkidlistptr->count);
+#endif
+if(rsnpmkidcount == 0) return;
 rsnlen -= RSNPMKIDLIST_SIZE;
 ieptr += RSNPMKIDLIST_SIZE;
 if(rsnlen < 16) return;
