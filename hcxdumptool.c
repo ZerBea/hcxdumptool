@@ -46,7 +46,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> 
 #include <netpacket/packet.h>
-#include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
