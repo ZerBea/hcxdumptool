@@ -3814,18 +3814,33 @@ return;
 /*===========================================================================*/
 static inline bool detectweakpmkid(uint8_t *macclient, uint8_t *macap, uint8_t *pmkid, uint8_t essidlen, uint8_t *essid)
 {
-static const char *pmkname = "PMK Name";
+static size_t testpmkidlen;
+static EVP_MD_CTX *mdctx;
+static const EVP_MD *md;
+static EVP_PKEY *pkey;
 static uint8_t *pmk;
+static char *pmkname = "PMK Name";
+
 static uint8_t salt[32];
-static uint8_t pmkidcalc[32];
+static uint8_t testpmkid[EVP_MAX_MD_SIZE];
 
 pmk = getpmk(essidlen, essid);
 if(pmk == NULL) return false;
 memcpy(&salt, pmkname, 8);
 memcpy(&salt[8], macap, 6);
 memcpy(&salt[14], macclient, 6);
-HMAC(EVP_sha1(), pmk, 32, salt, 20, pmkidcalc, NULL);
-if(memcmp(&pmkidcalc, pmkid, 16) == 0) return true;
+testpmkidlen = 0;
+mdctx = NULL;
+md = NULL;
+pkey = NULL;
+mdctx = EVP_MD_CTX_new();
+md = EVP_get_digestbyname("SHA1");
+pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
+EVP_DigestSignInit(mdctx, NULL, md, NULL, pkey);
+EVP_DigestSignUpdate(mdctx, salt, 20);
+EVP_DigestSignFinal(mdctx, testpmkid, &testpmkidlen);
+EVP_MD_CTX_destroy(mdctx);
+if(memcmp(&testpmkid, pmkid, 16) == 0) return true;
 return false;
 }
 /*===========================================================================*/
