@@ -3842,7 +3842,8 @@ if(pkey == NULL) return false;
 if(EVP_DigestSignInit(mdctx, NULL, md, NULL, pkey) <= 0) return false;
 if(EVP_DigestSignUpdate(mdctx, salt, 20) <= 0) return false;
 if(EVP_DigestSignFinal(mdctx, testpmkid, &testpmkidlen) <= 0) return false;
-EVP_MD_CTX_destroy(mdctx);
+EVP_PKEY_free(pkey);
+EVP_MD_CTX_free(mdctx);
 if(memcmp(&testpmkid, pmkid, 16) == 0) return true;
 return false;
 }
