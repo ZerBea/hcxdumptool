@@ -46,13 +46,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h> 
 #include <netpacket/packet.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
-#include <openssl/hmac.h>
-#include <openssl/cmac.h>
 #include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
 
 #include "include/hcxdumptool.h"
 #include "include/rpigpio.h"
