@@ -3520,10 +3520,8 @@ if(keyver == 2)
 		return false;
 		}
 	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
+	EVP_MD_CTX_reset(mdctx);
 	testmiclen = 16;
-	mdctx = EVP_MD_CTX_new();
-	if(mdctx == 0) return false;
 	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, testptk, 16);
 	if(pkey == NULL)
 		{
@@ -3607,10 +3605,8 @@ else if(keyver == 1)
 		return false;
 		}
 	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
+	EVP_MD_CTX_reset(mdctx);
 	testmiclen = 16;
-	mdctx = EVP_MD_CTX_new();
-	if(mdctx == 0) return false;
 	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, testptk, 16);
 	if(pkey == NULL)
 		{
@@ -3696,10 +3692,8 @@ else if(keyver == 3)
 		return false;
 		}
 	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
+	EVP_MD_CTX_reset(mdctx);
 	testmiclen = 16;
-	mdctx = EVP_MD_CTX_new();
-	if(mdctx == 0) return false;
 	pkey = EVP_PKEY_new_CMAC_key(NULL, testptk, 16, EVP_aes_128_cbc());
 	if(pkey == NULL)
 		{
@@ -3989,7 +3983,6 @@ static inline bool detectweakpmkid(uint8_t *macclient, uint8_t *macap, uint8_t *
 {
 static size_t testpmkidlen;
 static EVP_MD_CTX *mdctx;
-static const EVP_MD *md;
 static EVP_PKEY *pkey;
 static uint8_t *pmk;
 static char *pmkname = "PMK Name";
@@ -4003,9 +3996,6 @@ memcpy(&message, pmkname, 8);
 memcpy(&message[8], macap, 6);
 memcpy(&message[14], macclient, 6);
 testpmkidlen = 16;
-mdctx = NULL;
-md = NULL;
-pkey = NULL;
 mdctx = EVP_MD_CTX_new();
 if(mdctx == 0) return false;
 pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
@@ -4014,7 +4004,7 @@ if(pkey == NULL)
 	EVP_MD_CTX_free(mdctx);
 	return false;
 	}
-if(EVP_DigestSignInit(mdctx, NULL, md, NULL, pkey) <= 0)
+if(EVP_DigestSignInit(mdctx, NULL, EVP_sha1(), NULL, pkey) <= 0)
 	{
 	EVP_PKEY_free(pkey);
 	EVP_MD_CTX_free(mdctx);
