@@ -3437,34 +3437,8 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-static inline int omac1_aes_128_vector(const uint8_t *key, size_t num_elem, const uint8_t *addr[], const size_t *len, uint8_t *mac)
-{
-static CMAC_CTX *ctx;
-static int ret = -1;
-static size_t outlen, i;
-
-ctx = CMAC_CTX_new();
-if (ctx == NULL) return -1;
-if (!CMAC_Init(ctx, key, 16, EVP_aes_128_cbc(), NULL)) goto fail;
-for (i = 0; i < num_elem; i++)
-	{
-	if (!CMAC_Update(ctx, addr[i], len[i])) goto fail;
-	}
-if (!CMAC_Final(ctx, mac, &outlen) || outlen != 16) goto fail;
-ret = 0;
-fail:
-CMAC_CTX_free(ctx);
-return ret;
-}
-/*===========================================================================*/
-static inline int omac1_aes_128(const uint8_t *key, const uint8_t *data, size_t data_len, uint8_t *mac)
-{
-return omac1_aes_128_vector(key, 1, &data, &data_len, mac);
-}
-/*===========================================================================*/
 static inline bool detectweakwpa(uint8_t keyver, uint8_t essidlen, uint8_t *essid, uint8_t *anonce)
 {
-static int p;
 static int authlen;
 static uint8_t *pmk;
 static uint8_t *eapauthptr;
@@ -3472,10 +3446,16 @@ static eapauth_t *eapauth;
 static uint8_t *wpakptr;
 static wpakey_t *wpak;
 static uint8_t *pkeptr;
+
+static size_t testptklen;
+static size_t testmiclen;
+static EVP_MD_CTX *mdctx;
+static EVP_PKEY *pkey;
+static CMAC_CTX *ctx;
+
 static uint8_t pkedata[102];
-static uint8_t pkedata_prf[2 + 98 + 2];
-static uint8_t ptk[128];
-static uint8_t mymic[16];
+static uint8_t testptk[EVP_MAX_MD_SIZE];
+static uint8_t testmic[EVP_MAX_MD_SIZE];
 static uint8_t keymic[16];
 
 pmk = getpmk(essidlen, essid);
@@ -3487,11 +3467,13 @@ wpakptr = eapauthptr +EAPAUTH_SIZE;
 wpak = (wpakey_t*)wpakptr;
 memcpy(&keymic, wpak->keymic, 16);
 memset(wpak->keymic, 0, 16);
-if((keyver == 1 || keyver == 2))
+
+if(keyver == 2)
 	{
-	pkeptr = pkedata;
 	memset(&pkedata, 0, sizeof(pkedata));
-	memset(&ptk, 0, sizeof(ptk));
+	memset(&testptk, 0, sizeof(testptk));
+	memset(&testmic, 0, sizeof(testptk));
+	pkeptr = pkedata;
 	memcpy(pkeptr, "Pairwise key expansion", 23);
 	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
 		{
@@ -3503,7 +3485,6 @@ if((keyver == 1 || keyver == 2))
 		memcpy(pkeptr +23, macfrx->addr2, 6);
 		memcpy(pkeptr +29, macfrx->addr1, 6);
 		}
-
 	if(memcmp(anonce, wpak->nonce, 32) < 0)
 		{
 		memcpy (pkeptr +35, anonce, 32);
@@ -3514,21 +3495,161 @@ if((keyver == 1 || keyver == 2))
 		memcpy (pkeptr +35, wpak->nonce, 32);
 		memcpy (pkeptr +67, anonce, 32);
 		}
-	for (p = 0; p < 4; p++)
+	testptklen = 32;
+	mdctx = EVP_MD_CTX_new();
+	if(mdctx == 0) return false;
+	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
+	if(pkey == NULL)
 		{
-		pkedata[99] = p;
-		HMAC(EVP_sha1(), pmk, 32, pkedata, 100, ptk + p *20, NULL);
+		EVP_MD_CTX_free(mdctx);
+		return false;
 		}
-	if(keyver == 1) HMAC(EVP_md5(), &ptk, 16, eapauthptr, authlen +EAPAUTH_SIZE, mymic, NULL);
-	if(keyver == 2) HMAC(EVP_sha1(), &ptk, 16, eapauthptr, authlen +EAPAUTH_SIZE, mymic, NULL);
-	if(memcmp(&keymic, &mymic, 16) == 0) return true;
-	return false;
+	if(EVP_DigestSignInit(mdctx, NULL, EVP_sha1(), NULL, pkey) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignUpdate(mdctx, pkedata, 100) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignFinal(mdctx, testptk, &testptklen) <= 0)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	EVP_PKEY_free(pkey);
+	EVP_MD_CTX_free(mdctx);
+	testmiclen = 16;
+	mdctx = EVP_MD_CTX_new();
+	if(mdctx == 0) return false;
+	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, testptk, 16);
+	if(pkey == NULL)
+		{
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignInit(mdctx, NULL, EVP_sha1(), NULL, pkey) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignUpdate(mdctx, eapauthptr, authlen +EAPAUTH_SIZE) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignFinal(mdctx, testmic, &testmiclen) <= 0)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	EVP_PKEY_free(pkey);
+	EVP_MD_CTX_free(mdctx);
+	if(memcmp(&keymic, &testmic, 16) == 0) return true;
+	}
+else if(keyver == 1)
+	{
+	memset(&pkedata, 0, sizeof(pkedata));
+	memset(&testptk, 0, sizeof(testptk));
+	memset(&testmic, 0, sizeof(testptk));
+	pkeptr = pkedata;
+	memcpy(pkeptr, "Pairwise key expansion", 23);
+	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
+		{
+		memcpy(pkeptr +23, macfrx->addr1, 6);
+		memcpy(pkeptr +29, macfrx->addr2, 6);
+		}
+	else
+		{
+		memcpy(pkeptr +23, macfrx->addr2, 6);
+		memcpy(pkeptr +29, macfrx->addr1, 6);
+		}
+	if(memcmp(anonce, wpak->nonce, 32) < 0)
+		{
+		memcpy (pkeptr +35, anonce, 32);
+		memcpy (pkeptr +67, wpak->nonce, 32);
+		}
+	else
+		{
+		memcpy (pkeptr +35, wpak->nonce, 32);
+		memcpy (pkeptr +67, anonce, 32);
+		}
+	testptklen = 32;
+	mdctx = EVP_MD_CTX_new();
+	if(mdctx == 0) return false;
+	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
+	if(pkey == NULL)
+		{
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignInit(mdctx, NULL, EVP_sha1(), NULL, pkey) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignUpdate(mdctx, pkedata, 100) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignFinal(mdctx, testptk, &testptklen) <= 0)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	EVP_PKEY_free(pkey);
+	EVP_MD_CTX_free(mdctx);
+	testmiclen = 16;
+	mdctx = EVP_MD_CTX_new();
+	if(mdctx == 0) return false;
+	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, testptk, 16);
+	if(pkey == NULL)
+		{
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignInit(mdctx, NULL, EVP_md5(), NULL, pkey) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignUpdate(mdctx, eapauthptr, authlen +EAPAUTH_SIZE) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignFinal(mdctx, testmic, &testmiclen) <= 0)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	EVP_PKEY_free(pkey);
+	EVP_MD_CTX_free(mdctx);
+	if(memcmp(&keymic, &testmic, 16) == 0) return true;
 	}
 else if(keyver == 3)
 	{
-	pkeptr = pkedata;
-	memset(&pkedata_prf, 0, sizeof(pkedata_prf));
-	memset(&ptk, 0, sizeof(ptk));
+	memset(&pkedata, 0, sizeof(pkedata));
+	memset(&testptk, 0, sizeof(testptk));
+	memset(&testmic, 0, sizeof(testptk));
+	pkedata[0] = 1;
+	pkedata[1] = 0;
+	pkeptr = pkedata +2;
 	memcpy(pkeptr, "Pairwise key expansion", 22);
 	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
 		{
@@ -3550,10 +3671,52 @@ else if(keyver == 3)
 		memcpy (pkeptr +34, wpak->nonce, 32);
 		memcpy (pkeptr +66, anonce, 32);
 		}
-	HMAC(EVP_sha256(), pmk, 32, pkedata_prf, 2 + 98 + 2, ptk, NULL);
-	omac1_aes_128(ptk, eapauthptr, authlen +EAPAUTH_SIZE, mymic);
-	if(memcmp(&keymic, &mymic, 16) == 0) return true;
-	return false;
+	testptklen = 32;
+	mdctx = EVP_MD_CTX_new();
+	if(mdctx == 0) return false;
+	pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
+	if(pkey == NULL)
+		{
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignUpdate(mdctx, pkedata, 102) != 1)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	if(EVP_DigestSignFinal(mdctx, testptk, &testptklen) <= 0)
+		{
+		EVP_PKEY_free(pkey);
+		EVP_MD_CTX_free(mdctx);
+		return false;
+		}
+	EVP_PKEY_free(pkey);
+	EVP_MD_CTX_free(mdctx);
+
+	testmiclen = 16;
+	ctx = CMAC_CTX_new();
+	if(ctx == NULL) return false;
+	if(CMAC_Init(ctx, testptk, 16, EVP_aes_128_cbc(), NULL) != 1)
+		{
+		CMAC_CTX_free(ctx);
+		return false;
+		}
+	if(!CMAC_Update(ctx, eapauthptr, authlen +EAPAUTH_SIZE))
+		{
+		CMAC_CTX_free(ctx);
+		return false;
+		}
+	CMAC_Final(ctx, testmic, &testmiclen);
+
+	if(memcmp(&keymic, &testmic, 16) == 0) return true;
 	}
 return false;
 }
