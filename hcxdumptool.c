@@ -726,8 +726,8 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d ERROR:%d INCOMING:%" PRIu64 " OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
-		errorcount, incomingcount, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d ERROR:%d INCOMING:%" PRIu64 " OUTGOING:%" PRIu64 " LAST:%ld PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
+		errorcount, incomingcount, outgoingcount, tv.tv_sec - tvlast_sec, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
 return;
