@@ -135,6 +135,7 @@ static int gpiobutton;
 static struct timespec sleepled;
 static struct timespec sleepled2;
 static struct timeval tv;
+static time_t tvlast_sec;
 static struct timeval tvold;
 static struct timeval tvtot;
 static struct timeval tvpacketsent;
@@ -5532,6 +5533,7 @@ ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
 ieee82011len -= getradiotapfield(rthl, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
+tvlast_sec = tv.tv_sec;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 	{
@@ -5633,7 +5635,6 @@ return;
 /*===========================================================================*/
 static inline void process_fd()
 {
-static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
@@ -5693,7 +5694,6 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
 else printf("%s", servermsg);
-incomingcountold = 0;
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMER;
@@ -5734,7 +5734,7 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if(incomingcountold == incomingcount)
+				if((tv.tv_sec - tvlast_sec) > WATCHDOG)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -5742,7 +5742,6 @@ while(1)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
-			incomingcountold = incomingcount;
 			}
 		if((tv.tv_sec %staytime) == 0)
 			{
@@ -5987,6 +5986,7 @@ ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
 ieee82011len -= getradiotapfield(rthl, packetptr);
 if(ieee82011len < MAC_SIZE_ACK) return;
+tvlast_sec = tv.tv_sec;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
 	{
@@ -6106,7 +6106,6 @@ return;
 /*===========================================================================*/
 static inline void process_fd_injection()
 {
-static uint64_t incomingcountold;
 static int sd;
 static int fdnum;
 static fd_set readfds;
@@ -6168,7 +6167,7 @@ while(1)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if(incomingcountold == incomingcount)
+				if((tv.tv_sec - tvlast_sec) > WATCHDOG)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -6176,7 +6175,6 @@ while(1)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
-			incomingcountold = incomingcount;
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
@@ -7307,6 +7305,7 @@ static const char weakcandidatedefault[] = { "12345678" };
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tvold.tv_sec;
 tvold.tv_usec = tvold.tv_usec;
+tvlast_sec = 0;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 srand(time(NULL));

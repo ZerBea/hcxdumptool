@@ -56,6 +56,7 @@
 #define HCX_VERSION			'v'
 
 #define ERROR_MAX		100
+#define WATCHDOG		600
 
 #define APLIST_MAX		512
 #define RGLIST_MAX		1024
