@@ -1,9 +1,16 @@
+13.02.2021
+==========
+hcxdumptool: added WATCHDOG - we need that to determine if USB device died
+             Raspberry Pi LED will flash twice if now packet received turing the last past 600 seconds
+             print AGE of last received packet in status
+
+
 09.02.2021
 ==========
 started to prepare to use openssl 3.0
 Many structures have been made opaque in OpenSSL 3.0 since OpenSSL 1.0.2
 https://wiki.openssl.org/index.php/OpenSSL_3.0
-it is recommended to upgrade to at least OpenSSL 1.1 
+it is recommended to upgrade to at least to OpenSSL 1.1 
 
 
 06.02.2021
