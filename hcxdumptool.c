@@ -721,6 +721,17 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
+static inline void printreceivewatchdogwarnung()
+{
+static char timestring[16];
+
+strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, channelscanlist[cpa], tv.tv_sec - tvlast_sec);
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+else printf("%s", servermsg);
+return;
+}
+/*===========================================================================*/
 static inline void printtimestatus()
 {
 static char timestring[16];
@@ -5740,6 +5751,7 @@ while(1)
 					GPIO_SET = 1 << gpiostatusled;
 					nanosleep(&sleepled, NULL);
 					GPIO_CLR = 1 << gpiostatusled;
+					printreceivewatchdogwarnung();
 					}
 				}
 			}
@@ -7303,9 +7315,9 @@ static const char notavailable[] = { "N/A" };
 static const char weakcandidatedefault[] = { "12345678" };
 
 gettimeofday(&tv, NULL);
-tvold.tv_sec = tvold.tv_sec;
-tvold.tv_usec = tvold.tv_usec;
-tvlast_sec = 0;
+tvold.tv_sec = tv.tv_sec;
+tvold.tv_usec = tv.tv_usec;
+tvlast_sec = tv.tv_sec;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 srand(time(NULL));
