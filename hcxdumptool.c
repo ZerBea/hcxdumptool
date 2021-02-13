@@ -38,8 +38,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <arpa/inet.h> 
 #include <netpacket/packet.h>
 #include <openssl/conf.h>
 #include <openssl/err.h>
