@@ -22,11 +22,6 @@
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <linux/filter.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <linux/if_ether.h>
-#include <linux/filter.h>
 
 #ifdef __ANDROID__
 #include <libgen.h>
