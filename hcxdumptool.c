@@ -5709,9 +5709,8 @@ if(beaconactiveflag == true)
 	send_beacon_hidden();
 	}
 if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
-while(1)
+while(wantstopflag == false)
 	{
-	if(wantstopflag == true) globalclose();
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -5797,6 +5796,7 @@ while(1)
 		if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 		}
 	}
+globalclose();
 return;
 }
 /*===========================================================================*/
@@ -6029,9 +6029,8 @@ cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 printrcascan();
-while(1)
+while(wantstopflag == false)
 	{
-	if(wantstopflag == true) globalclose();
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
@@ -6106,6 +6105,7 @@ while(1)
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
 	}
+globalclose();
 return;
 }
 /*===========================================================================*/
@@ -6144,9 +6144,8 @@ cpa = 0;
 if(set_channel() == false) errorcount++;
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
-while(1)
+while(wantstopflag == false)
 	{
-	if(wantstopflag == true) globalclose();
 	if(errorcount >= maxerrorcount)
 		{
 		fprintf(stderr, "\nmaximum number of errors is reached\n");
