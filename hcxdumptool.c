@@ -6570,7 +6570,7 @@ if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
@@ -6583,7 +6583,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
-	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
@@ -6596,7 +6596,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
-	strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
@@ -6614,7 +6614,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		return false;
 		}
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
@@ -6630,7 +6630,7 @@ else
 	{
 	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
@@ -6642,12 +6642,12 @@ else
 	}
 /* disable power management, if possible */
 memset(&iwr, 0, sizeof(iwr));
-strncpy( iwr.ifr_name, interfacename, IFNAMSIZ -1);
+strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 memset(&param,0 , sizeof(param));
 iwr.u.data.pointer = &param;
 ioctl(fd_socket, SIOCSIWPOWER, &iwr);
 memset(&ifr, 0, sizeof(ifr));
-strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ifr.ifr_flags = 0;
 if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	{
@@ -6902,7 +6902,7 @@ for(c = 0; c < 256; c++)
 			if(testchannel > 0)
 				{
 				memset(&pwrq, 0, sizeof(pwrq));
-				strncpy( pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+				strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 				pwrq.u.txpower.value = -1;
 				pwrq.u.txpower.fixed = 1;
 				pwrq.u.txpower.disabled = 0;
@@ -6937,7 +6937,7 @@ static struct ethtool_drvinfo drvinfo;
 
 if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
-	perror( "socket info failed" );
+	perror("socket info failed");
 	return false;
 	}
 memset(&iwr, 0, sizeof(iwr));
