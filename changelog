@@ -1,3 +1,11 @@
+14.02.2021
+==========
+sll_pkttype = PACKET_OUTGOING is completey ingnored in promiscuous mode
+At least I found a way to detect outgoing packets.
+Luckily IEEE80211_RADIOTAP_TX_FLAGS is set on outgoing packets. If we check this, we are able to ignore them.
+That save us CPU time.
+
+
 13.02.2021
 ==========
 hcxdumptool: added WATCHDOG - we need that to determine if USB device died
