@@ -5440,17 +5440,13 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-static uint32_t getradiotapfield(uint16_t rthlen, uint8_t *packetptr)
+static uint32_t getradiotapfield(uint16_t rthlen, uint32_t rthp)
 {
 static int i;
 static uint16_t pf;
 static uint16_t pfc;
-static rth_t *rth;
 static uint32_t *pp;
-static uint32_t rthp;
 
-rth = (rth_t*)packetptr;
-rthp = le32toh(rth->it_present);
 pf = RTH_SIZE;
 if((rthp & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
 	{
@@ -5480,6 +5476,7 @@ return pfc;
 static inline void process_packet()
 {
 static int rthl;
+static uint32_t rthp;
 static authf_t *auth;
 
 packetlen = recvfrom(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN, 0, NULL, NULL);
@@ -5504,7 +5501,6 @@ if(packetlen < (int)RTH_SIZE)
 	errorcount++;
 	return;
 	}
-incomingcount++;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
@@ -5525,6 +5521,8 @@ if(rth->it_present == 0)
 	errorcount++;
 	return;
 	}
+rthp = le32toh(rth->it_present);
+if((rthp & IEEE80211_RADIOTAP_TX_FLAGS) == IEEE80211_RADIOTAP_TX_FLAGS) return;
 rthl = le16toh(rth->it_len);
 if(rthl > packetlen)
 	{
@@ -5532,11 +5530,11 @@ if(rthl > packetlen)
 	errorcount++;
 	return;
 	}
-if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-ieee82011len -= getradiotapfield(rthl, packetptr);
+ieee82011len -= getradiotapfield(rthl, rthp);
 if(ieee82011len < MAC_SIZE_ACK) return;
+incomingcount++;
 tvlast_sec = tv.tv_sec;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -5929,6 +5927,7 @@ return;
 static inline void process_packet_rca()
 {
 static int rthl;
+static uint32_t rthp;
 
 packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
 if(packetlen == 0)
@@ -5958,7 +5957,6 @@ if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 	return;
 	}
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
-incomingcount++;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
 if(rth->it_version != 0)
@@ -5979,6 +5977,8 @@ if(rth->it_present == 0)
 	errorcount++;
 	return;
 	}
+rthp = le32toh(rth->it_present);
+if((rthp & IEEE80211_RADIOTAP_TX_FLAGS) == IEEE80211_RADIOTAP_TX_FLAGS) return;
 rthl = le16toh(rth->it_len);
 if(rthl > packetlen)
 	{
@@ -5986,11 +5986,11 @@ if(rthl > packetlen)
 	errorcount++;
 	return;
 	}
-if(rthl <= (int)HDRRT_SIZE) return; /* outgoing packet */
 ieee82011ptr = packetptr +rthl;
 ieee82011len = packetlen -rthl;
-ieee82011len -= getradiotapfield(rthl, packetptr);
+ieee82011len -= getradiotapfield(rthl, rthp);
 if(ieee82011len < MAC_SIZE_ACK) return;
+incomingcount++;
 tvlast_sec = tv.tv_sec;
 macfrx = (mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
