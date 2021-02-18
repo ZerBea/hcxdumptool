@@ -266,7 +266,7 @@ struct stat statinfo;
 char newpcapngoutname[PATH_MAX +2];
 
 c = 0;
-strcpy(newpcapngoutname, pcapngdumpname);
+strncpy(newpcapngoutname, pcapngdumpname, PATH_MAX);
 while(stat(newpcapngoutname, &statinfo) == 0)
 	{
 	snprintf(newpcapngoutname, PATH_MAX, "%s-%d", pcapngdumpname, c);
