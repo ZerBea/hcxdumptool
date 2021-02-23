@@ -1,3 +1,10 @@
+23.02.2021
+==========
+hcxdumptool: allow output to stdout
+-o <dump file> : output file in pcapng format, filename '-' outputs to stdout
+                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)
+
+
 14.02.2021
 ==========
 sll_pkttype = PACKET_OUTGOING is completey ingnored in promiscuous mode
