@@ -297,3 +297,27 @@ if(writecb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 return fd;
 }
 /*===========================================================================*/
+int hcxcreatepcapngdumpfd(int fd, uint8_t *macorig, char *interfacestr, uint8_t *macap, uint64_t rc, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
+{
+if(fd == -1)
+	{
+	return -1;
+	}
+
+if(writeshb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+	{
+	return -1;
+	}
+
+if(writeidb(fd, macorig, interfacestr) == false)
+	{
+	return -1;
+	}
+
+if(writecb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+	{
+	return -1;
+	}
+return fd;
+}
+/*===========================================================================*/

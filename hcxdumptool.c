@@ -7499,7 +7499,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                  do not report issues related to iw\n"
 	"                 It is mandatory that chipset and driver support monitor mode and full packet injection!\n"
 	"                 Running a virtual machine, it is mandatory that the hardware is looped through!\n"
-	"-o <dump file> : output file in pcapng format\n"
+	"-o <dump file> : output file in pcapng format, filename '-' outputs to stdout\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
 	"-f <frames>    : frames to save\n"
 	"                 bitmask:\n"
@@ -7953,6 +7953,19 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_PCAPNG_NAME:
+		if(strcmp(optarg, "-") == 0)
+			{
+			if(isatty(STDOUT_FILENO) == 1)
+				{
+				fprintf(stderr, "stdout is a terminal, won't output pcapng there\n");
+				exit (EXIT_FAILURE);
+				}
+			else
+				{
+				fd_pcapng = fileno(stdout);
+				stdout = fopen("/dev/null", "w");
+				}
+			}
 		pcapngoutname = optarg;
 		break;
 
@@ -8497,7 +8510,14 @@ testscanlist();
 
 if(pcapngoutname != NULL)
 	{
-	fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
+	if(strcmp(pcapngoutname, "-") == 0)
+		{
+		fd_pcapng = hcxcreatepcapngdumpfd(fd_pcapng, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
+		}
+	else
+		{
+		fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
+		}
 	if(fd_pcapng <= 0)
 		{
 		fprintf(stderr, "could not create dumpfile %s\n", pcapngoutname);
