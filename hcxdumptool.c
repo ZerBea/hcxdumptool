@@ -4379,6 +4379,11 @@ static inline void process80211action()
 {
 static actf_t *actf;
 
+if(memcmp(&mac_myclient, macfrx->addr1, 6) == 0)
+	{
+	send_ack();
+	return;
+	}
 if(payloadlen < ACTIONFRAME_SIZE) return;
 actf = (actf_t*)payloadptr;
 if(actf->categoriecode == CAT_VENDOR)
