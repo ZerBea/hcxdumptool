@@ -215,12 +215,12 @@ static enhanced_packet_block_t *epbhdrown;
 
 static uint8_t weakcandidatelen;
 
-static const uint8_t hdradiotap[] =
+static uint8_t hdradiotap[] =
 {
 0x00, 0x00, /* radiotap version and padding */
 0x0c, 0x00, /* radiotap header length */
 0x06, 0x80, 0x00, 0x00, /* bitmap */
-0x02, /* short preamble */
+0x00, /* long preamble */
 0x02, /* rate */
 0x18, 0x00 /* tx flags */
 };
@@ -7580,6 +7580,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default: %" PRIu32 " BEACONs\n"
 	"--disable_deauthentication         : do not send deauthentication or disassociation frames\n"
 	"                                     affected: conntected clients\n"
+	"--short_preamble                   : use short preamble\n"
+	"                                     default: use long preamble\n"
 	"--silent                           : do not transmit!\n"
 	"                                     hcxdumptool is acting like a passive dumper\n"
 	"                                     expect possible packet loss\n"
@@ -7809,6 +7811,7 @@ static const struct option long_options[] =
 	{"resume_ap_attacks",		required_argument,	NULL,	HCX_RESUME_AP_ATTACKS},
 	{"disable_client_attacks",	no_argument,		NULL,	HCX_DISABLE_CLIENT_ATTACKS},
 	{"stop_client_m2_attacks",	required_argument,	NULL,	HCX_STOP_CLIENT_M2_ATTACKS},
+	{"short_preamble",		no_argument,		NULL,	HCX_SHORT_PREAMBLE},
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
@@ -8076,6 +8079,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_SILENT:
 		attackstatus = SILENT;
+		break;
+
+		case HCX_SHORT_PREAMBLE:
+		hdradiotap[0x08] = 2;
 		break;
 
 		case HCX_FILTERLIST_AP:

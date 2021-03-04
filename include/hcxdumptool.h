@@ -42,6 +42,7 @@
 #define HCX_EAP_SERVER_CERT		42
 #define HCX_EAP_SERVER_KEY		43
 #define HCX_EAPOL_EAP_TIMEOUT		44
+#define HCX_SHORT_PREAMBLE		45
 #define HCX_INTERFACE_NAME		'i'
 #define HCX_PCAPNG_NAME			'o'
 #define HCX_PACPNG_FRAMES		'f'

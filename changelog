@@ -1,3 +1,11 @@
+04.03.2021
+==========
+hcxdumptool: added new option to use short preamble
+--short_preamble                   : use short preamble
+                                     default: use long preamble
+that may not work on older devices!
+
+
 23.02.2021
 ==========
 hcxdumptool: allow output to stdout
