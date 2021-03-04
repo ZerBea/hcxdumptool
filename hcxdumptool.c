@@ -279,6 +279,8 @@ static int channelscanlist[256] =
 
 static uint8_t myessid[] = { "home" };
 
+static const char weakcandidatedefault[] = { "12345678" };
+
 static char interfaceprotocol[IFNAMSIZ];
 
 static char rssi;
@@ -7309,7 +7311,6 @@ static int c;
 static int gpiobasemem = 0;
 static unsigned long opensslversion;
 static const char notavailable[] = { "N/A" };
-static const char weakcandidatedefault[] = { "12345678" };
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -7440,8 +7441,6 @@ memset(&nmeatempsentence, 0, NMEA_MAX);
 memset(&nmeasentence, 0, NMEA_MAX);
 memcpy(&nmeasentence, &notavailable, 3);
 weakcandidatelen = 8;
-memset(&weakcandidate, 0, 64);
-memcpy(&weakcandidate, weakcandidatedefault, 8);
 
 wantstopflag = false;
 reloadfilesflag = false;
@@ -7912,6 +7911,8 @@ eapoltimeoutvalue = EAPOLTIMEOUT;
 eapoleaptimeoutvalue = EAPOLEAPTIMEOUT;
 scanlistmax = SCANLIST_MAX;
 tlsctx = NULL;
+memset(&weakcandidate, 0, 64);
+memcpy(&weakcandidate, weakcandidatedefault, 8);
 
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
