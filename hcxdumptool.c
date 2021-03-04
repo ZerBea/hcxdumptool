@@ -218,12 +218,10 @@ static uint8_t weakcandidatelen;
 static const uint8_t hdradiotap[] =
 {
 0x00, 0x00, /* radiotap version and padding */
-0x0e, 0x00, /* radiotap header length */
-0x06, 0x8c, 0x00, 0x00, /* bitmap */
+0x0c, 0x00, /* radiotap header length */
+0x06, 0x80, 0x00, 0x00, /* bitmap */
 0x02, /* flags */
-0x0c, /* rate */
-0x14, /* tx power */
-0x01, /* antenna */
+0x02, /* rate */
 0x18, 0x00 /* tx flags */
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
