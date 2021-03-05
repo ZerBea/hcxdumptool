@@ -1,3 +1,8 @@
+05.03.2021
+==========
+hcxdumptool: removed preamble option, because it is ignored by most wlan adapters
+
+
 04.03.2021
 ==========
 hcxdumptool: added new option to use short preamble
