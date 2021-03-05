@@ -8082,7 +8082,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_SHORT_PREAMBLE:
-		hdradiotap[0x08] = 2;
+		hdradiotap[0x08] = IEEE80211_RADIOTAP_F_SHORTPRE;
 		break;
 
 		case HCX_FILTERLIST_AP:
