@@ -25,7 +25,6 @@
 
 #ifdef __ANDROID__
 #include <libgen.h>
-#define strdupa strdup
 #include "include/android-ifaddrs/ifaddrs.h"
 #include "include/android-ifaddrs/ifaddrs.c"
 #else
