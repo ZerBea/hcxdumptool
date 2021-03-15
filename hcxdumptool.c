@@ -7935,7 +7935,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_CHANNEL:
-		userscanliststring = strdupa(optarg);
+		userscanliststring = strndup(optarg, 4096);
 		break;
 
 		case HCX_SCANLIST:
@@ -8511,6 +8511,7 @@ if(checkdriverflag == true)
 if(injectionflag == true) auto_channel();
 else if((sl == 0) && (userscanliststring == NULL)) auto_channel();
 testscanlist();
+if(userscanliststring != NULL) free(userscanliststring);
 
 if(pcapngoutname != NULL)
 	{
