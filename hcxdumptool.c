@@ -7966,7 +7966,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			else
 				{
 				fd_pcapng = fileno(stdout);
-				stdout = fopen("/dev/null", "w");
+				freopen("/dev/null", "w", stdout);
 				}
 			}
 		pcapngoutname = optarg;
