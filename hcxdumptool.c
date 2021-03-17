@@ -76,6 +76,7 @@ static int fd_socket;
 static int fd_gps;
 static int fd_pcapng;
 static int fd_socket_mccli;
+static int fd_devnull;
 static char *mcip;
 static struct ip_mreq mcmreq;
 static int fd_socket_mcsrv;
@@ -7871,6 +7872,7 @@ maxerrorcount = ERROR_MAX;
 pcapngframesout = PCAPNG_FRAME_DEFAULT;
 fh_nmea = NULL;
 fd_pcapng = 0;
+fd_devnull = 0;
 rcaorder = 0;
 sl = 0;
 cpa = 0;
@@ -7965,8 +7967,9 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 				}
 			else
 				{
-				fd_pcapng = fileno(stdout);
-				stdout = fopen("/dev/null", "w");
+				fd_devnull = open("/dev/null", O_WRONLY);
+				fd_pcapng = dup(fileno(stdout));
+				dup2(fd_devnull, fileno(stdout));
 				}
 			}
 		pcapngoutname = optarg;
