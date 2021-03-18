@@ -190,6 +190,8 @@ static int scanlistmax;
 static int filteraplistentries;
 static int filterclientlistentries;
 static int filtermode;
+static uint8_t fimacapsize;
+static uint8_t fimacclientsize;
 static int myreactivebeaconsequence;
 static int eapreqentries;
 
@@ -595,7 +597,7 @@ fclose(fh_extbeacon);
 return;
 }
 /*===========================================================================*/
-static inline int readmaclist(char *listname, maclist_t *maclist)
+static inline int readmaclist(char *listname, maclist_t *maclist, uint8_t filtermacsize)
 {
 static int len;
 static int c, i, o;
@@ -615,7 +617,7 @@ zeiger = maclist;
 while(entries < FILTERLIST_MAX)
 	{
 	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1) break;
-	if(len < 12)
+	if(len < (2 *filtermacsize))
 		{
 		c++;
 		continue;
@@ -634,7 +636,7 @@ while(entries < FILTERLIST_MAX)
 			o++;
 			}
 		}
-	if(hex2bin(&linein[0x0], zeiger->mac, 6) == true)
+	if(hex2bin(&linein[0x0], zeiger->mac, filtermacsize) == true)
 		{
 		zeiger++;
 		entries++;
@@ -698,8 +700,8 @@ if((reloadfilesflag == true) && (fd_socket > 0) && (bpf.filter != NULL))
 	if(setsockopt(fd_socket, SOL_SOCKET, SO_DETACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to free BPF code");
 	if(bpf.filter != NULL) free(bpf.filter);
 	}
-if(filteraplistname != NULL) filteraplistentries = readmaclist(filteraplistname, filteraplist);
-if(filterclientlistname != NULL) filterclientlistentries = readmaclist(filterclientlistname, filterclientlist);
+if(filteraplistname != NULL) filteraplistentries = readmaclist(filteraplistname, filteraplist, fimacapsize);
+if(filterclientlistname != NULL) filterclientlistentries = readmaclist(filterclientlistname, filterclientlist, fimacclientsize);
 if(bpfcname != NULL) readbpfc(bpfcname);
 if(extaplistname != NULL) readextbeaconlist(extaplistname, reloadfilesflag);
 if(reloadfilesflag == true)
@@ -917,7 +919,7 @@ if(filtermode == FM_PROTECT)
 	{
 	for(zeigerfilter = filterclientlist; zeigerfilter < filterclientlist +filterclientlistentries; zeigerfilter++)
 		{
-		if(memcmp(zeiger->client, zeigerfilter->mac, 6) == 0)
+		if(memcmp(zeiger->client, zeigerfilter->mac, fimacclientsize) == 0)
 			{
 			zeiger->status |= FILTERED;
 			return true;
@@ -929,7 +931,7 @@ if(filtermode == FI_ATTACK)
 	{
 	for(zeigerfilter = filterclientlist; zeigerfilter < filterclientlist +filterclientlistentries; zeigerfilter++)
 		{
-		if(memcmp(zeiger->client, zeigerfilter->mac, 6) == 0) return false;
+		if(memcmp(zeiger->client, zeigerfilter->mac, fimacclientsize) == 0) return false;
 		}
 	zeiger->status |= FILTERED;
 	return true;
@@ -945,7 +947,7 @@ if(filtermode == FM_PROTECT)
 	{
 	for(zeigerfilter = filteraplist; zeigerfilter < filteraplist +filteraplistentries; zeigerfilter++)
 		{
-		if(memcmp(zeiger->ap, zeigerfilter->mac, 6) == 0)
+		if(memcmp(zeiger->ap, zeigerfilter->mac, fimacapsize) == 0)
 			{
 			zeiger->status |= FILTERED;
 			return true;
@@ -957,7 +959,7 @@ if(filtermode == FI_ATTACK)
 	{
 	for(zeigerfilter = filteraplist; zeigerfilter < filteraplist +filteraplistentries; zeigerfilter++)
 		{
-		if(memcmp(zeiger->ap, zeigerfilter->mac, 6) == 0) return false;
+		if(memcmp(zeiger->ap, zeigerfilter->mac, fimacapsize) == 0) return false;
 		}
 	zeiger->status |= FILTERED;
 	return true;
@@ -7619,8 +7621,16 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment\n"
 	"                                     maximum entries %d\n"
 	"                                     run first --do_rcascan to retrieve information about the target\n"
+	"--filterlist_ap_vendor=<file>      : ACCESS POINT MAC filter list by VENDOR\n"
+	"                                     format: 112233, 11:22:33, 11-22-33 # comment\n"
+	"                                     maximum entries %d\n"
+	"                                     run first --do_rcascan to retrieve information about the target\n"
 	"--filterlist_client=<file>         : CLIENT MAC filter list\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment\n"
+	"                                     maximum entries %d\n"
+	"                                     due to MAC randomization of the CLIENT, it does not always work!\n"
+	"--filterlist_client_VENDOR=<file>  : CLIENT MAC filter list\n"
+	"                                     format: 112233, 11:22:33, 11-22-33 # comment\n"
 	"                                     maximum entries %d\n"
 	"                                     due to MAC randomization of the CLIENT, it does not always work!\n"
 	"--weakcandidate=<password>         : use this pre shared key (8...63 characters) for weak candidate alert\n"
@@ -7724,7 +7734,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -7812,6 +7822,8 @@ static const struct option long_options[] =
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
+	{"filterlist_ap_vendor",	required_argument,	NULL,	HCX_FILTERLIST_AP_VENDOR},
+	{"filterlist_client_vendor",	required_argument,	NULL,	HCX_FILTERLIST_CLIENT_VENDOR},
 	{"filtermode",			required_argument,	NULL,	HCX_FILTERMODE},
 	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
 	{"weakcandidate	",		required_argument,	NULL,	HCX_WEAKCANDIDATE},
@@ -7858,6 +7870,8 @@ interfacename = NULL;
 pcapngoutname = NULL;
 filteraplistname = NULL;
 filterclientlistname = NULL;
+fimacapsize = FI_MAC;
+fimacclientsize = FI_MAC;
 bpfcname = NULL;
 extaplistname = NULL;
 eapservercertname = NULL;
@@ -8081,11 +8095,41 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_FILTERLIST_AP:
+		if(filteraplistname != 0)
+			{
+			fprintf(stderr, "filterlist_ap_vendor and filterlist_ap_vendor not allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		filteraplistname = optarg;
 		break;
 
+		case HCX_FILTERLIST_AP_VENDOR:
+		if(filteraplistname != 0)
+			{
+			fprintf(stderr, "filterlist_ap_vendor and filterlist_ap_vendor not allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		filteraplistname = optarg;
+		fimacapsize = FI_VENDOR;
+		break;
+
 		case HCX_FILTERLIST_CLIENT:
+		if(filterclientlistname != 0)
+			{
+			fprintf(stderr, "filterlist_client_vendor and filterlist_client_vendor not allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		filterclientlistname = optarg;
+		break;
+
+		case HCX_FILTERLIST_CLIENT_VENDOR:
+		if(filterclientlistname != 0)
+			{
+			fprintf(stderr, "filterlist_client_vendor and filterlist_client_vendor not allowed\n");
+			exit(EXIT_FAILURE);
+			}
+		filterclientlistname = optarg;
+		fimacclientsize = FI_VENDOR;
 		break;
 
 		case HCX_FILTERMODE:
