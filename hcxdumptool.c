@@ -7732,6 +7732,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Important notice:\n"
 	"Using filter options, could cause that some useful frames are filtered out!\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
+	"Use SIGHUB with care, because it will impact the pselect()\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
 	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
