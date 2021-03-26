@@ -2197,6 +2197,9 @@ static inline void send_beacon_active()
 {
 static mac_t *macftx;
 static capap_t *capap;
+
+if(rgbeaconptr >= rglist +RGLIST_MAX) rgbeaconptr = rglist;
+if(rgbeaconptr->timestamp == 0) rgbeaconptr = rglist;
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
@@ -2219,8 +2222,6 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE 
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 rgbeaconptr++;
-if(rgbeaconptr >= rglist +RGLIST_MAX) rgbeaconptr = rglist;
-if(rgbeaconptr->timestamp == 0) rgbeaconptr = rglist;
 return;
 }
 /*===========================================================================*/
@@ -2228,6 +2229,9 @@ static inline void send_beacon_list_active()
 {
 static mac_t *macftx;
 static capap_t *capap;
+
+if(rgbeaconlistptr >= rgbeaconlist +RGLIST_MAX) rgbeaconlistptr = rgbeaconlist;
+if(rgbeaconlistptr->timestamp == 0) rgbeaconlistptr = rgbeaconlist;
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
@@ -2250,8 +2254,6 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE 
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 rgbeaconlistptr++;
-if(rgbeaconlistptr >= rgbeaconlist +RGLIST_MAX) rgbeaconlistptr = rgbeaconlist;
-if(rgbeaconlistptr->timestamp == 0) rgbeaconlistptr = rgbeaconlist;
 return;
 }
 /*===========================================================================*/
@@ -2259,6 +2261,7 @@ static void send_beacon_hidden()
 {
 static mac_t *macftx;
 static capap_t *capap;
+
 packetoutptr = epbown +EPB_SIZE;
 memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
@@ -5705,7 +5708,7 @@ if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendt
 else printf("%s", servermsg);
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
-tsfd.tv_nsec = FDNSECTIMER;
+tsfd.tv_nsec = FDNSECTIMERB;
 cpa = 0;
 if(set_channel() == false) errorcount++;
 if(beaconactiveflag == true)
@@ -5796,7 +5799,6 @@ while(wantstopflag == false)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
 	else
 		{
-		get_channel();
 		if(beaconactiveflag == true) send_beacon_active();
 		if(rgbeaconlist->timestamp != 0) send_beacon_list_active();
 		}
@@ -7735,7 +7737,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Use SIGHUB with care, because it will impact the pselect()\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMER, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMERB, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
