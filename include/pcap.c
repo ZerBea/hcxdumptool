@@ -71,7 +71,7 @@ optionhdr->option_length = colen -OH_SIZE;
 return colen;
 }
 /*===========================================================================*/
-bool writecb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
+bool writecb(int fd, struct sockaddr *address, int socketflags, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
 {
 int cblen;
 int written;
@@ -104,7 +104,10 @@ totallength = (total_length_t*)(cb +cblen);
 cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
-written = write(fd, &cb, cblen);
+if(address == NULL)
+	written = write(fd, &cb, cblen);
+else
+	written = sendto(fd, &cb, cblen, socketflags, (struct sockaddr*)&address, sizeof(address));
 if(written != cblen)
 	{
 	close(fd);
@@ -175,7 +178,7 @@ if(written != ISB_SIZE)
 return true;
 }
 /*===========================================================================*/
-bool writeidb(int fd, uint8_t *macorig, char *interfacestr)
+bool writeidb(int fd, struct sockaddr *address, int socketflags, uint8_t *macorig, char *interfacestr)
 {
 int idblen;
 int written;
@@ -205,7 +208,10 @@ idblen += TOTAL_SIZE;
 idbhdr->total_length = idblen;
 totallength->total_length = idblen;
 
-written = write(fd, &idb, idblen);
+if(address == NULL)
+	written = write(fd, &idb, idblen);
+else
+	written = sendto(fd, &idb, idblen, socketflags, (struct sockaddr*)&address, sizeof(address));
 if(written != idblen)
 	{
 	close(fd);
@@ -214,7 +220,7 @@ if(written != idblen)
 return true;
 }
 /*===========================================================================*/
-bool writeshb(int fd, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
+bool writeshb(int fd, struct sockaddr *address, int socketflags, uint8_t *macap, uint64_t rcrandom, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
 {
 int shblen;
 int written;
@@ -249,7 +255,10 @@ shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
 totallength->total_length = shblen;
 
-written = write(fd, &shb, shblen);
+if(address == NULL)
+	written = write(fd, &shb, shblen);
+else
+	written = sendto(fd, &shb, shblen, socketflags, (struct sockaddr*)&address, sizeof(address));
 if(written != shblen)
 	{
 	close(fd);
@@ -280,17 +289,17 @@ if(fd == -1)
 	return -1;
 	}
 
-if(writeshb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+if(writeshb(fd, NULL, 0, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 	{
 	return -1;
 	}
 
-if(writeidb(fd, macorig, interfacestr) == false)
+if(writeidb(fd, NULL, 0, macorig, interfacestr) == false)
 	{
 	return -1;
 	}
 
-if(writecb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+if(writecb(fd, NULL, 0, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 	{
 	return -1;
 	}
@@ -304,17 +313,41 @@ if(fd == -1)
 	return -1;
 	}
 
-if(writeshb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+if(writeshb(fd, NULL, 0, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 	{
 	return -1;
 	}
 
-if(writeidb(fd, macorig, interfacestr) == false)
+if(writeidb(fd, NULL, 0, macorig, interfacestr) == false)
 	{
 	return -1;
 	}
 
-if(writecb(fd, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+if(writecb(fd, NULL, 0, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+	{
+	return -1;
+	}
+return fd;
+}
+/*===========================================================================*/
+int hcxcreatepcapngdumpfdsocket(int fd, struct sockaddr *address, uint8_t *macorig, char *interfacestr, uint8_t *macap, uint64_t rc, uint8_t *anonce, uint8_t *macsta, uint8_t *snonce, uint8_t wclen, char *wc)
+{
+if(fd == -1)
+	{
+	return -1;
+	}
+
+if(writeshb(fd, address, MSG_MORE, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
+	{
+	return -1;
+	}
+
+if(writeidb(fd, address, MSG_MORE, macorig, interfacestr) == false)
+	{
+	return -1;
+	}
+
+if(writecb(fd, address, 0, macap, rc, anonce, macsta, snonce, wclen, wc) == false)
 	{
 	return -1;
 	}

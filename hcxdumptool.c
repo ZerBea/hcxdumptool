@@ -81,6 +81,8 @@ static char *mcip;
 static struct ip_mreq mcmreq;
 static int fd_socket_mcsrv;
 static struct sockaddr_in mcsrvaddress;
+static struct sockaddr_in srvaddress;
+static int fd_socket_srv;
 
 static FILE *fh_nmea;
 static struct ifreq ifr_old;
@@ -374,6 +376,84 @@ fprintf(stdout, "\n");
 return;
 }
 /*===========================================================================*/
+static inline void serversendstatus(char *text, int len)
+{
+static int written;
+static uint8_t msgtype;
+static struct msghdr msg;
+static struct iovec iov[2];
+if(!(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))) return;
+msgtype = SERVERMSG_TYPE_STATUS;
+iov[0].iov_base = (void*)&msgtype;
+iov[0].iov_len = sizeof(msgtype);
+msg.msg_iov = iov;
+msg.msg_iovlen = 2;
+msg.msg_name = (struct sockaddr*)&mcsrvaddress;
+msg.msg_namelen = sizeof(mcsrvaddress);
+while(len > 0)
+	{
+	iov[1].iov_base = (void*)text;
+	if(len > (SERVERMSG_MAX -SERVERMSG_HEAD_SIZE))
+		iov[1].iov_len = (SERVERMSG_MAX -SERVERMSG_HEAD_SIZE);
+	else iov[1].iov_len = len;
+	written = sendmsg(fd_socket_mcsrv, &msg, 0);
+	if(written != (len +SERVERMSG_HEAD_SIZE)) errorcount++;
+	len -= iov[1].iov_len;
+	text = &text[iov[1].iov_len];
+	}
+return;
+}
+/*===========================================================================*/
+static inline void serversendpcapng(uint8_t *pcapng, int len)
+{
+static int written;
+static int i;
+static uint8_t msgtype;
+static struct msghdr msg;
+static struct iovec iov[2];
+if(!(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))) return;
+msgtype = SERVERMSG_TYPE_PCAPNG;
+iov[0].iov_base = (void*)&msgtype;
+iov[0].iov_len = sizeof(msgtype);
+msg.msg_iov = iov;
+msg.msg_iovlen = 2;
+msg.msg_name = (struct sockaddr*)&mcsrvaddress;
+msg.msg_namelen = sizeof(mcsrvaddress);
+i=0;
+while(len > 0)
+	{
+	i++;
+	iov[1].iov_base = (void*)pcapng;
+	if(len > (SERVERMSG_MAX -SERVERMSG_HEAD_SIZE))
+		iov[1].iov_len = (SERVERMSG_MAX -SERVERMSG_HEAD_SIZE);
+	else iov[1].iov_len = len;
+	written = sendmsg(fd_socket_mcsrv, &msg, 0);
+	if(written != (len +SERVERMSG_HEAD_SIZE)) errorcount++;
+	len -= iov[1].iov_len;
+	pcapng = &pcapng[iov[1].iov_len];
+  }
+return;
+}
+/*===========================================================================*/
+static inline void clientrequestpcapnghead(struct sockaddr *sockaddrFrom, int sockaddrFrom_len)
+{
+static int written;
+static uint8_t clientstatus[2];
+clientstatus[0] = SERVERMSG_TYPE_CONTROL;
+clientstatus[1] = SERVERMSG_CONTROL_SENDPCAPNGHEAD;
+written = sendto(fd_socket_mccli, clientstatus, 2, 0, (struct sockaddr*)sockaddrFrom, sockaddrFrom_len);
+if(written != (SERVERMSG_HEAD_SIZE +1))
+	{
+	perror("clientpcapngheadrequest failed");
+	errorcount++;
+	}
+}
+/*===========================================================================*/
+static inline bool ismulticastip(char *ip)
+{
+return ((ntohl(inet_addr(ip)) & 0xf0000000) == 0xe0000000);
+}
+/*===========================================================================*/
 /*===========================================================================*/
 __attribute__ ((noreturn))
 static void globalclose()
@@ -392,7 +472,7 @@ if(radiotaperrorcount > 1) printf("%d radiotap errors encountered\n", radiotaper
 if(gpserrorcount == 1) printf("%d GPS error encountered\n", gpserrorcount);
 if(gpserrorcount > 1) printf("%d GPS errors encountered\n", gpserrorcount);
 
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, "bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus("bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"));
 if(gpiostatusled > 0)
 	{
 	GPIO_CLR = 1 << gpiostatusled;
@@ -429,7 +509,7 @@ if(fd_gps > 0)
 	}
 if(fd_socket_mccli > 0)
 	{
-	if(strcmp(mcip, "127.0.0.1") != 0)
+	if(ismulticastip(mcip) == true)
 		{
 		memset(&mcmreq, 0, sizeof(mcmreq));
 		mcmreq.imr_multiaddr.s_addr = inet_addr(mcip);
@@ -442,7 +522,7 @@ if(fd_socket_mcsrv > 0)
 	{
 	if(close(fd_socket_mcsrv) != 0) perror("failed to close server socket");
 	}
-if(fd_pcapng > 0)
+if((fd_pcapng > 0) && (pcapngoutname != NULL) && (fd_pcapng != fd_socket_mcsrv))
 	{
 	if(close(fd_pcapng) != 0) perror("failed to close PCAPNG dump file");
 	}
@@ -722,7 +802,7 @@ static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 snprintf(servermsg, SERVERMSG_MAX, "%s %3d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, channelscanlist[cpa], tv.tv_sec - tvlast_sec);
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -734,7 +814,7 @@ static char timestring[16];
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 snprintf(servermsg, SERVERMSG_MAX, "%s %3d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
 		errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -745,7 +825,7 @@ static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[7]);
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -762,7 +842,7 @@ if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, channelscanlist[cpa],
 		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
-	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 	else printf("%s", servermsg);
 	return;
 	}
@@ -781,7 +861,7 @@ essidstring[p] = 0;
 snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, channelscanlist[cpa],
 	toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 	zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -833,8 +913,13 @@ totallength = (total_length_t*)(cb +cblen);
 cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
-written = write(fd, &cb, cblen);
-if(written != cblen) errorcount++;
+if(fd == fd_socket_mcsrv)
+	serversendpcapng(cb, cblen);
+else
+	{
+	written = write(fd, &cb, cblen);
+	if(written != cblen) errorcount++;
+	}
 return true;
 }
 /*===========================================================================*/
@@ -862,9 +947,14 @@ totallenght = (total_length_t*)(epbown +epblen);
 epblen += TOTAL_SIZE;
 epbhdrown->total_length = epblen;
 totallenght->total_length = epblen;
-written = write(fd, &epbown, epblen);
-if(written != epblen) errorcount++;
-return;	
+if(fd == fd_socket_mcsrv)
+	serversendpcapng(epbown, epblen);
+else
+	{
+	written = write(fd, &epbown, epblen);
+	if(written != epblen) errorcount++;
+	}
+return;
 }
 /*===========================================================================*/
 static inline void writeepb(int fd)
@@ -891,9 +981,14 @@ totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallenght->total_length = epblen;
-written = write(fd, &epb, epblen);
-if(written != epblen) errorcount++;
-return;	
+if(fd == fd_socket_mcsrv)
+	serversendpcapng(epb, epblen);
+else
+	{
+	written = write(fd, &epb, epblen);
+	if(written != epblen) errorcount++;
+	}
+return;
 }
 /*===========================================================================*/
 static inline void writeepbown_peap(int fd, uint8_t *innerpacket, size_t innerpacketlen)
@@ -2659,7 +2754,7 @@ else
 		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 		msg);
 	}
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -3837,7 +3932,7 @@ else
 		ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 		msg, timegap, rc, kdv);
 	}
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -4125,7 +4220,7 @@ else
 		pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
 		kdv);
 	}
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
 }
@@ -5204,7 +5299,7 @@ if(((statusout &STATUS_AP_BEACON_PROBE) == STATUS_AP_BEACON_PROBE) || ((statusou
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 	snprintf(servermsg, SERVERMSG_MAX, "%s %3d              %02x%02x%02x%02x%02x%02x [PWNAGOTCHI ID:%.*s]\n", timestring, channelscanlist[cpa],
 			macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
-	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 	else printf("%s", servermsg);
 	}
 if(fd_pcapng > 0)
@@ -5400,7 +5495,7 @@ if(aktchannel != pwrq.u.freq.m)
 	errorcount++;
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
-	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 	else printf("%s", servermsg);
 	}
 return;
@@ -5449,6 +5544,37 @@ gpscount++;
 return;
 }
 /*===========================================================================*/
+/*===========================================================================*/
+static void sendpcapngheader()
+{
+static const uint8_t servermsgtype = SERVERMSG_TYPE_PCAPNGHEAD;
+sendto(fd_socket_mcsrv, &servermsgtype, sizeof(servermsgtype), MSG_MORE, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+hcxcreatepcapngdumpfdsocket(fd_socket_mcsrv, (struct sockaddr*)&mcsrvaddress, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
+return;
+}
+/*===========================================================================*/
+static void process_packet_client()
+{
+static ssize_t serverrecvlen;
+static uint8_t serverrecvbuf[SERVERMSG_MAX];
+static struct sockaddr_in sockaddrFrom;
+static socklen_t sockaddrFrom_len = sizeof(sockaddrFrom);
+
+serverrecvlen = recvfrom(fd_socket_srv, &serverrecvbuf, SERVERMSG_MAX, 0, (struct sockaddr*)&sockaddrFrom, &sockaddrFrom_len);
+if((serverrecvlen >= 2) && (sockaddrFrom.sin_port == mcsrvaddress.sin_port))
+	{
+	if(serverrecvbuf[0] == SERVERMSG_TYPE_CONTROL)
+		{
+		switch(serverrecvbuf[1])
+			{
+			case SERVERMSG_CONTROL_SENDPCAPNGHEAD:
+				if((pcapngoutname != NULL) && (fd_pcapng == fd_socket_mcsrv))
+					sendpcapngheader();
+				break;
+			}
+		}
+	}
+}
 /*===========================================================================*/
 static uint32_t getradiotapfield(uint16_t rthlen, uint32_t rthp)
 {
@@ -5704,7 +5830,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	mysnonce[16], mysnonce[17], mysnonce[18], mysnonce[19], mysnonce[20], mysnonce[21], mysnonce[22], mysnonce[23],
 	mysnonce[24], mysnonce[25], mysnonce[26], mysnonce[27], mysnonce[28], mysnonce[29], mysnonce[30], mysnonce[31]);
 
-if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) sendto(fd_socket_mcsrv, servermsg, strlen(servermsg), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
@@ -5789,6 +5915,11 @@ while(wantstopflag == false)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
+	if(fd_socket_srv > 0)
+		{
+		FD_SET(fd_socket_srv, &readfds);
+		sd = fd_socket_srv;
+		}
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
@@ -5797,6 +5928,7 @@ while(wantstopflag == false)
 		}
 	if(FD_ISSET(fd_gps, &readfds)) process_gps();
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
+	else if(FD_ISSET(fd_socket_srv, &readfds)) process_packet_client();
 	else
 		{
 		if(beaconactiveflag == true) send_beacon_active();
@@ -6267,10 +6399,20 @@ static inline void process_server()
 {
 static fd_set readfds;
 static struct timespec tsfd;
+static struct stat statinfo;
 static int fdnum;
 static int msglen;
 static uint32_t statuscount;
-static char serverstatus[SERVERSTATUS_MAX];
+static char serverstatus[SERVERMSG_MAX];
+static bool havepcapngheader;
+static int c = 0;
+static char newpcapngoutname[PATH_MAX +2];
+static uint8_t pcapngheader[SERVERMSG_MAX];
+static uint8_t temppacket[SERVERMSG_MAX];
+static int temppacket_len = 0;
+static struct sockaddr_in sockaddrFrom;
+static socklen_t sockaddrFrom_len = sizeof(sockaddrFrom);
+static int written;
 
 printf("waiting for hcxdumptool server...\n");
 gettimeofday(&tv, NULL);
@@ -6280,6 +6422,11 @@ wantstopflag = false;
 statuscount = 1;
 tsfd.tv_sec = 1;
 tsfd.tv_nsec = 0;
+havepcapngheader = false;
+if(pcapngoutname != NULL)
+	{
+	clientrequestpcapnghead((struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress));
+	}
 while(1)
 	{
 	if(gpiobutton > 0)
@@ -6303,14 +6450,86 @@ while(1)
 		}
 	if(FD_ISSET(fd_socket_mccli, &readfds))
 		{
-		msglen = read(fd_socket_mccli, serverstatus, SERVERSTATUS_MAX);
-		if(msglen < 0)
+		msglen = recvfrom(fd_socket_mccli, serverstatus, SERVERMSG_MAX, 0, (struct sockaddr*)&sockaddrFrom, &sockaddrFrom_len);
+		if(msglen < 1)
 			{
 			perror("\nfailed to read data from server");
 			continue;
 			}
-		serverstatus[msglen] = 0;
-		printf("%s", serverstatus);
+		switch(serverstatus[0])
+			{
+			case SERVERMSG_TYPE_STATUS:
+				serverstatus[msglen] = 0;
+				printf("%s", &serverstatus[SERVERMSG_HEAD_SIZE]);
+				if((pcapngoutname != NULL) && (havepcapngheader == false) && (pcapngoutname != NULL))
+					{
+					clientrequestpcapnghead((struct sockaddr*)&sockaddrFrom, sockaddrFrom_len);
+					}
+				break;
+			case SERVERMSG_TYPE_PCAPNGHEAD:
+				if(pcapngoutname == NULL) break;
+				if((havepcapngheader == true) && (fd_pcapng > 0))
+					{
+					if(strcmp(pcapngoutname, "-") == 0) break;
+					if((memcmp(&pcapngheader, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE)) != 0))
+						close(fd_pcapng);
+					else break;
+					}
+				strncpy(newpcapngoutname, pcapngoutname, PATH_MAX);
+				while(stat(newpcapngoutname, &statinfo) == 0)
+					{
+					snprintf(newpcapngoutname, PATH_MAX, "%s-%d", pcapngoutname, c);
+					c++;
+					}
+				umask(0);
+				fd_pcapng = open(newpcapngoutname, O_WRONLY | O_CREAT, 0644);
+				if(fd_pcapng <= 0)
+					{
+					fprintf(stderr, "could not create dumpfile %s\n", newpcapngoutname);
+					errorcount++;
+					globalclose();
+					}
+				written = write(fd_pcapng, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE));
+				if(written != (msglen -SERVERMSG_HEAD_SIZE))
+					{
+					fprintf(stderr, "could not write to dumpfile %s\n", newpcapngoutname);
+					errorcount++;
+					globalclose();
+					}
+				havepcapngheader = true;
+				memcpy(&pcapngheader, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE));
+				if(temppacket_len > 0)
+					{
+					written = write(fd_pcapng, &temppacket, temppacket_len);
+					if(written != temppacket_len)
+						{
+						fprintf(stderr, "could not write temppacket to dumpfile %s\n", newpcapngoutname);
+						errorcount++;
+						globalclose();
+						}
+					temppacket_len = 0;
+					}
+				break;
+			case SERVERMSG_TYPE_PCAPNG:
+				if(pcapngoutname == NULL) break;
+				if((havepcapngheader == true) && (fd_pcapng > 0))
+					{
+					written = write(fd_pcapng, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE));
+					if(written != (msglen -SERVERMSG_HEAD_SIZE))
+						{
+						fprintf(stderr, "could not write to dumpfile %s\n", newpcapngoutname);
+						errorcount++;
+						globalclose();
+						}
+					}
+				else
+					{
+					clientrequestpcapnghead((struct sockaddr*)&sockaddrFrom, sockaddrFrom_len);
+					memcpy(&temppacket, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE));
+					temppacket_len = (msglen -SERVERMSG_HEAD_SIZE);
+					}
+				break;
+			}
 		}
 	else
 		{
@@ -6382,14 +6601,24 @@ if((fd_socket_mccli = socket(PF_INET, SOCK_DGRAM, 0)) < 0)
 	return false;
 	}
 
+memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
+mcsrvaddress.sin_family = AF_INET;
+mcsrvaddress.sin_addr.s_addr = inet_addr(mcip);
+mcsrvaddress.sin_port = htons(mccliport);
 memset (&mccliaddress, 0, sizeof(mccliaddress));
 mccliaddress.sin_family = AF_INET;
-mccliaddress.sin_addr.s_addr = htonl(INADDR_ANY);
+mccliaddress.sin_addr.s_addr = inet_addr(mcip);
 mccliaddress.sin_port = htons(mccliport);
 loop = 1;
 if(setsockopt(fd_socket_mccli, SOL_SOCKET, SO_REUSEADDR, &loop, sizeof (loop)) < 0)
 	{
 	perror("setsockopt() SO_REUSEADDR failed");
+	return false;
+}
+loop = 1;
+if(setsockopt(fd_socket_mccli, SOL_SOCKET, SO_REUSEPORT, &loop, sizeof (loop)) < 0)
+	{
+	perror("setsockopt() SO_REUSEPORT failed");
 	return false;
 	}
 if(bind(fd_socket_mccli, (struct sockaddr*)&mccliaddress, sizeof(mccliaddress)) < 0)
@@ -6398,13 +6627,13 @@ if(bind(fd_socket_mccli, (struct sockaddr*)&mccliaddress, sizeof(mccliaddress)) 
 	return false;
 	}
 loop = 1;
-if (setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+if(ismulticastip(mcip) == true)
 	{
-	perror ("setsockopt() IP_MULTICAST_LOOP failed");
-	return false;
-	}
-if(strcmp(mcip, "127.0.0.1") != 0)
-	{
+	if (setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+		{
+		perror ("setsockopt() IP_MULTICAST_LOOP failed");
+		return false;
+		}
 	memset(&mcmreq, 0, sizeof(mcmreq));
 	mcmreq.imr_multiaddr.s_addr = inet_addr(mcip);
 	mcmreq.imr_interface.s_addr = htonl(INADDR_ANY);
@@ -6419,6 +6648,7 @@ return true;
 /*===========================================================================*/
 static inline bool openmcsrvsocket(int mcsrvport)
 {
+static int loop;
 fd_socket_mcsrv = 0;
 if((fd_socket_mcsrv = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
@@ -6429,11 +6659,77 @@ memset (&mcsrvaddress, 0, sizeof(mcsrvaddress));
 mcsrvaddress.sin_family = AF_INET;
 mcsrvaddress.sin_addr.s_addr = inet_addr(mcip);
 mcsrvaddress.sin_port = htons(mcsrvport);
-if(sendto(fd_socket_mcsrv, "hello hcxdumptool client...\n", sizeof ("hello hcxdumptool client...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress)) < 0)
+loop = 1;
+if(setsockopt(fd_socket_mcsrv, SOL_SOCKET, SO_REUSEADDR, &loop, sizeof (loop)) < 0)
+	{
+	perror("setsockopt() SO_REUSEADDR failed");
+	return false;
+	}
+loop = 1;
+if(setsockopt(fd_socket_mcsrv, SOL_SOCKET, SO_REUSEPORT, &loop, sizeof (loop)) < 0)
+	{
+	perror("setsockopt() SO_REUSEPORT failed");
+	return false;
+	}
+if(ismulticastip(mcip) == true)
+	{
+	if((fd_socket_srv = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
+		{
+		perror("server socket failed");
+		return false;
+		}
+	memset(&srvaddress, 0, sizeof(srvaddress));
+	srvaddress.sin_family = AF_INET;
+	srvaddress.sin_addr.s_addr = inet_addr(mcip);
+	srvaddress.sin_port = htons(mcsrvport);
+	loop = 1;
+	if(setsockopt(fd_socket_srv, SOL_SOCKET, SO_REUSEADDR, &loop, sizeof (loop)) < 0)
+		{
+		perror("setsockopt() SO_REUSEADDR failed");
+		return false;
+	}
+	loop = 1;
+	if(setsockopt(fd_socket_srv, SOL_SOCKET, SO_REUSEPORT, &loop, sizeof (loop)) < 0)
+		{
+		perror("setsockopt() SO_REUSEPORT failed");
+		return false;
+		}
+	if(bind(fd_socket_srv, (struct sockaddr*)&srvaddress, sizeof(srvaddress)) < 0)
+		{
+		perror("server mc socket bind failed");
+		close(fd_socket_srv);
+		return false;
+		}
+	loop = 1;
+	if (setsockopt(fd_socket_srv, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+		{
+		perror ("setsockopt() IP_MULTICAST_LOOP failed");
+		return false;
+		}
+	memset(&mcmreq, 0, sizeof(mcmreq));
+	mcmreq.imr_multiaddr.s_addr = inet_addr(mcip);
+	mcmreq.imr_interface.s_addr = htonl(INADDR_ANY);
+	if(setsockopt(fd_socket_srv, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mcmreq, sizeof(mcmreq)) < 0)
+		{
+		perror ("setsockopt() IP_ADD_MEMBERSHIP failed");
+		return false;
+		}
+	}
+else
+	{
+	fd_socket_srv = fd_socket_mcsrv;
+	}
+
+if(sendto(fd_socket_mcsrv, "\x01hello hcxdumptool client...\n", sizeof ("\x01hello hcxdumptool client...\n"), 0, (struct sockaddr*)&mcsrvaddress, sizeof(mcsrvaddress)) < 0)
 	{
 	perror("server socket failed");
 	close(fd_socket_mcsrv);
 	return false;
+	}
+if((pcapngoutname != NULL) && (strcmp(pcapngoutname, "+") == 0))
+	{
+	fd_pcapng = fd_socket_mcsrv;
+	sendpcapngheader();
 	}
 return true;
 }
@@ -7327,6 +7623,7 @@ sleepled2.tv_sec = 0;
 sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
+fd_socket_srv = 0;
 rpirevision = 0;
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
@@ -7505,7 +7802,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                  do not report issues related to iw\n"
 	"                 It is mandatory that chipset and driver support monitor mode and full packet injection!\n"
 	"                 Running a virtual machine, it is mandatory that the hardware is looped through!\n"
-	"-o <dump file> : output file in pcapng format, filename '-' outputs to stdout\n"
+	"-o <dump file> : output file in pcapng format, filename '-' outputs to stdout, '+' outputs to client\n"
 	"                 including radiotap header (LINKTYPE_IEEE802_11_RADIOTAP)\n"
 	"-f <frames>    : frames to save\n"
 	"                 bitmask:\n"
@@ -7711,6 +8008,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     example: show everything but don\'t run as server or client (1+2+4+8+16 = 31)\n"
 	"                                              show only EAPOL and ASSOCIATION and REASSOCIATION (1+2 = 3)\n"
 	"--ip=<IP address>                  : define IP address for server / client (default: 224.0.0.255)\n"
+	"                                     multicast, localhost or client unicast IP address on both sides\n"
 	"--server_port=<digit>              : define port for server status output (1...65535)\n"
 	"                                   : default IP: %s\n"
 	"                                   : default port: %d\n"
@@ -8493,6 +8791,20 @@ if(weakcandidateuser != NULL)
 
 if((statusout &STATUS_CLIENT) == STATUS_CLIENT)
 	{
+	if(pcapngoutname != NULL)
+		{
+		if(strcmp(pcapngoutname, "-") == 0)
+			{
+			fd_pcapng = fileno(stdout);
+			stdout = fopen("/dev/null", "w");
+			}
+		else if(strcmp(pcapngoutname, "+") == 0)
+			{
+			fprintf(stderr, "client mode, can not send pcapng dump to clients\n");
+			fd_pcapng = 0;
+			pcapngoutname = NULL;
+			}
+		}
 	if(openmcclisocket(mccliport) == true) process_server();
 	process_server();
 	globalclose();
@@ -8568,7 +8880,7 @@ if(pcapngoutname != NULL)
 		{
 		fd_pcapng = hcxcreatepcapngdumpfd(fd_pcapng, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
 		}
-	else
+	else if(strcmp(pcapngoutname, "+") != 0)
 		{
 		fd_pcapng = hcxcreatepcapngdump(pcapngoutname, mac_orig, interfacename, mac_myap, myrc, myanonce, mac_myclient, mysnonce, weakcandidatelen, weakcandidate);
 		}
