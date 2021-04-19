@@ -142,6 +142,8 @@ Intel PRO/Wireless
 
 Broadcom
 
+Realtek RTL8811AU, RTL8812AU, RTL 8814AU
+
 
 Antennas
 --------------
