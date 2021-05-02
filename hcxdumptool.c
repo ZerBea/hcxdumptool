@@ -6536,19 +6536,22 @@ while(1)
 						close(fd_pcapng);
 					else break;
 					}
-				strncpy(newpcapngoutname, pcapngoutname, PATH_MAX);
-				while(stat(newpcapngoutname, &statinfo) == 0)
+				if(strcmp(pcapngoutname, "-") != 0)
 					{
-					snprintf(newpcapngoutname, PATH_MAX, "%s-%d", pcapngoutname, c);
-					c++;
-					}
-				umask(0);
-				fd_pcapng = open(newpcapngoutname, O_WRONLY | O_CREAT, 0644);
-				if(fd_pcapng <= 0)
-					{
-					fprintf(stderr, "could not create dumpfile %s\n", newpcapngoutname);
-					errorcount++;
-					globalclose();
+					strncpy(newpcapngoutname, pcapngoutname, PATH_MAX);
+					while(stat(newpcapngoutname, &statinfo) == 0)
+						{
+						snprintf(newpcapngoutname, PATH_MAX, "%s-%d", pcapngoutname, c);
+						c++;
+						}
+					umask(0);
+					fd_pcapng = open(newpcapngoutname, O_WRONLY | O_CREAT, 0644);
+					if(fd_pcapng <= 0)
+						{
+						fprintf(stderr, "could not create dumpfile %s\n", newpcapngoutname);
+						errorcount++;
+						globalclose();
+						}
 					}
 				written = write(fd_pcapng, &serverstatus[SERVERMSG_HEAD_SIZE], (msglen -SERVERMSG_HEAD_SIZE));
 				if(written != (msglen -SERVERMSG_HEAD_SIZE))
@@ -8893,12 +8896,7 @@ if((statusout &STATUS_CLIENT) == STATUS_CLIENT)
 	{
 	if(pcapngoutname != NULL)
 		{
-		if(strcmp(pcapngoutname, "-") == 0)
-			{
-			fd_pcapng = fileno(stdout);
-			stdout = fopen("/dev/null", "w");
-			}
-		else if(strcmp(pcapngoutname, "+") == 0)
+		if(strcmp(pcapngoutname, "+") == 0)
 			{
 			fprintf(stderr, "client mode, can not send pcapng dump to clients\n");
 			fd_pcapng = 0;
