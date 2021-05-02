@@ -63,6 +63,7 @@ static char *filteraplistname;
 static char *filterclientlistname;
 static char *bpfcname;
 static char *extaplistname;
+static char *extapwpaentlistname;
 static char *eapservercertname;
 static char *eapserverkeyname;
 
@@ -337,6 +338,9 @@ static char debugmsg[DEBUGMSG_MAX];
 static uint8_t reactivebeacondata[BEACONBODY_LEN_MAX];
 static size_t reactivebeacondatalen;
 static int reactivebeacondatachanoffset;
+static uint8_t reactivebeaconwpaentdata[BEACONBODY_LEN_MAX];
+static size_t reactivebeaconwpaentdatalen;
+static int reactivebeaconwpaentdatachanoffset;
 static uint8_t bcbeacondatahidden[BEACONBODY_LEN_MAX];
 static size_t bcbeacondatahiddenlen;
 static int bcbeacondatahiddenchanoffset;
@@ -580,7 +584,7 @@ return;
 /*===========================================================================*/
 static inline void reloadfiles(int signum)
 {
-if((signum == SIGHUP) && (filteraplistname || filterclientlistname || bpfcname || extaplistname)) reloadfilesflag = true;
+if((signum == SIGHUP) && (filteraplistname || filterclientlistname || bpfcname || extaplistname || extapwpaentlistname)) reloadfilesflag = true;
 return;
 }
 /*===========================================================================*/
@@ -617,7 +621,7 @@ len = chop(buffptr, len);
 return len;
 }
 /*===========================================================================*/
-static inline void readextbeaconlist(char *listname, bool reload)
+static inline void readextbeaconlist(char *listname, uint16_t akm, bool reload)
 {
 static int len;
 static FILE *fh_extbeacon;
@@ -638,8 +642,13 @@ else
 	memset(rgbeaconlist, 0, RGLIST_MAX *MACESSIDLIST_SIZE);
 	}
 zeiger = list;
-
-beaconextlistlen = 0;
+if(reload == false)
+	{
+	for(; zeiger < list +RGLIST_MAX; zeiger++)
+		{
+		if(zeiger->timestamp == 0) break;
+		}
+	}
 gettimeofday(&tv, NULL);
 timestamp = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec -512;
 while(beaconextlistlen < BEACONEXTLIST_MAX)
@@ -669,6 +678,7 @@ while(beaconextlistlen < BEACONEXTLIST_MAX)
 	mynic_ap++;
 	zeiger->essidlen = len;
 	memcpy(zeiger->essid, linein, len);
+	zeiger->akm = akm;
 	timestamp++;
 	zeiger++;
 	beaconextlistlen++;
@@ -783,7 +793,8 @@ if((reloadfilesflag == true) && (fd_socket > 0) && (bpf.filter != NULL))
 if(filteraplistname != NULL) filteraplistentries = readmaclist(filteraplistname, filteraplist, fimacapsize);
 if(filterclientlistname != NULL) filterclientlistentries = readmaclist(filterclientlistname, filterclientlist, fimacclientsize);
 if(bpfcname != NULL) readbpfc(bpfcname);
-if(extaplistname != NULL) readextbeaconlist(extaplistname, reloadfilesflag);
+if(extaplistname != NULL) readextbeaconlist(extaplistname, TAK_PSK, reloadfilesflag);
+if(extapwpaentlistname != NULL) readextbeaconlist(extapwpaentlistname, TAK_PMKSA, reloadfilesflag);
 if(reloadfilesflag == true)
 	{
 	if(bpf.len > 0)
@@ -2132,7 +2143,7 @@ static inline void send_probe_resp(uint8_t *client, macessidlist_t *zeigerap)
 {
 static mac_t *macftx;
 static capap_t *capap;
-size_t rsnwpa_size;
+static size_t rsnwpa_size;
 const uint8_t proberesponse_head_data[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18, [Mbit/sec] */
@@ -2188,6 +2199,26 @@ const uint8_t proberesponse_ie_wpaentpsk[] =
 };
 #define PROBERESPONSE_IE_WPAENTPSK_SIZE sizeof(proberesponse_ie_wpaentpsk)
 
+const uint8_t proberesponse_ie_wpaent[] =
+{
+/* Tag: RSN Information WPA1 & WPA2 ENT */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x01,
+0x00, 0x00,
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x01
+};
+#define PROBERESPONSE_IE_WPAENT_SIZE sizeof(proberesponse_ie_wpaent)
+
 const uint8_t proberesponse_ie_extcap[] =
 {
 /* Tag: Extended Capabilities (8 octets) */
@@ -2214,16 +2245,22 @@ packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = zeigerap->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], zeigerap->essid, zeigerap->essidlen);
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen], &proberesponse_head_data, PROBERESPONSE_HEAD_SIZE);
-if(wpaentflag == true)
+if(((zeigerap->akm & TAK_PMKSA) == TAK_PMKSA) || ((zeigerap->akm & TAK_PMKSA256) == TAK_PMKSA256))
 	{
-	rsnwpa_size = PROBERESPONSE_IE_WPAENTPSK_SIZE;
-	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpaentpsk, PROBERESPONSE_IE_WPAENTPSK_SIZE);
+	rsnwpa_size = PROBERESPONSE_IE_WPAENT_SIZE;
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpaent, PROBERESPONSE_IE_WPAENT_SIZE);
 	}
 else
-	{
-	rsnwpa_size = PROBERESPONSE_IE_WPAPSK_SIZE;
-	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpapsk, PROBERESPONSE_IE_WPAPSK_SIZE);
-	}
+	if(wpaentflag == true)
+		{
+		rsnwpa_size = PROBERESPONSE_IE_WPAENTPSK_SIZE;
+		memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpaentpsk, PROBERESPONSE_IE_WPAENTPSK_SIZE);
+		}
+	else
+		{
+		rsnwpa_size = PROBERESPONSE_IE_WPAPSK_SIZE;
+		memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpapsk, PROBERESPONSE_IE_WPAPSK_SIZE);
+		}
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size], &proberesponse_ie_extcap, PROBERESPONSE_IE_EXTCAP_SIZE);
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +0x0c] = channelscanlist[cpa];
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size +PROBERESPONSE_IE_EXTCAP_SIZE, "failed to transmit proberesponse");
@@ -2296,7 +2333,10 @@ static capap_t *capap;
 if(rgbeaconptr >= rglist +RGLIST_MAX) rgbeaconptr = rglist;
 if(rgbeaconptr->timestamp == 0) rgbeaconptr = rglist;
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
+if(((rgbeaconptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
+	memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeaconwpaentdatalen +1);
+else
+	memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2313,9 +2353,18 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconptr->essid, rgbeaconptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
+if(((rgbeaconptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
+	{
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeaconwpaentdata, reactivebeaconwpaentdatalen);
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeaconwpaentdatachanoffset] = channelscanlist[cpa];
+	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeaconwpaentdatalen, "failed to transmit internal beacon");
+	}
+else
+	{
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
+	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
+	}
 rgbeaconptr++;
 return;
 }
@@ -2328,7 +2377,10 @@ static capap_t *capap;
 if(rgbeaconlistptr >= rgbeaconlist +RGLIST_MAX) rgbeaconlistptr = rgbeaconlist;
 if(rgbeaconlistptr->timestamp == 0) rgbeaconlistptr = rgbeaconlist;
 packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
+if(((rgbeaconlistptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconlistptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
+	memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeaconwpaentdatalen +1);
+else
+	memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +reactivebeacondatalen +1);
 memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
 macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2345,9 +2397,18 @@ capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +1] = rgbeaconlistptr->essidlen;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE], rgbeaconlistptr->essid, rgbeaconlistptr->essidlen);
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
+if(((rgbeaconlistptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconlistptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
+	{
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeaconwpaentdata, reactivebeaconwpaentdatalen);
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeaconwpaentdatachanoffset] = channelscanlist[cpa];
+	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeaconwpaentdatalen, "failed to transmit internal beacon");
+	}
+else
+	{
+	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
+	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
+	}
 rgbeaconlistptr++;
 return;
 }
@@ -7449,49 +7510,77 @@ static const uint8_t beacon_ie_wpaentpsk_wpa[] =
 };
 #define BEACON_IE_WPAENTPSK_WPA_SIZE sizeof(beacon_ie_wpaentpsk_wpa)
 
-uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX +BEACON_IE_WPAENTPSK_RSN_SIZE +BEACON_IE_WPAENTPSK_WPA_SIZE];
-size_t beaconparamsoctetslen = 0;
-ietag_t *ieset[IESETLEN_MAX];
-size_t iesetlen;
+static const uint8_t beacon_ie_wpaent_rsn[] =
+{
+/* Tag: RSN Information WPA1 & WPA2 ENT */
+0x30, 0x14, 0x01, 0x00,
+0x00, 0x0f, 0xac, 0x02,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x04,
+0x01, 0x00,
+0x00, 0x0f, 0xac, 0x01,
+0x00, 0x0c
+};
+#define BEACON_IE_WPAENT_RSN_SIZE sizeof(beacon_ie_wpaent_rsn)
 
-if(beaconparams == NULL && wpaentflag == false)
+static const uint8_t beacon_ie_wpaent_wpa[] =
+{
+/* Tag: Vendor Specific: Microsoft Corp.: WPA Information Element */
+0xdd, 0x16, 0x00, 0x50, 0xf2, 0x01, 0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x02,
+0x01, 0x00,
+0x00, 0x50, 0xf2, 0x01
+};
+#define BEACON_IE_WPAENT_WPA_SIZE sizeof(beacon_ie_wpaent_wpa)
+
+static uint8_t beaconparamsoctets[BEACONBODY_LEN_MAX +BEACON_IE_WPAENTPSK_RSN_SIZE +BEACON_IE_WPAENTPSK_WPA_SIZE];
+static uint8_t beaconparamsoctetswpaent[BEACONBODY_LEN_MAX +BEACON_IE_WPAENT_RSN_SIZE +BEACON_IE_WPAENT_WPA_SIZE];
+static size_t beaconparamsoctetslen = 0;
+static size_t beaconparamsoctetswpaentlen = 0;
+static ietag_t *ieset[IESETLEN_MAX];
+static size_t iesetlen;
+
+if(wpaentflag == true)
 	{
-	reactivebeacondatalen = REACTIVEBEACON_TEMPL_SIZE;
-	memcpy(&reactivebeacondata, &reactivebeacondata_templ, reactivebeacondatalen);
-	reactivebeacondatachanoffset = REACTIVEBEACON_TEMPL_CHANOFFSET;
-	bcbeacondatahiddenlen = BCBEACON_HIDDEN_TEMPL_SIZE;
-	memcpy(&bcbeacondatahidden, &bcbeacondata_hidden_templ, bcbeacondatahiddenlen);
-	bcbeacondatahiddenchanoffset = BCBEACON_HIDDEN_TEMPL_CHANOFFSET;
-	bcbeacondataopenlen = BCBEACON_OPEN_TEMPL_SIZE;
-	memcpy(&bcbeacondataopen, &bcbeacondata_open_templ, bcbeacondataopenlen);
-	bcbeacondataopenchanoffset = BCBEACON_OPEN_TEMPL_CHANOFFSET;
+	memcpy(&beaconparamsoctets, &beacon_ie_wpaentpsk_rsn, BEACON_IE_WPAENTPSK_RSN_SIZE);
+	beaconparamsoctetslen += BEACON_IE_WPAENTPSK_RSN_SIZE;
+	memcpy(&beaconparamsoctets[BEACON_IE_WPAENTPSK_RSN_SIZE], &beacon_ie_wpaentpsk_wpa, BEACON_IE_WPAENTPSK_WPA_SIZE);
+	beaconparamsoctetslen += BEACON_IE_WPAENTPSK_WPA_SIZE;
 	}
-else
+memcpy(&beaconparamsoctetswpaent, &beacon_ie_wpaent_rsn, BEACON_IE_WPAENT_RSN_SIZE);
+beaconparamsoctetswpaentlen += BEACON_IE_WPAENT_RSN_SIZE;
+memcpy(&beaconparamsoctetswpaent[BEACON_IE_WPAENT_RSN_SIZE], &beacon_ie_wpaent_wpa, BEACON_IE_WPAENT_WPA_SIZE);
+beaconparamsoctetswpaentlen += BEACON_IE_WPAENT_WPA_SIZE;
+if(beaconparams != NULL)
 	{
-	if(wpaentflag == true)
+	if((hex2bin(beaconparams, &beaconparamsoctets[beaconparamsoctetslen], (strlen(beaconparams) /2)) == false) ||
+		(hex2bin(beaconparams, &beaconparamsoctetswpaent[beaconparamsoctetswpaentlen], (strlen(beaconparams) /2)) == false))
 		{
-		memcpy(&beaconparamsoctets, &beacon_ie_wpaentpsk_rsn, BEACON_IE_WPAENTPSK_RSN_SIZE);
-		beaconparamsoctetslen += BEACON_IE_WPAENTPSK_RSN_SIZE;
-		memcpy(&beaconparamsoctets[BEACON_IE_WPAENTPSK_RSN_SIZE], &beacon_ie_wpaentpsk_wpa, BEACON_IE_WPAENTPSK_WPA_SIZE);
-		beaconparamsoctetslen += BEACON_IE_WPAENTPSK_WPA_SIZE;
+		fprintf(stderr, "beacon parameters error can't read hex string\n");
+		exit(EXIT_FAILURE);
 		}
-	if(beaconparams != NULL)
-		{
-		if(hex2bin(beaconparams, &beaconparamsoctets[beaconparamsoctetslen], (strlen(beaconparams) /2)) == false)
-			{
-			fprintf(stderr, "beacon parameters error can't read hex string\n");
-			exit(EXIT_FAILURE);
-			}
-		beaconparamsoctetslen += (strlen(beaconparams) /2);
-		}
-	iesetlen = bin2ieset(ieset, beaconparamsoctets, beaconparamsoctetslen);
-	reactivebeacondatalen = merge_ieset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -34, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, ieset, iesetlen);
-	reactivebeacondatachanoffset = gettlvoffset_value(3, reactivebeacondata, reactivebeacondatalen);
-	bcbeacondatahiddenlen = merge_ieset2bin(bcbeacondatahidden, BEACONBODY_LEN_MAX -2, bcbeacondata_hidden_templ, BCBEACON_HIDDEN_TEMPL_SIZE, ieset, iesetlen);
-	bcbeacondatahiddenchanoffset = gettlvoffset_value(3, bcbeacondatahidden,bcbeacondatahiddenlen);
-	bcbeacondataopenlen = merge_ieset2bin(bcbeacondataopen, BEACONBODY_LEN_MAX -9, bcbeacondata_open_templ, BCBEACON_OPEN_TEMPL_SIZE, ieset, iesetlen);
-	bcbeacondataopenchanoffset = gettlvoffset_value(3, bcbeacondataopen, bcbeacondataopenlen);
+	beaconparamsoctetslen += (strlen(beaconparams) /2);
+	beaconparamsoctetswpaentlen += (strlen(beaconparams) /2);
 	}
+
+iesetlen = bin2ieset(ieset, beaconparamsoctets, beaconparamsoctetslen);
+reactivebeacondatalen = merge_ieset2bin(reactivebeacondata, BEACONBODY_LEN_MAX -IETAG_SIZE -ESSID_LEN_MAX, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, ieset, iesetlen);
+reactivebeacondatachanoffset = gettlvoffset_value(TAG_CHAN, reactivebeacondata, reactivebeacondatalen);
+
+iesetlen = bin2ieset(ieset, beaconparamsoctetswpaent, beaconparamsoctetswpaentlen);
+reactivebeaconwpaentdatalen = merge_ieset2bin(reactivebeaconwpaentdata, BEACONBODY_LEN_MAX -IETAG_SIZE -ESSID_LEN_MAX, reactivebeacondata_templ, REACTIVEBEACON_TEMPL_SIZE, ieset, iesetlen);
+reactivebeaconwpaentdatachanoffset = gettlvoffset_value(TAG_CHAN, reactivebeaconwpaentdata, reactivebeaconwpaentdatalen);
+
+bcbeacondatahiddenlen = BCBEACON_HIDDEN_TEMPL_SIZE;
+memcpy(&bcbeacondatahidden, &bcbeacondata_hidden_templ, bcbeacondatahiddenlen);
+bcbeacondatahiddenchanoffset = BCBEACON_HIDDEN_TEMPL_CHANOFFSET;
+
+bcbeacondataopenlen = BCBEACON_OPEN_TEMPL_SIZE;
+memcpy(&bcbeacondataopen, &bcbeacondata_open_templ, bcbeacondataopenlen);
+bcbeacondataopenchanoffset = BCBEACON_OPEN_TEMPL_CHANOFFSET;
+
 return;
 }
 /*===========================================================================*/
@@ -7706,6 +7795,7 @@ mac_myap[3] = (mynic_ap >> 16) & 0xff;
 mac_myap[2] = myoui_ap & 0xff;
 mac_myap[1] = (myoui_ap >> 8) & 0xff;
 mac_myap[0] = (myoui_ap >> 16) & 0xff;
+mynic_ap++;
 rglist->timestamp = timestampstart;
 memcpy(rglist->ap, &mac_myap, 6);
 rglist->essidlen = 4;
@@ -7937,7 +8027,9 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     will be saved to pcapng to inform hcxpcaptool\n"
 	"                                     default: %s\n"
 	"--essidlist=<file>                 : transmit beacons from this ESSID list\n"
-	"                                     maximum entries: %d ESSIDs\n"
+	"                                     maximum total entries: %d ESSIDs\n"
+	"--essidlist_wpaent=<file>          : transmit WPA-Enterprise-only beacons from this ESSID list\n"
+	"                                     maximum total entries: %d ESSIDs\n"
 	"--active_beacon                    : transmit beacon from collected ESSIDs and from essidlist once every %d nsec\n"
 	"                                     affected: ap-less\n"
 	"--flood_beacon                     : transmit beacon on every received beacon\n"
@@ -7947,7 +8039,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     warning: that can prevent that a CLIENT can establish a connection to an assigned ACCESS POINT\n"
 	"--infinity                         : prevent that a CLIENT can establish a connection to an assigned ACCESS POINT\n"
 	"                                     affected: ACCESS POINTs and CLIENTs\n"
-	"--beaconparams=<TLVs>              : update or add Information Elements in all transmitted beacons\n"
+	"--beaconparams=<TLVs>              : update or add Information Elements in all reactive and essidlist beacons\n"
 	"                                     maximum %d IEs as TLV hex string, tag id 0 (ESSID) will be ignored, tag id 3 (channel) overwritten\n"
 	"                                     multiple IEs with same tag id are added, default IE is overwritten by the first\n"
 	"--wpaent                           : enable announcement of WPA-Enterprise in beacons and probe responses in addition to WPA-PSK\n"
@@ -8036,7 +8128,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Use SIGHUB with care, because it will impact the pselect()\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
-	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, BEACONEXTLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, FILTERLIST_MAX, FDNSECTIMERB, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
+	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, BEACONEXTLIST_MAX, BEACONEXTLIST_MAX, FDNSECTIMERB, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -8141,6 +8233,7 @@ static const struct option long_options[] =
 	{"eap_server_cert",		required_argument,	NULL,	HCX_EAP_SERVER_CERT},
 	{"eap_server_key",		required_argument,	NULL,	HCX_EAP_SERVER_KEY},
 	{"essidlist",			required_argument,	NULL,	HCX_EXTAP_BEACON},
+	{"essidlist_wpaent",		required_argument,	NULL,	HCX_EXTAP_WPAENTBEACON},
 	{"use_gps_device",		required_argument,	NULL,	HCX_GPS_DEVICE},
 	{"use_gpsd",			no_argument,		NULL,	HCX_GPSD},
 	{"nmea",			required_argument,	NULL,	HCX_NMEA_NAME},
@@ -8176,6 +8269,8 @@ fimacapsize = FI_MAC;
 fimacclientsize = FI_MAC;
 bpfcname = NULL;
 extaplistname = NULL;
+extapwpaentlistname = NULL;
+beaconextlistlen = 0;
 eapservercertname = NULL;
 eapserverkeyname = NULL;
 userscanliststring = NULL;
@@ -8489,6 +8584,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_EXTAP_BEACON:
 		extaplistname = optarg;
+		break;
+
+		case HCX_EXTAP_WPAENTBEACON:
+		extapwpaentlistname = optarg;
 		break;
 
 		case HCX_BEACONPARAMS:
