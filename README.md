@@ -93,6 +93,8 @@ Requirements
 
 * GPIO hardware mod recommended (push button and LED).
 
+If you decide to compile latest git head, make sure that your distribution is updated on latest version.
+
 
 Adapters
 --------------
