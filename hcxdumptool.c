@@ -2501,8 +2501,21 @@ static uint8_t eapdata[] =
 #define EAP_DATA_SIZE sizeof(eapdata)
 
 packetoutptr = epbown +EPB_SIZE;
-eapauth = (eapauth_t*)&eapdata[LLC_SIZE];
-exteap = (exteap_t*)&eapdata[LLC_SIZE +EAPAUTH_SIZE];
+memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +data_len +1);
+memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
+macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_QOS_DATA;
+memcpy(macftx->addr1, macfrx->addr2, 6);
+memcpy(macftx->addr2, macfrx->addr1, 6);
+memcpy(macftx->addr3, macfrx->addr1, 6);
+macftx->from_ds = 1;
+macftx->duration = 0x002c;
+macftx->sequence = myapsequence++ << 4;
+if(myapsequence >= 4096) myapsequence = 1;
+memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS], &eapdata, EAP_DATA_SIZE);
+eapauth = (eapauth_t*)&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE];
+exteap = (exteap_t*)&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE];
 eapauth->type = eapoltype;
 eapdata_len = 0;
 if(eapoltype == EAPOL_START || eapoltype == EAPOL_LOGOFF)
@@ -2543,19 +2556,6 @@ else
 	exteap->id = id;
 	exteap->type = eaptype;
 	}
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_QOS +LLC_SIZE +EAPAUTH_SIZE +data_len +1);
-memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_DATA;
-macftx->subtype = IEEE80211_STYPE_QOS_DATA;
-memcpy(macftx->addr1, macfrx->addr2, 6);
-memcpy(macftx->addr2, macfrx->addr1, 6);
-memcpy(macftx->addr3, macfrx->addr1, 6);
-macftx->from_ds = 1;
-macftx->duration = 0x002c;
-macftx->sequence = myapsequence++ << 4;
-if(myapsequence >= 4096) myapsequence = 1;
-memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS], &eapdata, eapdata_len);
 if(data_len > 0) memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len], data, data_len);
 packetlenown = HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len;
 send_packet(fd_socket,  HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len, "failed to transmit EAP packet");
