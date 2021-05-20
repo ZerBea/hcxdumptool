@@ -38,6 +38,8 @@ hcxhashtool: filter hashes
 
 hcxpsktool: get weak PSK candidates
  
+hashcat or JtR: get PSK from hash
+
 
 Get source
 --------------
