@@ -25,6 +25,20 @@ Detailed description
 | hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
+Work flow
+--------------
+
+hcxdumptool -> hcxpcapngtool -> hcxpsktool/hcxhashtool -> hashcat or JtR
+
+hcxdumptool: attack and capture everything
+
+hcxpcapngtool: convert everything
+
+hcxhashtool: filter hashes
+
+hcxpsktool: get weak PSK candidates
+ 
+
 Get source
 --------------
 ```
