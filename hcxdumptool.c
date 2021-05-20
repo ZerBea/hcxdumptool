@@ -8125,10 +8125,13 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"as well as wpa-sec.stanev.org.\n"
 	"If hcxdumptool captured your password from WiFi traffic, you should check all your devices immediately!\n"
 	"If you use GPS, make sure GPS device is inserted and has a GPS FIX, before you start hcxdumptool!\n"
+	"Recommended tools to show additional 802.11 fields or to decrypt WiFi traffic: Wireshark and/or tshark\n"
+	"Recommended tool to convert hashes to formats that hashcat and JtR understand: hcxpcapngtool\n"
+	"Recommended tool to get possible PSKs from pcapng file: hcxpcapngtool\n"
 	"Important notice:\n"
 	"Using filter options, could cause that some useful frames are filtered out!\n"
 	"In that case hcxpcapngtool will show a warning that this frames are missing!\n"
-	"Use SIGHUB with care, because it will impact the pselect()\n"
+	"Use SIGHUB with care, because it will impact pselect()\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
 	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, BEACONEXTLIST_MAX, BEACONEXTLIST_MAX, FDNSECTIMERB, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
