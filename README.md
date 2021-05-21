@@ -2,8 +2,9 @@ hcxdumptool
 ==============
 
 Small tool to capture packets from wlan devices.
-After capturing, upload the "uncleaned" pcapng here (https://wpa-sec.stanev.org/?submit)
+After capturing, upload the "uncleaned" pcapng file here https://wpa-sec.stanev.org/?submit
 to see if your ACCESS POINT or the CLIENT is vulnerable by using common wordlists.
+To reduce dump file size, gzip (.gz) compression is supported.
 Convert the pcapng file to WPA-PBKDF2-PMKID+EAPOL hashline (22000) with hcxpcapngtool (hcxtools)
 and check if PreSharedKey or PlainMasterKey was transmitted unencrypted.
 
