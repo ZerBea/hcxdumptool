@@ -5645,6 +5645,7 @@ static uint16_t pfc;
 static uint32_t *pp;
 
 pf = RTH_SIZE;
+rssi = 0;
 if((rthp & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
 	{
 	pp = (uint32_t*)packetptr;
@@ -5665,8 +5666,11 @@ if((rthp & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
 if((rthp & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
 if((rthp & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL) pf += 4;
 if((rthp & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS) pf += 2;
-rssi = 0;
-if(pf < rthlen) rssi = packetptr[pf];
+if((rthp &  IEEE80211_RADIOTAP_DBM_ANTSIGNAL) ==  IEEE80211_RADIOTAP_DBM_ANTSIGNAL)
+	{
+	if(pf > rthlen) return pfc;
+	rssi = packetptr[pf];
+	}
 return pfc;
 }
 /*===========================================================================*/
