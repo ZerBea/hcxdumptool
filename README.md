@@ -137,7 +137,6 @@ This list is for information purposes only and should not be regarded as a bindi
 | TP-LINK Archer T2UH     | ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter) |
 | ASUS USB-AC51           | ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U] |
 | ALFA AWUS036ACM         | ID 0e8d:7612 MediaTek Inc. MT7612U 802.11a/b/g/n/ac Wireless Adapter |
-| ALFA AWUS036ACH         | ID 0bda:8812 Realtek Semiconductor Corp. RTL8812AU 802.11a/b/g/n/ac 2T2R DB WLAN Adapter <br /> Required driver: https://github.com/aircrack-ng/rtl8812au - interface must be set to monitor mode manually using iw before starting hcxdumptool |
 | CSL 300MBit 300649      | ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter |
 | EDIMAX EW-7711UAN       | ID 7392:7710 Edimax Technology Co., Ltd |
 | TENDA W311U+            | ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter |
@@ -148,6 +147,8 @@ This list is for information purposes only and should not be regarded as a bindi
 | TP-Link TL-WN722N <br /> v1 | ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n <br /> Partly driver freezes and overheating problems |
 | TP-Link TL-WN722N <br /> v2/v3 | ID 2357:010c TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS] <br /> Recommended driver: https://github.com/kimocoder/realtek_rtwifi |
 | LogiLink WL0151A        | ID 0bda:8179 Realtek Semiconductor Corp. RTL8188EUS 802.11n Wireless Network Adapter <br /> Recommended driver: https://github.com/kimocoder/realtek_rtwifi |
+| ALFA AWUS036ACH         | ID 0bda:8812 Realtek Semiconductor Corp. RTL8812AU 802.11a/b/g/n/ac 2T2R DB WLAN Adapter <br /> Required driver: https://github.com/aircrack-ng/rtl8812au - interface must be set to monitor mode manually using iw before starting hcxdumptool |
+
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
