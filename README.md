@@ -154,6 +154,8 @@ Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
 Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
 
+Third party drivers may not compile or work as expected on latest kernels
+
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
 No support for a driver which doesn't support monitor and packet injection, native <br /> If you need this features, do a request on www.kernel.org
