@@ -112,6 +112,8 @@ Requirements
 
 * GPIO hardware mod recommended (push button and LED).
 
+* to allow 5GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
+
 If you decide to compile latest git head, make sure that your distribution is updated on latest version.
 
 
