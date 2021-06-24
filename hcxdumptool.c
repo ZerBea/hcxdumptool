@@ -6619,10 +6619,12 @@ return;
 /*===========================================================================*/
 static inline bool checkmonitorinterface(char *checkinterfacename)
 {
-static const char *monstr = "mon";
+static const char *vifstr1 = "mon";
+static const char *vifstr2 = "prism";
 
 if(checkinterfacename == NULL) return true;
-if(strstr(checkinterfacename, monstr) == NULL) return false;
+if(strstr(checkinterfacename, vifstr1) == NULL) return false;
+if(strstr(checkinterfacename, vifstr2) == NULL) return false;
 return true;
 }
 /*===========================================================================*/
