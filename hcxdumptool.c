@@ -296,6 +296,7 @@ static char driverversion[34];
 static char driverfwversion[ETHTOOL_FWVERS_LEN +2];
 
 static uint8_t mac_orig[6];
+static uint8_t mac_virt[6];
 static uint8_t mac_myclient[6];
 static uint8_t mac_myprclient[6];
 static uint8_t mac_myaphidden[6];
@@ -5854,7 +5855,8 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"NMEA 0183 SENTENCE........: %s\n"
 	"INTERFACE NAME............: %s\n"
 	"INTERFACE PROTOCOL........: %s\n"
-	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x\n"
+	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
+	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack\n"
 	"DRIVER....................: %s\n"
 	"DRIVER VERSION............: %s\n"
 	"DRIVER FIRMWARE VERSION...: %s\n"
@@ -5866,9 +5868,9 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"FILTERMODE................: %s\n"
 	"WEAK CANDIDATE............: %s\n"
 	"ESSID list................: %d entries\n"
-	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST HIDDEN)\n"
-	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST OPEN)\n"
-	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (incremented on every new client)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST HIDDEN used for the attack)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST OPEN used for the attack)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (used for the attack and incremented on every new client)\n"
 	"CLIENT (ROGUE)............: %02x%02x%02x%02x%02x%02x\n"
 	"EAPOLTIMEOUT..............: %" PRIu64 " usec\n"
 	"EAPOLEAPTIMEOUT...........: %" PRIu64 " usec\n"
@@ -5876,7 +5878,9 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"ANONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
-	nmeasentence, interfacename, interfaceprotocol, mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
+	nmeasentence, interfacename, interfaceprotocol,
+	mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
+	mac_virt[0], mac_virt[1], mac_virt[2], mac_virt[3], mac_virt[4], mac_virt[5],
 	drivername, driverversion, driverfwversion,
 	opensslversionmajor, opensslversionminor,
 	maxerrorcount, bpf.len, filteraplistentries, filterclientlistentries, fimtempl, weakcandidate,
@@ -6904,6 +6908,7 @@ static struct ethtool_drvinfo drvinfo;
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
+memset(&mac_virt, 0, 6);
 memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
@@ -7070,6 +7075,10 @@ if(epmaddr->size != 6)
 	}
 memcpy(&mac_orig, epmaddr->data, 6);
 free(epmaddr);
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+if(ioctl(fd_socket, SIOCGIFHWADDR, &ifr) == 0) memcpy(&mac_virt, ifr.ifr_hwaddr.sa_data, 6);
 
 memset(&ifr, 0, sizeof(ifr));
 strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
