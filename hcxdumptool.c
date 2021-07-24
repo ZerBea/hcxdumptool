@@ -7301,7 +7301,7 @@ for(c = 0; c < 256; c++)
 return;
 }
 /*===========================================================================*/
-static inline bool get_perm_addr(char *ifname, uint8_t *permaddr, char *drivername)
+static inline bool get_perm_addr(char *ifname, uint8_t *permaddr, uint8_t *virtaddr, char *drivername)
 {
 static int fd_info;
 static struct iwreq iwr;
@@ -7309,6 +7309,8 @@ static struct ifreq ifr;
 static struct ethtool_perm_addr *epmaddr;
 static struct ethtool_drvinfo drvinfo;
 
+memset(permaddr, 0, 6);
+memset(virtaddr, 0, 6);
 if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 	perror("socket info failed");
@@ -7364,6 +7366,10 @@ if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
 	}
 memcpy(drivername, drvinfo.driver, 32);
 free(epmaddr);
+
+memset(&ifr, 0, sizeof(ifr));
+strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+if(ioctl(fd_info, SIOCGIFHWADDR, &ifr) == 0) memcpy(virtaddr, ifr.ifr_hwaddr.sa_data, 6);
 close(fd_info);
 return true;
 }
@@ -7374,6 +7380,7 @@ static int p;
 static struct ifaddrs *ifaddr = NULL;
 static struct ifaddrs *ifa = NULL;
 static uint8_t permaddr[6];
+static uint8_t virtaddr[6];
 static char drivername[32];
 
 if(getifaddrs(&ifaddr) == -1) perror("failed to get ifaddrs");
@@ -7385,11 +7392,18 @@ else
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
 			memset(&drivername, 0, 32);
-			if(get_perm_addr(ifa->ifa_name, permaddr, drivername) == true)
+			if(get_perm_addr(ifa->ifa_name, permaddr, virtaddr, drivername) == true)
 				{
 				for (p = 0; p < 6; p++) printf("%02x", (permaddr[p]));
-				if(checkmonitorinterface(ifa->ifa_name) == false) printf(" %s (%s)\n", ifa->ifa_name, drivername);
-				else printf(" %s (%s)  warning: probably a monitor interface!\n", ifa->ifa_name, drivername);
+				if(checkmonitorinterface(ifa->ifa_name) == false) printf(" %s (%s)", ifa->ifa_name, drivername);
+				else printf(" %s (%s) warning:probably a monitor interface!", ifa->ifa_name, drivername);
+				if(memcmp(&permaddr, &virtaddr, 6) != 0)
+					{
+					printf(" warning:spoofed MAC ");
+					for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
+					printf(" detected");
+					}
+				printf("\n");
 				}
 			}
 		}
