@@ -5856,7 +5856,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"INTERFACE NAME............: %s\n"
 	"INTERFACE PROTOCOL........: %s\n"
 	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
-	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack\n"
+	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
 	"DRIVER....................: %s\n"
 	"DRIVER VERSION............: %s\n"
 	"DRIVER FIRMWARE VERSION...: %s\n"
@@ -8913,7 +8913,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	exit(EXIT_FAILURE);
 	}
 
-printf("initialization...\n");
+printf("initialization of %s %s...\n", basename(argv[0]), VERSION_TAG);
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
