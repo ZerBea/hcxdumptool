@@ -165,11 +165,11 @@ No support for a driver which doesn't support monitor and packet injection, nati
 
 Not recommended WiFi chipsets:
 
-Intel PRO/Wireless
+* Intel PRO/Wireless
 
-Broadcom
+* Broadcom
 
-Realtek RTL8811AU, RTL8812AU, RTL 8814AU
+* Realtek RTL8811AU, RTL8812AU, RTL 8814AU (due to NETLINK dependency)
 
 
 Antennas
