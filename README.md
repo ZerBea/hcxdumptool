@@ -1,7 +1,7 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices.
+Small tool to capture packets from wlan devices and detect weak point within own WiFi networks.
 After capturing, upload the "uncleaned" pcapng file here https://wpa-sec.stanev.org/?submit
 to see if your ACCESS POINT or the CLIENT is vulnerable by using common wordlists.
 To reduce dump file size, gzip (.gz) compression is supported.
