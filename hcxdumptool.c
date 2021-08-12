@@ -8532,7 +8532,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_FILTERLIST_AP:
 		if(filteraplistname != 0)
 			{
-			fprintf(stderr, "filterlist_ap_vendor and filterlist_ap_vendor not allowed\n");
+			fprintf(stderr, "filterlist_ap and filterlist_ap_vendor not allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		filteraplistname = optarg;
@@ -8541,7 +8541,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_FILTERLIST_AP_VENDOR:
 		if(filteraplistname != 0)
 			{
-			fprintf(stderr, "filterlist_ap_vendor and filterlist_ap_vendor not allowed\n");
+			fprintf(stderr, "filterlist_ap_vendor and filterlist_ap not allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		filteraplistname = optarg;
@@ -8560,7 +8560,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_FILTERLIST_CLIENT_VENDOR:
 		if(filterclientlistname != 0)
 			{
-			fprintf(stderr, "filterlist_client_vendor and filterlist_client_vendor not allowed\n");
+			fprintf(stderr, "filterlist_client_vendor and filterlist_client not allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		filterclientlistname = optarg;
