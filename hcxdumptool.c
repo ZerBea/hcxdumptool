@@ -697,14 +697,35 @@ static maclist_t *zeiger;
 static FILE *fh_filter;
 static char linein[FILTERLIST_LINE_LEN];
 
-if((fh_filter = fopen(listname, "r")) == NULL)
-	{
-	fprintf(stderr, "failed to open filter list %s\n", listname);
-	return 0;
-	}
 entries = 0;
 c = 0;
 zeiger = maclist;
+if((fh_filter = fopen(listname, "r")) == NULL)
+	{
+	len = strlen(listname);
+	if((len < (2 *filtermacsize)) || (len >= FILTERLIST_LINE_LEN))
+		{
+		fprintf(stderr, "failed to open filter list %s\n", listname);
+		return 0;
+		}
+	o = 0;
+	for(i = 0; i < len; i++)
+		{
+		if(isxdigit(listname[i]))
+			{
+			linein[o] = listname[i];
+			o++;
+			}
+		}
+	if(hex2bin(&linein[0x0], zeiger->mac, filtermacsize) == false)
+		{
+		fprintf(stderr, "failed to process filter MAC %s\n", listname);
+		return 0;
+		}
+	zeiger++;
+	entries++;
+	return entries;
+	}
 while(entries < FILTERLIST_MAX)
 	{
 	if((len = fgetline(fh_filter, FILTERLIST_LINE_LEN, linein)) == -1) break;
