@@ -1,3 +1,16 @@
+15.08.2021
+==========
+hcxdumptool: allow MAC instead of filter list
+--filterlist_ap=<file or MAC>      : ACCESS POINT MAC or MAC filter list
+                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment
+                                     maximum entries 256
+                                     run first --do_rcascan to retrieve information about the target
+--filterlist_client=<file or MAC>  : CLIENT MAC or MAC filter list
+                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment
+                                     maximum entries 256
+                                     due to MAC randomization of the CLIENT, it does not always work!
+
+
 17.05.2021
 ==========
 release v 6.1.6
