@@ -15,7 +15,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <math.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include <sys/socket.h>
