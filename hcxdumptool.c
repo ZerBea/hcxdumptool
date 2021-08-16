@@ -5878,7 +5878,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"NMEA 0183 SENTENCE........: %s\n"
 	"INTERFACE NAME............: %s\n"
 	"INTERFACE PROTOCOL........: %s\n"
-	"INTERFACE TX POWER........: %d dBm (lowest value reported from the device)\n"
+	"INTERFACE TX POWER........: %d dBm (lowest value reported by the device)\n"
 	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
 	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
 	"DRIVER....................: %s\n"
