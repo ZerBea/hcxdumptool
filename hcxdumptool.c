@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <math.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include <sys/socket.h>
@@ -84,6 +85,8 @@ static int fd_socket_mcsrv;
 static struct sockaddr_in mcsrvaddress;
 static struct sockaddr_in srvaddress;
 static int fd_socket_srv;
+
+static int interfacetxpwr;
 
 static FILE *fh_nmea;
 static struct ifreq ifr_old;
@@ -5876,6 +5879,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"NMEA 0183 SENTENCE........: %s\n"
 	"INTERFACE NAME............: %s\n"
 	"INTERFACE PROTOCOL........: %s\n"
+	"INTERFACE TX POWER........: %d dBm\n"
 	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
 	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
 	"DRIVER....................: %s\n"
@@ -5899,7 +5903,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"ANONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"SNONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n",
-	nmeasentence, interfacename, interfaceprotocol,
+	nmeasentence, interfacename, interfaceprotocol, interfacetxpwr,
 	mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
 	mac_virt[0], mac_virt[1], mac_virt[2], mac_virt[3], mac_virt[4], mac_virt[5],
 	drivername, driverversion, driverfwversion,
@@ -6926,6 +6930,8 @@ static struct iw_param param;
 static struct sockaddr_ll ll;
 static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
+static struct iw_param txpower;
+static double lfin;
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
@@ -7046,6 +7052,35 @@ strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 memset(&param,0 , sizeof(param));
 iwr.u.data.pointer = &param;
 ioctl(fd_socket, SIOCSIWPOWER, &iwr);
+
+memset(&iwr, 0, sizeof(iwr));
+strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+ioctl(fd_socket, SIOCGIWTXPOW, &iwr);
+memcpy(&txpower, &(iwr.u.txpower), sizeof(param));
+interfacetxpwr = 0;
+lfin = (double)txpower.value;
+if(txpower.flags & IW_TXPOW_RELATIVE) interfacetxpwr = txpower.value;
+else
+	{
+	if(txpower.flags & IW_TXPOW_MWATT)
+		{
+		while(lfin > 10.0)
+			{
+			interfacetxpwr += 10;
+			lfin /= 10.0;
+			}
+		while(lfin > 1.000001)	/* Eliminate rounding errors, take ceil */
+			{
+			interfacetxpwr += 1;
+			lfin /= 1.25892541179;
+			}
+		}
+	else
+		{
+		interfacetxpwr = txpower.value;
+		}
+	}
+
 memset(&ifr, 0, sizeof(ifr));
 strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 ifr.ifr_flags = 0;
