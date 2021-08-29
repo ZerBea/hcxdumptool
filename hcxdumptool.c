@@ -129,6 +129,7 @@ static unsigned int injectionratio;
 
 static int gpiostatusled;
 static int gpiobutton;
+static int gpiostatusledflashinterval;
 
 static struct timespec sleepled;
 static struct timespec sleepled2;
@@ -5957,7 +5958,7 @@ while(wantstopflag == false)
 			totflag = true;
 			globalclose();
 			}
-		if((tv.tv_sec %5) == 0)
+		if((tv.tv_sec %gpiostatusledflashinterval) == 0)
 			{
 			if(gpiostatusled > 0)
 				{
@@ -6291,7 +6292,7 @@ while(wantstopflag == false)
 			totflag = true;
 			globalclose();
 			}
-		if((tv.tv_sec %5) == 0)
+		if((tv.tv_sec %gpiostatusledflashinterval) == 0)
 			{
 			if(gpiostatusled > 0)
 				{
@@ -6398,7 +6399,7 @@ while(wantstopflag == false)
 		if(stagecount == 0) break;
 		if(set_channel() == false) continue;
 		tvold.tv_sec = tv.tv_sec;
-		if((tv.tv_sec %5) == 0)
+		if((tv.tv_sec %gpiostatusledflashinterval) == 0)
 			{
 			if(gpiostatusled > 0)
 				{
@@ -8162,6 +8163,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     default = GPIO not in use\n"
 	"--gpio_statusled=<digit>           : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                                     default = GPIO not in use\n"
+	"--gpio_statusled_intervall=<digit> : Raspberry Pi GPIO LED flash intervall\n"
+	"                                     default = flash every 5 seconds\n"
 	"--tot=<digit>                      : enable timeout timer in minutes (minimum = 2 minutes)\n"
 	"                                     hcxdumptool will terminate if tot reached (EXIT code = 2)\n"
 	"                                     for a successful attack tot > 120 minutes recommended\n"
@@ -8332,6 +8335,7 @@ static const struct option long_options[] =
 	{"nmea",			required_argument,	NULL,	HCX_NMEA_NAME},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
+	{"gpio_statusled_interval",	required_argument,	NULL,	HCX_GPIO_STATUSLED_FLASHINTERVAL},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
 	{"error_max",			required_argument,	NULL,	HCX_ERROR_MAX},
 	{"reboot",			no_argument,		NULL,	HCX_REBOOT},
@@ -8380,6 +8384,7 @@ fd_devnull = 0;
 rcaorder = 0;
 sl = 0;
 cpa = 0;
+gpiostatusledflashinterval = LEDFLASHINTERVAL;
 staytime = STAYTIME;
 attackcount = staytime *10;
 attackstopcount = ATTACKSTOP_MAX;
@@ -8739,6 +8744,17 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			exit(EXIT_FAILURE);
 			}
 		break;
+
+		case HCX_GPIO_STATUSLED_FLASHINTERVAL:
+		gpiostatusledflashinterval = strtol(optarg, NULL, 10);
+		if(gpiostatusledflashinterval < 5)
+			{
+			fprintf(stderr, "minimum flash interval is 5 seconds\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+
 
 		case HCX_TOT:
 		if(!isdigit(optarg[0]))

@@ -1,3 +1,10 @@
+29.08.2021
+==========
+hcxdumptool: GPIO flash intervall not longer hardcoded
+--gpio_statusled_intervall=<digit> : Raspberry Pi GPIO LED flash intervall
+                                     default = flash every 5 seconds
+
+
 15.08.2021
 ==========
 hcxdumptool: allow MAC instead of filter list
