@@ -103,6 +103,7 @@ static bool gpsdflag;
 static bool infinityflag;
 static bool wpaentflag;
 static bool eapreqflag;
+static bool eapreqfollownakflag;
 static bool eaptunflag;
 static bool packetsentflag;
 static int sl;
@@ -2867,9 +2868,15 @@ switch(type)
 	case EAP_TYPE_NOTIFY:
 		return "NOTIFY";
 	case EAP_TYPE_PWD:
-		return "PWD";
+		return "EAP-PWD";
 	case EAP_TYPE_SIM:
-		return "SIM";
+		return "EAP-SIM";
+	case EAP_TYPE_AKA:
+		return "EAP-AKA";
+	case EAP_TYPE_AKA1:
+		return "EAP-AKA'";
+	case EAP_TYPE_MD5:
+		return "EAP-MD5-CHALLENGE";
 	default:
 		sprintf(outstr, "%d", type);
 		return outstr;
@@ -3113,12 +3120,24 @@ if((macfrx->to_ds == 0) && (macfrx->from_ds == 1))
 return;
 }
 /*===========================================================================*/
+static inline int eapreqlist_gettype(eapctx_t *eapctx, uint8_t type)
+{
+static int i;
+for(i = eapctx->reqstate; i < eapreqentries; i++)
+	{
+	if(eapreqlist[i].type == type)
+		return i;
+	}
+return 0;
+}
+/*===========================================================================*/
 static inline void process80211exteap_resp(uint16_t exteaplen)
 {
 static ownlist_t *zeiger;
 static uint8_t *eapauthptr;
 static exteap_t *exteap;
 static eapctx_t *eapctx;
+static int eapreqentry;
 eapauthptr = payloadptr +LLC_SIZE +EAPAUTH_SIZE;
 exteap = (exteap_t*)eapauthptr;
 char outstr[DEBUGMSG_MAX];
@@ -3149,9 +3168,15 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 			if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))) && (exteap->id == eapctx->id))
 				{
 #ifdef DEBUG_TLS
-				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
+				if(exteap->type == EAP_TYPE_NAK)
+					sprintf(outstr, "EAP RESPONSE TYPE NAK:%s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->data[0]), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
+				else
+					sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
 #else
-				sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
+				if(exteap->type == EAP_TYPE_NAK)
+					sprintf(outstr, "EAP RESPONSE TYPE NAK:%s EAPTIME:%" PRIu64 " REQ:%d%s%s" , eap_type2name(exteap->data[0]), timestamp -lastauthtimestamp, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
+				else
+					sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " REQ:%d%s%s" , eap_type2name(exteap->type), timestamp -lastauthtimestamp, zeiger->eapctx.reqstate, zeiger->eapctx.tlstun ? " TLS":"", (zeiger->eapctx.reqstate == (eapreqentries -1)) ? " FIN" : "");
 #endif
 				printown(zeiger, outstr);
 				}
@@ -3182,6 +3207,11 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 				}
 			if(exteap->id == eapctx->id)
 				{
+				if((exteap->type == EAP_TYPE_NAK) && (eapreqfollownakflag == true))
+					{
+					eapreqentry = eapreqlist_gettype(eapctx, exteap->data[0]);
+					if(eapreqentry > 0) eapctx->reqstate = eapreqentry -1;
+					}
 				while(++eapctx->reqstate < eapreqentries)
 					{
 					if((eapreqlist[eapctx->reqstate].mode == EAPREQLIST_MODE_TLS) && (eapctx->tlstun == false)) continue;
@@ -8145,6 +8175,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                      :T = TLS shutdown\n"
 	"                                      :- = no packet\n"
 	"                                     default behavior is terminating all responses with a EAP Failure, after last one the client is deauthenticated\n"
+	"--eapreq_follownak                 : jump to Auth Type requested by client in Legacy Nak response, if type available in remaining request sequence\n"
 	"--eaptlstun                        : activate TLS tunnel negotiation and Phase 2 EAP requests when requesting PEAP using --eapreq\n"
 	"                                     requires --eap_server_cert and --eap_server_key\n"
 	"--eap_server_cert=<server.pem>     : EAP TLS tunnel Server cert PEM file\n"
@@ -8325,6 +8356,7 @@ static const struct option long_options[] =
 	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
 	{"wpaent",			no_argument,		NULL,	HCX_WPAENT},
 	{"eapreq",			required_argument,	NULL,	HCX_EAPREQ},
+	{"eapreq_follownak",	no_argument,		NULL,	HCX_EAPREQ_FOLLOWNAK},
 	{"eaptlstun",			no_argument,		NULL,	HCX_EAPTUN},
 	{"eap_server_cert",		required_argument,	NULL,	HCX_EAP_SERVER_CERT},
 	{"eap_server_key",		required_argument,	NULL,	HCX_EAP_SERVER_KEY},
@@ -8403,6 +8435,7 @@ monitormodeflag = false;
 beaconparamsflag = false;
 wpaentflag = false;
 eapreqflag = false;
+eapreqfollownakflag = false;
 eaptunflag = false;
 totflag = false;
 gpsdflag = false;
@@ -8715,6 +8748,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		eapreqflag = true;
 		break;
 
+		case HCX_EAPREQ_FOLLOWNAK:
+		eapreqfollownakflag = true;
+		break;
+
 		case HCX_EAPTUN:
 		eaptunflag = true;
 		break;
@@ -8978,7 +9015,7 @@ if((eaptunflag == true) && (eapreqflag == false))
 	}
 if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CLIENT_ATTACKS))
 	{
-	fprintf(stderr, "EAP requests are activated while CLIENT Attacks are disabled");
+	fprintf(stderr, "EAP requests are activated while CLIENT Attacks are disabled\n");
 	exit(EXIT_FAILURE);
 	}
 
