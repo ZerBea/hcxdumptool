@@ -42,10 +42,11 @@
 #define HCX_BEACONPARAMS			42
 #define HCX_WPAENT				43
 #define HCX_EAPREQ				44
-#define HCX_EAPTUN				45
-#define HCX_EAP_SERVER_CERT			46
-#define HCX_EAP_SERVER_KEY			47
-#define HCX_EAPOL_EAP_TIMEOUT			48
+#define HCX_EAPREQ_FOLLOWNAK	45
+#define HCX_EAPTUN				46
+#define HCX_EAP_SERVER_CERT			47
+#define HCX_EAP_SERVER_KEY			48
+#define HCX_EAPOL_EAP_TIMEOUT			49
 #define HCX_INTERFACE_NAME			'i'
 #define HCX_PCAPNG_NAME				'o'
 #define HCX_PACPNG_FRAMES			'f'
