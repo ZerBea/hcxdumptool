@@ -1,3 +1,10 @@
+01.09.2021
+==========
+hcxdumptool: added new option to the next EAP request entry contained in the sequence passed to
+             --eapreq with a type matching the Desired Auth Type requested in a client's Legacy NAK response
+--eapreq_follownak                 : jump to Auth Type requested by client in Legacy Nak response, if type available in remaining request sequence
+
+
 29.08.2021
 ==========
 hcxdumptool: GPIO flash intervall not longer hardcoded
