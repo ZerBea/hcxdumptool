@@ -7491,7 +7491,7 @@ else
 				{
 				for (p = 0; p < 6; p++) printf("%02x", (permaddr[p]));
 				if(checkmonitorinterface(ifa->ifa_name) == false) printf(" %s (%s)", ifa->ifa_name, drivername);
-				else printf(" %s (%s) warning:probably a monitor interface!", ifa->ifa_name, drivername);
+				else printf(" %s (%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
 				if(memcmp(&permaddr, &virtaddr, 6) != 0)
 					{
 					printf(" warning:spoofed MAC ");
