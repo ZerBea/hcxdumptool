@@ -1,0 +1,15 @@
+# See /boot/overlays/README for all available options
+
+gpu_mem=64
+initramfs initramfs-linux.img followkernel
+max_usb_current=1
+hdmi_blanking=1
+dtoverlay=pi3-disable-bt
+dtoverlay=pi3-disable-wifi
+dtparam=audio=off
+dtparam=watchdog=on
+disable_splash=1
+tparam=pwr_led_trigger=none
+dtparam=pwr_led_activelow=off
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=on
