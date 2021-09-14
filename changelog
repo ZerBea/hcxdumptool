@@ -5,7 +5,6 @@ This is the last version, supporting OpenSSL 1.1
 Next version 6.3.0 will need OpenSSL 3.0.0
 
 
-
 01.09.2021
 ==========
 hcxdumptool: added new option to the next EAP request entry contained in the sequence passed to
