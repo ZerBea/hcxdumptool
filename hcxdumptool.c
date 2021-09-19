@@ -4601,14 +4601,17 @@ if(memcmp(&mac_myclient, macfrx->addr1, 6) == 0)
 	return;
 	}
 if(payloadlen < ACTIONFRAME_SIZE) return;
-actf = (actf_t*)payloadptr;
-if(actf->categoriecode == CAT_VENDOR)
+if(fd_pcapng > 0)
 	{
-	if(fd_pcapng > 0)
+	actf = (actf_t*)payloadptr;
+	if(actf->categoriecode == CAT_VENDOR)
 		{
 		if((pcapngframesout &PCAPNG_FRAME_VENDOR) == PCAPNG_FRAME_VENDOR) writeepb(fd_pcapng);
 		}
-	return;
+	else if(actf->categoriecode == CAT_RADIO_MEASUREMENT)
+		{
+		if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
+		}
 	}
 if(((timestamp -lastauthtimestamp) > eapoltimeoutvalue) || ((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) > eapoleaptimeoutvalue))) return;
 if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
