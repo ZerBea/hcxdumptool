@@ -6480,7 +6480,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
 	if((zeiger->channel < 36) && (zeiger->hit > 0)) inject24 = true; 
-	if((zeiger->channel >= 36) && (zeiger->channel < 200) && (zeiger->hit > 0)) inject5 = true; 
+	if(((zeiger->channel >= 36) && (zeiger->channel < 200)) && (zeiger->hit > 0)) inject5 = true; 
 	if((zeiger->channel >= 200)  && (zeiger->hit > 0)) inject6 = true; 
 	injectionhit += zeiger->hit;
 	injectioncount += zeiger->beacon;
@@ -8031,7 +8031,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"-c <digit>     : set channel (1,2,3, ...)\n"
 	"                 default: auto channel/auto band\n"
 	"                 maximum entries: 255\n"
-	"                 standard 802.11 channels (depends on device, driver and world regulatory domain):\n"
+	"                 standard 802.11 channels (depend on device, driver and world regulatory domain):\n"
 	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
 	"                 36, 38, 40, 44, 48, 52, 56, 60, 64\n"
 	"                 100, 104, 108, 112, 116, 120, 124, 128\n"
