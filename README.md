@@ -12,8 +12,8 @@ and check if PreSharedKey or PlainMasterKey was transmitted unencrypted.
 Brief description
 --------------
 
-Stand-alone binaries - designed to run on Raspberry Pi's with installed Arch Linux.
-It may work on other Linux systems (notebooks, desktops) and distributions, too.
+Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
+
 Capture format pcapng is compatible to Wireshark and tshark.
 
 Read this post: hcxtools - solution for capturing wlan traffic and conversion to hashcat formats (https://hashcat.net/forum/thread-6661.html)
