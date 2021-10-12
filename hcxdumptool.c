@@ -6479,13 +6479,16 @@ qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_hit);
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
-	if((zeiger->channel < 36) && (zeiger->hit > 0)) inject24 = true; 
-	if(((zeiger->channel >= 36) && (zeiger->channel < 200)) && (zeiger->hit > 0)) inject5 = true; 
-	if((zeiger->channel >= 200)  && (zeiger->hit > 0)) inject6 = true; 
-	injectionhit += zeiger->hit;
+	if(zeiger->hit > 0)
+		{
+		if(zeiger->channel < 36) inject24 = true; 
+		else if((zeiger->channel >= 36) && (zeiger->channel < 200)) inject5 = true; 
+		else if(zeiger->channel >= 200) inject6 = true; 
+		injectionhit += zeiger->hit;
+		networkhit++;
+		}
 	injectioncount += zeiger->beacon;
 	networkcount++;
-	if(zeiger->hit > 0) networkhit ++;
 	}
 if(injectionhit > 0)
 	{
