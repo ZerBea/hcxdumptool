@@ -296,6 +296,8 @@ OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 Warning
 --------------
 
+hcxdumptool is designed to be an analysis tool. This means that everything is requested/stored by default. Unwanted information must be filtered out later on, offline! 
+
 You must use hcxdumptool only on networks you have permission to do this, because:
 
 * hcxdumptool is able to prevent complete wlan traffic
