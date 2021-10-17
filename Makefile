@@ -21,13 +21,14 @@ DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 
 INSTALL		?= install
 INSTFLAGS	=
+PKG_CONFIG ?= pkg-config
 
 ifeq ($(HOSTOS), Linux)
 INSTFLAGS += -D
 endif
 
-OPENSSL_LIBS=$(shell pkg-config --libs openssl)
-OPENSSL_CFLAGS=$(shell pkg-config --cflags openssl)
+OPENSSL_LIBS=$(shell $(PKG_CONFIG) --libs openssl)
+OPENSSL_CFLAGS=$(shell $(PKG_CONFIG) --cflags openssl)
 
 TOOLS=
 TOOLS+=hcxdumptool
