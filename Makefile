@@ -9,7 +9,7 @@ VERSION_TAG		:= $(shell git describe --tags || echo $(PRODUCTION_VERSION))
 endif
 VERSION_YEAR		:= $(shell echo $(PRODUCTION_YEAR))
 
-PREFIX		?= /usr/local
+PREFIX		?= /usr
 BINDIR		= $(DESTDIR)$(PREFIX)/bin
 
 HOSTOS		:= $(shell uname -s)
