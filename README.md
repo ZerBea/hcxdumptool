@@ -1,7 +1,7 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices and to detect weak point within own WiFi networks
+Small tool to capture packets from wlan devices and to detect weak points within own WiFi networks
 (e.g.: PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
 
 
