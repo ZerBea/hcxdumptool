@@ -1,12 +1,8 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices and detect weak point within own WiFi networks.
-After capturing, upload the "uncleaned" pcapng file here https://wpa-sec.stanev.org/?submit
-to see if your ACCESS POINT or the CLIENT is vulnerable by using common wordlists.
-To reduce dump file size, gzip (.gz) compression is supported.
-Convert the pcapng file to WPA-PBKDF2-PMKID+EAPOL hashline (22000) with hcxpcapngtool (hcxtools)
-and check if PreSharedKey or PlainMasterKey was transmitted unencrypted.
+Small tool to capture packets from wlan devices and detect weak point within own WiFi networks
+(e.g.: the PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
 
 
 Brief description
