@@ -7047,7 +7047,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		}
 	if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		{
-		fprintf(stderr, "warning: interface is not in monitor mode\n");
+		fprintf(stderr, "warning: physical interface is not in monitor mode\n");
 		if(forceinterfaceflag == false) return false;
 		}
 	ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
