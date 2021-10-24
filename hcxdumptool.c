@@ -6976,7 +6976,7 @@ memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
 checkallunwanted();
-if(forceinterfaceflag == true)fprintf(stderr, "warning: ioctl() errors are ignored -  if monitor mode, packet injection or channel switch is not working as expected\n");
+if(forceinterfaceflag == true)fprintf(stderr, "warning: ioctl() warnings are ignored -  if monitor mode, packet injection or channel switch is not working as expected\n");
 if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a virtual monitor interface and some attack modes may not work as expected\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
