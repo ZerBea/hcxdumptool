@@ -90,7 +90,7 @@ static FILE *fh_nmea;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
-static bool monitormodeflag;
+static bool forceinterfaceflag;
 static bool targetscanflag;
 static bool totflag;
 static bool poweroffflag;
@@ -501,14 +501,11 @@ if(fd_socket > 0)
 		}
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-	if(monitormodeflag == false)
-		{
-		if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface information");
-		ifr.ifr_flags = 0;
-		if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0) perror("failed to set interface down");
-		if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0) perror("failed to restore old SIOCSIWMODE");
-		if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0) perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
-		}
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface information");
+	ifr.ifr_flags = 0;
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0) perror("failed to set interface down");
+	if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0) perror("failed to restore old SIOCSIWMODE");
+	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0) perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
 	if(close(fd_socket) != 0) perror("failed to close raw socket");
 	}
 if(fd_gps > 0)
@@ -6979,7 +6976,6 @@ memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
 checkallunwanted();
-monitormodeflag = false;
 if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a virtual monitor interface and some attack modes may not work as expected\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
@@ -6992,7 +6988,7 @@ strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
 	{
 	perror("failed to detect wlan interface");
-	return false;
+	if(forceinterfaceflag == false) return false;
 	}
 strncpy(interfaceprotocol, iwr.u.name, IFNAMSIZ);
 if(bpf.len > 0)
@@ -7004,14 +7000,14 @@ strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
 	perror("failed to backup current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
-	return false;
+	if(forceinterfaceflag == false) return false;
 	}
 memset(&iwr_old, 0, sizeof(iwr));
 strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
 	perror("failed to backup  current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
-	return false;
+	if(forceinterfaceflag == false) return false;
 	}
 if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
@@ -7020,61 +7016,60 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	ifr.ifr_flags = 0;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to set interface down, ioctl(SIOCSIFFLAGS) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
 	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	iwr.u.mode = IW_MODE_MONITOR;
 	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 		{
 		perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
 	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	if((iwr.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		{
 		fprintf(stderr, "warning: interface is not in monitor mode\n");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	ifr.ifr_flags = IFF_UP | IFF_BROADCAST | IFF_RUNNING;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to set interface up, ioctl(SIOCSIFFLAGS) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
 		{
 		fprintf(stderr, "warning: interface is not up\n");
-		return false;
+		if(forceinterfaceflag == false) return false;
 		}
 	}
 else
 	{
-	monitormodeflag = true;
 	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
@@ -8246,6 +8241,8 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                                     otherwise hcxdumptool will not work as expected\n"
 	"--check_injection                  : run antenna test and packet injection test to determine that driver support full packet injection\n"
 	"                                     packet injection will not work as expected if the Wireless Regulatory Domain is unset\n"
+	"--force_interface                  : ignore all ioctl() warnings\n"
+	"                                     do not report issues, if attacks or channel switch is not working as expected\n"
 	"--example                          : show abbreviations and example command lines\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
@@ -8389,6 +8386,7 @@ static const struct option long_options[] =
 	{"client_port",			required_argument,	NULL,	HCX_CLIENT_PORT},
 	{"check_driver",		no_argument,		NULL,	HCX_CHECK_DRIVER},
 	{"check_injection",		no_argument,		NULL,	HCX_CHECK_INJECTION},
+	{"force_interface",		no_argument,		NULL,	HCX_FORCE_INTERFACE},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"example",			no_argument,		NULL,	HCX_EXAMPLE},
 	{"help",			no_argument,		NULL,	HCX_HELP},
@@ -8435,6 +8433,7 @@ attackresumecount = ATTACKRESUME_MAX;
 owm1m2roguemax = OW_M1M2ROGUE_MAX;
 reasoncode = WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA;
 myoui_client = 0;
+forceinterfaceflag = false;
 rcascanflag = false;
 targetscanflag = false;
 beaconactiveflag = false;
@@ -8845,6 +8844,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_CHECK_INJECTION:
 		injectionflag = true;
+		break;
+
+		case HCX_FORCE_INTERFACE:
+		forceinterfaceflag = true;
 		break;
 
 		case HCX_SHOW_INTERFACES:

@@ -1,3 +1,10 @@
+24.10.2021
+==========
+hcxdumptool: added new option to ignore ioctl() warnings
+--force_interface                  : ignore all ioctl() warnings
+                                     do not report issues, if attacks or channel switch is not working as expected
+
+
 23.10.2021
 ==========
 added generic hcxdumptool.1 man page 
