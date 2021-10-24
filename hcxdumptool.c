@@ -5629,7 +5629,11 @@ strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
 pwrq.u.freq.e = 0;
-if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
+if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+	{
+	if(forceinterfaceflag == false) return false;
+	return true;
+	}
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
 }
