@@ -84,13 +84,13 @@ static int fd_socket_mcsrv;
 static struct sockaddr_in mcsrvaddress;
 static struct sockaddr_in srvaddress;
 static int fd_socket_srv;
-
 static int interfacetxpwr;
 
 static FILE *fh_nmea;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
+static bool monitormodeflag;
 static bool targetscanflag;
 static bool totflag;
 static bool poweroffflag;
@@ -501,11 +501,14 @@ if(fd_socket > 0)
 		}
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
-	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface information");
-	ifr.ifr_flags = 0;
-	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0) perror("failed to set interface down");
-	if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0) perror("failed to restore old SIOCSIWMODE");
-	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0) perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
+	if(monitormodeflag == false)
+		{
+		if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface information");
+		ifr.ifr_flags = 0;
+		if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0) perror("failed to set interface down");
+		if(ioctl(fd_socket, SIOCSIWMODE, &iwr_old) < 0) perror("failed to restore old SIOCSIWMODE");
+		if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr_old) < 0) perror("failed to restore old SIOCSIFFLAGS and to bring interface up");
+		}
 	if(close(fd_socket) != 0) perror("failed to close raw socket");
 	}
 if(fd_gps > 0)
@@ -6976,6 +6979,7 @@ memset(&drivername, 0, 34);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
 checkallunwanted();
+monitormodeflag = false;
 if(checkmonitorinterface(interfacename) == true) fprintf(stderr, "warning: %s is probably a virtual monitor interface and some attack modes may not work as expected\n", interfacename);
 if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	{
@@ -7070,6 +7074,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	}
 else
 	{
+	monitormodeflag = true;
 	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
