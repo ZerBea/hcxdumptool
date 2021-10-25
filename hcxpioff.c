@@ -288,7 +288,7 @@ printf("%s %s (wpi version) (C) %s ZeroBeat\n"
 	"--help                   : show this help\n"
 	"--version                : show version\n"
 	"\n"
-	"run gpio readall to print a table of all accessable pins and their numbers\n"
+	"run gpio readall to print a table of all accessible pins and their numbers\n"
 	"(wiringPi, BCM_GPIO and physical pin numbers)\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
