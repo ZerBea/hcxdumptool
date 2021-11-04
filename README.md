@@ -104,6 +104,16 @@ Copy it to your phone and enjoy.
 Requirements
 --------------
 
+* knowledge of radiofrequency technology
+
+* knowledge of electromagnetic-wave engineering
+
+* detailed knowledge of 802.11 protocol
+
+* detailed knowledge of key derivation functions
+
+* detailed kowlege of Linux
+
 * Operatingsystem: Arch Linux (strict), Kernel >= 5.4 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems).
 
 * Chipset must be able to run in monitor mode and driver must support monitor mode as well as full packet injection. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
