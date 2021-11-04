@@ -104,7 +104,7 @@ Copy it to your phone and enjoy.
 Requirements
 --------------
 
-* knowledge of radiofrequency technology
+* knowledge of radio technology
 
 * knowledge of electromagnetic-wave engineering
 
@@ -112,7 +112,7 @@ Requirements
 
 * detailed knowledge of key derivation functions
 
-* detailed kowlege of Linux
+* detailed kwowledge of Linux
 
 * Operatingsystem: Arch Linux (strict), Kernel >= 5.4 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems).
 
