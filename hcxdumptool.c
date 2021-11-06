@@ -7370,8 +7370,13 @@ for(c = 0; c < 256; c++)
 		if(res >= 0)
 			{
 			frequency = pwrq.u.freq.m;
+			/*
+			 frequency or channel :
+			 0 - 1000 = channel
+			   > 1000 = frequency in Hz!
+			*/
 			if(frequency > 100000) frequency /= 100000;
-			if(frequency < 1000) testchannel = frequency;
+			if(frequency <= 1000) testchannel = frequency;
 			else if((frequency >= 2407) && (frequency <= 2474)) testchannel = (frequency -2407)/5;
 			else if((frequency >= 2481) && (frequency <= 2487)) testchannel = (frequency -2412)/5;
 			else if((frequency >= 5150) && (frequency <= 5875)) testchannel = (frequency -5000)/5;
