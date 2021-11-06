@@ -838,7 +838,7 @@ static inline void printreceivewatchdogwarnung()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %4d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, channelscanlist[cpa], tv.tv_sec - tvlast_sec);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, channelscanlist[cpa], tv.tv_sec - tvlast_sec);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -849,7 +849,7 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %4d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
 		errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
@@ -861,7 +861,7 @@ static inline void printposition()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %4d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[7]);
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -876,7 +876,7 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %4d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, channelscanlist[cpa],
+	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, channelscanlist[cpa],
 		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
@@ -895,7 +895,7 @@ for(c = 0; c < zeiger->essidlen; c++)
 	else essidstring[p++] = zeiger->essid[c];
 	}
 essidstring[p] = 0;
-snprintf(servermsg, SERVERMSG_MAX, "%s %4d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, channelscanlist[cpa],
+snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, channelscanlist[cpa],
 	toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 	zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
@@ -5627,7 +5627,6 @@ memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = channelscanlist[cpa];
-if(channelscanlist[cpa] > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
@@ -7324,7 +7323,6 @@ while(channelscanlist[c] != 0)
 	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
 	pwrq.u.freq.m = channelscanlist[c];
-	if(channelscanlist[c] > 1000) pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 		{
 		fprintf(stdout, "channel %d not available\n", channelscanlist[c]);
@@ -8036,9 +8034,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 32: WPA encrypted frames\n"
 	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
-	"-c <digit>     : set channel (1,2,3, ...) or frequency (2437,2462,5600,...)\n"
-	"                 0 - 1000 treated as channel\n"
-	"                   > 1000 treated as frequency in MHz\n"
+	"-c <digit>     : set channel (1,2,3, ...)\n"
 	"                 default: auto channel/auto band\n"
 	"                 maximum entries: 255\n"
 	"                 standard 802.11 channels (depend on device, driver and world regulatory domain):\n"
