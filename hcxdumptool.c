@@ -7379,7 +7379,7 @@ for(c = 0; c < 256; c++)
 			if(frequency <= 1000) testchannel = frequency;
 			else if((frequency >= 2407) && (frequency <= 2474)) testchannel = (frequency -2407)/5;
 			else if((frequency >= 2481) && (frequency <= 2487)) testchannel = (frequency -2412)/5;
-			else if((frequency >= 5150) && (frequency <= 5875)) testchannel = (frequency -5000)/5;
+			else if((frequency >= 5035) && (frequency <= 6425)) testchannel = (frequency -5000)/5;
 			if(testchannel > 0)
 				{
 				memset(&pwrq, 0, sizeof(pwrq));
