@@ -260,11 +260,6 @@ const int channelscanlist4[] =
 132, 136, 140, 144, 149, 153, 157, 161, 165, 0
 };
 
-const int channelscanlist5[] =
-{
-201, 205, 209, 213, 217, 221, 225, 229, 233, 0
-};
-
 static fscanlist_t fscanlist[SCANLIST_MAX +1];
 
 static uint8_t myessid[] = { "home" };
@@ -8226,15 +8221,15 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 32: WPA encrypted frames\n"
 	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
-	"-c <digit>     : set channel (1,2,3, ...)\n"
+	"-c <digit>     : set channel (1,2,3, ...) or frequency (2437,2462,5600,...)\n"
 	"                 default: auto channel/auto band\n"
 	"                 maximum entries: 255\n"
+	"                 0 - 1000 treated as channel\n"
+	"                   > 1000 treated as frequency in MHz\n"
+	"                 channel numbers are not longer unique\n"
+	"                 on 5GHz and 6Ghz it is recommended to use frequency instead of channel number\n"
 	"                 standard 802.11 channels (depend on device, driver and world regulatory domain):\n"
-	"                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14\n"
-	"                 36, 38, 40, 44, 48, 52, 56, 60, 64\n"
-	"                 100, 104, 108, 112, 116, 120, 124, 128\n"
-	"                 132, 136, 140, 144, 149, 153, 157, 161, 165\n"
-	"                 201, 205, 209, 213, 217, 221, 225, 229, 233\n"
+	"                 https://en.wikipedia.org/wiki/List_of_WLAN_channels\n"
 	"-s <digit>     : set predefined scanlist\n"
 	"                 0 = auto channel/auto band (default)\n"
 	"                 1 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (optimized 2.4GHz)\n"
@@ -9268,24 +9263,25 @@ if(injectionflag == true)
 
 if(sl == 1)
 	{
+	printf("warning: not yet implemented\n");
 	}
 else if(sl == 2)
 	{
+	printf("warning: not yet implemented\n");
 	}
 else if(sl == 3)
 	{
+	printf("warning: not yet implemented\n");
 	}
 else if(sl == 4)
 	{
+	printf("warning: not yet implemented\n");
 	}
 else if(userscanliststring != NULL)
 	{
 	getscanlistchannel(userscanliststring);
 	}
 else getscanlist();
-
-if(rcascanflag == false) process_fd();
-else process_fd_rca();
 
 if(pcapngoutname != NULL)
 	{
@@ -9321,8 +9317,11 @@ if(nmeaoutname != NULL)
 		}
 	setbuf(fh_nmea, NULL);
 	}
-
 if((gpsname != NULL) || (gpsdflag == true)) opengps();
+
+if(rcascanflag == false) process_fd();
+else process_fd_rca();
+
 globalclose();
 return EXIT_SUCCESS;
 }
