@@ -418,7 +418,7 @@ while(len > 0)
 	if(written != (len +SERVERMSG_HEAD_SIZE)) errorcount++;
 	len -= iov[1].iov_len;
 	pcapng = &pcapng[iov[1].iov_len];
-  }
+	}
 return;
 }
 /*===========================================================================*/
@@ -778,7 +778,7 @@ while(c < bpf.len)
 		bpf.len = 0;
 		break;
 		}
-	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &zeiger->code, &zeiger->jt,  &zeiger->jf,  &zeiger->k);
+	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &zeiger->code, &zeiger->jt, &zeiger->jf, &zeiger->k);
 	zeiger++;
 	c++;
 	}
@@ -816,9 +816,9 @@ static inline void printreceivewatchdogwarnung()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -830,11 +830,11 @@ static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
-				errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+				errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
-				errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+				errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
-			errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+			errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -845,9 +845,9 @@ static inline void printposition()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -862,13 +862,13 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 	{
-	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
-	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
-	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
@@ -887,13 +887,13 @@ for(c = 0; c < zeiger->essidlen; c++)
 	else essidstring[p++] = zeiger->essid[c];
 	}
 essidstring[p] = 0;
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
@@ -1469,7 +1469,7 @@ while(pos < (mergedatalen -1))
 		}
 	if(setcnt == iesetlen)
 		{
-		if(destdatalen > destdatalenmax - mergedata[pos +1] -2) break;
+		if(destdatalen > destdatalenmax -mergedata[pos +1] -2) break;
 		memcpy(&destdata[destdatalen], &mergedata[pos], mergedata[pos +1] +2);
 		destdatalen += mergedata[pos +1] +2;
 		}
@@ -2582,7 +2582,7 @@ else
 	}
 if(data_len > 0) memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len], data, data_len);
 packetlenown = HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len;
-send_packet(fd_socket,  HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len, "failed to transmit EAP packet");
+send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_QOS +eapdata_len +data_len, "failed to transmit EAP packet");
 gettimeofday(&tvpacketsent, NULL);
 memcpy(packetsent, packetoutptr, packetlenown);
 packetsentlen = packetlenown;
@@ -2625,7 +2625,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	if(packetsentlen != write(fd_socket, &packetsent, packetsentlen))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %d/%d socket write error: failed to retransmit EAP packet\n",  timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
+		printf("%s %d/%d socket write error: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 		errorcount++;
 		return;
 		}
@@ -2637,7 +2637,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	return;
 	}
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("%s %d/%d driver is busy: failed to retransmit EAP packet\n",  timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
+printf("%s %d/%d driver is busy: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 return;
 }
 /*===========================================================================*/
@@ -2827,30 +2827,30 @@ if(essidstring[0] == 0)
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if(essidstring[0] != 0)
 	{
-	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						essidstring, msg);
-	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						essidstring, msg);
-	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						essidstring, msg);
 	}
 else
 	{
-	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						msg);
-	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						msg);
-	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
 						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 						msg);
@@ -3461,7 +3461,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			}
 		else
 			{
-			tlsflags |=  (EAP_TLSFLAGS_MORE_FRAGMENTS);
+			tlsflags |= (EAP_TLSFLAGS_MORE_FRAGMENTS);
 			eaptlsctx->buflen = EAP_LEN_MAX -EXTEAP_SIZE -EAP_TLSFLAGS_SIZE -EAP_TLSLENGTH_SIZE;
 			}
 		
@@ -3589,7 +3589,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		res = SSL_read(eaptlsctx->ssl, inbuf, sizeof(inbuf));
 #ifdef DEBUG_TLS
-		snprintf(debugmsg, DEBUGMSG_MAX, "TLS connection read  len=%d, id=%d:", res, eapctx->id);
+		snprintf(debugmsg, DEBUGMSG_MAX, "TLS connection read len=%d, id=%d:", res, eapctx->id);
 		debugprint(res, inbuf, debugmsg);
 #endif
 		if(res > 0)
@@ -4042,30 +4042,30 @@ if(essidstring[0] != 0)
 	{
 	if(pmkflag == false)
 		{
-		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 							essidstring, msg, timegap, rc, kdv);
-		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 							essidstring, msg, timegap, rc, kdv);
-		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 				client[0], client[1], client[2], client[3], client[4], client[5],
 				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 				essidstring, msg, timegap, rc, kdv);
 		}
 	else
 		{
-		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 							essidstring, msg, timegap, rc, kdv, weakcandidate);
-		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 							essidstring, msg, timegap, rc, kdv, weakcandidate);
-		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 				client[0], client[1], client[2], client[3], client[4], client[5],
 				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 				essidstring, msg, timegap, rc, kdv, weakcandidate);
@@ -4073,15 +4073,15 @@ if(essidstring[0] != 0)
 	}
 else
 	{
-	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						client[0], client[1], client[2], client[3], client[4], client[5],
 						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 						msg, timegap, rc, kdv);
-	else if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 						client[0], client[1], client[2], client[3], client[4], client[5],
 						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 						msg, timegap, rc, kdv);
-	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			client[0], client[1], client[2], client[3], client[4], client[5],
 			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
 			msg, timegap, rc, kdv);
@@ -4369,19 +4369,19 @@ if(essidstring[0] != 0)
 		}
 	else
 		{
-		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
 							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
 							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
 							kdv, weakcandidate);
-		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 							client[0], client[1], client[2], client[3], client[4], client[5],
 							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
 							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
 							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
 							kdv, weakcandidate);
-		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 				client[0], client[1], client[2], client[3], client[4], client[5],
 				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
 				pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
@@ -5801,7 +5801,7 @@ if((rthp & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
 if((rthp & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
 if((rthp & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL) pf += 4;
 if((rthp & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS) pf += 2;
-if((rthp &  IEEE80211_RADIOTAP_DBM_ANTSIGNAL) ==  IEEE80211_RADIOTAP_DBM_ANTSIGNAL)
+if((rthp & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL)
 	{
 	if(pf > rthlen) return pfc;
 	rssi = packetptr[pf];
@@ -6075,7 +6075,7 @@ while(wantstopflag == false)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if((tv.tv_sec - tvlast_sec) > WATCHDOG)
+				if((tv.tv_sec -tvlast_sec) > WATCHDOG)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -6167,7 +6167,7 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 		}
 	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %4d  %3d %4d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-					zeiger->frequency, zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
+					zeiger->frequency, zeiger->channel, zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
 	}
 return;
 }
@@ -6528,7 +6528,7 @@ while(wantstopflag == false)
 				GPIO_SET = 1 << gpiostatusled;
 				nanosleep(&sleepled, NULL);
 				GPIO_CLR = 1 << gpiostatusled;
-				if((tv.tv_sec - tvlast_sec) > WATCHDOG)
+				if((tv.tv_sec -tvlast_sec) > WATCHDOG)
 					{
 					nanosleep(&sleepled, NULL);
 					GPIO_SET = 1 << gpiostatusled;
@@ -7334,7 +7334,7 @@ while(1)
 	if(memcmp(&linein, revstr, 8) == 0)
 		{
 		rpirevision = strtol(&linein[len -6], &revptr, 16);
-		if((revptr - linein) == len)
+		if((revptr -linein) == len)
 			{
 			rev = (rpirevision >> 4) &0xff;
 			if(rev <= 3)
@@ -7364,7 +7364,7 @@ while(1)
 			continue;
 			}
 		rpirevision = strtol(&linein[len -4], &revptr, 16);
-		if((revptr - linein) == len)
+		if((revptr -linein) == len)
 			{
 			if((rpirevision < 0x02) || (rpirevision > 0x15)) continue;
 			if((rpirevision == 0x11) || (rpirevision == 0x14)) continue;
@@ -9124,7 +9124,6 @@ if(showinterfaceflag == true)
 	return EXIT_SUCCESS;
 	}
 
-
 if(monitormodeflag == true)
 	{
 	if(getuid() != 0)
@@ -9217,8 +9216,6 @@ if(eapreqflag == true)
 		}
 	}
 
-if(checkdriverflag == true) printf("starting driver test...\n");
-
 if(opensocket() == false)
 	{
  	fprintf(stderr, "warning: failed to init socket\n");
@@ -9243,6 +9240,7 @@ if(showchannelsflag == true)
 
 if(checkdriverflag == true)
 	{
+	printf("starting driver test...\n");
 	ptrfscanlist = fscanlist;
 	ptrfscanlist->frequency = 2412;
 	ptrfscanlist->channel = 1;
@@ -9282,6 +9280,7 @@ else if(userscanliststring != NULL)
 	getscanlistchannel(userscanliststring);
 	}
 else getscanlist();
+
 
 if(pcapngoutname != NULL)
 	{
