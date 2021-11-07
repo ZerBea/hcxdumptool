@@ -73,6 +73,7 @@ static int opensslversionminor;
 static SSL_CTX *tlsctx;
 static eaptlsctx_t *eaptlsctx;
 
+static fscanlist_t *ptrfscanlist;
 static int fd_socket;
 static int fd_gps;
 static int fd_pcapng;
@@ -125,6 +126,7 @@ static int gpscount;
 
 static int rcaorder;
 static unsigned int injectionhit;
+static unsigned int responsehit;
 static unsigned int injectioncount;
 static unsigned int injectionratio;
 
@@ -139,7 +141,6 @@ static time_t tvlast_sec;
 static struct timeval tvold;
 static struct timeval tvtot;
 static struct timeval tvpacketsent;
-static int cpa;
 static uint32_t staytime;
 static uint16_t reasoncode;
 static uint32_t attackcount;
@@ -264,25 +265,7 @@ const int channelscanlist5[] =
 201, 205, 209, 213, 217, 221, 225, 229, 233, 0
 };
 
-static int channelscanlist[256] =
-{
-1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
-6, 11 ,8, 10, 1, 6, 11, 12, 13, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+static fscanlist_t fscanlist[SCANLIST_MAX +1];
 
 static uint8_t myessid[] = { "home" };
 
@@ -838,7 +821,9 @@ static inline void printreceivewatchdogwarnung()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, channelscanlist[cpa], tv.tv_sec - tvlast_sec);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,  tv.tv_sec - tvlast_sec);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -849,8 +834,12 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, channelscanlist[cpa],
-		errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+				errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+				errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+			errorcount, incomingcount, tv.tv_sec - tvlast_sec, outgoingcount,  pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -861,7 +850,9 @@ static inline void printposition()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d INFO GPS:%s\n", timestring, channelscanlist[cpa], &nmeasentence[7]);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel, &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -876,9 +867,15 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, channelscanlist[cpa],
-		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
-		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 	else printf("%s", servermsg);
 	return;
@@ -895,9 +892,15 @@ for(c = 0; c < zeiger->essidlen; c++)
 	else essidstring[p++] = zeiger->essid[c];
 	}
 essidstring[p] = 0;
-snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, channelscanlist[cpa],
-	toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
-	zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
+		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
 return;
@@ -1512,7 +1515,7 @@ if(FD_ISSET(txsocket, &txfds))
 	if(txsize != write(txsocket, packetoutptr, txsize))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %3d socket error: %s\n", timestring, channelscanlist[cpa], errormessage);
+		printf("%s %d/%d socket error: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
 		errorcount++;
 		return;
 		}
@@ -1521,7 +1524,7 @@ if(FD_ISSET(txsocket, &txfds))
 	return;
 	}
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("%s %3d driver is busy: %s\n", timestring, channelscanlist[cpa], errormessage);
+printf("%s %d/%d driver is busy: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
 return;
 }
 /*===========================================================================*/
@@ -2160,7 +2163,7 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &proberesponsedata, PROBERESPONSE_SIZE);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +0x15] = channelscanlist[cpa];
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +0x15] = ptrfscanlist->channel;
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +PROBERESPONSE_SIZE, "failed to transmit proberesponse");
 return;
 }
@@ -2288,7 +2291,7 @@ else
 		memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE], &proberesponse_ie_wpapsk, PROBERESPONSE_IE_WPAPSK_SIZE);
 		}
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size], &proberesponse_ie_extcap, PROBERESPONSE_IE_EXTCAP_SIZE);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +0x0c] = channelscanlist[cpa];
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +0x0c] = ptrfscanlist->channel;
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +zeigerap->essidlen +PROBERESPONSE_HEAD_SIZE +rsnwpa_size +PROBERESPONSE_IE_EXTCAP_SIZE, "failed to transmit proberesponse");
 return;
 }
@@ -2382,13 +2385,13 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE]
 if(((rgbeaconptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
 	{
 	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeaconwpaentdata, reactivebeaconwpaentdatalen);
-	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeaconwpaentdatachanoffset] = channelscanlist[cpa];
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeaconwpaentdatachanoffset] = ptrfscanlist->channel;
 	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeaconwpaentdatalen, "failed to transmit internal beacon");
 	}
 else
 	{
 	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
-	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatachanoffset] = ptrfscanlist->channel;
 	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 	}
 rgbeaconptr++;
@@ -2426,13 +2429,13 @@ memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE]
 if(((rgbeaconlistptr->akm & TAK_PMKSA) == TAK_PMKSA) || ((rgbeaconlistptr->akm & TAK_PMKSA256) == TAK_PMKSA256))
 	{
 	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeaconwpaentdata, reactivebeaconwpaentdatalen);
-	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeaconwpaentdatachanoffset] = channelscanlist[cpa];
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeaconwpaentdatachanoffset] = ptrfscanlist->channel;
 	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeaconwpaentdatalen, "failed to transmit internal beacon");
 	}
 else
 	{
 	memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen], &reactivebeacondata, reactivebeacondatalen);
-	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = channelscanlist[cpa];
+	packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatachanoffset] = ptrfscanlist->channel;
 	send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +IETAG_SIZE +rgbeaconlistptr->essidlen +reactivebeacondatalen, "failed to transmit internal beacon");
 	}
 rgbeaconlistptr++;
@@ -2461,7 +2464,7 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x411;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondatahidden, bcbeacondatahiddenlen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenchanoffset] = channelscanlist[cpa];
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenchanoffset] = ptrfscanlist->channel;
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondatahiddenlen, "failed to transmit internal beacon");
 return;
 }
@@ -2488,7 +2491,7 @@ capap->beaconintervall = BEACONINTERVALL;
 capap->capabilities = 0x401;
 packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE] = 0;
 memcpy(&packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE], &bcbeacondataopen, bcbeacondataopenlen);
-packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenchanoffset] = channelscanlist[cpa];
+packetoutptr[HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenchanoffset] = ptrfscanlist->channel;
 send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESAP_SIZE +bcbeacondataopenlen, "failed to transmit internal beacon");
 return;
 }
@@ -2627,7 +2630,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	if(packetsentlen != write(fd_socket, &packetsent, packetsentlen))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %3d socket write error: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
+		printf("%s %d/%d socket write error: failed to retransmit EAP packet\n",  timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 		errorcount++;
 		return;
 		}
@@ -2639,7 +2642,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	return;
 	}
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("%s %3d driver is busy: failed to retransmit EAP packet\n",  timestring, channelscanlist[cpa]);
+printf("%s %d/%d driver is busy: failed to retransmit EAP packet\n",  timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 return;
 }
 /*===========================================================================*/
@@ -2829,17 +2832,33 @@ if(essidstring[0] == 0)
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if(essidstring[0] != 0)
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, channelscanlist[cpa],
-		zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
-		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-		essidstring, msg);
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						essidstring, msg);
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						essidstring, msg);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						essidstring, msg);
 	}
 else
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, channelscanlist[cpa],
-		zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
-		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-		msg);
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						msg);
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						msg);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						zeiger->client[0], zeiger->client[1], zeiger->client[2], zeiger->client[3], zeiger->client[4], zeiger->client[5],
+						zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
+						msg);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
@@ -4028,25 +4047,49 @@ if(essidstring[0] != 0)
 	{
 	if(pmkflag == false)
 		{
-		snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, channelscanlist[cpa],
-			client[0], client[1], client[2], client[3], client[4], client[5],
-			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
-			essidstring, msg, timegap, rc, kdv);
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+							essidstring, msg, timegap, rc, kdv);
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+							essidstring, msg, timegap, rc, kdv);
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+				client[0], client[1], client[2], client[3], client[4], client[5],
+				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+				essidstring, msg, timegap, rc, kdv);
 		}
 	else
 		{
-		snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, channelscanlist[cpa],
-			client[0], client[1], client[2], client[3], client[4], client[5],
-			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
-			essidstring, msg, timegap, rc, kdv, weakcandidate);
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+							essidstring, msg, timegap, rc, kdv, weakcandidate);
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+							essidstring, msg, timegap, rc, kdv, weakcandidate);
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+				client[0], client[1], client[2], client[3], client[4], client[5],
+				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+				essidstring, msg, timegap, rc, kdv, weakcandidate);
 		}
 	}
 else
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, channelscanlist[cpa],
-		client[0], client[1], client[2], client[3], client[4], client[5],
-		ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
-		msg, timegap, rc, kdv);
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						client[0], client[1], client[2], client[3], client[4], client[5],
+						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+						msg, timegap, rc, kdv);
+	else if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+						client[0], client[1], client[2], client[3], client[4], client[5],
+						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+						msg, timegap, rc, kdv);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [EAPOL:%s EAPOLTIME:%" PRIu64 " RC:%" PRIu64 " KDV:%d]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+			client[0], client[1], client[2], client[3], client[4], client[5],
+			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5],
+			msg, timegap, rc, kdv);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
@@ -4310,31 +4353,67 @@ if(essidstring[0] != 0)
 	{
 	if(pmkflag == false)
 		{
-		snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, channelscanlist[cpa],
-			client[0], client[1], client[2], client[3], client[4], client[5],
-			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
-			pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
-			pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
-			kdv);
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+							kdv);
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+							kdv);
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+				client[0], client[1], client[2], client[3], client[4], client[5],
+				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+				pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+				pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+				kdv);
 		}
 	else
 		{
-		snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, channelscanlist[cpa],
-			client[0], client[1], client[2], client[3], client[4], client[5],
-			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
-			pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
-			pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
-			kdv, weakcandidate);
+		if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+							kdv, weakcandidate);
+		else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+							client[0], client[1], client[2], client[3], client[4], client[5],
+							ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+							pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+							pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+							kdv, weakcandidate);
+		else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d PSK:%s]\n", timestring, ptrfscanlist->frequency,  ptrfscanlist->channel,
+				client[0], client[1], client[2], client[3], client[4], client[5],
+				ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], essidstring, msg,
+				pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+				pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+				kdv, weakcandidate);
 		}
 	}
 else
 	{
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, channelscanlist[cpa],
-		client[0], client[1], client[2], client[3], client[4], client[5],
-		ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], msg,
-		pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
-		pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
-		kdv);
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+						client[0], client[1], client[2], client[3], client[4], client[5],
+						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], msg,
+						pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+						pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+						kdv);
+	else if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+						client[0], client[1], client[2], client[3], client[4], client[5],
+						ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], msg,
+						pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+						pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+						kdv);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [ESSID NOT RECEIVED YET] [%s:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x KDV:%d]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+			client[0], client[1], client[2], client[3], client[4], client[5],
+			ap[0], ap[1], ap[2], ap[3], ap[4], ap[5], msg,
+			pmkid[0], pmkid[1], pmkid[2], pmkid[3], pmkid[4], pmkid[5], pmkid[6], pmkid[7],
+			pmkid[8], pmkid[9], pmkid[10], pmkid[11], pmkid[12], pmkid[13], pmkid[14], pmkid[15],
+			kdv);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else printf("%s", servermsg);
@@ -5350,7 +5429,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		memcpy(zeiger->ap, macfrx->addr2, 6);
 		if(tags.channel != 0) zeiger->channel = tags.channel;
-		else zeiger->channel = channelscanlist[cpa];
+		else zeiger->channel = ptrfscanlist->channel;
 		zeiger->kdversion = tags.kdversion;
 		zeiger->groupcipher = tags.groupcipher;
 		zeiger->cipher = tags.cipher;
@@ -5376,7 +5455,7 @@ zeiger->timestamp = timestamp;
 zeiger->status = AP_PROBE_RESP;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
+else zeiger->channel = ptrfscanlist->channel;
 zeiger->kdversion = tags.kdversion;
 zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
@@ -5416,7 +5495,11 @@ memcpy(zeiger->id, pagidptr, 64);
 if(((statusout &STATUS_AP_BEACON_PROBE) == STATUS_AP_BEACON_PROBE) || ((statusout &STATUS_ROGUE) == STATUS_ROGUE) || ((statusout &STATUS_ASSOCIATION) == STATUS_ASSOCIATION))
 	{
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-	snprintf(servermsg, SERVERMSG_MAX, "%s %3d              %02x%02x%02x%02x%02x%02x [PWNAGOTCHI ID:%.*s]\n", timestring, channelscanlist[cpa],
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d                            %02x%02x%02x%02x%02x%02x [PWNAGOTCHI ID:%.*s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+							macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d                             %02x%02x%02x%02x%02x%02x [PWNAGOTCHI ID:%.*s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+							macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d                              %02x%02x%02x%02x%02x%02x [PWNAGOTCHI ID:%.*s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			macfrx->addr2[0], macfrx->addr2[1], macfrx->addr2[2], macfrx->addr2[3], macfrx->addr2[4], macfrx->addr2[5], 64, zeiger->id);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 	else printf("%s", servermsg);
@@ -5488,7 +5571,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		zeiger->timestamp = timestamp;
 		memcpy(zeiger->ap, macfrx->addr2, 6);
 		if(tags.channel != 0) zeiger->channel = tags.channel;
-		else zeiger->channel = channelscanlist[cpa];
+		else zeiger->channel = ptrfscanlist->channel;
 		zeiger->kdversion = tags.kdversion;
 		zeiger->groupcipher = tags.groupcipher;
 		zeiger->cipher = tags.cipher;
@@ -5507,7 +5590,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 		if(memcmp(&mac_null, zeiger->client, 6) != 0) send_deauthentication2client(zeiger->client, zeiger->ap, reasoncode);
 		send_deauthentication2client(macfrx->addr1, macfrx->addr2, reasoncode);
 		}
-	if((channelscanlist[cpa] == zeiger->channel) && (zeiger->status < AP_M2M3) && (zeiger->count <= attackstopcount))
+	if((ptrfscanlist->channel == zeiger->channel) && (zeiger->status < AP_M2M3) && (zeiger->count <= attackstopcount))
 		{
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS)
 			{
@@ -5555,7 +5638,7 @@ zeiger->timestamp = timestamp;
 zeiger->status = AP_BEACON;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 if(tags.channel != 0) zeiger->channel = tags.channel;
-else zeiger->channel = channelscanlist[cpa];
+else zeiger->channel = ptrfscanlist->channel;
 zeiger->kdversion = tags.kdversion;
 zeiger->groupcipher = tags.groupcipher;
 zeiger->cipher = tags.cipher;
@@ -5575,7 +5658,7 @@ if(fd_pcapng > 0)
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
 if(fh_nmea != NULL) writegpwpl(macfrx->addr2);
-if(channelscanlist[cpa] == zeiger->channel)
+if(ptrfscanlist->channel == zeiger->channel)
 	{
 	if((tags.essidlen != 0) && (tags.essid[0] != 0))
 		{
@@ -5626,7 +5709,8 @@ static struct iwreq pwrq;
 memset(&pwrq, 0, sizeof(pwrq));
 strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = channelscanlist[cpa];
+pwrq.u.freq.m = ptrfscanlist->frequency;
+pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
@@ -5960,7 +6044,7 @@ else printf("%s", servermsg);
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMERB;
-cpa = 0;
+ptrfscanlist = fscanlist; 
 if(set_channel() == false) errorcount++;
 if(beaconactiveflag == true)
 	{
@@ -6008,8 +6092,8 @@ while(wantstopflag == false)
 			}
 		if((tv.tv_sec %staytime) == 0)
 			{
-			cpa++;
-			if(channelscanlist[cpa] == 0) cpa = 0;
+			ptrfscanlist++;
+			if(ptrfscanlist->frequency == 0) ptrfscanlist = fscanlist;
 			if(set_channel() == false)
 				{
 				errorcount++;
@@ -6073,9 +6157,9 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_beacon);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID         CH  RSSI BEACON RESPONSE ESSID  SCAN-CH: %3d INJECTION-RATIO: %3d%% [%s]\n"
-	"---------------------------------------------------------------------------------------------\n",
-	channelscanlist[cpa], injectionratio, timestring);
+printf("\033[2J\033[0;0H BSSID        FREQ   CH RSSI BEACON RESPONSE ESSID  SCAN-FREQ: %4d INJECTION-RATIO: %3d%% [%s]\n"
+	"-----------------------------------------------------------------------------------------------------\n",
+	ptrfscanlist->frequency, injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 	{
 	if(zeiger->count == 0) return;
@@ -6086,9 +6170,9 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 		injectionratio = (injectionhit *100) /injectioncount;
 		if(injectionratio > 100) injectionratio = 100;
 		}
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %3d  %4d %6d   %6d %s\n",
+	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %4d  %3d %4d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
-					zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
+					zeiger->frequency, zeiger->channel,  zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
 	}
 return;
 }
@@ -6112,19 +6196,31 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
-	if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
+	if(tags.channel == ptrfscanlist->channel)
+		{
+		zeiger->frequency = ptrfscanlist->frequency;
+		zeiger->channel = tags.channel;
+		}
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
 	zeiger->proberesponse +=1;
 	zeiger->rssi = rssi;
 	zeiger->essidlen = tags.essidlen;
 	memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->hit += 1;
+	if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0)
+		{
+		zeiger->hit += 1;
+		responsehit++;
+		}
 	return;
 	}
 memset(zeiger, 0, SCANLIST_SIZE);
 gettags(apinfolen, apinfoptr, &tags);
-if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
+if(tags.channel == ptrfscanlist->channel)
+	{
+	zeiger->frequency = ptrfscanlist->frequency;
+	zeiger->channel = tags.channel;
+	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 zeiger->proberesponse =1;
@@ -6132,7 +6228,11 @@ zeiger->rssi = rssi;
 memcpy(zeiger->ap, macfrx->addr2, 6);
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, ESSID_LEN_MAX);
-if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0) zeiger->hit += 1;
+if(memcmp(macfrx->addr1, &mac_myclient, 6) == 0)
+	{
+	zeiger->hit += 1;
+	responsehit++;
+	}
 qsort(scanlist, zeiger -scanlist, SCANLIST_SIZE, sort_scanlist_by_hit);
 return;
 }
@@ -6156,7 +6256,11 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
-	if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
+	if(tags.channel == ptrfscanlist->channel)
+		{
+		zeiger->frequency = ptrfscanlist->frequency;
+		zeiger->channel = tags.channel;
+		}
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
 	zeiger->beacon += 1;
@@ -6173,7 +6277,11 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	}
 memset(zeiger, 0, SCANLIST_SIZE);
 gettags(apinfolen, apinfoptr, &tags);
-if(tags.channel == channelscanlist[cpa]) zeiger->channel = tags.channel;
+if(tags.channel == ptrfscanlist->channel)
+	{
+	zeiger->frequency = ptrfscanlist->frequency;
+	zeiger->channel = tags.channel;
+	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 zeiger->beacon = 1;
@@ -6291,7 +6399,6 @@ tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMER;
-cpa = 0;
 if(set_channel() == false) errorcount++;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 printrcascan();
@@ -6310,8 +6417,8 @@ while(wantstopflag == false)
 	if(tv.tv_sec != tvold.tv_sec)
 		{
 		get_channel();
-		cpa++;
-		if(channelscanlist[cpa] == 0) cpa = 0;
+		ptrfscanlist++;
+		if(ptrfscanlist->frequency == 0) ptrfscanlist = fscanlist;
 		if(set_channel() == false)
 			{
 			errorcount++;
@@ -6361,8 +6468,8 @@ while(wantstopflag == false)
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet_rca();
 	else
 		{
-		cpa++;
-		if(channelscanlist[cpa] == 0) cpa = 0;
+		ptrfscanlist++;
+		if(ptrfscanlist->frequency == 0) ptrfscanlist = fscanlist;
 		if(set_channel() == false)
 			{
 			errorcount++;
@@ -6388,7 +6495,7 @@ static bool inject6 = false;
 static int networkcount = 0;
 static int networkhit = 0;
 static int networkratio = 0;
-static int stagecount = 2;
+static int stagecount = 1;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -6398,18 +6505,11 @@ tsfd.tv_nsec = FDNSECTIMER;
 if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 attackstatus = 0;
 fprintf(stdout, "starting antenna test and packet injection test (that can take up to two minutes)...\n");
-cpa = 0;
-fprintf(stdout, "available channels: ");
-while(channelscanlist[cpa] != 0)
-	{
-	if(channelscanlist[cpa +1] != 0) fprintf(stdout, "%d,", channelscanlist[cpa]);
-	else fprintf(stdout, "%d\n", channelscanlist[cpa]);
-	cpa++;
-	}
-cpa = 0;
+ptrfscanlist = fscanlist;
 if(set_channel() == false) errorcount++;
 while(tvold.tv_sec == tv.tv_sec) gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
+fprintf(stdout, "\e[?25lstage %d of 2 probing frequency %d/%d proberesponse %d", stagecount, ptrfscanlist->frequency, ptrfscanlist->channel, responsehit);
 while(wantstopflag == false)
 	{
 	if(errorcount >= maxerrorcount)
@@ -6425,10 +6525,6 @@ while(wantstopflag == false)
 	if(tv.tv_sec != tvold.tv_sec)
 		{
 		get_channel();
-		cpa++;
-		if(channelscanlist[cpa] == 0) stagecount--;
-		if(stagecount == 0) break;
-		if(set_channel() == false) continue;
 		tvold.tv_sec = tv.tv_sec;
 		if((tv.tv_sec %gpiostatusledflashinterval) == 0)
 			{
@@ -6445,6 +6541,18 @@ while(wantstopflag == false)
 					GPIO_CLR = 1 << gpiostatusled;
 					}
 				}
+			}
+		if((tv.tv_sec %2) == 0)
+			{
+			ptrfscanlist++;
+			if(ptrfscanlist->frequency == 0)
+				{
+				ptrfscanlist = fscanlist;
+				stagecount++;
+				}
+			if(stagecount >= 3) break;
+			if(set_channel() == false) continue;
+			fprintf(stdout, "\rstage %d of 2 probing frequency %d/%d proberesponse %d   ", stagecount, ptrfscanlist->frequency, ptrfscanlist->channel, responsehit);
 			}
 		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
 		}
@@ -6464,16 +6572,9 @@ while(wantstopflag == false)
 		}
 	if(FD_ISSET(fd_gps, &readfds)) process_gps();
 	else if(FD_ISSET(fd_socket, &readfds)) process_packet_rca();
-	else
-		{
-		cpa++;
-		if(channelscanlist[cpa] == 0) stagecount--;
-		if(stagecount == 0) break;
-		if(set_channel() == false) continue;
-		if((attackstatus &DISABLE_AP_ATTACKS) != DISABLE_AP_ATTACKS) send_proberequest_undirected_broadcast();
-		}
 	}
 qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_hit);
+fprintf(stdout, "\e[?25h\n");
 for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	{
 	if(zeiger->count == 0) break;
@@ -7288,53 +7389,142 @@ if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
-static inline void auto_channel()
+static inline void getscanlistchannel(char *scanlistin)
 {
-static int c;
+static int lf;
 static struct iwreq pwrq;
+static char *fscanlistdup;
+static char *tokptr;
 
-cpa = 0;
-for(c = 1; c < 256; c++)
+fscanlistdup = strndup(scanlistin, 4096);
+if(fscanlistdup == NULL) return;
+tokptr = strtok(fscanlistdup, ",");
+ptrfscanlist = fscanlist;
+lf = 1;
+while((tokptr != NULL) && (ptrfscanlist < fscanlist +SCANLIST_MAX))
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c;
-	pwrq.u.freq.e = 0;
+	pwrq.u.freq.m = atoi(tokptr);
+	tokptr = strtok(NULL, ",");
+	if(pwrq.u.freq.m > 1000) pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
-	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
-	channelscanlist[cpa] = c;
-	cpa++;
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	ptrfscanlist->frequency = pwrq.u.freq.m;
+	if((pwrq.u.freq.m >= 2407) && (pwrq.u.freq.m <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+	else if((pwrq.u.freq.m >= 2481) && (pwrq.u.freq.m <= 2487)) ptrfscanlist->channel = (pwrq.u.freq.m -2412)/5;
+	else if((pwrq.u.freq.m >= 5005) && (pwrq.u.freq.m <= 5980)) ptrfscanlist->channel = (pwrq.u.freq.m -5000)/5;
+	else if((pwrq.u.freq.m >= 5955) && (pwrq.u.freq.m <= 6415)) ptrfscanlist->channel = (pwrq.u.freq.m -5950)/5;
+	else continue;
+	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
+	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	lf++;
+	if(lf > 14)
+		{
+		fprintf(stdout, "\n");
+		lf = 1;
+		}
+	ptrfscanlist++;
 	}
-channelscanlist[cpa] = 0;
+if((ptrfscanlist > fscanlist) && (lf > 1)) fprintf(stdout, "\n");
+ptrfscanlist->frequency = 0;
+ptrfscanlist->channel = 0;
+free(fscanlistdup);
 return;
 }
 /*===========================================================================*/
-static inline void testscanlist()
+static inline void getscanlist()
 {
 static int c;
+static int lf;
 static struct iwreq pwrq;
+static fscanlist_t *ptrold;
 
-c = 0;
-cpa = 0;
-while(channelscanlist[c] != 0)
+fprintf(stdout, "get frequency range from interface %s:\n", interfacename);
+ptrfscanlist = fscanlist;
+lf = 1;
+for(c = 2407; c < 2488; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = channelscanlist[c];
-	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+	ptrfscanlist->frequency = c;
+	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+	else continue;
+	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
+	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	lf++;
+	if(lf > 14)
 		{
-		fprintf(stdout, "channel %d not available\n", channelscanlist[c]);
-		c++;
-		continue;
+		fprintf(stdout, "\n");
+		lf = 1;
 		}
-	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
-	channelscanlist[cpa] = channelscanlist[c];
-	cpa++;
-	c++;
+	ptrfscanlist++;
 	}
-channelscanlist[cpa] = 0;
+if((ptrfscanlist > fscanlist) && (lf > 1)) fprintf(stdout, "\n");
+ptrold = ptrfscanlist;
+lf = 1;
+for(c = 5005; c < 5981; c++)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
+	ptrfscanlist->frequency = c;
+	if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
+	else continue;
+	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
+	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	lf++;
+	if(lf > 14)
+		{
+		fprintf(stdout, "\n");
+		lf = 1;
+		}
+	ptrfscanlist++;
+	}
+if((ptrfscanlist > ptrold) && (lf > 1)) fprintf(stdout, "\n");
+ptrold = ptrfscanlist;
+lf = 1;
+for(c = 5955; c < 6416; c++)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
+	ptrfscanlist->frequency = c;
+	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+	else continue;
+	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
+	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
+	lf++;
+	if(lf > 14)
+		{
+		fprintf(stdout, "\n");
+		lf = 1;
+		}
+	ptrfscanlist++;
+	}
+if((ptrfscanlist > ptrold) && (lf > 1)) fprintf(stdout, "\n");
+ptrfscanlist->frequency = 0;
+ptrfscanlist->channel = 0;
 return;
 }
 /*===========================================================================*/
@@ -7974,6 +8164,7 @@ eapolmp23count = 0;
 eapolmp34count = 0;
 eapolmp34zeroedcount = 0;
 injectionhit = 0;
+responsehit = 0;
 injectioncount = 0;
 injectionratio = 0;
 gpscount = 0;
@@ -8050,7 +8241,6 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 2 = 1,2,3,4,5,6,7,8,9,10,11,12,13 (standard 2.4 GHz)\n"
 	"                 3 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 5GHz)\n"
 	"                 4 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 2.4GHz/5GHz)\n"
-	"                 5 = 201,205,209,213,217,221,225,229,233 (standard 6GHz)\n"
 	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
 	"                 default %d seconds\n"
 	"-m <interface> : set monitor mode by ioctl() system call and quit\n"
@@ -8339,7 +8529,6 @@ static char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static char *eapreqhex;
-static char *tokptr;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
@@ -8430,7 +8619,6 @@ fd_pcapng = 0;
 fd_devnull = 0;
 rcaorder = 0;
 sl = 0;
-cpa = 0;
 gpiostatusledflashinterval = LEDFLASHINTERVAL;
 staytime = STAYTIME;
 attackcount = staytime *10;
@@ -8494,7 +8682,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_CHANNEL:
-		userscanliststring = strndup(optarg, 4096);
+		userscanliststring = optarg;
 		break;
 
 		case HCX_SCANLIST:
@@ -8941,67 +9129,7 @@ if(showinterfaceflag == true)
 	return EXIT_SUCCESS;
 	}
 
-if(sl == 1)
-	{
-	while(channelscanlist1[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist1[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-else if(sl == 2)
-	{
-	while(channelscanlist2[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist2[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-else if(sl == 3)
-	{
-	while(channelscanlist3[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist3[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-else if(sl == 4)
-	{
-	while(channelscanlist4[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist4[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-else if(sl == 5)
-	{
-	while(channelscanlist5[cpa] != 0)
-		{
-		channelscanlist[cpa] = channelscanlist5[cpa];
-		cpa++;
-		}
-	channelscanlist[cpa] = 0;
-	}
-else if(userscanliststring != NULL)
-	{
-	tokptr = strtok(userscanliststring, ",");
-	while(tokptr != NULL)
-		{
-		channelscanlist[cpa] = atoi(tokptr);
-		tokptr = strtok(NULL, ",");
-		cpa++;
-		if(cpa > 255)
-			{
-			fprintf(stderr, "only 255 channels allowed\n");
-			exit(EXIT_FAILURE);
-			}
-		}
-	channelscanlist[cpa] = 0;
-	}
+
 if(monitormodeflag == true)
 	{
 	if(getuid() != 0)
@@ -9120,18 +9248,44 @@ if(showchannelsflag == true)
 
 if(checkdriverflag == true)
 	{
-	cpa = 0;
+	ptrfscanlist = fscanlist;
+	ptrfscanlist->frequency = 2412;
+	ptrfscanlist->channel = 1;
 	if(set_channel() == false) errorcount++;
-	if(errorcount == 0) printf("driver tests passed...\nall required ioctl() system calls are supported by driver\n");
-	else printf("several driver errors encountered during the test - monitor mode and ioctl() system calls failed\n");
+	if(errorcount == 0) fprintf(stdout, "driver tests passed...\nall required ioctl() system calls are supported by driver\n");
+	else fprintf(stderr, "%d driver error(s) encountered during the test - monitor mode and ioctl() system calls failed\n", errorcount);
 	globalclose();
 	return EXIT_SUCCESS;
 	}
 
-if(injectionflag == true) auto_channel();
-else if((sl == 0) && (userscanliststring == NULL)) auto_channel();
-testscanlist();
-if(userscanliststring != NULL) free(userscanliststring);
+if(injectionflag == true)
+	{
+	getscanlist();
+	process_fd_injection();
+	globalclose();
+	return EXIT_SUCCESS;
+	}
+
+if(sl == 1)
+	{
+	}
+else if(sl == 2)
+	{
+	}
+else if(sl == 3)
+	{
+	}
+else if(sl == 4)
+	{
+	}
+else if(userscanliststring != NULL)
+	{
+	getscanlistchannel(userscanliststring);
+	}
+else getscanlist();
+
+if(rcascanflag == false) process_fd();
+else process_fd_rca();
 
 if(pcapngoutname != NULL)
 	{
@@ -9169,11 +9323,6 @@ if(nmeaoutname != NULL)
 	}
 
 if((gpsname != NULL) || (gpsdflag == true)) opengps();
-
-if(rcascanflag == true) process_fd_rca();
-else if(injectionflag == true) process_fd_injection();
-else process_fd();
-
 globalclose();
 return EXIT_SUCCESS;
 }

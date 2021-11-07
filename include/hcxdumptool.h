@@ -373,6 +373,7 @@ typedef struct
  unsigned int		hit;
  char			rssi;
  uint8_t		channel;
+ unsigned int		frequency;
  uint8_t		essidlen;
  uint8_t		essid[ESSID_LEN_MAX];
 }scanlist_t;
@@ -439,4 +440,11 @@ uint8_t			mode;
 #define EAPREQLIST_MODE_TLS 1
 }eapreqlist_t;
 #define EAPREQLIST_SIZE (sizeof(eapreqlist_t))
+/*===========================================================================*/
+typedef struct
+{
+unsigned int	frequency;
+unsigned int	channel;
+}fscanlist_t;
+#define	FSCANLIST_SIZE (sizeof(fscanlist_t))
 /*===========================================================================*/
