@@ -5711,14 +5711,11 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
 	fprintf(stderr, "driver doesn't support ioctl() SIOCGIWFREQ\n");
 	return false;
 	}
-if(pwrq.u.freq.m != freq)
-	{
-	fprintf(stderr, "driver use unsupported frequency format\n"
-			"expected frequency: %d - reported frequency: %d\n"
-			"expected exponent;  6    - reported exponent:  %d\n",
-			freq, pwrq.u.freq.m, pwrq.u.freq.e);
-	return false;
-	}
+if((pwrq.u.freq.m == freq) && (pwrq.u.freq.e == 6)) return true;
+fprintf(stderr, "driver use unsupported frequency format\n"
+		"expected frequency: %d - reported frequency: %d\n"
+		"expected exponent;  6    - reported exponent:  %d\n",
+		freq, pwrq.u.freq.m, pwrq.u.freq.e);
 return true;
 }
 /*===========================================================================*/
