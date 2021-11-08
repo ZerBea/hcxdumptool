@@ -5692,6 +5692,36 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
 }
 /*===========================================================================*/
+static inline bool set_channel_test(int freq)
+{
+static struct iwreq pwrq;
+
+memset(&pwrq, 0, sizeof(pwrq));
+strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+pwrq.u.freq.flags = IW_FREQ_FIXED;
+pwrq.u.freq.m = freq;
+pwrq.u.freq.e = 6;
+if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+	{
+	fprintf(stderr, "driver doesn't support ioctl() SIOCSIWFREQ\n");
+	return false;
+	}
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
+	{
+	fprintf(stderr, "driver doesn't support ioctl() SIOCGIWFREQ\n");
+	return false;
+	}
+if(pwrq.u.freq.m != freq)
+	{
+	fprintf(stderr, "driver use unsupported frequency format\n"
+			"expected frequency: %d - reported frequency: %d\n"
+			"expected exponent;  6    - reported exponent:  %d\n",
+			freq, pwrq.u.freq.m, pwrq.u.freq.e);
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
 static inline void process_gps()
 {
 static char *nmeaptr;
@@ -9173,10 +9203,7 @@ if(showchannelsflag == true)
 if(checkdriverflag == true)
 	{
 	printf("starting driver test...\n");
-	ptrfscanlist = fscanlist;
-	ptrfscanlist->frequency = 2412;
-	ptrfscanlist->channel = 1;
-	if(set_channel() == false) errorcount++;
+	if(set_channel_test(2412) == false) errorcount++;
 	if(errorcount == 0) fprintf(stdout, "driver tests passed...\nall required ioctl() system calls are supported by driver\n");
 	else fprintf(stderr, "%d driver error(s) encountered during the test - monitor mode and ioctl() system calls failed\n", errorcount);
 	globalclose();
@@ -9191,31 +9218,16 @@ if(injectionflag == true)
 	return EXIT_SUCCESS;
 	}
 
-if(sl == 1)
-	{
-	getscanlistchannel(channelscanlist1);
-	}
-else if(sl == 2)
-	{
-	getscanlistchannel(channelscanlist2);
-	}
-else if(sl == 3)
-	{
-	getscanlistchannel(channelscanlist3);
-	}
-else if(sl == 4)
-	{
-	getscanlistchannel(channelscanlist4);
-	}
-else if(userscanliststring != NULL)
-	{
-	getscanlistchannel(userscanliststring);
-	}
+if(sl == 1) getscanlistchannel(channelscanlist1);
+else if(sl == 2) getscanlistchannel(channelscanlist2);
+else if(sl == 3) getscanlistchannel(channelscanlist3);
+else if(sl == 4) getscanlistchannel(channelscanlist4);
+else if(userscanliststring != NULL) getscanlistchannel(userscanliststring);
 else getscanlist();
 
 if(ptrfscanlist == fscanlist)
 	{
-	fprintf(stderr, "no frequencies detected\n");
+	fprintf(stderr, "no frequencies available\n");
 	errorcount++;
 	globalclose();
 	}
