@@ -7435,6 +7435,7 @@ static struct iwreq pwrq;
 ptrfscanlist = fscanlist;
 for(c = 2407; c < 2488; c++)
 	{
+	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
@@ -7450,6 +7451,7 @@ for(c = 2407; c < 2488; c++)
 	}
 for(c = 5005; c < 5981; c++)
 	{
+	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
@@ -7464,6 +7466,7 @@ for(c = 5005; c < 5981; c++)
 	}
 for(c = 5955; c < 6416; c++)
 	{
+	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
