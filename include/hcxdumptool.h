@@ -72,6 +72,7 @@
 #define EAPLIST_MAX		1024
 #define EAPREQLIST_MAX		20
 
+#define FSCANLIST_MAX		1000
 #define SCANLIST_MAX		256
 #define FILTERLIST_MAX		256
 #define	FILTERLIST_LINE_LEN	256
@@ -443,8 +444,8 @@ uint8_t			mode;
 /*===========================================================================*/
 typedef struct
 {
-unsigned int	frequency;
-unsigned int	channel;
+int	frequency;
+int	channel;
 }fscanlist_t;
 #define	FSCANLIST_SIZE (sizeof(fscanlist_t))
 /*===========================================================================*/

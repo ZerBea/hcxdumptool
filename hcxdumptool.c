@@ -241,7 +241,7 @@ const char *channelscanlist2 = "1,2,3,4,5,6,7,8,9,10,11,12,13";
 const char *channelscanlist3 = "36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 const char *channelscanlist4 = "1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 
-static fscanlist_t fscanlist[SCANLIST_MAX +1];
+static fscanlist_t fscanlist[FSCANLIST_MAX +1];
 
 static uint8_t myessid[] = { "home" };
 
@@ -7402,7 +7402,7 @@ fscanlistdup = strndup(scanlistin, 4096);
 if(fscanlistdup == NULL) return;
 tokptr = strtok(fscanlistdup, ",");
 ptrfscanlist = fscanlist;
-while((tokptr != NULL) && (ptrfscanlist < fscanlist +SCANLIST_MAX))
+while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
@@ -7435,7 +7435,7 @@ static struct iwreq pwrq;
 ptrfscanlist = fscanlist;
 for(c = 2407; c < 2488; c++)
 	{
-	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
+	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
@@ -7451,7 +7451,7 @@ for(c = 2407; c < 2488; c++)
 	}
 for(c = 5005; c < 5981; c++)
 	{
-	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
+	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
@@ -7466,7 +7466,7 @@ for(c = 5005; c < 5981; c++)
 	}
 for(c = 5955; c < 6416; c++)
 	{
-	if(ptrfscanlist >= fscanlist +SCANLIST_MAX) break;
+	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
