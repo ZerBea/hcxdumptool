@@ -236,29 +236,10 @@ static uint8_t hdradiotap[] =
 };
 #define HDRRT_SIZE sizeof(hdradiotap)
 
-const int channelscanlist1[] =
-{
-1, 6, 11, 3, 5, 1, 6, 11, 2, 4, 1, 6, 11, 7, 9, 1,
-6, 11 ,8, 10, 1, 6, 11, 12, 13, 0
-};
-
-const int channelscanlist2[] =
-{
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0
-};
-
-const int channelscanlist3[] =
-{
-36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
-132, 136, 140, 144, 149, 153, 157, 161, 165, 0
-};
-
-const int channelscanlist4[] =
-{
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
-132, 136, 140, 144, 149, 153, 157, 161, 165, 0
-};
+const char *channelscanlist1 = "1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13";
+const char *channelscanlist2 = "1,2,3,4,5,6,7,8,9,10,11,12,13";
+const char *channelscanlist3 = "36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
+const char *channelscanlist4 = "1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 
 static fscanlist_t fscanlist[SCANLIST_MAX +1];
 
@@ -7384,9 +7365,8 @@ if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
-static inline void getscanlistchannel(char *scanlistin)
+static inline void getscanlistchannel(const char *scanlistin)
 {
-static int lf;
 static struct iwreq pwrq;
 static char *fscanlistdup;
 static char *tokptr;
@@ -7395,7 +7375,6 @@ fscanlistdup = strndup(scanlistin, 4096);
 if(fscanlistdup == NULL) return;
 tokptr = strtok(fscanlistdup, ",");
 ptrfscanlist = fscanlist;
-lf = 1;
 while((tokptr != NULL) && (ptrfscanlist < fscanlist +SCANLIST_MAX))
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7413,18 +7392,8 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +SCANLIST_MAX))
 	else if((pwrq.u.freq.m >= 5955) && (pwrq.u.freq.m <= 6415)) ptrfscanlist->channel = (pwrq.u.freq.m -5950)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
-	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	lf++;
-	if(lf > 14)
-		{
-		fprintf(stdout, "\n");
-		lf = 1;
-		}
 	ptrfscanlist++;
 	}
-if((ptrfscanlist > fscanlist) && (lf > 1)) fprintf(stdout, "\n");
 ptrfscanlist->frequency = 0;
 ptrfscanlist->channel = 0;
 free(fscanlistdup);
@@ -7434,13 +7403,9 @@ return;
 static inline void getscanlist()
 {
 static int c;
-static int lf;
 static struct iwreq pwrq;
-static fscanlist_t *ptrold;
 
-fprintf(stdout, "get frequency range from interface %s:\n", interfacename);
 ptrfscanlist = fscanlist;
-lf = 1;
 for(c = 2407; c < 2488; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7454,20 +7419,8 @@ for(c = 2407; c < 2488; c++)
 	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
-	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	lf++;
-	if(lf > 14)
-		{
-		fprintf(stdout, "\n");
-		lf = 1;
-		}
 	ptrfscanlist++;
 	}
-if((ptrfscanlist > fscanlist) && (lf > 1)) fprintf(stdout, "\n");
-ptrold = ptrfscanlist;
-lf = 1;
 for(c = 5005; c < 5981; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7480,20 +7433,8 @@ for(c = 5005; c < 5981; c++)
 	if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
-	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	lf++;
-	if(lf > 14)
-		{
-		fprintf(stdout, "\n");
-		lf = 1;
-		}
 	ptrfscanlist++;
 	}
-if((ptrfscanlist > ptrold) && (lf > 1)) fprintf(stdout, "\n");
-ptrold = ptrfscanlist;
-lf = 1;
 for(c = 5955; c < 6416; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7506,18 +7447,8 @@ for(c = 5955; c < 6416; c++)
 	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
-	if(ptrfscanlist->channel >= 100) fprintf(stdout, "%d/%d ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else if(ptrfscanlist->channel >= 10) fprintf(stdout, "%d/%d  ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	else fprintf(stdout, "%d/%d   ", ptrfscanlist->frequency, ptrfscanlist->channel);
-	lf++;
-	if(lf > 14)
-		{
-		fprintf(stdout, "\n");
-		lf = 1;
-		}
 	ptrfscanlist++;
 	}
-if((ptrfscanlist > ptrold) && (lf > 1)) fprintf(stdout, "\n");
 ptrfscanlist->frequency = 0;
 ptrfscanlist->channel = 0;
 return;
@@ -8221,28 +8152,28 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"                 32: WPA encrypted frames\n"
 	"                 64: vendor defined frames (AWDL)\n"
 	"                 to clear default values use -f 0 first, followed by desired frame type (e.g. -f 0 -f 4)\n"
-	"-c <digit>     : set channel (1,2,3, ...) or frequency (2437,2462,5600,...)\n"
-	"                 default: auto channel/auto band\n"
+	"-c <digit>     : set frequency (2437,2462,5600,...) or channel (1,2,3, ...)\n"
+	"                 default: auto frequency/auto band\n"
 	"                 maximum entries: 255\n"
 	"                 0 - 1000 treated as channel\n"
 	"                   > 1000 treated as frequency in MHz\n"
-	"                 channel numbers are not longer unique\n"
 	"                 on 5GHz and 6Ghz it is recommended to use frequency instead of channel number\n"
+	"                 because channel numbers are not longer unique\n"
 	"                 standard 802.11 channels (depend on device, driver and world regulatory domain):\n"
 	"                 https://en.wikipedia.org/wiki/List_of_WLAN_channels\n"
 	"-s <digit>     : set predefined scanlist\n"
-	"                 0 = auto channel/auto band (default)\n"
-	"                 1 = 1,6,11,3,5,1,6,11,2,4,1,6,11,7,9,1,6,11,8,10,1,6,11,12,13 (optimized 2.4GHz)\n"
-	"                 2 = 1,2,3,4,5,6,7,8,9,10,11,12,13 (standard 2.4 GHz)\n"
-	"                 3 = 36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 5GHz)\n"
-	"                 4 = 1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,149,153,157,161,165 (standard 2.4GHz/5GHz)\n"
-	"-t <seconds>   : stay time on channel before hopping to the next channel\n"
+	"                 0 = auto frequency/auto band (default)\n"
+	"                 1 = %s (optimized 2.4GHz)\n"
+	"                 2 = %s (standard 2.4 GHz)\n"
+	"                 3 = %s (standard 5GHz)\n"
+	"                 4 = %s (standard 2.4GHz/5GHz)\n"
+	"-t <seconds>   : stay time on frequency before hopping to the next channel\n"
 	"                 default %d seconds\n"
 	"-m <interface> : set monitor mode by ioctl() system call and quit\n"
 	"-I             : show WLAN interfaces and quit\n"
 	"-C             : show available device channels and quit\n"
-	"                 if no channels are available, interface is probably in use or doesn't support monitor mode\n"
-	"                 if more channels are available, firmware, driver and regulatory domain is probably patched\n"
+	"                 if no frequencies are available, interface is probably in use or doesn't support monitor mode\n"
+	"                 if additional frequencies are available, firmware, driver and regulatory domain is probably patched\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n"
@@ -8454,6 +8385,7 @@ printf("%s %s  (C) %s ZeroBeat\n"
 	"Use SIGHUB with care, because it will impact pselect()\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname,
+	channelscanlist1, channelscanlist2, channelscanlist3, channelscanlist4,
 	STAYTIME, SCANLIST_MAX, OW_M1M2ROGUE_MAX, ATTACKSTOP_MAX, ATTACKRESUME_MAX, EAPOLTIMEOUT, EAPOLEAPTIMEOUT, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, FILTERLIST_MAX, weakcandidate, BEACONEXTLIST_MAX, BEACONEXTLIST_MAX, FDNSECTIMERB, IESETLEN_MAX, EAPREQLIST_MAX, ERROR_MAX, mcip, MCPORT, mcip, MCPORT);
 exit(EXIT_SUCCESS);
 }
@@ -8520,7 +8452,7 @@ static bool showinterfaceflag;
 static bool monitormodeflag;
 static bool showchannelsflag;
 static bool beaconparamsflag;
-static char *userscanliststring;
+static const char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static char *eapreqhex;
@@ -9261,19 +9193,19 @@ if(injectionflag == true)
 
 if(sl == 1)
 	{
-	printf("warning: not yet implemented\n");
+	getscanlistchannel(channelscanlist1);
 	}
 else if(sl == 2)
 	{
-	printf("warning: not yet implemented\n");
+	getscanlistchannel(channelscanlist2);
 	}
 else if(sl == 3)
 	{
-	printf("warning: not yet implemented\n");
+	getscanlistchannel(channelscanlist3);
 	}
 else if(sl == 4)
 	{
-	printf("warning: not yet implemented\n");
+	getscanlistchannel(channelscanlist4);
 	}
 else if(userscanliststring != NULL)
 	{
@@ -9281,6 +9213,12 @@ else if(userscanliststring != NULL)
 	}
 else getscanlist();
 
+if(ptrfscanlist == fscanlist)
+	{
+	fprintf(stderr, "no frequencies detected\n");
+	errorcount++;
+	globalclose();
+	}
 
 if(pcapngoutname != NULL)
 	{
