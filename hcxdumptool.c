@@ -9123,7 +9123,8 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	exit(EXIT_FAILURE);
 	}
 
-printf("initialization of %s %s...\n", basename(argv[0]), VERSION_TAG);
+fprintf(stdout, "initialization of %s %s...\n", basename(argv[0]), VERSION_TAG);
+if(checkdriverflag == true) printf("starting driver test...\n");
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
@@ -9202,7 +9203,6 @@ if(showchannelsflag == true)
 
 if(checkdriverflag == true)
 	{
-	printf("starting driver test...\n");
 	if(set_channel_test(2412) == false) errorcount++;
 	if(errorcount == 0) fprintf(stdout, "driver tests passed...\nall required ioctl() system calls are supported by driver\n");
 	else fprintf(stderr, "%d driver error(s) encountered during the test - monitor mode and ioctl() system calls failed\n", errorcount);
