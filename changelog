@@ -2,7 +2,8 @@
 ==========
 hcxdumptool: replaced channel scan engine by frequency scan engine
 this is high experimental
-tested:
+tested devices:
+USB:
 Bus 005 Device 060: ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 Bus 005 Device 062: ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
 Bus 005 Device 064: ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
@@ -14,6 +15,12 @@ Bus 005 Device 073: ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapt
 Bus 005 Device 075: ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 Bus 005 Device 078: ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
 Bus 005 Device 082: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
+
+PCI:
+04:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
+
+That is neccessary because, since WiFi 6, channel numbers are no longer unique:
+https://en.wikipedia.org/wiki/List_of_WLAN_channels
 
 
 24.10.2021
