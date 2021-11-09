@@ -44,7 +44,7 @@ if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
 		{
-		printf("can't power off\n");
+		fprintf(stderr, "can't power off\n");
 		exit(EXIT_FAILURE);
 		}
 	}
@@ -52,7 +52,7 @@ if(rebootflag == true)
 	{
 	if(system("reboot") != 0)
 		{
-		printf("can't reboot\n");
+		fprintf(stderr, "can't reboot\n");
 		exit(EXIT_FAILURE);
 		}
 	}
@@ -260,14 +260,14 @@ while(1)
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
-printf("%s %s (wpi version) (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
+fprintf(stdout, "%s %s (wpi version) (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
-printf("%s %s (wpi version) (C) %s ZeroBeat\n"
+fprintf(stdout, "%s %s (wpi version) (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
 	"         press the button to power off\n"
 	"         hardware modification is necessary, read more:\n"
@@ -298,7 +298,7 @@ exit(EXIT_SUCCESS);
 __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
-printf("%s %s (wpi version) (C) %s by ZeroBeat\n"
+fprintf(stdout, "%s %s (wpi version) (C) %s by ZeroBeat\n"
 	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
 }

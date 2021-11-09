@@ -429,16 +429,16 @@ static void globalclose()
 static struct ifreq ifr;
 static const char *gpsd_disable = "?WATCH={\"enable\":false}";
 
-printf("\nterminating...\e[?25h\n");
+fprintf(stdout, "\nterminating...\e[?25h\n");
 sync();
 errorcount -= radiotaperrorcount;
 errorcount -= gpserrorcount;
-if(errorcount == 1) printf("%d driver error encountered\n", errorcount);
-if(errorcount > 1) printf("%d driver errors encountered\n", errorcount);
-if(radiotaperrorcount == 1) printf("%d radiotap error encountered\n", radiotaperrorcount);
-if(radiotaperrorcount > 1) printf("%d radiotap errors encountered\n", radiotaperrorcount);
-if(gpserrorcount == 1) printf("%d GPS error encountered\n", gpserrorcount);
-if(gpserrorcount > 1) printf("%d GPS errors encountered\n", gpserrorcount);
+if(errorcount == 1) fprintf(stdout, "%d driver error encountered\n", errorcount);
+if(errorcount > 1) fprintf(stdout, "%d driver errors encountered\n", errorcount);
+if(radiotaperrorcount == 1) fprintf(stdout, "%d radiotap error encountered\n", radiotaperrorcount);
+if(radiotaperrorcount > 1) fprintf(stdout, "%d radiotap errors encountered\n", radiotaperrorcount);
+if(gpserrorcount == 1) fprintf(stdout, "%d GPS error encountered\n", gpserrorcount);
+if(gpserrorcount > 1) fprintf(stdout, "%d GPS errors encountered\n", gpserrorcount);
 
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus("bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"));
 if(gpiostatusled > 0)
@@ -517,7 +517,7 @@ if(poweroffflag == true)
 	{
 	if(system("poweroff") != 0)
 		{
-		printf("can't power off\n");
+		fprintf(stderr, "can't power off\n");
 		exit(EXIT_FAILURE);
 		}
 	}
@@ -525,7 +525,7 @@ if(rebootflag == true)
 	{
 	if(system("reboot") != 0)
 		{
-		printf("can't reboot\n");
+		fprintf(stderr, "can't reboot\n");
 		exit(EXIT_FAILURE);
 		}
 	}
@@ -801,7 +801,7 @@ if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d WA
 else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
 else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -817,7 +817,7 @@ else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%
 else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -830,7 +830,7 @@ if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d IN
 else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
 else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -853,7 +853,7 @@ if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-	else printf("%s", servermsg);
+	else fprintf(stdout, "%s", servermsg);
 	return;
 	}
 p = 0;
@@ -878,7 +878,7 @@ else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02
 		toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 		zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], essidstring, msg);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -1491,7 +1491,7 @@ if(FD_ISSET(txsocket, &txfds))
 	if(txsize != write(txsocket, packetoutptr, txsize))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %d/%d socket error: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
+		fprintf(stdout, "%s %d/%d socket error: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
 		errorcount++;
 		return;
 		}
@@ -1500,7 +1500,7 @@ if(FD_ISSET(txsocket, &txfds))
 	return;
 	}
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("%s %d/%d driver is busy: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
+fprintf(stdout, "%s %d/%d driver is busy: %s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, errormessage);
 return;
 }
 /*===========================================================================*/
@@ -2606,7 +2606,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	if(packetsentlen != write(fd_socket, &packetsent, packetsentlen))
 		{
 		strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-		printf("%s %d/%d socket write error: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
+		fprintf(stdout, "%s %d/%d socket write error: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 		errorcount++;
 		return;
 		}
@@ -2618,7 +2618,7 @@ if(FD_ISSET(fd_socket, &txfds))
 	return;
 	}
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("%s %d/%d driver is busy: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
+fprintf(stdout, "%s %d/%d driver is busy: failed to retransmit EAP packet\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel);
 return;
 }
 /*===========================================================================*/
@@ -2837,7 +2837,7 @@ else
 						msg);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -4068,7 +4068,7 @@ else
 			msg, timegap, rc, kdv);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -4392,7 +4392,7 @@ else
 			kdv);
 	}
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
@@ -5673,7 +5673,7 @@ if(aktchannel != pwrq.u.freq.m)
 	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-	else printf("%s", servermsg);
+	else fprintf(stdout, "%s", servermsg);
 	}
 return;
 }
@@ -6043,7 +6043,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	mysnonce[24], mysnonce[25], mysnonce[26], mysnonce[27], mysnonce[28], mysnonce[29], mysnonce[30], mysnonce[31]);
 
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-else printf("%s", servermsg);
+else fprintf(stdout, "%s", servermsg);
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMERB;
@@ -6160,7 +6160,7 @@ if(rcaorder == RCA_SORT_BY_HIT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort
 else if(rcaorder == RCA_SORT_BY_COUNT) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_beacon);
 else if(rcaorder == RCA_SORT_BY_CHANNEL) qsort(scanlist, scanlistmax, SCANLIST_SIZE, sort_scanlist_by_channel);
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-printf("\033[2J\033[0;0H BSSID        FREQ   CH RSSI BEACON RESPONSE ESSID  SCAN-FREQ: %4d INJECTION-RATIO: %3d%% [%s]\n"
+fprintf(stdout, "\033[2J\033[0;0H BSSID        FREQ   CH RSSI BEACON RESPONSE ESSID  SCAN-FREQ: %4d INJECTION-RATIO: %3d%% [%s]\n"
 	"-----------------------------------------------------------------------------------------------------\n",
 	ptrfscanlist->frequency, injectionratio, timestring);
 for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
@@ -6173,7 +6173,7 @@ for(zeiger = scanlist; zeiger < scanlist +scanlistmax; zeiger++)
 		injectionratio = (injectionhit *100) /injectioncount;
 		if(injectionratio > 100) injectionratio = 100;
 		}
-	if(zeiger->channel != 0) printf(" %02x%02x%02x%02x%02x%02x %4d  %3d %4d %6d   %6d %s\n",
+	if(zeiger->channel != 0) fprintf(stdout, " %02x%02x%02x%02x%02x%02x %4d  %3d %4d %6d   %6d %s\n",
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5],
 					zeiger->frequency, zeiger->channel, zeiger->rssi, zeiger->beacon, zeiger->hit, zeiger->essid);
 	}
@@ -6596,33 +6596,33 @@ if(injectionhit > 0)
 	{
 	if((injectionhit > 0) && (injectioncount > 0)) injectionratio = (injectionhit *100) /injectioncount;
 	if(injectionratio > 100) injectionratio = 100;
-	if(inject24 == true) printf("packet injection is working on 2.4GHz!\n");
-	if(inject5 == true) printf("packet injection is working on 5GHz!\n");
-	if(inject6 == true) printf("packet injection is working on 6GHz!\n");
-	printf("injection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
-	if(injectionratio < 25) printf("your injection ratio is poor - improve your equipment and/or get closer to the target\n");
-	else if((injectionratio >= 25) && (injectionratio < 50)) printf("your injection ratio is average, but there is still room for improvement\n");
-	else if((injectionratio >= 50) && (injectionratio < 75)) printf("your injection ratio is good\n");
-	else if((injectionratio >= 75) && (injectionratio < 90)) printf("your injection ratio is excellent, let's ride!\n");
-	else if(injectionratio > 90) printf("your injection ratio is huge - say kids what time is it?\n");
+	if(inject24 == true) fprintf(stdout, "packet injection is working on 2.4GHz!\n");
+	if(inject5 == true) fprintf(stdout, "packet injection is working on 5GHz!\n");
+	if(inject6 == true) fprintf(stdout, "packet injection is working on 6GHz!\n");
+	fprintf(stdout, "injection ratio: %d%% (BEACON: %d PROBERESPONSE: %d)\n", injectionratio, injectioncount, injectionhit);
+	if(injectionratio < 25) fprintf(stdout, "your injection ratio is poor - improve your equipment and/or get closer to the target\n");
+	else if((injectionratio >= 25) && (injectionratio < 50)) fprintf(stdout, "your injection ratio is average, but there is still room for improvement\n");
+	else if((injectionratio >= 50) && (injectionratio < 75)) fprintf(stdout, "your injection ratio is good\n");
+	else if((injectionratio >= 75) && (injectionratio < 90)) fprintf(stdout, "your injection ratio is excellent, let's ride!\n");
+	else if(injectionratio > 90) fprintf(stdout, "your injection ratio is huge - say kids what time is it?\n");
 	if((networkhit > 0) && (networkcount > 0)) networkratio = (networkhit *100) /networkcount;
 	if(networkratio > 100) networkratio = 100;
-	printf("antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
-	if(networkratio < 25) printf("your incection ratio is poor - improve your antenna and get closer to the target\n");
-	else if((networkratio >= 25) && (networkratio < 50)) printf("your antenna ratio is average, but there is still room for improvement\n");
-	else if((networkratio >= 50) && (networkratio < 75)) printf("your antenna ratio is good\n");
-	else if((networkratio >= 75) && (networkratio < 90)) printf("your antenna ratio is excellent, let's ride!\n");
-	else if(networkratio > 90) printf("your antenna ratio is huge - say kids what time is it?\n");
+	fprintf(stdout, "antenna ratio: %d%% (NETWORK: %d PROBERESPONSE: %d)\n", networkratio, networkcount, networkhit);
+	if(networkratio < 25) fprintf(stdout, "your incection ratio is poor - improve your antenna and get closer to the target\n");
+	else if((networkratio >= 25) && (networkratio < 50)) fprintf(stdout, "your antenna ratio is average, but there is still room for improvement\n");
+	else if((networkratio >= 50) && (networkratio < 75)) fprintf(stdout, "your antenna ratio is good\n");
+	else if((networkratio >= 75) && (networkratio < 90)) fprintf(stdout, "your antenna ratio is excellent, let's ride!\n");
+	else if(networkratio > 90) fprintf(stdout, "your antenna ratio is huge - say kids what time is it?\n");
 	}
-else printf("warning: no PROBERESPONSE received - packet injection is probably not working!\n");
+else fprintf(stdout, "warning: no PROBERESPONSE received - packet injection is probably not working!\n");
 errorcount -= radiotaperrorcount;
 errorcount -= gpserrorcount;
-if(errorcount == 1) printf("%d driver error encountered during the test\n", errorcount);
-if(errorcount > 1) printf("%d driver errors encountered during the test\n", errorcount);
-if(radiotaperrorcount == 1) printf("%d radiotap error encountered during the test\n", radiotaperrorcount);
-if(radiotaperrorcount > 1) printf("%d radiotap errors encountered during the test\n", radiotaperrorcount);
-if(gpserrorcount == 1) printf("%d GPS error encountered during the test\n", gpserrorcount);
-if(gpserrorcount > 1) printf("%d GPS errors encountered during the test\n", gpserrorcount);
+if(errorcount == 1) fprintf(stdout, "%d driver error encountered during the test\n", errorcount);
+if(errorcount > 1) fprintf(stdout, "%d driver errors encountered during the test\n", errorcount);
+if(radiotaperrorcount == 1) fprintf(stdout, "%d radiotap error encountered during the test\n", radiotaperrorcount);
+if(radiotaperrorcount > 1) fprintf(stdout, "%d radiotap errors encountered during the test\n", radiotaperrorcount);
+if(gpserrorcount == 1) fprintf(stdout, "%d GPS error encountered during the test\n", gpserrorcount);
+if(gpserrorcount > 1) fprintf(stdout, "%d GPS errors encountered during the test\n", gpserrorcount);
 globalclose();
 return;
 }
@@ -6646,7 +6646,7 @@ static struct sockaddr_in sockaddrFrom;
 static socklen_t sockaddrFrom_len = sizeof(sockaddrFrom);
 static int written;
 
-printf("waiting for hcxdumptool server...\n");
+fprintf(stdout, "waiting for hcxdumptool server...\n");
 gettimeofday(&tv, NULL);
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
@@ -6692,7 +6692,7 @@ while(1)
 			{
 			case SERVERMSG_TYPE_STATUS:
 				serverstatus[msglen] = 0;
-				printf("%s", &serverstatus[SERVERMSG_HEAD_SIZE]);
+				fprintf(stdout, "%s", &serverstatus[SERVERMSG_HEAD_SIZE]);
 				if((pcapngoutname != NULL) && (havepcapngheader == false) && (pcapngoutname != NULL))
 					{
 					clientrequestpcapnghead((struct sockaddr*)&sockaddrFrom, sockaddrFrom_len);
@@ -6988,7 +6988,7 @@ memset(&nmeasentence, 0, NMEA_MAX);
 memcpy(&nmeasentence, nogps, 3);
 if(gpsname != NULL)
 	{
-	printf("connecting GPS device...\n");
+	fprintf(stdout, "connecting GPS device...\n");
 	if((fd_gps = open(gpsname, O_RDONLY)) < 0)
 		{
 		perror( "failed to open GPS device");
@@ -7005,7 +7005,7 @@ if(gpsdflag == true)
 		fd_gps = 0;
 		return;
 		}
-	printf("connecting GPSD...\n");
+	fprintf(stdout, "connecting GPSD...\n");
 	memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
 	gpsd_addr.sin_family = AF_INET;
 	gpsd_addr.sin_port = htons(2947);
@@ -7572,7 +7572,7 @@ strncpy(iwr.ifr_name, ifname, IFNAMSIZ -1);
 if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	{
 #ifdef DEBUG
-	printf("testing %s %s\n", ifname, drivername);
+	fprintf(stdout, "testing %s %s\n", ifname, drivername);
 	perror("not a wireless interface");
 #endif
 	close(fd_info);
@@ -7637,7 +7637,7 @@ static char drivername[32];
 if(getifaddrs(&ifaddr) == -1) perror("failed to get ifaddrs");
 else
 	{
-	printf("wlan interfaces:\n");
+	fprintf(stdout, "wlan interfaces:\n");
 	for(ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
@@ -7645,16 +7645,16 @@ else
 			memset(&drivername, 0, 32);
 			if(get_perm_addr(ifa->ifa_name, permaddr, virtaddr, drivername) == true)
 				{
-				for (p = 0; p < 6; p++) printf("%02x", (permaddr[p]));
-				if(checkmonitorinterface(ifa->ifa_name) == false) printf(" %s (%s)", ifa->ifa_name, drivername);
-				else printf(" %s (%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
+				for (p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
+				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, " %s (%s)", ifa->ifa_name, drivername);
+				else fprintf(stdout, " %s (%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
 				if(memcmp(&permaddr, &virtaddr, 6) != 0)
 					{
-					printf(" warning:spoofed MAC ");
+					fprintf(stdout, " warning:spoofed MAC ");
 					for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
-					printf(" detected");
+					fprintf(stdout, " detected");
 					}
-				printf("\n");
+				fprintf(stdout, "\n");
 				}
 			}
 		}
@@ -8143,14 +8143,14 @@ return true;
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
-printf("%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
+fprintf(stdout, "%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
-printf("%s %s  (C) %s ZeroBeat\n"
+fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"usage  : %s <options>\n"
 	"         press ctrl+c to terminate hcxdumptool\n"
 	"         press GPIO button to terminate hcxdumptool\n"
@@ -8423,7 +8423,7 @@ exit(EXIT_SUCCESS);
 __attribute__ ((noreturn))
 static inline void exampleusage(char *eigenname)
 {
-printf("%s %s  (C) %s ZeroBeat\n"
+fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"abbreviations:\n"
 	"--------------\n"
 	"PMKIDROGUE = PMKID requested from ACCESS POINT by hcxdumptool\n"
@@ -8460,7 +8460,7 @@ exit(EXIT_SUCCESS);
 __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
-printf("%s %s (C) %s by ZeroBeat\n"
+fprintf(stdout, "%s %s (C) %s by ZeroBeat\n"
 	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
 }
@@ -9103,7 +9103,7 @@ if(monitormodeflag == true)
 		fprintf(stderr, "failed to init socket\n");
 		exit(EXIT_FAILURE);
 		}
-	printf("setting interface %s to monitor mode\n", interfacename); 
+	fprintf(stdout, "setting interface %s to monitor mode\n", interfacename); 
 	return EXIT_SUCCESS;
 	}
 
@@ -9124,7 +9124,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	}
 
 fprintf(stdout, "initialization of %s %s...\n", basename(argv[0]), VERSION_TAG);
-if(checkdriverflag == true) printf("starting driver test...\n");
+if(checkdriverflag == true) fprintf(stdout, "starting driver test...\n");
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
