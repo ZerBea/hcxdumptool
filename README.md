@@ -128,7 +128,7 @@ Requirements
 
 * GPIO hardware mod recommended (push button and LED).
 
-* to allow 5GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
+* to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
 If you decide to compile latest git head, make sure that your distribution is updated on latest version.
 
@@ -319,7 +319,7 @@ You must use hcxdumptool only on networks you have permission to do this, becaus
 * hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
   (use hcxpcapngtool to convert them to a format hashcat and/Or JtR understand)
 
-* hcxdumptool is able to capture handshakes from 5GHz clients on 2.4GHz (only one single M2 from the client is required)
+* hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz (only one single M2 from the client is required)
   (use hcxpcapngtool to to a format hashcat and/Or JtR understand)
 
 * hcxdumptool is able to capture passwords from the wlan traffic
