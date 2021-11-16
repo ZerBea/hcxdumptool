@@ -7183,20 +7183,13 @@ else
 	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
-	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
-		{
-		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
-		}
-	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP))
-		{
-		fprintf(stderr, "warning: interface is not up\n");
-		}
+	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
+	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP)) fprintf(stderr, "warning: interface is not up\n");
 	}
 /* disable power management, if possible */
 memset(&iwr, 0, sizeof(iwr));
 strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
-memset(&param,0 , sizeof(param));
-iwr.u.data.pointer = &param;
+iwr.u.power.disabled = 1;
 ioctl(fd_socket, SIOCSIWPOWER, &iwr);
 
 memset(&iwr, 0, sizeof(iwr));
