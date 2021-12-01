@@ -1,3 +1,9 @@
+01.12.2021
+==========
+release v6.2.5
+still supporting OpenSSL 1.1
+
+
 08.11.2021
 ==========
 hcxdumptool: replaced channel scan engine by frequency scan engine
