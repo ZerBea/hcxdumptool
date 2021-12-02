@@ -6206,10 +6206,15 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
-	if(tags.channel == ptrfscanlist->channel)
+	if(tags.channel == ptrfscanlist->channel) 
 		{
 		zeiger->frequency = ptrfscanlist->frequency;
 		zeiger->channel = tags.channel;
+		}
+	else if(tags.channel == 0)
+		{
+		zeiger->frequency = ptrfscanlist->frequency;
+		zeiger->channel = ptrfscanlist->channel;
 		}
 	zeiger->timestamp = timestamp;
 	zeiger->count +=1;
@@ -6231,6 +6236,11 @@ if(tags.channel == ptrfscanlist->channel)
 	zeiger->frequency = ptrfscanlist->frequency;
 	zeiger->channel = tags.channel;
 	}
+else if(tags.channel == 0)
+		{
+		zeiger->frequency = ptrfscanlist->frequency;
+		zeiger->channel = ptrfscanlist->channel;
+		}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
 zeiger->proberesponse =1;
@@ -6271,6 +6281,11 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 		zeiger->frequency = ptrfscanlist->frequency;
 		zeiger->channel = tags.channel;
 		}
+	else if(tags.channel == 0)
+		{
+		zeiger->frequency = ptrfscanlist->frequency;
+		zeiger->channel = ptrfscanlist->channel;
+		}
 	zeiger->timestamp = timestamp;
 	zeiger->count += 1;
 	zeiger->beacon += 1;
@@ -6291,6 +6306,11 @@ if(tags.channel == ptrfscanlist->channel)
 	{
 	zeiger->frequency = ptrfscanlist->frequency;
 	zeiger->channel = tags.channel;
+	}
+else if(tags.channel == 0)
+	{
+	zeiger->frequency = ptrfscanlist->frequency;
+	zeiger->channel = ptrfscanlist->channel;
 	}
 zeiger->timestamp = timestamp;
 zeiger->count = 1;
