@@ -7512,9 +7512,7 @@ static struct iwreq pwrq;
 static int frequency;
 static int exponent;
 
-
 fprintf(stdout, "%s available frequencies, channels and tx power reported by driver:\n", interfacename);
-
 for(c = 2407; c < 2488; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
