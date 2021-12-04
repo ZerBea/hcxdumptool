@@ -7507,67 +7507,93 @@ return;
 static inline void show_channels()
 {
 static int c;
-static int res;
 static struct iwreq pwrq;
 static int frequency;
-static int testchannel;
+static int exponent;
 
-fprintf(stdout, "available channels:\n");
-for(c = 0; c < 256; c++)
+
+fprintf(stdout, "available frequencies, channels and tx power reported by driver:\n");
+
+for(c = 2407; c < 2488; c++)
 	{
-	testchannel = 0;
-	frequency = 0;
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-	pwrq.u.freq.e = 0;
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
 	pwrq.u.freq.m = c;
-	res = ioctl(fd_socket, SIOCSIWFREQ, &pwrq);
-	if(res >= 0)
-		{
-		memset(&pwrq, 0, sizeof(pwrq));
-		strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-		pwrq.u.freq.e = 0;
-		pwrq.u.freq.flags = IW_FREQ_FIXED;
-		res = ioctl(fd_socket, SIOCGIWFREQ, &pwrq);
-		if(res >= 0)
-			{
-			frequency = pwrq.u.freq.m;
-			/*
-			 frequency or channel :
-			 0 - 1000 = channel
-			   > 1000 = frequency in Hz!
-			*/
-			if(frequency > 100000) frequency /= 100000;
-			if(frequency <= 1000) testchannel = frequency;
-			else if((frequency >= 2407) && (frequency <= 2474)) testchannel = (frequency -2407)/5;
-			else if((frequency >= 2481) && (frequency <= 2487)) testchannel = (frequency -2412)/5;
-			else if((frequency >= 5005) && (frequency <= 5980)) testchannel = (frequency -5000)/5;
-			else if((frequency >= 5955) && (frequency <= 6415)) testchannel = (frequency -5950)/5;
-			if(testchannel > 0)
-				{
-				memset(&pwrq, 0, sizeof(pwrq));
-				strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
-				pwrq.u.txpower.value = -1;
-				pwrq.u.txpower.fixed = 1;
-				pwrq.u.txpower.disabled = 0;
-				pwrq.u.txpower.flags = IW_TXPOW_DBM;
-				if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0)
-					{
-					if(testchannel == frequency) fprintf(stdout, " %3d\n", testchannel);
-					else fprintf(stdout, " %3d / %4dMHz\n", testchannel, frequency);
-					}
-				else
-					{
-					if(pwrq.u.txpower.value > 0)
-						{
-						if(testchannel == frequency) fprintf(stdout, "%3d (%2d dBm)\n",testchannel, pwrq.u.txpower.value);
-						else fprintf(stdout, "%3d / %4dMHz (%2d dBm)\n",testchannel, frequency, pwrq.u.txpower.value);
-						}
-					}
-				}
-			}
-		}
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	frequency = pwrq.u.freq.m;
+	exponent = pwrq.u.freq.e;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.txpower.value = -1;
+	pwrq.u.txpower.fixed = 1;
+	pwrq.u.txpower.disabled = 0;
+	pwrq.u.txpower.flags = IW_TXPOW_DBM;
+	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
+
+	if((frequency >= 2407) && (frequency <= 2474)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2407)/5, pwrq.u.txpower.value);
+	else if((frequency >= 2481) && (frequency <= 2487)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2412)/5, pwrq.u.txpower.value);
+	else fprintf(stdout, "expected frequency %4dMHz reported frequency %4d and exponent %d (%2d dBm)\n", c, frequency, exponent, pwrq.u.txpower.value);
+	}
+
+for(c = 5005; c < 5981; c++)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	frequency = pwrq.u.freq.m;
+	exponent = pwrq.u.freq.e;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.txpower.value = -1;
+	pwrq.u.txpower.fixed = 1;
+	pwrq.u.txpower.disabled = 0;
+	pwrq.u.txpower.flags = IW_TXPOW_DBM;
+	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
+
+	if((frequency >= 5005) && (frequency <= 5980)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5000)/5, pwrq.u.txpower.value);
+	else fprintf(stdout, "expected frequency %4dMHz reported frequency %4d and exponent %d (%2d dBm)\n", c, frequency, exponent, pwrq.u.txpower.value);
+	}
+
+for(c = 5955; c < 6416; c++)
+	{
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	pwrq.u.freq.flags = IW_FREQ_FIXED;
+	pwrq.u.freq.m = c;
+	pwrq.u.freq.e = 6;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	frequency = pwrq.u.freq.m;
+	exponent = pwrq.u.freq.e;
+
+	memset(&pwrq, 0, sizeof(pwrq));
+	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	pwrq.u.txpower.value = -1;
+	pwrq.u.txpower.fixed = 1;
+	pwrq.u.txpower.disabled = 0;
+	pwrq.u.txpower.flags = IW_TXPOW_DBM;
+	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
+
+	if((frequency >= 5955) && (frequency <= 6415)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5950)/5, pwrq.u.txpower.value);
+	else fprintf(stdout, "expected frequency %4dMHz reported frequency %4d and exponent %d (%2d dBm)\n", c, frequency, exponent, pwrq.u.txpower.value);
 	}
 return;
 }
