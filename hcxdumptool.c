@@ -55,7 +55,6 @@
 /*===========================================================================*/
 /* global var */
 
-static char *interfacename;
 static char *pcapngoutname;
 static char *gpsname;
 
@@ -241,13 +240,15 @@ const char *channelscanlist2 = "1,2,3,4,5,6,7,8,9,10,11,12,13";
 const char *channelscanlist3 = "36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 const char *channelscanlist4 = "1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 
+static char interfacename[IFNAMSIZ +1];
+
 static fscanlist_t fscanlist[FSCANLIST_MAX +1];
 
 static uint8_t myessid[] = { "home" };
 
 static const char weakcandidatedefault[] = { "12345678" };
 
-static char interfaceprotocol[IFNAMSIZ];
+static char interfaceprotocol[IFNAMSIZ +1];
 
 static char rssi;
 static uint32_t myoui_client;
@@ -459,7 +460,7 @@ if(fd_socket > 0)
 		if(setsockopt(fd_socket, SOL_SOCKET, SO_DETACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to free BPF code");
 		}
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy( ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface information");
 	ifr.ifr_flags = 0;
 	if(ioctl(fd_socket, SIOCSIFFLAGS, &ifr) < 0) perror("failed to set interface down");
@@ -5664,7 +5665,7 @@ static struct iwreq pwrq;
 static char timestring[16];
 
 memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return;
 if(aktchannel != pwrq.u.freq.m)
@@ -5683,7 +5684,7 @@ static inline bool set_channel()
 static struct iwreq pwrq;
 
 memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = ptrfscanlist->frequency;
 pwrq.u.freq.e = 6;
@@ -5697,7 +5698,7 @@ static inline bool set_channel_test(int freq)
 static struct iwreq pwrq;
 
 memset(&pwrq, 0, sizeof(pwrq));
-strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = freq;
 pwrq.u.freq.e = 6;
@@ -7112,28 +7113,28 @@ if((fd_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0)
 	perror("socket failed");
 	return false;
 	}
-memset(interfaceprotocol, 0, IFNAMSIZ);
+memset(interfaceprotocol, 0, IFNAMSIZ +1);
 memset(&iwr, 0, sizeof(iwr));
-strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(iwr.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
 	{
 	perror("failed to detect wlan interface");
 	if(forceinterfaceflag == false) return false;
 	}
-strncpy(interfaceprotocol, iwr.u.name, IFNAMSIZ);
+memcpy(interfaceprotocol, iwr.u.name, IFNAMSIZ);
 if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to set Berkeley Packet Filter");
 	}
 memset(&ifr_old, 0, sizeof(ifr));
-strncpy(ifr_old.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(ifr_old.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
 	{
 	perror("failed to backup current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 	if(forceinterfaceflag == false) return false;
 	}
 memset(&iwr_old, 0, sizeof(iwr));
-strncpy(iwr_old.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(iwr_old.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
 	perror("failed to backup  current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
@@ -7142,7 +7143,7 @@ if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	{
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get current interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
@@ -7155,7 +7156,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		if(forceinterfaceflag == false) return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
-	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(iwr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
@@ -7168,7 +7169,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		if(forceinterfaceflag == false) return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
-	strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(iwr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIWMODE, &iwr) < 0)
 		{
 		perror("failed to get interface information, ioctl(SIOCGIWMODE) not supported by driver");
@@ -7186,7 +7187,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 		if(forceinterfaceflag == false) return false;
 		}
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0)
 		{
 		perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
@@ -7202,18 +7203,18 @@ else
 	{
 	fprintf(stderr, "interface is already in monitor mode, skipping ioctl(SIOCSIWMODE) and ioctl(SIOCSIFFLAGS) system calls\n");
 	memset(&ifr, 0, sizeof(ifr));
-	strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr) < 0) perror("failed to get interface flags, ioctl(SIOCGIFFLAGS) not supported by driver");
 	if((ifr.ifr_flags & (IFF_UP)) != (IFF_UP)) fprintf(stderr, "warning: interface is not up\n");
 	}
 /* disable power management, if possible */
 memset(&iwr, 0, sizeof(iwr));
-strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(iwr.ifr_name, interfacename, IFNAMSIZ);
 iwr.u.power.disabled = 1;
 ioctl(fd_socket, SIOCSIWPOWER, &iwr);
 
 memset(&iwr, 0, sizeof(iwr));
-strncpy(iwr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(iwr.ifr_name, interfacename, IFNAMSIZ);
 ioctl(fd_socket, SIOCGIWTXPOW, &iwr);
 memcpy(&txpower, &(iwr.u.txpower), sizeof(param));
 interfacetxpwr = 0;
@@ -7241,7 +7242,7 @@ else
 	}
 
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 ifr.ifr_flags = 0;
 if(ioctl(fd_socket, SIOCGIFINDEX, &ifr) < 0)
 	{
@@ -7274,7 +7275,7 @@ if(!epmaddr)
 	return false;
 	}
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 epmaddr->cmd = ETHTOOL_GPERMADDR;
 epmaddr->size = 6;
 ifr.ifr_data = (char*)epmaddr;
@@ -7292,11 +7293,11 @@ memcpy(&mac_orig, epmaddr->data, 6);
 free(epmaddr);
 
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIFHWADDR, &ifr) == 0) memcpy(&mac_virt, ifr.ifr_hwaddr.sa_data, 6);
 
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, interfacename, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, interfacename, IFNAMSIZ);
 ifr.ifr_data = (char*)&drvinfo;
 drvinfo.cmd = ETHTOOL_GDRVINFO;
 if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
@@ -7530,7 +7531,7 @@ for(c = 2407; c < 2488; c++)
 	exponent = pwrq.u.freq.e;
 
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.txpower.value = -1;
 	pwrq.u.txpower.fixed = 1;
 	pwrq.u.txpower.disabled = 0;
@@ -7558,7 +7559,7 @@ for(c = 5005; c < 5981; c++)
 	exponent = pwrq.u.freq.e;
 
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.txpower.value = -1;
 	pwrq.u.txpower.fixed = 1;
 	pwrq.u.txpower.disabled = 0;
@@ -7585,7 +7586,7 @@ for(c = 5955; c < 6416; c++)
 	exponent = pwrq.u.freq.e;
 
 	memset(&pwrq, 0, sizeof(pwrq));
-	strncpy(pwrq.ifr_name, interfacename, IFNAMSIZ -1);
+	memcpy(pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.txpower.value = -1;
 	pwrq.u.txpower.fixed = 1;
 	pwrq.u.txpower.disabled = 0;
@@ -7614,7 +7615,7 @@ if((fd_info = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	return false;
 	}
 memset(&iwr, 0, sizeof(iwr));
-strncpy(iwr.ifr_name, ifname, IFNAMSIZ -1);
+memcpy(iwr.ifr_name, ifname, IFNAMSIZ);
 if(ioctl(fd_info, SIOCGIWNAME, &iwr) < 0)
 	{
 #ifdef DEBUG
@@ -7632,7 +7633,7 @@ if(!epmaddr)
 	return false;
 	}
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 epmaddr->cmd = ETHTOOL_GPERMADDR;
 epmaddr->size = 6;
 ifr.ifr_data = (char*)epmaddr;
@@ -7651,7 +7652,7 @@ if(epmaddr->size != 6)
 	}
 memcpy(permaddr, epmaddr->data, 6);
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 drvinfo.cmd = ETHTOOL_GDRVINFO;
 ifr.ifr_data = (char*)&drvinfo;
 if(ioctl(fd_info, SIOCETHTOOL, &ifr) < 0)
@@ -7665,7 +7666,7 @@ memcpy(drivername, drvinfo.driver, 32);
 free(epmaddr);
 
 memset(&ifr, 0, sizeof(ifr));
-strncpy(ifr.ifr_name, ifname, IFNAMSIZ -1);
+memcpy(ifr.ifr_name, ifname, IFNAMSIZ);
 if(ioctl(fd_info, SIOCGIFHWADDR, &ifr) == 0) memcpy(virtaddr, ifr.ifr_hwaddr.sa_data, 6);
 close(fd_info);
 return true;
@@ -8594,7 +8595,6 @@ optind = 1;
 optopt = 0;
 gpiobutton = 0;
 gpiostatusled = 0;
-interfacename = NULL;
 pcapngoutname = NULL;
 filteraplistname = NULL;
 filterclientlistname = NULL;
@@ -8664,7 +8664,12 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 	switch (auswahl)
 		{
 		case HCX_INTERFACE_NAME:
-		interfacename = optarg;
+		if(strlen(optarg) > IFNAMSIZ)
+			{
+			fprintf(stderr, "interfacename > IFNAMSIZE\n");
+			exit (EXIT_FAILURE);
+			}
+		memcpy(&interfacename, optarg, strlen(optarg));
 		break;
 
 		case HCX_GPS_DEVICE:
@@ -9049,7 +9054,12 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_SET_MONITORMODE:
-		interfacename = optarg;
+		if(strlen(optarg) > IFNAMSIZ)
+			{
+			fprintf(stderr, "interfacename > IFNAMSIZE\n");
+			exit (EXIT_FAILURE);
+			}
+		memcpy(&interfacename, optarg, strlen(optarg));
 		monitormodeflag = true;
 		break;
 
