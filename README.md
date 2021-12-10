@@ -187,7 +187,7 @@ Not recommended WiFi chipsets:
 
 * Broadcom (neither monitor mode nor frame injection)
 
-* Intel PRO/Wireless (due to NETLINK dependency)
+* Intel PRO/Wireless (due to several driver issues and NETLINK dependency)
 
 * Realtek RTL8811AU, RTL8812AU, RTL8814AU (due to NETLINK dependency)
 
