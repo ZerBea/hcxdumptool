@@ -5372,13 +5372,16 @@ zeiger->ap[5] = mynic_ap & 0xff;
 mynic_ap++;
 zeiger->essidlen = tags.essidlen;
 memcpy(zeiger->essid, tags.essid, tags.essidlen);
-if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) send_probe_resp(macfrx->addr2, zeiger);
+if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
+	{
+	send_probe_resp(macfrx->addr2, zeiger);
+	if((statusout &STATUS_ROGUE) == STATUS_ROGUE) printstatusap(macfrx->addr2, zeiger, "ROGUE PROBERESPONSE");
+	}
 memcpy(&mac_myprclient, macfrx->addr2, 6);
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_MANAGEMENT) == PCAPNG_FRAME_MANAGEMENT) writeepb(fd_pcapng);
 	}
-if((statusout &STATUS_ROGUE) == STATUS_ROGUE) printstatusap(macfrx->addr2, zeiger, "ROGUE PROBERESPONSE");
 qsort(rglist, zeiger -rglist +1, MACESSIDLIST_SIZE, sort_macessidlist_by_time);
 return;
 }
