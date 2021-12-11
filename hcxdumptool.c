@@ -798,9 +798,9 @@ static inline void printreceivewatchdogwarnung()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d    WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d     WARNING RECEIVE TIMEOUT: NO PACKETS RECEIVED SINC %ld SECONDS\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, tv.tv_sec -tvlast_sec);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else fprintf(stdout, "%s", servermsg);
 return;
@@ -811,11 +811,11 @@ static inline void printtimestatus()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 				errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d    ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 				errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d     ERROR:%d INCOMING:%" PRIu64 " AGE:%ld OUTGOING:%" PRIu64 " PMKIDROGUE:%d PMKID:%d M1M2ROGUE:%d M1M2:%d M2M3:%d M3M4:%d M3M4ZEROED:%d GPS:%d\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			errorcount, incomingcount, tv.tv_sec -tvlast_sec, outgoingcount, pmkidroguecount, pmkidcount, eapolmp12roguecount, eapolmp12count, eapolmp23count, eapolmp34count, eapolmp34zeroedcount, gpscount);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else fprintf(stdout, "%s", servermsg);
@@ -827,9 +827,9 @@ static inline void printposition()
 static char timestring[16];
 
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
-else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
-else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
+if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
+else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d    INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
+else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d     INFO GPS:%s\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel, &nmeasentence[7]);
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
 else fprintf(stdout, "%s", servermsg);
 return;
