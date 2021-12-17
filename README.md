@@ -148,29 +148,29 @@ Manufacturers do change chipsets without changing model numbers. Sometimes they 
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
-* Bus 005 Device 073: ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
+* ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
 
-* Bus 005 Device 062: ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
+* ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
 
-* Bus 005 Device 065: ID 0e8d:7612 MediaTek Inc. MT7612U 802.11a/b/g/n/ac Wireless Adapter
+* ID 0e8d:7612 MediaTek Inc. MT7612U 802.11a/b/g/n/ac Wireless Adapter
 
-* Bus 005 Device 078: ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
+* ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
 
-* Bus 005 Device 071: ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
+* ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
 
-* Bus 005 Device 075: ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
+* ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 
-* Bus 005 Device 060: ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
+* ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 
-* Bus 005 Device 064: ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
+* ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
 
-* Bus 005 Device 066: ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n
+* ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n
 
-* Bus 005 Device 068: ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 802.11n WLAN Adapter
+* ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 802.11n WLAN Adapter
 
-* Bus 005 Device 082: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
+* ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
 
-* 04:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
+* Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
