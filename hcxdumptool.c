@@ -7346,7 +7346,7 @@ static FILE *iomem;
 static int len;
 static bool rpi = false;
 static unsigned int gpioperibase = 0;
-static char linein[256];
+static char linein[RASPBERRY_INFO];
 
 cpuinfo = fopen("/proc/cpuinfo", "r");
 if(cpuinfo == NULL)
@@ -7356,7 +7356,7 @@ if(cpuinfo == NULL)
 }
 while(1)
 	{
-	if((len = fgetline(cpuinfo, 256, linein)) == -1) break;
+	if((len = fgetline(cpuinfo, RASPBERRY_INFO, linein)) == -1) break;
 	if(strstr(linein, "Raspberry Pi")) rpi = true;
 	}
 if(rpi == false) return gpioperibase;
@@ -7368,7 +7368,7 @@ if(iomem == NULL)
 	}
 while(1)
 	{
-	if((len = fgetline(iomem, 256, linein)) == -1) break;
+	if((len = fgetline(iomem, RASPBERRY_INFO, linein)) == -1) break;
 	if(strstr(linein, ".gpio") != NULL)
 		{
 		if(linein[8] != '-') return gpioperibase;
