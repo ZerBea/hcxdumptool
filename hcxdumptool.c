@@ -7318,7 +7318,7 @@ memcpy(&driverfwversion, drvinfo.fw_version, ETHTOOL_FWVERS_LEN);
 return true;
 }
 /*===========================================================================*/
-static inline bool initgpio(int gpioperi)
+static inline bool initgpio(unsigned int gpioperi)
 {
 static int fd_mem;
 
@@ -7328,7 +7328,7 @@ if(fd_mem < 0)
 	fprintf(stderr, "failed to get device memory\n");
 	return false;
 	}
-gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_mem, GPIO_BASE +gpioperi);
+gpio_map = mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_mem, gpioperi);
 close(fd_mem);
 if(gpio_map == MAP_FAILED)
 	{
@@ -7339,84 +7339,46 @@ gpio = (volatile unsigned *)gpio_map;
 return true;
 }
 /*===========================================================================*/
-static inline int getrpirev()
+static inline unsigned int getgpiobasemem()
 {
-static FILE *fh_rpi;
+static FILE *cpuinfo;
+static FILE *iomem;
 static int len;
-static int rpi = 0;
-static int rev = 0;
-static int gpioperibase = 0;
-static char *revptr = NULL;
-static const char *revstr = "Revision";
-static const char *hwstr = "Hardware";
-static const char *snstr = "Serial";
-static char linein[128];
+static bool rpi = false;
+static unsigned int gpioperibase = 0;
+static char linein[256];
 
-fh_rpi = fopen("/proc/cpuinfo", "r");
-if(fh_rpi == NULL)
-	{
+cpuinfo = fopen("/proc/cpuinfo", "r");
+if(cpuinfo == NULL)
+{
 	perror("failed to retrieve cpuinfo");
+	return gpioperibase;
+}
+while(1)
+	{
+	if((len = fgetline(cpuinfo, 256, linein)) == -1) break;
+	if(strstr(linein, "Raspberry Pi")) rpi = true;
+	}
+if(rpi == false) return gpioperibase;
+iomem = fopen("/proc/iomem", "r");
+if(iomem == NULL)
+	{
+	perror("failed to retrieve iomem");
 	return gpioperibase;
 	}
 while(1)
 	{
-	if((len = fgetline(fh_rpi, 128, linein)) == -1) break;
-	if(len < 15) continue;
-	if(memcmp(&linein, hwstr, 8) == 0)
+	if((len = fgetline(iomem, 256, linein)) == -1) break;
+	if(strstr(linein, ".gpio") != NULL)
 		{
-		rpi |= 1;
-		continue;
-		}
-	if(memcmp(&linein, revstr, 8) == 0)
-		{
-		rpirevision = strtol(&linein[len -6], &revptr, 16);
-		if((revptr -linein) == len)
+		if(linein[8] != '-') return gpioperibase;
 			{
-			rev = (rpirevision >> 4) &0xff;
-			if(rev <= 3)
-				{
-				gpioperibase = GPIO_PERI_BASE_OLD;
-				rpi |= 2;
-				continue;
-				}
-			if(rev == 0x09)
-				{
-				gpioperibase = GPIO_PERI_BASE_OLD;
-				rpi |= 2;
-				continue;
-				}
-			if(rev == 0x0c)
-				{
-				gpioperibase = GPIO_PERI_BASE_OLD;
-				rpi |= 2;
-				continue;
-				}
-			if((rev == 0x04) || (rev == 0x08) || (rev == 0x0d) || (rev == 0x0e) || (rev == 0x11) || (rev == 0x13))
-				{
-				gpioperibase = GPIO_PERI_BASE_NEW;
-				rpi |= 2;
-				continue;
-				}
-			continue;
+			linein[8] = 0;
+			gpioperibase = strtoul(linein, NULL, 16);
+			break;
 			}
-		rpirevision = strtol(&linein[len -4], &revptr, 16);
-		if((revptr -linein) == len)
-			{
-			if((rpirevision < 0x02) || (rpirevision > 0x15)) continue;
-			if((rpirevision == 0x11) || (rpirevision == 0x14)) continue;
-			gpioperibase = GPIO_PERI_BASE_OLD;
-			rpi |= 2;
-			}
-		continue;
-		}
-	if(memcmp(&linein, snstr, 6) == 0)
-		{
-		rpi |= 4;
-		continue;
 		}
 	}
-fclose(fh_rpi);
-if(rpi < 0x7) return 0;
 return gpioperibase;
 }
 /*===========================================================================*/
@@ -8021,7 +7983,7 @@ return true;
 static inline bool globalinit()
 {
 static int c;
-static int gpiobasemem = 0;
+static unsigned int gpiobasemem = 0;
 static unsigned long opensslversion;
 static const char notavailable[] = { "N/A" };
 
@@ -8039,7 +8001,6 @@ sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
 fd_socket_srv = 0;
-rpirevision = 0;
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -8047,7 +8008,7 @@ if((gpiobutton > 0) || (gpiostatusled > 0))
 		fprintf(stderr, "same value for wpi_button and wpi_statusled is not allowed\n");
 		return false;
 		}
-	gpiobasemem = getrpirev();
+	gpiobasemem = getgpiobasemem();
 	if(gpiobasemem == 0)
 		{
 		fprintf(stderr, "failed to locate GPIO\n");
@@ -8078,7 +8039,6 @@ if(gpiostatusled > 0)
 		nanosleep(&sleepled2, NULL);
 		}
 	}
-
 
 ERR_load_crypto_strings();
 OpenSSL_add_all_algorithms();
