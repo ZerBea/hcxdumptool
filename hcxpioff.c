@@ -346,11 +346,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		}
 	}
 
-if(globalinit() == false)
-	{
-	exit(EXIT_FAILURE);
-	}
-
+if(globalinit() == false) exit(EXIT_FAILURE);
 if((gpiobutton > 0) && (gpiostatusled > 0)) waitloop();
 
 return EXIT_SUCCESS;
