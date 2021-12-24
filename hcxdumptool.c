@@ -7389,6 +7389,7 @@ static inline void getscanlistchannel(const char *scanlistin)
 static struct iwreq pwrq;
 static char *fscanlistdup;
 static char *tokptr;
+static int wantedfrequency;
 
 fscanlistdup = strndup(scanlistin, 4096);
 if(fscanlistdup == NULL) return;
@@ -7399,17 +7400,32 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = atoi(tokptr);
+	wantedfrequency = strtol(tokptr, NULL, 10);
+	pwrq.u.freq.m = wantedfrequency;
 	tokptr = strtok(NULL, ",");
 	if(pwrq.u.freq.m > 1000) pwrq.u.freq.e = 6;
-	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
-	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
+		{
+		fprintf(stdout, "frequency/channel %d not accepted by driver\n", wantedfrequency);
+		continue;
+		}
+	memset(&pwrq, 0, sizeof(pwrq));
+	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
+		{
+		fprintf(stdout, "no frequency/channel reported by driver\n");
+		continue;
+		}
 	ptrfscanlist->frequency = pwrq.u.freq.m;
 	if((pwrq.u.freq.m >= 2407) && (pwrq.u.freq.m <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
 	else if((pwrq.u.freq.m >= 2481) && (pwrq.u.freq.m <= 2487)) ptrfscanlist->channel = (pwrq.u.freq.m -2412)/5;
 	else if((pwrq.u.freq.m >= 5005) && (pwrq.u.freq.m <= 5980)) ptrfscanlist->channel = (pwrq.u.freq.m -5000)/5;
 	else if((pwrq.u.freq.m >= 5955) && (pwrq.u.freq.m <= 6415)) ptrfscanlist->channel = (pwrq.u.freq.m -5950)/5;
-	else continue;
+	else
+		{
+		fprintf(stdout, "unexpected frequency/channel!\nwanted %d, reported from driver %d (exponent %d)\n", wantedfrequency, pwrq.u.freq.m, pwrq.u.freq.e);
+		continue;
+		}
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
 	ptrfscanlist++;
 	}
