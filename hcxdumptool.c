@@ -5733,13 +5733,10 @@ if(pwrq.u.freq.m > 1000)
 		fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 		return false;
 		}
+	if(freqreported == freq) return true;
 	}
-if(freqreported == freq) return true;
-fprintf(stderr, "driver use unsupported frequency format\n"
-		"expected frequency: %d - reported frequency: %d\n"
-		"expected exponent;  6    - reported exponent:  %d\n",
-		freq, freqreported, pwrq.u.freq.e);
-return true;
+fprintf(stdout, "driver doesn't report frequency\n");
+return false;
 }
 /*===========================================================================*/
 static inline void process_gps()
