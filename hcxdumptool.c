@@ -5730,12 +5730,12 @@ if(pwrq.u.freq.m > 1000)
 	else if(pwrq.u.freq.e == 0) freqreported = pwrq.u.freq.m /1000000;
 	else
 		{
-		fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
+		fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 		return false;
 		}
 	if(freqreported == freq) return true;
 	}
-fprintf(stdout, "driver doesn't report frequency\n");
+fprintf(stderr, "driver doesn't report frequency\n");
 return false;
 }
 /*===========================================================================*/
@@ -7419,14 +7419,14 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 	if(pwrq.u.freq.m > 1000) pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 		{
-		fprintf(stdout, "frequency/channel %d not accepted by driver\n", wantedfrequency);
+		fprintf(stderr, "frequency/channel %d not accepted by driver\n", wantedfrequency);
 		continue;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
 		{
-		fprintf(stdout, "no frequency/channel reported by driver\n");
+		fprintf(stderr, "no frequency/channel reported by driver\n");
 		continue;
 		}
 	if(pwrq.u.freq.m > 1000)
@@ -7440,7 +7440,7 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 		else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
 		else
 			{
-			fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
+			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
 		if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
@@ -7449,7 +7449,7 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 		else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 		else
 			{
-			fprintf(stdout, "unexpected frequency/channel!\nwanted %d, reported from driver %d (exponent %d)\n", wantedfrequency, pwrq.u.freq.m, pwrq.u.freq.e);
+			fprintf(stderr, "unexpected frequency/channel!\nwanted %d, reported from driver %d (exponent %d)\n", wantedfrequency, pwrq.u.freq.m, pwrq.u.freq.e);
 			continue;
 			}
 		}
@@ -7558,13 +7558,13 @@ for(c = 2407; c < 2488; c++)
 		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
-			fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
+			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
 		}
 	else
 		{
-		fprintf(stdout, "driver doesn't allow frequency scan\n");
+		fprintf(stderr, "driver doesn't allow frequency scan\n");
 		continue;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7605,13 +7605,13 @@ for(c = 5005; c < 5981; c++)
 		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
-			fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
+			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
 		}
 	else
 		{
-		fprintf(stdout, "driver doesn't allow frequency scan\n");
+		fprintf(stderr, "driver doesn't allow frequency scan\n");
 		continue;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7623,7 +7623,7 @@ for(c = 5005; c < 5981; c++)
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
 
 	if((frequency >= 5005) && (frequency <= 5980)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5000)/5, pwrq.u.txpower.value);
-	else fprintf(stdout, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
+	else fprintf(stderr, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 
 for(c = 5955; c < 6416; c++)
@@ -7651,13 +7651,13 @@ for(c = 5955; c < 6416; c++)
 		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
-			fprintf(stdout, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
+			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
 		}
 	else
 		{
-		fprintf(stdout, "driver doesn't allow frequency scan\n");
+		fprintf(stderr, "driver doesn't allow frequency scan\n");
 		continue;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7669,7 +7669,7 @@ for(c = 5955; c < 6416; c++)
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
 
 	if((frequency >= 5955) && (frequency <= 6415)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5950)/5, pwrq.u.txpower.value);
-	else fprintf(stdout, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
+	else fprintf(stderr, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 return;
 }
