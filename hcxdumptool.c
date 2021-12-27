@@ -5708,7 +5708,7 @@ memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = freq;
-if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
+if(freq > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	{
 	fprintf(stderr, "driver doesn't support ioctl() SIOCSIWFREQ\n");
