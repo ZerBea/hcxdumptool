@@ -5693,7 +5693,7 @@ memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = ptrfscanlist->frequency;
-pwrq.u.freq.e = 6;
+if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
 return true;
@@ -5708,7 +5708,7 @@ memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = freq;
-pwrq.u.freq.e = 6;
+if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	{
 	fprintf(stderr, "driver doesn't support ioctl() SIOCSIWFREQ\n");
@@ -7458,6 +7458,7 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 		}
 	else
 		{
+		ptrfscanlist->frequency = pwrq.u.freq.m;
 		ptrfscanlist->channel = pwrq.u.freq.m;
 		}
 
