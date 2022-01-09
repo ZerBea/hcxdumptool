@@ -434,12 +434,13 @@ fprintf(stdout, "\nterminating...\e[?25h\n");
 sync();
 errorcount -= radiotaperrorcount;
 errorcount -= gpserrorcount;
-if(errorcount == 1) fprintf(stdout, "%d driver error encountered\n", errorcount);
+if(errorcount == 1) fprintf(stdout, "%d driver error encountered - usually this error is related to pselect() after SIGTERM has been received\n", errorcount);
 if(errorcount > 1) fprintf(stdout, "%d driver errors encountered\n", errorcount);
 if(radiotaperrorcount == 1) fprintf(stdout, "%d radiotap error encountered\n", radiotaperrorcount);
 if(radiotaperrorcount > 1) fprintf(stdout, "%d radiotap errors encountered\n", radiotaperrorcount);
 if(gpserrorcount == 1) fprintf(stdout, "%d GPS error encountered\n", gpserrorcount);
 if(gpserrorcount > 1) fprintf(stdout, "%d GPS errors encountered\n", gpserrorcount);
+if((errorcount > 0) && (errorcount < 10)) fprintf(stdout, "ERRORs < 10 are related to a slow initialization and can be ignored\n");
 
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus("bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"));
 if(gpiostatusled > 0)
