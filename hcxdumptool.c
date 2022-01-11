@@ -434,7 +434,7 @@ fprintf(stdout, "\nterminating...\e[?25h\n");
 sync();
 errorcount -= radiotaperrorcount;
 errorcount -= gpserrorcount;
-if(errorcount == 1) fprintf(stdout, "%d driver error encountered - usually this error is related to pselect() after SIGTERM has been received\n", errorcount);
+if(errorcount == 1) fprintf(stdout, "%d driver error encountered\nusually this error is related to pselect() after SIGTERM has been received\n", errorcount);
 if(errorcount > 1) fprintf(stdout, "%d driver errors encountered\n", errorcount);
 if(radiotaperrorcount == 1) fprintf(stdout, "%d radiotap error encountered\n", radiotaperrorcount);
 if(radiotaperrorcount > 1) fprintf(stdout, "%d radiotap errors encountered\n", radiotaperrorcount);
@@ -5339,7 +5339,7 @@ memcpy(zeiger->essid, tags.essid, tags.essidlen);
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
 	send_probe_resp(macfrx->addr2, zeiger);
-	if((statusout &STATUS_ROGUE) == STATUS_ROGUE) printstatusap(macfrx->addr2, zeiger, "ROGUE PROBEREQPONSE");
+	if((statusout &STATUS_ROGUE) == STATUS_ROGUE) printstatusap(macfrx->addr2, zeiger, "ROGUE PROBERESPONSE");
 	}
 memcpy(&mac_myprclient, macfrx->addr2, 6);
 if(fd_pcapng > 0)
