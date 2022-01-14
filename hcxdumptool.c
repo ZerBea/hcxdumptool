@@ -845,13 +845,13 @@ static char essidstring[ESSID_LEN_MAX *2 +1];
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 if((zeiger->essidlen == 0) || (zeiger->essid[0] == 0))
 	{
-	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+	if(ptrfscanlist->channel >= 100) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [WILDCARD %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
-	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+	else if(ptrfscanlist->channel >= 10) snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [WILDCARD %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 					toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 					zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
-	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [HIDDEN %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
+	else snprintf(servermsg, SERVERMSG_MAX, "%s %d/%d   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x [WILDCARD %s]\n", timestring, ptrfscanlist->frequency, ptrfscanlist->channel,
 			toaddr[0], toaddr[1], toaddr[2], toaddr[3], toaddr[4], toaddr[5],
 			zeiger->ap[0], zeiger->ap[1], zeiger->ap[2], zeiger->ap[3], zeiger->ap[4], zeiger->ap[5], msg);
 	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
@@ -6039,7 +6039,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"FILTERMODE................: %s\n"
 	"WEAK CANDIDATE............: %s\n"
 	"ESSID list................: %d entries\n"
-	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST HIDDEN used for the attack)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST WILDCARD used for the attack)\n"
 	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST OPEN used for the attack)\n"
 	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (used for the attack and incremented on every new client)\n"
 	"CLIENT (ROGUE)............: %02x%02x%02x%02x%02x%02x\n"
