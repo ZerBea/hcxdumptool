@@ -9253,7 +9253,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	exit(EXIT_FAILURE);
 	}
 
-fprintf(stdout, "initialization of %s %s...\n", basename(argv[0]), VERSION_TAG);
+fprintf(stdout, "initialization of %s %s (this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(checkdriverflag == true) fprintf(stdout, "starting driver test...\n");
 if(globalinit() == false)
 	{
