@@ -224,6 +224,8 @@ static enhanced_packet_block_t *epbhdrown;
 
 static uint8_t weakcandidatelen;
 
+static const char notavailablestr[] = "N/A";
+
 static uint8_t hdradiotap[] =
 {
 0x00, 0x00, /* radiotap version and padding */
@@ -240,6 +242,7 @@ const char *channelscanlist2 = "1,2,3,4,5,6,7,8,9,10,11,12,13";
 const char *channelscanlist3 = "36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 const char *channelscanlist4 = "1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140,144,149,153,157,161,165";
 
+static char phyinterfacename[PHYIFNAMESIZE +1];
 static char interfacename[IFNAMSIZ +1];
 
 static fscanlist_t fscanlist[FSCANLIST_MAX +1];
@@ -6021,8 +6024,11 @@ static const char *fimtemplunused = "unused";
 fimtempl = fimtemplunused;
 if(filtermode == 1) fimtempl = fimtemplprotect;
 if(filtermode == 2) fimtempl = fimtemplattack;
+if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
+if(nmeasentence[0] == 0) memcpy(&nmeasentence, &notavailablestr, 3);
 snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
 	"NMEA 0183 SENTENCE........: %s\n"
+	"PHYSICAL INTERFACE........: %s\n"
 	"INTERFACE NAME............: %s\n"
 	"INTERFACE PROTOCOL........: %s\n"
 	"INTERFACE TX POWER........: %d dBm (lowest value reported by the device)\n"
@@ -6050,7 +6056,7 @@ snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\
 	"SNONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
 	"\n"
 	"TIME     FREQ/CH  MAC_DEST     MAC_SOURCE   ESSID [FRAME TYPE]\n",
-	nmeasentence, interfacename, interfaceprotocol, interfacetxpwr,
+	nmeasentence, phyinterfacename, interfacename, interfaceprotocol, interfacetxpwr,
 	mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
 	mac_virt[0], mac_virt[1], mac_virt[2], mac_virt[3], mac_virt[4], mac_virt[5],
 	drivername, driverversion, driverfwversion,
@@ -7031,14 +7037,11 @@ static struct sockaddr_in gpsd_addr;
 static int fdnum;
 static fd_set readfds;
 static struct timespec tsfd;
-static const char *nogps = "N/A";
 static const char gpgga[] = "$GPGGA";
 static const char gprmc[] = "$GPRMC";
 static const char *gpsd_enable_nmea = "?WATCH={\"enable\":true,\"json\":false,\"nmea\":true}";
 
 nmealen = 0;
-memset(&nmeasentence, 0, NMEA_MAX);
-memcpy(&nmeasentence, nogps, 3);
 if(gpsname != NULL)
 	{
 	fprintf(stdout, "connecting GPS device...\n");
@@ -8098,7 +8101,6 @@ static inline bool globalinit()
 static int c;
 static unsigned int gpiobasemem = 0;
 static unsigned long opensslversion;
-static const char notavailable[] = { "N/A" };
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -8226,8 +8228,6 @@ filteraplistentries = 0;
 filterclientlistentries = 0;
 nmealen = 0;
 memset(&nmeatempsentence, 0, NMEA_MAX);
-memset(&nmeasentence, 0, NMEA_MAX);
-memcpy(&nmeasentence, &notavailable, 3);
 weakcandidatelen = 8;
 
 wantstopflag = false;
@@ -8264,6 +8264,20 @@ signal(SIGHUP, reloadfiles);
 return true;
 }
 /*===========================================================================*/
+static void getphyifname()
+{
+static int fd;
+static char *pos;
+static char interfacepathname[PATH_MAX];
+snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
+fd = open(interfacepathname, O_RDONLY);
+if (fd < 0) return;
+read(fd, phyinterfacename, PHYIFNAMESIZE);
+pos = strchr(phyinterfacename, '\n');
+if(pos) *pos = '\0';
+close(fd);
+return;	
+}
 /*===========================================================================*/
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
@@ -8735,7 +8749,9 @@ scanlistmax = SCANLIST_MAX;
 tlsctx = NULL;
 memset(&weakcandidate, 0, 64);
 memcpy(&weakcandidate, weakcandidatedefault, 8);
+memset(&phyinterfacename, 0, PHYIFNAMESIZE);
 memset(&interfacename, 0, IFNAMSIZ +1);
+memset(&nmeasentence, 0, NMEA_MAX);
 while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) != -1)
 	{
 	switch (auswahl)
@@ -9203,6 +9219,8 @@ if(argc < 2)
 	fprintf(stderr, "no option selected\n");
 	exit(EXIT_FAILURE);
 	}
+
+if(interfacename[0] != 0) getphyifname();
 
 if((rebootflag == true) && (poweroffflag == true))
 	{
