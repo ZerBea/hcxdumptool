@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <dirent.h>
 #include <getopt.h>
 #include <errno.h>
 #include <string.h>
@@ -7755,6 +7756,22 @@ close(fd_info);
 return true;
 }
 /*===========================================================================*/
+static void getphyifname()
+{
+static int fd;
+static char *pos;
+static char interfacepathname[PATH_MAX];
+
+snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
+fd = open(interfacepathname, O_RDONLY);
+if (fd < 0) return;
+read(fd, phyinterfacename, PHYIFNAMESIZE);
+pos = strchr(phyinterfacename, '\n');
+if(pos) *pos = '\0';
+close(fd);
+return;	
+}
+/*===========================================================================*/
 static inline void show_wlaninterfaces()
 {
 static int p;
@@ -7772,12 +7789,16 @@ else
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
+
 			memset(&drivername, 0, 32);
 			if(get_perm_addr(ifa->ifa_name, permaddr, virtaddr, drivername) == true)
 				{
 				for (p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
-				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, " %s (%s)", ifa->ifa_name, drivername);
-				else fprintf(stdout, " %s (%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
+				strncpy(interfacename, ifa->ifa_name, IFNAMSIZ);
+				memset(phyinterfacename, 0 , PHYIFNAMESIZE);
+				getphyifname();
+				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, " %s %s (%s)", phyinterfacename, ifa->ifa_name, drivername);
+				else fprintf(stdout, " %s (%s) warning:probably a virtual monitor interface!", phyinterfacename, drivername);
 				if(memcmp(&permaddr, &virtaddr, 6) != 0)
 					{
 					fprintf(stdout, " warning:spoofed MAC ");
@@ -8264,19 +8285,22 @@ signal(SIGHUP, reloadfiles);
 return true;
 }
 /*===========================================================================*/
-static void getphyifname()
+static bool isinterfaceshared()
 {
-static int fd;
-static char *pos;
+int ec;
+static DIR *folder;
+struct dirent *entry;
+
 static char interfacepathname[PATH_MAX];
-snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
-fd = open(interfacepathname, O_RDONLY);
-if (fd < 0) return;
-read(fd, phyinterfacename, PHYIFNAMESIZE);
-pos = strchr(phyinterfacename, '\n');
-if(pos) *pos = '\0';
-close(fd);
-return;	
+
+snprintf(interfacepathname, PATH_MAX -1, "/sys/class/ieee80211/%s/device/net", phyinterfacename);
+ec = 0;
+folder = opendir(interfacepathname);
+if(folder == NULL) return true;
+while((entry = readdir(folder))) ec++;
+closedir(folder);
+if(ec == 3) return false;
+return true;
 }
 /*===========================================================================*/
 __attribute__ ((noreturn))
@@ -9272,6 +9296,10 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	}
 
 fprintf(stdout, "initialization of %s %s (this may take some time)...\n", basename(argv[0]), VERSION_TAG);
+if(phyinterfacename[0] != 0)
+	{
+	if(isinterfaceshared() == true) fprintf(stderr, "warning: interface %s is shared\n\n", interfacename);
+	}
 if(checkdriverflag == true) fprintf(stdout, "starting driver test...\n");
 if(globalinit() == false)
 	{
