@@ -565,13 +565,13 @@ static char *ptr;
 ptr = buffer +len -1;
 while(len)
 	{
-	if (*ptr != '\n') break;
+	if(*ptr != '\n') break;
 	*ptr-- = 0;
 	len--;
 	}
 while(len)
 	{
-	if (*ptr != '\r') break;
+	if(*ptr != '\r') break;
 	*ptr-- = 0;
 	len--;
 	}
@@ -3563,9 +3563,9 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 					}
 				}
 #ifdef DEBUG_TLS
-			if (err == SSL_ERROR_WANT_READ)
+			if(err == SSL_ERROR_WANT_READ)
 				debugprint(0, NULL, "TLS SSL_connect - want more data");
-			else if (err == SSL_ERROR_WANT_WRITE)
+			else if(err == SSL_ERROR_WANT_WRITE)
 				debugprint(0, NULL, "TLS SSL_connect - want to write");
 #endif
 			}
@@ -6926,7 +6926,7 @@ if(bind(fd_socket_mccli, (struct sockaddr*)&mccliaddress, sizeof(mccliaddress)) 
 loop = 1;
 if(ismulticastip(mcip) == true)
 	{
-	if (setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+	if(setsockopt(fd_socket_mccli, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
 		{
 		perror ("setsockopt() IP_MULTICAST_LOOP failed");
 		return false;
@@ -6998,7 +6998,7 @@ if(ismulticastip(mcip) == true)
 		return false;
 		}
 	loop = 1;
-	if (setsockopt(fd_socket_srv, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
+	if(setsockopt(fd_socket_srv, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof (loop)) < 0)
 		{
 		perror ("setsockopt() IP_MULTICAST_LOOP failed");
 		return false;
@@ -7764,7 +7764,7 @@ static char interfacepathname[PATH_MAX];
 
 snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
 fd = open(interfacepathname, O_RDONLY);
-if (fd < 0) return;
+if(fd < 0) return;
 read(fd, phyinterfacename, PHYIFNAMESIZE);
 pos = strchr(phyinterfacename, '\n');
 if(pos) *pos = '\0';
@@ -8106,7 +8106,7 @@ memset(eaptlsctx, 0, EAPTLSCTX_SIZE);
 SSL_CTX_set_session_cache_mode(tlsctx, SSL_SESS_CACHE_OFF);
 SSL_CTX_set_ecdh_auto(tlsctx, 1);
 SSL_CTX_set_verify(tlsctx, (SSL_VERIFY_PEER|SSL_VERIFY_CLIENT_ONCE), eap_tls_clientverify_cb);
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+#if(OPENSSL_VERSION_NUMBER >= 0x10100000L)
 SSL_CTX_set_min_proto_version(tlsctx, TLS1_VERSION);
 SSL_CTX_set_max_proto_version(tlsctx, TLS1_2_VERSION);
 #else
