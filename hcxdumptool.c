@@ -7797,6 +7797,7 @@ else
 				strncpy(interfacename, ifa->ifa_name, IFNAMSIZ);
 				memset(phyinterfacename, 0 , PHYIFNAMESIZE);
 				getphyifname();
+				if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
 				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, " %s %s (%s)", phyinterfacename, ifa->ifa_name, drivername);
 				else fprintf(stdout, " %s (%s) warning:probably a virtual monitor interface!", phyinterfacename, drivername);
 				if(memcmp(&permaddr, &virtaddr, 6) != 0)
