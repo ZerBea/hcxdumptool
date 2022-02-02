@@ -9299,7 +9299,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 fprintf(stdout, "initialization of %s %s (this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(phyinterfacename[0] != 0)
 	{
-	if(isinterfaceshared() == true) fprintf(stderr, "\nwarning: interface %s (%s) is shared\n\n", interfacename, phyinterfacename);
+	if(isinterfaceshared() == true) fprintf(stderr, "\nwarning: interface %s (%s) is shared\nhcxdumptool may not work as expected on shared physical devices\n\n", interfacename, phyinterfacename);
 	}
 if(checkdriverflag == true) fprintf(stdout, "starting driver test...\n");
 if(globalinit() == false)
