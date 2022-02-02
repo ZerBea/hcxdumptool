@@ -7147,7 +7147,7 @@ memset(&iwr, 0, sizeof(iwr));
 memcpy(&iwr.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
 	{
-	perror("failed to detect wlan interface - kernel possible complied without Wireless Extensions (expected: CONFIG_CFG80211_WEXT=y and CONFIG_CFG80211_WEXT_EXPORT=y)");
+	perror("failed to detect wlan interface: interface possible not comected\ndriver doesn't support CFG80211\nkernel possible complied without Wireless Extensions (expected: CONFIG_CFG80211_WEXT=y and CONFIG_CFG80211_WEXT_EXPORT=y)");
 	if(forceinterfaceflag == false) return false;
 	}
 memcpy(&interfaceprotocol, iwr.u.name, IFNAMSIZ);
