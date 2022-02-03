@@ -7793,19 +7793,20 @@ else
 			memset(&drivername, 0, 32);
 			if(get_perm_addr(ifa->ifa_name, permaddr, virtaddr, drivername) == true)
 				{
-				for (p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
 				strncpy(interfacename, ifa->ifa_name, IFNAMSIZ);
 				memset(phyinterfacename, 0 , PHYIFNAMESIZE);
 				getphyifname();
 				if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
-				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, " %s %s (%s)", phyinterfacename, ifa->ifa_name, drivername);
-				else fprintf(stdout, " %s (%s) warning:probably a virtual monitor interface!", phyinterfacename, drivername);
+				fprintf(stdout, "%s\t", phyinterfacename);
+				for(p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
 				if(memcmp(&permaddr, &virtaddr, 6) != 0)
 					{
-					fprintf(stdout, " warning:spoofed MAC ");
+					fprintf(stdout, "\t(spoofed MAC:");
 					for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
-					fprintf(stdout, " detected");
+					fprintf(stdout, " detected)");
 					}
+				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, "\t%s\t(driver:%s)", ifa->ifa_name, drivername);
+				else fprintf(stdout, "\t%s\t(driver:%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
 				fprintf(stdout, "\n");
 				}
 			}
