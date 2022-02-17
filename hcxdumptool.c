@@ -130,6 +130,7 @@ static unsigned int responsehit;
 static unsigned int injectioncount;
 static unsigned int injectionratio;
 
+static unsigned long int rpisn;
 static int gpiostatusled;
 static int gpiobutton;
 static int gpiostatusledflashinterval;
@@ -7380,6 +7381,12 @@ while(1)
 	{
 	if((len = fgetline(cpuinfo, RASPBERRY_INFO, linein)) == -1) break;
 	if(strstr(linein, "Raspberry Pi")) rpi = true;
+	if(len < 18) continue;
+	if(strstr(linein, "Raspberry Pi")) rpi = true;
+	if(strstr(linein, "Serial") != NULL)
+		{
+		if(len > 8) rpisn = strtoul(&linein[len -4], NULL, 16);
+		}
 	}
 fclose(cpuinfo);
 if(rpi == false) return gpioperibase;
@@ -8123,6 +8130,7 @@ static inline bool globalinit()
 {
 static int c;
 static unsigned int gpiobasemem = 0;
+static unsigned int seed;
 static unsigned long opensslversion;
 
 gettimeofday(&tv, NULL);
@@ -8131,7 +8139,6 @@ tvold.tv_usec = tv.tv_usec;
 tvlast_sec = tv.tv_sec;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
-srand(time(NULL));
 sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 sleepled2.tv_sec = 0;
@@ -8177,7 +8184,8 @@ if(gpiostatusled > 0)
 		nanosleep(&sleepled2, NULL);
 		}
 	}
-
+seed = rpisn +tv.tv_sec;
+srand(seed);
 ERR_load_crypto_strings();
 OpenSSL_add_all_algorithms();
 opensslversion = OpenSSL_version_num();
