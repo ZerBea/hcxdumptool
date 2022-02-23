@@ -6169,6 +6169,8 @@ while(wantstopflag == false)
 		FD_SET(fd_socket_srv, &readfds);
 		sd = fd_socket_srv;
 		}
+	tsfd.tv_sec = 0;
+	tsfd.tv_nsec = FDNSECTIMERB;
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
@@ -6518,6 +6520,8 @@ while(wantstopflag == false)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
+	tsfd.tv_sec = 0;
+	tsfd.tv_nsec = FDNSECTIMER;
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
@@ -6624,6 +6628,8 @@ while(wantstopflag == false)
 		FD_SET(fd_gps, &readfds);
 		sd = fd_gps;
 		}
+	tsfd.tv_sec = 0;
+	tsfd.tv_nsec = FDNSECTIMER;
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
