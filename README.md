@@ -170,8 +170,6 @@ This list is for information purposes only and should not be regarded as a bindi
 
 * ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
 
-* Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
-
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
 Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
