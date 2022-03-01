@@ -2589,8 +2589,6 @@ static mac_t *macftx;
 
 static char timestring[16];
 
-tsfdtx.tv_sec = 0;
-tsfdtx.tv_nsec = FDNSECTXTIMER;
 FD_ZERO(&txfds);
 FD_SET(fd_socket, &txfds);
 if(packetsenttries == 0)
@@ -2602,6 +2600,8 @@ macftx = (mac_t*)(&packetsent[HDRRT_SIZE]);
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 macftx->retry = 1;
+tsfdtx.tv_sec = 0;
+tsfdtx.tv_nsec = FDNSECTXTIMER;
 fdnum = pselect(fd_socket +1, NULL, &txfds, NULL, &tsfdtx, NULL);
 if(fdnum < 0)
 	{
