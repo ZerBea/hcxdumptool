@@ -6174,7 +6174,7 @@ while(wantstopflag == false)
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
-		errorcount++;
+		if(wantstopflag == false) errorcount++;
 		continue;
 		}
 	if(FD_ISSET(fd_gps, &readfds)) process_gps();
@@ -6525,7 +6525,7 @@ while(wantstopflag == false)
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
-		errorcount++;
+		if(wantstopflag == false) errorcount++;
 		continue;
 		}
 	if(FD_ISSET(fd_gps, &readfds)) process_gps();
@@ -6633,7 +6633,7 @@ while(wantstopflag == false)
 	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
 	if(fdnum < 0)
 		{
-		errorcount++;
+		if(wantstopflag == false) errorcount++;
 		continue;
 		}
 	if(FD_ISSET(fd_gps, &readfds)) process_gps();
