@@ -7134,6 +7134,10 @@ static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
 static struct iw_param txpower;
 static double lfin;
+static int enable = 1;
+static int fdnum;
+static fd_set readfds;
+static struct timespec tsfd;
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
@@ -7302,6 +7306,25 @@ mr.mr_type = PACKET_MR_PROMISC;
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0)
 	{
 	perror("failed to set setsockopt(PACKET_MR_PROMISC)");
+	return false;
+	}
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
+
+fcntl(fd_socket, F_SETFL, O_NONBLOCK);
+FD_ZERO(&readfds);
+FD_SET(fd_socket, &readfds);
+tsfd.tv_sec = 0;
+tsfd.tv_nsec = FDNSECTIMER;
+fdnum = pselect(fd_socket +1, &readfds, NULL, NULL, &tsfd, NULL);
+if(fdnum < 0)
+	{
+	perror("pselect() failed");
+	return false;
+	}
+if(FD_ISSET(fd_socket, &readfds)) packetlen = read(fd_socket, epb +EPB_SIZE, PCAPNG_MAXSNAPLEN);
+else
+	{
+	fprintf(stderr, "driver doesn't respond in time\n");
 	return false;
 	}
 epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
