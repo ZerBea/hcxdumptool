@@ -114,7 +114,9 @@ Requirements
 
 * detailed kwowledge of Linux
 
-* Operatingsystem: Arch Linux (strict), Kernel >= 5.4 (strict). It may work on other Linux systems (notebooks, desktops) and distributions, too (no support for other distributions, no support for other operating systems).
+* operatingsystem: Linux distribution, Kernel >= 5.10
+
+* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
 
 * Chipset must be able to run in monitor mode and driver must support monitor mode as well as full packet injection. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
 
