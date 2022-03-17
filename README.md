@@ -116,9 +116,13 @@ Requirements
 
 * operatingsystem: Linux distribution, Kernel >= 5.10
 
-* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
+* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
 
-* Chipset must be able to run in monitor mode and driver must support monitor mode as well as full packet injection. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset 
+* chipset must be able to run in monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset
+
+* driver must support monitor mode as well as full packet injection.  
+
+* driver must not depend on NETLINK
 
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 
@@ -126,13 +130,13 @@ Requirements
 
 * pkg-config installed
 
-* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops may work, too.
+* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
 
-* GPIO hardware mod recommended (push button and LED).
+* GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 
 * to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
-If you decide to compile latest git head, make sure that your distribution is updated on latest version.
+If you decide to compile latest git head, make sure that your distribution is updated to latest version.
 
 
 Adapters
