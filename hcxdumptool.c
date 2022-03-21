@@ -9335,7 +9335,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	exit(EXIT_FAILURE);
 	}
 
-fprintf(stdout, "initialization of %s %s (this may take some time)...\n", basename(argv[0]), VERSION_TAG);
+fprintf(stdout, "initialization of %s %s (depending on the capabilities of the device, this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(phyinterfacename[0] != 0)
 	{
 	if(isinterfaceshared() == true) fprintf(stderr, "\nwarning: interface %s (%s) is shared\nhcxdumptool may not work as expected on shared physical devices\n\n", interfacename, phyinterfacename);
