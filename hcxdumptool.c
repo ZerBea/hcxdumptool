@@ -7801,7 +7801,12 @@ static char interfacepathname[PATH_MAX];
 snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
 fd = open(interfacepathname, O_RDONLY);
 if(fd < 0) return;
-read(fd, phyinterfacename, PHYIFNAMESIZE);
+if(read(fd, phyinterfacename, PHYIFNAMESIZE) == -1)
+	{
+	phyinterfacename[0] = 0;
+	close(fd);
+	return;
+	}
 pos = strchr(phyinterfacename, '\n');
 if(pos) *pos = '\0';
 close(fd);
