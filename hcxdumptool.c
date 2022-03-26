@@ -7310,6 +7310,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	}
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
 
+if(set_channel_test(2412) == false) return false;
 fcntl(fd_socket, F_SETFL, O_NONBLOCK);
 FD_ZERO(&readfds);
 FD_SET(fd_socket, &readfds);
