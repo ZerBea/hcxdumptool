@@ -112,7 +112,7 @@ Requirements
 
 * detailed knowledge of key derivation functions
 
-* detailed kwowledge of Linux
+* detailed knowledge of Linux
 
 * operatingsystem: Linux distribution, Kernel >= 5.10
 
