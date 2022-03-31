@@ -170,8 +170,6 @@ This list is for information purposes only and should not be regarded as a bindi
 
 * ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
 
-* ID 0cf3:9271 Qualcomm Atheros Communications AR9271 802.11n
-
 * ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 802.11n WLAN Adapter
 
 * ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
