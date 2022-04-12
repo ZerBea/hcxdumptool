@@ -7305,7 +7305,9 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	perror("failed to set setsockopt(PACKET_MR_PROMISC)");
 	return false;
 	}
+#ifdef PACKET_IGNORE_OUTGOING
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
+#endif
 
 if(set_channel_test(2462) == false) return false;
 if(set_channel_test(2412) == false) return false;
