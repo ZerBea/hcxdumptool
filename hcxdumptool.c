@@ -18,6 +18,7 @@
 #include <inttypes.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
+#include <linux/if_packet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -38,7 +39,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <netpacket/packet.h>
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
@@ -7134,7 +7134,9 @@ static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
 static struct iw_param txpower;
 static double lfin;
+#ifdef PACKET_IGNORE_OUTGOING
 static int enable = 1;
+#endif
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
