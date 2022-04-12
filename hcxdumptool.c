@@ -7291,7 +7291,7 @@ ll.sll_family = PF_PACKET;
 ll.sll_ifindex = ifr.ifr_ifindex;
 ll.sll_protocol = htons(ETH_P_ALL);
 ll.sll_halen = ETH_ALEN;
-ll.sll_pkttype = PACKET_OTHERHOST | PACKET_OUTGOING;
+ll.sll_pkttype = PACKET_OTHERHOST;
 if(bind(fd_socket, (struct sockaddr*) &ll, sizeof(ll)) < 0)
 	{
 	perror("failed to bind socket");
