@@ -607,7 +607,7 @@ if((fh_extbeacon = fopen(listname, "r")) == NULL)
 	return;
 	}
 if(beaconactiveflag == true) list = rglist;
-else 
+else
 	{
 	list = rgbeaconlist;
 	memset(rgbeaconlist, 0, RGLIST_MAX *MACESSIDLIST_SIZE);
@@ -1045,7 +1045,7 @@ if(filtermode == FM_PROTECT)
 		}
 	return false;
 	}
-if(filtermode == FI_ATTACK) 
+if(filtermode == FI_ATTACK)
 	{
 	for(zeigerfilter = filterclientlist; zeigerfilter < filterclientlist +filterclientlistentries; zeigerfilter++)
 		{
@@ -1073,7 +1073,7 @@ if(filtermode == FM_PROTECT)
 		}
 	return false;
 	}
-if(filtermode == FI_ATTACK) 
+if(filtermode == FI_ATTACK)
 	{
 	for(zeigerfilter = filteraplist; zeigerfilter < filteraplist +filteraplistentries; zeigerfilter++)
 		{
@@ -1573,7 +1573,7 @@ static const uint8_t reassociationrequestwpa1data[] =
 0x00, 0x50, 0xf2, 0x02, /* group cipher */
 0x01, 0x00, /* count */
 0x00, 0x50, 0xf2, 0x02, /* pairwise cipher */
-0x01, 0x00,  /* count */
+0x01, 0x00, /* count */
 0x00, 0x50, 0xf2, 0x02, /* AKM */
 };
 #define REASSOCIATIONREQUESTWPA1_SIZE sizeof(reassociationrequestwpa1data)
@@ -1892,7 +1892,7 @@ static const uint8_t associationrequestwpa1data[] =
 0x00, 0x50, 0xf2, 0x02, /* group cipher */
 0x01, 0x00, /* count */
 0x00, 0x50, 0xf2, 0x02, /* pairwise cipher */
-0x01, 0x00,  /* count */
+0x01, 0x00, /* count */
 0x00, 0x50, 0xf2, 0x02, /* AKM */
 /* extended capabilites */
 0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40,
@@ -2644,7 +2644,7 @@ return;
 static inline void send_eap_request_id(eapctx_t *eapctx)
 {
 if(eapctx == NULL) send_eap_request(0, EAP_TYPE_ID, NULL, 0);
-else 
+else
 	{
 	eapctx->id++;
 	send_eap_request(eapctx->id, EAP_TYPE_ID, NULL, 0);
@@ -2937,7 +2937,7 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 						zeiger->eapctx.reqstate--;
 						continue;
 						}
-					else 
+					else
 						{
 						while(++zeiger->eapctx.reqstate < eapreqentries)
 							{
@@ -3413,7 +3413,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		eaptlsctx->tls_out = BIO_new(BIO_s_mem());
 		eapctx->version = ((tlsflags &EAP_TLSFLAGS_VERSION));
 		SSL_set_bio(eaptlsctx->ssl, eaptlsctx->tls_in, eaptlsctx->tls_out);
-		if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK)))) 
+		if((((exteap->type != EAP_TYPE_NAK) && ((statusout &STATUS_EAP) == STATUS_EAP)) || ((exteap->type == EAP_TYPE_NAK) && ((statusout &STATUS_EAP_NAK) == STATUS_EAP_NAK))))
 			{
 #ifdef DEBUG_TLS
 			sprintf(outstr, "EAP RESPONSE TYPE %s EAPTIME:%" PRIu64 " ID:%d REQ:%d TLSSTART", eap_type2name(exteap->type), timestamp -lastauthtimestamp, exteap->id, zeiger->eapctx.reqstate);
@@ -3512,7 +3512,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		res = SSL_accept(eaptlsctx->ssl);
 		if(res == 1)
 			{
-			if((statusout &STATUS_EAP) == STATUS_EAP) 
+			if((statusout &STATUS_EAP) == STATUS_EAP)
 				{
 				snprintf(outstr, STATUSMSG_MAX, "EAP TLS connect EAPTIME:%" PRIu64, timestamp -lastauthtimestamp);
 				printown(zeiger, outstr);
@@ -3626,7 +3626,7 @@ exteaplen = ntohs(exteap->len);
 if(exteaplen > authlen) return;
 if(eaptunflag == true)
 	{
-	if((macfrx->retry == 1) && (memcmp(lastauthap, macfrx->addr1, 6) == 0) && (memcmp(exteap, &lastpacket, exteaplen) == 0)) 
+	if((macfrx->retry == 1) && (memcmp(lastauthap, macfrx->addr1, 6) == 0) && (memcmp(exteap, &lastpacket, exteaplen) == 0))
 		{
 		send_ack();
 		return;
@@ -3963,7 +3963,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
 	if(memcmp(zeiger->ap, ap, 6) == 0)
 		{
-		if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce); 
+		if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce);
 		p = 0;
 		for(c = 0; c < zeiger->essidlen; c++)
 			{
@@ -3985,7 +3985,7 @@ if(essidstring[0] == 0)
 		{
 		if(memcmp(zeiger->ap, ap, 6) == 0)
 			{
-			if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce); 
+			if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce);
 			p = 0;
 			for(c = 0; c < zeiger->essidlen; c++)
 				{
@@ -4008,7 +4008,7 @@ if(essidstring[0] == 0)
 		{
 		if(memcmp(zeigerown->ap, ap, 6) == 0)
 			{
-			if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce); 
+			if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0)) pmkflag = detectweakwpa(kdv, zeiger->essidlen, zeiger->essid, anonce);
 			p = 0;
 			for(c = 0; c < zeigerown->essidlen; c++)
 				{
@@ -4097,7 +4097,7 @@ rc = be64toh(wpak->replaycount);
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
 if((lastkeyinfo == 3) && (lastkeyver == keyver) && (lastrc == rc)
 	&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
-	&& (memcmp(&lastap, macfrx->addr1, 6) == 0) 
+	&& (memcmp(&lastap, macfrx->addr1, 6) == 0)
 	&& (memcmp(&lastclient, macfrx->addr2, 6) == 0))
 		{
 		if(memcmp(wpak->nonce, &zeroed32, 32) == 0)
@@ -4147,7 +4147,7 @@ if(rc == myrc) send_ack();
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
 if((lastkeyinfo == 2) && (lastkeyver == keyver) && (lastrc == (rc -1))
 	&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
-	&& (memcmp(&lastap, macfrx->addr2, 6) == 0) 
+	&& (memcmp(&lastap, macfrx->addr2, 6) == 0)
 	&& (memcmp(&lastclient, macfrx->addr1, 6) == 0))
 		{
 		if((addown(OW_M2M3, macfrx->addr1, macfrx->addr2) == true) || (addownap(AP_M2M3, macfrx->addr2) == true))
@@ -4203,7 +4203,7 @@ else if(lastrc == rc)
 	{
 	if((lastkeyinfo == 1) && (lastkeyver == keyver) && (lastrc == rc)
 		&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
-		&& (memcmp(&lastap, macfrx->addr1, 6) == 0) 
+		&& (memcmp(&lastap, macfrx->addr1, 6) == 0)
 		&& (memcmp(&lastclient, macfrx->addr2, 6) == 0))
 		{
 		if(addownap(AP_M1M2, macfrx->addr1) == true)
@@ -4291,7 +4291,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	if(memcmp(zeiger->ap, ap, 6) == 0)
 		{
 		if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0))
-		pmkflag = detectweakpmkid(client, ap, pmkid, zeiger->essidlen, zeiger->essid); 
+		pmkflag = detectweakpmkid(client, ap, pmkid, zeiger->essidlen, zeiger->essid);
 		p = 0;
 		for(c = 0; c < zeiger->essidlen; c++)
 			{
@@ -4313,7 +4313,7 @@ if(essidstring[0] == 0)
 		{
 		if(memcmp(zeigerown->ap, ap, 6) == 0)
 			{
-			pmkflag = detectweakpmkid(client, ap, pmkid, zeiger->essidlen, zeiger->essid); 
+			pmkflag = detectweakpmkid(client, ap, pmkid, zeiger->essidlen, zeiger->essid);
 			p = 0;
 			for(c = 0; c < zeigerown->essidlen; c++)
 				{
@@ -5602,7 +5602,7 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 				{
 				send_deauthentication2client(zeiger->client, zeiger->ap, reasoncode);
 				}
-			if((zeiger->count %attackcount) == staytime *4) 
+			if((zeiger->count %attackcount) == staytime *4)
 				{
 				send_deauthentication2client(macfrx->addr1, macfrx->addr2, reasoncode);
 				}
@@ -5834,12 +5834,12 @@ if((rthp & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
 if((rthp & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
 if((rthp & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL)
 	{
-	if((pf %2) != 0) pf += 1; 
+	if((pf %2) != 0) pf += 1;
 	pf += 4;
 	}
 if((rthp & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
 	{
-	if((pf %2) != 0) pf += 1; 
+	if((pf %2) != 0) pf += 1;
 	pf += 2;
 	}
 if((rthp & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL)
@@ -6084,7 +6084,7 @@ else fprintf(stdout, "%s", servermsg);
 gettimeofday(&tv, NULL);
 tsfd.tv_sec = 0;
 tsfd.tv_nsec = FDNSECTIMERB;
-ptrfscanlist = fscanlist; 
+ptrfscanlist = fscanlist;
 if(set_channel() == false) errorcount++;
 if(beaconactiveflag == true)
 	{
@@ -6238,7 +6238,7 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX -1; zeiger++)
 	if(zeiger->count == 0) break;
 	if(memcmp(zeiger->ap, macfrx->addr2, 6) != 0) continue;
 	gettags(apinfolen, apinfoptr, &tags);
-	if(tags.channel == ptrfscanlist->channel) 
+	if(tags.channel == ptrfscanlist->channel)
 		{
 		zeiger->frequency = ptrfscanlist->frequency;
 		zeiger->channel = tags.channel;
@@ -6646,9 +6646,9 @@ for(zeiger = scanlist; zeiger < scanlist +SCANLIST_MAX; zeiger++)
 	if(zeiger->count == 0) break;
 	if(zeiger->hit > 0)
 		{
-		if(zeiger->channel < 36) inject24 = true; 
-		else if((zeiger->channel >= 36) && (zeiger->channel < 200)) inject5 = true; 
-		else if(zeiger->channel >= 200) inject6 = true; 
+		if(zeiger->channel < 36) inject24 = true;
+		else if((zeiger->channel >= 36) && (zeiger->channel < 200)) inject5 = true;
+		else if(zeiger->channel >= 200) inject6 = true;
 		injectionhit += zeiger->hit;
 		networkhit++;
 		}
@@ -7176,7 +7176,7 @@ memset(&iwr_old, 0, sizeof(iwr));
 memcpy(&iwr_old.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWMODE, &iwr_old) < 0)
 	{
-	perror("failed to backup  current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
+	perror("failed to backup current interface mode, ioctl(SIOCGIWMODE) not supported by driver");
 	if(forceinterfaceflag == false) return false;
 	}
 if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
@@ -8341,18 +8341,18 @@ exit(EXIT_SUCCESS);
 __attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
-fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
-	"usage  : %s <options>\n"
-	"         press ctrl+c to terminate hcxdumptool\n"
-	"         press GPIO button to terminate hcxdumptool\n"
-	"         hardware modification is necessary, read more:\n"
-	"         https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
-	"         do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)\n"
-	"         do not run hcxdumptool on logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw\n"
-	"         do not run hcxdumptool on virtual machines or emulators\n"
-	"         do not run hcxdumptool in combination with tools (channel hopper), that take access to the interface (except: tshark, wireshark, tcpdump)\n"
-	"         do not use tools like macchanger, because hcxdumptool runs its own MAC space and will ignore this changes\n"
-	"         stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
+fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
+	"usage: %s <options>\n"
+	"       press ctrl+c to terminate hcxdumptool\n"
+	"       press GPIO button to terminate hcxdumptool\n"
+	"       hardware modification is necessary, read more:\n"
+	"       https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
+	"       do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)\n"
+	"       do not run hcxdumptool on logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw\n"
+	"       do not run hcxdumptool on virtual machines or emulators\n"
+	"       do not run hcxdumptool in combination with tools (channel hopper), that take access to the interface (except: tshark, wireshark, tcpdump)\n"
+	"       do not use tools like macchanger, because hcxdumptool runs its own MAC space and will ignore this changes\n"
+	"       stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
 	"\n"
 	"short options:\n"
 	"-i <interface> : interface (monitor mode will be enabled by hcxdumptool)\n"
@@ -8405,13 +8405,13 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                                     use this mode to collect data for the filter list\n"
 	"                                     run this mode at least for 2 minutes\n"
 	"                                     to save all received raw packets use option -o\n"
-	"                                     default scanlist: channel 1 ...13\n" 
+	"                                     default scanlist: channel 1 ...13\n"
 	"--rcascan_max=digit>               : show only n highest ranking lines\n"
 	"                                     default: %d lines\n"
 	"--rcascan_order=digit>             : rcascan sorting order:\n"
-	"                                      0 = sort by PROBERESPONSE count (default)\n" 
-	"                                      1 = sort by BEACON count\n" 
-	"                                      2 = sort by CHANNEL\n" 
+	"                                      0 = sort by PROBERESPONSE count (default)\n"
+	"                                      1 = sort by BEACON count\n"
+	"                                      2 = sort by CHANNEL\n"
 	"--do_targetscan=<MAC_AP>           : same as do_rcascan - hide all networks, except target\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66\n"
 	"--reason_code=<digit>              : deauthentication reason code\n"
@@ -8472,7 +8472,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                                        not recommended, because some useful frames could be filtered out\n"
 	"                                     using a filter list doesn't have an affect on rca scan\n"
 	"                                     only for testing useful - devices to be protected should be added to BPF\n"
-	"                                     notice: this filter option will let hcxdumptool protect or attack a target - it is neither a capture nor a display filter\n" 
+	"                                     notice: this filter option will let hcxdumptool protect or attack a target - it is neither a capture nor a display filter\n"
 	"--filterlist_ap=<file or MAC>      : ACCESS POINT MAC or MAC filter list\n"
 	"                                     format: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66 # comment\n"
 	"                                     maximum entries %d\n"
@@ -8837,7 +8837,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_SCANLIST:
-		sl = strtol(optarg, NULL, 10); 
+		sl = strtol(optarg, NULL, 10);
 		if(sl > 5)
 			{
 			fprintf(stderr, "no predefined scanlist available\n");
@@ -9304,7 +9304,7 @@ if(monitormodeflag == true)
 		fprintf(stderr, "failed to init socket\n");
 		exit(EXIT_FAILURE);
 		}
-	fprintf(stdout, "setting interface %s to monitor mode\n", interfacename); 
+	fprintf(stdout, "setting interface %s to monitor mode\n", interfacename);
 	return EXIT_SUCCESS;
 	}
 
