@@ -1658,21 +1658,6 @@ send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_NORM +CAPABILITIESREQSTA_SIZE +zeige
 return;
 }
 /*===========================================================================*/
-static inline void send_ack()
-{
-static mac_t *macftx;
-
-packetoutptr = epbown +EPB_SIZE;
-memset(packetoutptr, 0, HDRRT_SIZE +MAC_SIZE_ACK+1);
-memcpy(packetoutptr, &hdradiotap, HDRRT_SIZE);
-macftx = (mac_t*)(packetoutptr +HDRRT_SIZE);
-macftx->type = IEEE80211_FTYPE_CTL;
-macftx->subtype = IEEE80211_STYPE_ACK;
-memcpy(macftx->addr1, macfrx->addr2, 6);
-send_packet(fd_socket, HDRRT_SIZE +MAC_SIZE_ACK, "failed to transmit acknowledgement");
-return;
-}
-/*===========================================================================*/
 static inline void send_reassociation_resp()
 {
 static mac_t *macftx;
@@ -2915,10 +2900,6 @@ static ownlist_t *zeiger;
 if(exteaplen < EAPAUTH_SIZE) return;
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if(((timestamp -lastauthtimestamp) <= eapoltimeoutvalue) || ((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) <= eapoleaptimeoutvalue)))
-		{
-		if(memcmp(&lastauthap, macfrx->addr1, 6) == 0) send_ack();
-		}
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -3147,10 +3128,6 @@ char outstr[DEBUGMSG_MAX];
 if(exteaplen < EAPAUTH_SIZE) return;
 if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	{
-	if((eapreqflag == true) && (lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) <= eapoleaptimeoutvalue))
-		{
-		if(memcmp(&lastauthap, macfrx->addr1, 6) == 0) send_ack();
-		}
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -3384,7 +3361,6 @@ if(exteaplen < EAPAUTH_SIZE) return;
 if((timestamp -lastauthtimestamp) > eapoleaptimeoutvalue) return;
 if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
 if(!((macfrx->to_ds == 1) && (macfrx->from_ds == 0))) return;
-send_ack();
 for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	{
 	if(zeiger->timestamp == 0) break;
@@ -3626,11 +3602,6 @@ exteaplen = ntohs(exteap->len);
 if(exteaplen > authlen) return;
 if(eaptunflag == true)
 	{
-	if((macfrx->retry == 1) && (memcmp(lastauthap, macfrx->addr1, 6) == 0) && (memcmp(exteap, &lastpacket, exteaplen) == 0))
-		{
-		send_ack();
-		return;
-		}
 	memcpy(&lastpacket, exteap, exteaplen);
 	switch(exteap->type)
 		{
@@ -4143,7 +4114,6 @@ memset(&lastauthclient, 0, 6);
 lastauthtimestamp = 0;
 wpak = (wpakey_t*)wpakptr;
 rc = be64toh(wpak->replaycount);
-if(rc == myrc) send_ack();
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
 if((lastkeyinfo == 2) && (lastkeyver == keyver) && (lastrc == (rc -1))
 	&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
@@ -4408,7 +4378,6 @@ static inline void process80211eapol_m1_own(uint16_t authlen, uint8_t keyinfo, u
 static wpakey_t *wpak;
 static pmkid_t *pmkid;
 
-send_ack();
 if(fd_pcapng > 0)
 	{
 	if((pcapngframesout &PCAPNG_FRAME_EAP) == PCAPNG_FRAME_EAP) writeepb(fd_pcapng);
@@ -4518,7 +4487,6 @@ else if((eapauth->type == EAPOL_START) && (macfrx->to_ds == 1))
 	{
 	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && (memcmp(&lastauthap, macfrx->addr1, 6) == 0))
 		{
-		send_ack();
 		send_eap_request_id(NULL);
 		lastauthtimestamp = timestamp;
 		}
@@ -4657,11 +4625,6 @@ static inline void process80211action()
 {
 static actf_t *actf;
 
-if(memcmp(&mac_myclient, macfrx->addr1, 6) == 0)
-	{
-	send_ack();
-	return;
-	}
 if(payloadlen < ACTIONFRAME_SIZE) return;
 if(fd_pcapng > 0)
 	{
@@ -4677,7 +4640,6 @@ if(fd_pcapng > 0)
 	}
 if(((timestamp -lastauthtimestamp) > eapoltimeoutvalue) || ((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) > eapoleaptimeoutvalue))) return;
 if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
-send_ack();
 if(lastauthkeyver == 2) send_m1_wpa2();
 else if(lastauthkeyver == 1) send_m1_wpa1();
 return;
@@ -4688,7 +4650,6 @@ static inline void process80211ack()
 if(((timestamp -lastauthtimestamp) > eapoltimeoutvalue) || ((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) > eapoleaptimeoutvalue))) return;
 if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
 packetsentflag = false;
-send_ack();
 if(lastauthkeyver == 2) send_m1_wpa2();
 else if(lastauthkeyver == 1) send_m1_wpa1();
 return;
@@ -4717,7 +4678,6 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 		{
 		if(memcmp(&lastauthap, macfrx->addr1, 6) == 0)
 			{
-			send_ack();
 			if(lastauthkeyver == 2) send_m1_wpa2();
 			else if(lastauthkeyver == 1) send_m1_wpa1();
 			return;
@@ -4762,7 +4722,6 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	if((((timestamp -lastauthtimestamp) <= eapoltimeoutvalue) || ((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) <= eapoleaptimeoutvalue)))
 		&& (memcmp(&lastauthap, macfrx->addr1, 6) == 0))
 		{
-		send_ack();
 		if(lastauthkeyver == 2) send_m1_wpa2();
 		else if(lastauthkeyver == 1) send_m1_wpa1();
 		return;
@@ -4789,7 +4748,6 @@ if((macfrx->to_ds == 1) && (macfrx->from_ds == 0))
 	if(memcmp(&lastauthap, macfrx->addr1, 6) != 0) return;
 	if((lastauthkeyver == 0) && ((timestamp -lastauthtimestamp) > eapoleaptimeoutvalue)) return;
 	if((lastauthkeyver > 0) && ((timestamp -lastauthtimestamp) > eapoltimeoutvalue)) return;
-	send_ack();
 	for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 		{
 		if(zeiger->timestamp == 0) break;
@@ -4880,7 +4838,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
-				send_ack();
 				send_reassociation_resp();
 				memcpy(&lastauthap, macfrx->addr1, 6);
 				memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -4889,7 +4846,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
-				send_ack();
 				send_reassociation_resp();
 				memcpy(&lastauthap, macfrx->addr1, 6);
 				memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -4933,7 +4889,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
 		if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 			{
-			send_ack();
 			send_reassociation_resp();
 			memcpy(&lastauthap, macfrx->addr1, 6);
 			memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -4942,7 +4897,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			}
 		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 			{
-			send_ack();
 			send_reassociation_resp();
 			memcpy(&lastauthap, macfrx->addr1, 6);
 			memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -4965,7 +4919,6 @@ static inline void process80211association_resp()
 {
 static macessidlist_t *zeiger;
 
-if(memcmp(&mac_myclient, macfrx->addr1, 6) == 0) send_ack();
 if(payloadlen < ASSOCIATIONRESPFRAME_SIZE) return;
 for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	{
@@ -5038,7 +4991,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			{
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
-				send_ack();
 				send_association_resp();
 				memcpy(&lastauthap, macfrx->addr1, 6);
 				memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -5047,7 +4999,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 				}
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
-				send_ack();
 				send_association_resp();
 				memcpy(&lastauthap, macfrx->addr1,6);
 				memcpy(&lastauthclient, macfrx->addr2,6);
@@ -5063,7 +5014,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 				{
 				if((eapreqflag == true) && (zeiger->eapctx.reqstate == eapreqentries)) return;
-				send_ack();
 				if((timestamp -lastauthtimestamp) <= PACKET_RESEND_TIMER_USEC) return;
 				send_association_resp();
 				zeiger->eapctx.id = -1;
@@ -5076,7 +5026,6 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 			else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 				{
 				if((eapreqflag == true) && (zeiger->eapctx.reqstate == eapreqentries)) return;
-				send_ack();
 				if((timestamp -lastauthtimestamp) <= PACKET_RESEND_TIMER_USEC) return;
 				send_association_resp();
 				zeiger->eapctx.id = -1;
@@ -5125,7 +5074,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
 		if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 			{
-			send_ack();
 			send_association_resp();
 			memcpy(&lastauthap, macfrx->addr1, 6);
 			memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -5134,7 +5082,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			}
 		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 			{
-			send_ack();
 			send_association_resp();
 			memcpy(&lastauthap, macfrx->addr1, 6);
 			memcpy(&lastauthclient, macfrx->addr2, 6);
@@ -5146,7 +5093,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 		{
 		if((tags.kdversion &KV_RSNIE) == KV_RSNIE)
 			{
-			send_ack();
 			send_association_resp();
 			zeiger->eapctx.id = -1;
 			send_eap_request_id(&zeiger->eapctx);
@@ -5157,7 +5103,6 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 			}
 		else if((tags.kdversion &KV_WPAIE) == KV_WPAIE)
 			{
-			send_ack();
 			send_association_resp();
 			zeiger->eapctx.id = -1;
 			send_eap_request_id(&zeiger->eapctx);
@@ -5187,13 +5132,11 @@ if((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CLIENT_ATTACKS) return;
 auth = (authf_t*)payloadptr;
 if(ntohs(auth->sequence) == 1)
 	{
-	send_ack();
 	if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) send_authentication_sae_commit(macfrx->addr2, macfrx->addr1);
 	else if(memcmp(macfrx->addr2, macfrx->addr3, 6) == 0) send_authentication_sae_confirm(macfrx->addr2, macfrx->addr1);
 	}
 if(ntohs(auth->sequence) == 2)
 	{
-	send_ack();
 	if(memcmp(macfrx->addr1, macfrx->addr3, 6) == 0) send_authentication_sae_confirm(macfrx->addr2 ,macfrx->addr1);
 	}
 return;
@@ -5214,7 +5157,6 @@ for(zeiger = aplist; zeiger < aplist +APLIST_MAX; zeiger++)
 	if((zeiger->status &FILTERED) == FILTERED) return;
 	if((zeiger->essidlen != 0) && (zeiger->essid[0] != 0) && (auth->algorithm == OPEN_SYSTEM) && (memcmp(&mac_myclient, macfrx->addr1, 6) == 0))
 		{
-		send_ack();
 		if((zeiger->kdversion &KV_RSNIE) == KV_RSNIE) send_association_req_wpa2(zeiger);
 		else if((zeiger->kdversion &KV_WPAIE) == KV_WPAIE) send_association_req_wpa1(zeiger);
 		}
@@ -5266,11 +5208,7 @@ for(zeiger = ownlist; zeiger < ownlist +OWNLIST_MAX; zeiger++)
 	if((zeiger->status &FILTERED) == FILTERED) return;
 	if(((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS) && ((zeiger->status < OW_M1M2ROGUE) || ((eapreqflag == true) && (zeiger->eapctx.reqstate < eapreqentries))))
 		{
-		if(auth->algorithm == OPEN_SYSTEM)
-			{
-			send_ack();
-			send_authentication_resp_opensystem();
-			}
+		if(auth->algorithm == OPEN_SYSTEM) send_authentication_resp_opensystem();
 		}
 	if((zeiger->status &OW_AUTH) != OW_AUTH)
 		{
@@ -5298,11 +5236,7 @@ if(filtermode != 0)
 	}
 if((attackstatus &DISABLE_CLIENT_ATTACKS) != DISABLE_CLIENT_ATTACKS)
 	{
-	if(auth->algorithm == OPEN_SYSTEM)
-		{
-		send_ack();
-		send_authentication_resp_opensystem();
-		}
+	if(auth->algorithm == OPEN_SYSTEM) send_authentication_resp_opensystem();
 	}
 if(fd_pcapng > 0)
 	{
