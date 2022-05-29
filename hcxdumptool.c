@@ -5635,8 +5635,24 @@ pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = ptrfscanlist->frequency;
 if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
-if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0) aktchannel = pwrq.u.freq.m;
-return true;
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
+	{
+	if(pwrq.u.freq.e == 6)  aktchannel = pwrq.u.freq.m;
+	else if(pwrq.u.freq.e == 5) aktchannel = pwrq.u.freq.m /10;
+	else if(pwrq.u.freq.e == 4) aktchannel = pwrq.u.freq.m /100;
+	else if(pwrq.u.freq.e == 3) aktchannel = pwrq.u.freq.m /1000;
+	else if(pwrq.u.freq.e == 2) aktchannel = pwrq.u.freq.m /10000;
+	else if(pwrq.u.freq.e == 1) aktchannel = pwrq.u.freq.m /100000;
+	else if(pwrq.u.freq.e == 0) aktchannel = pwrq.u.freq.m /1000000;
+	if(aktchannel < 3000)
+		{
+		hdradiotap[9] = 0x02;
+		return true;
+		}
+	hdradiotap[9] = 0x0c;
+	return true;
+	}
+return false;
 }
 /*===========================================================================*/
 static inline bool set_channel_test(int freq)
@@ -7507,7 +7523,6 @@ for(c = 2407; c < 2488; c++)
 	pwrq.u.freq.m = c;
 	pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
-
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
