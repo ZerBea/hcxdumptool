@@ -352,7 +352,7 @@ static inline void debugprint(int len, uint8_t *ptr, char *mesg)
 {
 static int p;
 
-fprintf(stdout, "%s ", mesg);
+if(mesg != NULL) fprintf(stdout, "%s ", mesg);
 for(p = 0; p < len; p++)
 	{
 	fprintf(stdout, "%02x", ptr[p]);
