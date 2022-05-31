@@ -1,3 +1,11 @@
+31.05.2022
+==========
+hcxpcapngtool: added new option according to https://github.com/ZerBea/hcxdumptool/issues/220
+--passive                          : channel management is completely disabled - initial channel must be set by a third party tool
+                                     hcxdumptool is acting like a passive dumper (silent mode)
+                                     expect possible heavy packet loss
+
+
 22.04.2022
 ==========
 release v6.2.6

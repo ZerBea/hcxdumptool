@@ -5616,6 +5616,33 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
+static inline void get_channel_no_cm()
+{
+static struct iwreq pwrq;
+
+ptrfscanlist = fscanlist;
+memset(&pwrq, 0, sizeof(pwrq));
+memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
+	{
+	if(pwrq.u.freq.e == 6) ptrfscanlist->frequency = pwrq.u.freq.m;
+	else if(pwrq.u.freq.e == 5) ptrfscanlist->frequency = pwrq.u.freq.m /10;
+	else if(pwrq.u.freq.e == 4) ptrfscanlist->frequency = pwrq.u.freq.m /100;
+	else if(pwrq.u.freq.e == 3) ptrfscanlist->frequency = pwrq.u.freq.m /1000;
+	else if(pwrq.u.freq.e == 2) ptrfscanlist->frequency = pwrq.u.freq.m /10000;
+	else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
+	else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
+	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+	else if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
+	else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+	return;
+	}
+ptrfscanlist->frequency = 0;
+ptrfscanlist->channel = 0;
+return;
+}
+/*===========================================================================*/
 static inline void get_channel()
 {
 static struct iwreq pwrq;
@@ -5972,6 +5999,153 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		else if(((mpdu->keyid >> 5) &1) == 0) process80211data_wep();
 		}
 	}
+return;
+}
+/*===========================================================================*/
+static inline void process_no_cm_fd()
+{
+static int sd;
+static int fdnum;
+static fd_set readfds;
+static struct timespec tsfd;
+static const char *fimtempl;
+static const char *fimtemplprotect = "protect";
+static const char *fimtemplattack = "attack";
+static const char *fimtemplunused = "unused";
+
+attackstatus = SILENT;
+fimtempl = fimtemplunused;
+if(filtermode == 1) fimtempl = fimtemplprotect;
+if(filtermode == 2) fimtempl = fimtemplattack;
+if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
+if(nmeasentence[0] == 0) memcpy(&nmeasentence, &notavailablestr, 3);
+snprintf(servermsg, SERVERMSG_MAX, "\e[?25l\nstart capturing (stop with ctrl+c)\n"
+	"NMEA 0183 SENTENCE........: %s\n"
+	"PHYSICAL INTERFACE........: %s\n"
+	"INTERFACE NAME............: %s\n"
+	"INTERFACE PROTOCOL........: %s\n"
+	"INTERFACE TX POWER........: %d dBm (lowest value reported by the device)\n"
+	"INTERFACE HARDWARE MAC....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
+	"INTERFACE VIRTUAL MAC.....: %02x%02x%02x%02x%02x%02x (not used for the attack)\n"
+	"DRIVER....................: %s\n"
+	"DRIVER VERSION............: %s\n"
+	"DRIVER FIRMWARE VERSION...: %s\n"
+	"openSSL version...........: %d.%d\n"
+	"ERRORMAX..................: %d errors\n"
+	"BPF code blocks...........: %" PRIu16 "\n"
+	"FILTERLIST ACCESS POINT...: %d entries\n"
+	"FILTERLIST CLIENT.........: %d entries\n"
+	"FILTERMODE................: %s\n"
+	"WEAK CANDIDATE............: %s\n"
+	"ESSID list................: %d entries\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST WILDCARD used for the attack)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (BROADCAST OPEN used for the attack)\n"
+	"ACCESS POINT (ROGUE)......: %02x%02x%02x%02x%02x%02x (used for the attack and incremented on every new client)\n"
+	"CLIENT (ROGUE)............: %02x%02x%02x%02x%02x%02x\n"
+	"EAPOLTIMEOUT..............: %" PRIu64 " usec\n"
+	"EAPOLEAPTIMEOUT...........: %" PRIu64 " usec\n"
+	"REPLAYCOUNT...............: %" PRIu64 "\n"
+	"ANONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
+	"SNONCE....................: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
+	"\n"
+	"TIME     FREQ/CH  MAC_DEST     MAC_SOURCE   ESSID [FRAME TYPE]\n",
+	nmeasentence, phyinterfacename, interfacename, interfaceprotocol, interfacetxpwr,
+	mac_orig[0], mac_orig[1], mac_orig[2], mac_orig[3], mac_orig[4], mac_orig[5],
+	mac_virt[0], mac_virt[1], mac_virt[2], mac_virt[3], mac_virt[4], mac_virt[5],
+	drivername, driverversion, driverfwversion,
+	opensslversionmajor, opensslversionminor,
+	maxerrorcount, bpf.len, filteraplistentries, filterclientlistentries, fimtempl, weakcandidate,
+	beaconextlistlen,
+	mac_myaphidden[0], mac_myaphidden[1], mac_myaphidden[2], mac_myaphidden[3], mac_myaphidden[4], mac_myaphidden[5],
+	mac_myapopen[0], mac_myapopen[1], mac_myapopen[2], mac_myapopen[3], mac_myapopen[4], mac_myapopen[5],
+	mac_myap[0], mac_myap[1], mac_myap[2], mac_myap[3], mac_myap[4], mac_myap[5],
+	mac_myclient[0], mac_myclient[1], mac_myclient[2], mac_myclient[3], mac_myclient[4], mac_myclient[5],
+	eapoltimeoutvalue, eapoleaptimeoutvalue, myrc,
+	myanonce[0], myanonce[1], myanonce[2], myanonce[3], myanonce[4], myanonce[5], myanonce[6], myanonce[7],
+	myanonce[8], myanonce[9], myanonce[10], myanonce[11], myanonce[12], myanonce[13], myanonce[14], myanonce[15],
+	myanonce[16], myanonce[17], myanonce[18], myanonce[19], myanonce[20], myanonce[21], myanonce[22], myanonce[23],
+	myanonce[24], myanonce[25], myanonce[26], myanonce[27], myanonce[28], myanonce[29], myanonce[30], myanonce[31],
+	mysnonce[0], mysnonce[1], mysnonce[2], mysnonce[3], mysnonce[4], mysnonce[5], mysnonce[6], mysnonce[7],
+	mysnonce[8], mysnonce[9], mysnonce[10], mysnonce[11], mysnonce[12], mysnonce[13], mysnonce[14], mysnonce[15],
+	mysnonce[16], mysnonce[17], mysnonce[18], mysnonce[19], mysnonce[20], mysnonce[21], mysnonce[22], mysnonce[23],
+	mysnonce[24], mysnonce[25], mysnonce[26], mysnonce[27], mysnonce[28], mysnonce[29], mysnonce[30], mysnonce[31]);
+
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
+else fprintf(stdout, "%s", servermsg);
+gettimeofday(&tv, NULL);
+tsfd.tv_sec = 0;
+tsfd.tv_nsec = FDNSECTIMERB;
+while(wantstopflag == false)
+	{
+	if(errorcount >= maxerrorcount)
+		{
+		fprintf(stderr, "\nmaximum number of errors is reached\n");
+		if(forceinterfaceflag == false) globalclose();
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0) globalclose();
+		}
+	gettimeofday(&tv, NULL);
+	if(tv.tv_sec != tvold.tv_sec)
+		{
+		tvold.tv_sec = tv.tv_sec;
+		if(tv.tv_sec >= tvtot.tv_sec)
+			{
+			totflag = true;
+			globalclose();
+			}
+		if((tv.tv_sec %gpiostatusledflashinterval) == 0)
+			{
+			if(gpiostatusled > 0)
+				{
+				GPIO_SET = 1 << gpiostatusled;
+				nanosleep(&sleepled, NULL);
+				GPIO_CLR = 1 << gpiostatusled;
+				if((tv.tv_sec -tvlast_sec) > WATCHDOG)
+					{
+					nanosleep(&sleepled, NULL);
+					GPIO_SET = 1 << gpiostatusled;
+					nanosleep(&sleepled, NULL);
+					GPIO_CLR = 1 << gpiostatusled;
+					printreceivewatchdogwarnung();
+					}
+				}
+			}
+		if((tv.tv_sec %60) == 0)
+			{
+			if(((statusout &STATUS_GPS) == STATUS_GPS) && (fd_gps > 0)) printposition();
+			if((statusout &STATUS_INTERNAL) == STATUS_INTERNAL) printtimestatus();
+			}
+		}
+	if(reloadfilesflag == true) loadfiles();
+	FD_ZERO(&readfds);
+	FD_SET(fd_socket, &readfds);
+	sd = fd_socket;
+	if(fd_gps > 0)
+		{
+		FD_SET(fd_gps, &readfds);
+		sd = fd_gps;
+		}
+	if(fd_socket_srv > 0)
+		{
+		FD_SET(fd_socket_srv, &readfds);
+		sd = fd_socket_srv;
+		}
+	tsfd.tv_sec = 0;
+	tsfd.tv_nsec = FDNSECTIMERB;
+	fdnum = pselect(sd +1, &readfds, NULL, NULL, &tsfd, NULL);
+	if(fdnum < 0)
+		{
+		if(wantstopflag == false) errorcount++;
+		continue;
+		}
+	get_channel_no_cm();
+	if(FD_ISSET(fd_gps, &readfds)) process_gps();
+	else if(FD_ISSET(fd_socket, &readfds)) process_packet();
+	else if(FD_ISSET(fd_socket_srv, &readfds)) process_packet_client();
+	}
+globalclose();
 return;
 }
 /*===========================================================================*/
@@ -8401,6 +8575,9 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"--silent                           : do not transmit!\n"
 	"                                     hcxdumptool is acting like a passive dumper\n"
 	"                                     expect possible packet loss\n"
+	"--passive                          : channel management is completely disabled - initial channel must be set by a third party tool\n"
+	"                                     hcxdumptool is acting like a passive dumper (silent mode)\n"
+	"                                     expect possible heavy packet loss\n"
 	"--eapoltimeout=<digit>             : set EAPOL TIMEOUT (microseconds)\n"
 	"                                     default: %d usec\n"
 	"--eapoleaptimeout=<digit>          : set EAPOL EAP TIMEOUT (microseconds) over entire request sequence\n"
@@ -8631,6 +8808,7 @@ static bool showinterfaceflag;
 static bool monitormodeflag;
 static bool showchannelsflag;
 static bool beaconparamsflag;
+static bool passiveflag;
 static const char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
@@ -8650,6 +8828,7 @@ static const struct option long_options[] =
 	{"disable_client_attacks",	no_argument,		NULL,	HCX_DISABLE_CLIENT_ATTACKS},
 	{"stop_client_m2_attacks",	required_argument,	NULL,	HCX_STOP_CLIENT_M2_ATTACKS},
 	{"silent",			no_argument,		NULL,	HCX_SILENT},
+	{"passive",			no_argument,		NULL,	HCX_SILENT_NOCM},
 	{"filterlist_ap",		required_argument,	NULL,	HCX_FILTERLIST_AP},
 	{"filterlist_client",		required_argument,	NULL,	HCX_FILTERLIST_CLIENT},
 	{"filterlist_ap_vendor",	required_argument,	NULL,	HCX_FILTERLIST_AP_VENDOR},
@@ -8749,6 +8928,7 @@ eaptunflag = false;
 totflag = false;
 gpsdflag = false;
 infinityflag = false;
+passiveflag = false;
 statusout = 0;
 attackstatus = 0;
 filtermode = 0;
@@ -8936,6 +9116,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_SILENT:
 		attackstatus = SILENT;
+		break;
+
+		case HCX_SILENT_NOCM:
+		passiveflag = true;
 		break;
 
 		case HCX_FILTERLIST_AP:
@@ -9434,7 +9618,11 @@ if(nmeaoutname != NULL)
 	}
 if((gpsname != NULL) || (gpsdflag == true)) opengps();
 
-if(rcascanflag == false) process_fd();
+if(rcascanflag == false)
+	{
+	if(passiveflag == false) process_fd();
+	else process_no_cm_fd();
+	}
 else process_fd_rca();
 
 globalclose();
