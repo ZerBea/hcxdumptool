@@ -1513,7 +1513,6 @@ if(FD_ISSET(txsocket, &txfds))
 		errorcount++;
 		return;
 		}
-	fsync(txsocket);
 	outgoingcount++;
 	return;
 	}
@@ -2613,7 +2612,6 @@ if(FD_ISSET(fd_socket, &txfds))
 		errorcount++;
 		return;
 		}
-	fsync(fd_socket);
 	outgoingcount++;
 	gettimeofday(&tvpacketsent, NULL);
 	packetsenttries--;
