@@ -5868,13 +5868,7 @@ if(packetlen < (int)RTH_SIZE)
 	}
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
-if(rth->it_version != 0)
-	{
-	radiotaperrorcount++;
-	errorcount++;
-	return;
-	}
-if((rth->it_pad != 0) || (rth->it_present == 0))
+if((rth->it_version != 0) || (rth->it_pad != 0) || (rth->it_present == 0))
 	{
 	radiotaperrorcount++;
 	errorcount++;
@@ -6524,19 +6518,7 @@ if(ioctl(fd_socket, SIOCGSTAMP, &tv) < 0)
 timestamp = ((uint64_t)tv.tv_sec *1000000) + tv.tv_usec;
 packetptr = &epb[EPB_SIZE];
 rth = (rth_t*)packetptr;
-if(rth->it_version != 0)
-	{
-	radiotaperrorcount++;
-	errorcount++;
-	return;
-	}
-if(rth->it_pad != 0)
-	{
-	radiotaperrorcount++;
-	errorcount++;
-	return;
-	}
-if(rth->it_present == 0)
+if((rth->it_version != 0) || (rth->it_pad != 0) || (rth->it_present == 0))
 	{
 	radiotaperrorcount++;
 	errorcount++;
