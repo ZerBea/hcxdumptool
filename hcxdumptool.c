@@ -5874,13 +5874,7 @@ if(rth->it_version != 0)
 	errorcount++;
 	return;
 	}
-if(rth->it_pad != 0)
-	{
-	radiotaperrorcount++;
-	errorcount++;
-	return;
-	}
-if(rth->it_present == 0)
+if((rth->it_pad != 0) || (rth->it_present == 0))
 	{
 	radiotaperrorcount++;
 	errorcount++;
