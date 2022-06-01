@@ -5851,18 +5851,19 @@ if(packetlen == 0)
 	fprintf(stderr, "\ninterface went down\n");
 	globalclose();
 	}
+#ifdef DEBUG
+debugprint(packetlen, &epb[EPB_SIZE], NULL);
+#endif
 if(packetlen < 0)
 	{
 	perror("\nfailed to read packet");
 	errorcount++;
 	return;
 	}
-#ifdef DEBUG
-debugprint(packetlen, &epb[EPB_SIZE], NULL);
-#endif
 if(packetlen < (int)RTH_SIZE)
 	{
 	fprintf(stderr, "\ngot damged radiotap header\n");
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
@@ -6494,18 +6495,19 @@ if(packetlen == 0)
 	fprintf(stderr, "\ninterface went down\n");
 	globalclose();
 	}
+#ifdef DEBUG
+debugprint(packetlen, &epb[EPB_SIZE], NULL);
+#endif
 if(packetlen < 0)
 	{
 	perror("\nfailed to read packet");
 	errorcount++;
 	return;
 	}
-#ifdef DEBUG
-debugprint(packetlen, &epb[EPB_SIZE], NULL);
-#endif
 if(packetlen < (int)RTH_SIZE)
 	{
 	fprintf(stderr, "\ngot damged radiotap header\n");
+	radiotaperrorcount++;
 	errorcount++;
 	return;
 	}
