@@ -9543,6 +9543,7 @@ if(showchannelsflag == true)
 
 if(checkdriverflag == true)
 	{
+	fprintf(stdout, "detected driver: %s\n", drivername);
 	if(set_channel_test(2412) == false) errorcount++;
 	if(errorcount == 0) fprintf(stdout, "driver tests passed...\nall required ioctl() system calls are supported by driver\n");
 	else fprintf(stderr, "%d driver error(s) encountered during the test - monitor mode and ioctl() system calls failed\n", errorcount);
