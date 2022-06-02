@@ -170,10 +170,6 @@ This list is for information purposes only and should not be regarded as a bindi
 
 * ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
 
-* ID 0bda:8178 Realtek Semiconductor Corp. RTL8192CU 802.11n WLAN Adapter
-
-* ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter
-
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
 Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
