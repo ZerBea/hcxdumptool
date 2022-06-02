@@ -1,3 +1,8 @@
+02.06.2022
+==========
+hcxdumptool: added warning if a not recommended driver has been detected
+
+
 31.05.2022
 ==========
 hcxpcapngtool: added new option according to https://github.com/ZerBea/hcxdumptool/issues/220

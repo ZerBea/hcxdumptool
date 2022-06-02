@@ -271,7 +271,7 @@ static uint32_t myoui_client;
 static uint32_t myoui_ap;
 static uint32_t mynic_ap;
 
-static char drivername[34];
+static char drivername[256];
 static char driverversion[34];
 static char driverfwversion[ETHTOOL_FWVERS_LEN +2];
 
@@ -7251,10 +7251,16 @@ static double lfin;
 static int enable = 1;
 #endif
 
+static char *drvmediatek = "mt7";
+static char *drvralink2 = "rt2";
+static char *drvralink6 = "rt6";
+static char *drvralink7 = "rt7";
+static char *drvwarning = " (this driver is not recommended - expect errors)";
+
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
 memset(&mac_virt, 0, 6);
-memset(&drivername, 0, 34);
+memset(&drivername, 0, 256);
 memset(&driverversion, 0, 34);
 memset(&driverfwversion, 0, 34);
 checkallunwanted();
@@ -7467,6 +7473,14 @@ if(ioctl(fd_socket, SIOCETHTOOL, &ifr) < 0)
 memcpy(&drivername, drvinfo.driver, 32);
 memcpy(&driverversion, drvinfo.version, 32);
 memcpy(&driverfwversion, drvinfo.fw_version, ETHTOOL_FWVERS_LEN);
+if(strlen(drivername) > 3)
+	{
+	if(memcmp(drivername, drvmediatek, 3) == 0) return true;
+	if(memcmp(drivername, drvralink2, 3) == 0) return true;
+	if(memcmp(drivername, drvralink6, 3) == 0) return true;
+	if(memcmp(drivername, drvralink7, 3) == 0) return true;
+	}
+strncat(drivername, drvwarning, 256 -36);
 return true;
 }
 /*===========================================================================*/
