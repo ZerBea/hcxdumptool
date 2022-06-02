@@ -7255,7 +7255,7 @@ static char *drvmediatek = "mt7";
 static char *drvralink2 = "rt2";
 static char *drvralink6 = "rt6";
 static char *drvralink7 = "rt7";
-static char *drvwarning = " (this driver is not recommended - expect errors)";
+static char *drvwarning = " (this driver is not recommended - expect driver errors)";
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
