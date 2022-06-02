@@ -9560,7 +9560,8 @@ if(checkdriverflag == true)
 
 if(injectionflag == true)
 	{
-	getscanlist();
+	if(userscanliststring == NULL) getscanlist();
+	else getscanlistchannel(userscanliststring);
 	process_fd_injection();
 	globalclose();
 	return EXIT_SUCCESS;
