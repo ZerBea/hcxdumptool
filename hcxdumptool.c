@@ -7251,11 +7251,13 @@ static double lfin;
 static int enable = 1;
 #endif
 
+static char *drvhwsim = "mac80211_hwsim";
 static char *drvmediatek = "mt7";
 static char *drvralink2 = "rt2";
 static char *drvralink6 = "rt6";
 static char *drvralink7 = "rt7";
 static char *drvwarning = " (this driver is not recommended - expect driver errors)";
+static char *drvsimulation = " (hardware simulation)";
 
 fd_socket = 0;
 memset(&mac_orig, 0, 6);
@@ -7479,6 +7481,11 @@ if(strlen(drivername) > 3)
 	if(memcmp(drivername, drvralink2, 3) == 0) return true;
 	if(memcmp(drivername, drvralink6, 3) == 0) return true;
 	if(memcmp(drivername, drvralink7, 3) == 0) return true;
+	if(memcmp(drivername, drvhwsim, 3) == 0)
+		{
+		strncat(drivername, drvsimulation, 256 -36);
+		return true;
+		}
 	}
 strncat(drivername, drvwarning, 256 -36);
 return true;
