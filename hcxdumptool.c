@@ -5651,7 +5651,6 @@ memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return;
-
 if((pwrq.u.freq.e == 6) && (aktchannel = pwrq.u.freq.m)) return;
 else if((pwrq.u.freq.e == 5) && (aktchannel == pwrq.u.freq.m /10)) return;
 else if((pwrq.u.freq.e == 4) && (aktchannel == pwrq.u.freq.m /100)) return;
@@ -7600,6 +7599,7 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 		fprintf(stderr, "no frequency/channel reported by driver\n");
 		continue;
 		}
+	if(pwrq.u.freq.m == 0) continue;
 	if(pwrq.u.freq.m > 1000)
 		{
 		if(pwrq.u.freq.e == 6) ptrfscanlist->frequency = pwrq.u.freq.m;
@@ -7654,6 +7654,8 @@ for(c = 2407; c < 2488; c++)
 	pwrq.u.freq.m = c;
 	pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
 	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
@@ -7670,6 +7672,8 @@ for(c = 5005; c < 5981; c++)
 	pwrq.u.freq.m = c;
 	pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
 	else continue;
@@ -7685,6 +7689,8 @@ for(c = 5955; c < 6416; c++)
 	pwrq.u.freq.m = c;
 	pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
+	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
+	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 	else continue;
