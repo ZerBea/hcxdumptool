@@ -5630,6 +5630,7 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
 	else if(pwrq.u.freq.e == 2) ptrfscanlist->frequency = pwrq.u.freq.m /10000;
 	else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
 	else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
+	else return;
 	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
 	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
 	else if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
@@ -5652,12 +5653,12 @@ pwrq.u.freq.flags = IW_FREQ_FIXED;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return;
 
 if((pwrq.u.freq.e == 6) && (aktchannel = pwrq.u.freq.m)) return;
-else if((pwrq.u.freq.e == 5) && (aktchannel = pwrq.u.freq.m /10)) return;
-else if((pwrq.u.freq.e == 4) && (aktchannel = pwrq.u.freq.m /100)) return;
-else if((pwrq.u.freq.e == 3) && (aktchannel = pwrq.u.freq.m /1000)) return;
-else if((pwrq.u.freq.e == 2) && (aktchannel = pwrq.u.freq.m /10000)) return;
-else if((pwrq.u.freq.e == 1) && (aktchannel = pwrq.u.freq.m /100000)) return;
-else if((pwrq.u.freq.e == 0) && (aktchannel = pwrq.u.freq.m /1000000)) return;
+else if((pwrq.u.freq.e == 5) && (aktchannel == pwrq.u.freq.m /10)) return;
+else if((pwrq.u.freq.e == 4) && (aktchannel == pwrq.u.freq.m /100)) return;
+else if((pwrq.u.freq.e == 3) && (aktchannel == pwrq.u.freq.m /1000)) return;
+else if((pwrq.u.freq.e == 2) && (aktchannel == pwrq.u.freq.m /10000)) return;
+else if((pwrq.u.freq.e == 1) && (aktchannel == pwrq.u.freq.m /100000)) return;
+else if((pwrq.u.freq.e == 0) && (aktchannel == pwrq.u.freq.m /1000000)) return;
 
 errorcount++;
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
@@ -5677,26 +5678,24 @@ pwrq.u.freq.flags = IW_FREQ_FIXED;
 pwrq.u.freq.m = ptrfscanlist->frequency;
 if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
-if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
+if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return false;
+if(pwrq.u.freq.e == 6) aktchannel = pwrq.u.freq.m;
+else if(pwrq.u.freq.e == 5) aktchannel = pwrq.u.freq.m /10;
+else if(pwrq.u.freq.e == 4) aktchannel = pwrq.u.freq.m /100;
+else if(pwrq.u.freq.e == 3) aktchannel = pwrq.u.freq.m /1000;
+else if(pwrq.u.freq.e == 2) aktchannel = pwrq.u.freq.m /10000;
+else if(pwrq.u.freq.e == 1) aktchannel = pwrq.u.freq.m /100000;
+else if(pwrq.u.freq.e == 0) aktchannel = pwrq.u.freq.m /1000000;
+else return false;
+if(aktchannel < 3000)
 	{
-	if(pwrq.u.freq.e == 6) aktchannel = pwrq.u.freq.m;
-	else if(pwrq.u.freq.e == 5) aktchannel = pwrq.u.freq.m /10;
-	else if(pwrq.u.freq.e == 4) aktchannel = pwrq.u.freq.m /100;
-	else if(pwrq.u.freq.e == 3) aktchannel = pwrq.u.freq.m /1000;
-	else if(pwrq.u.freq.e == 2) aktchannel = pwrq.u.freq.m /10000;
-	else if(pwrq.u.freq.e == 1) aktchannel = pwrq.u.freq.m /100000;
-	else if(pwrq.u.freq.e == 0) aktchannel = pwrq.u.freq.m /1000000;
-	if(aktchannel < 3000)
-		{
-		hdradiotap[9] = 0x02;
-		hdradiotap_ack[9] = 0x02;
-		return true;
-		}
-	hdradiotap[9] = 0x0c;
-	hdradiotap_ack[9] = 0x0c;
+	hdradiotap[9] = 0x02;
+	hdradiotap_ack[9] = 0x02;
 	return true;
 	}
-return false;
+hdradiotap[9] = 0x0c;
+hdradiotap_ack[9] = 0x0c;
+return true;
 }
 /*===========================================================================*/
 static inline bool set_channel_test(int freq)
