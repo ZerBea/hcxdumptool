@@ -5679,7 +5679,7 @@ if(ptrfscanlist->frequency > 1000) pwrq.u.freq.e = 6;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
 	{
-	if(pwrq.u.freq.e == 6)  aktchannel = pwrq.u.freq.m;
+	if(pwrq.u.freq.e == 6) aktchannel = pwrq.u.freq.m;
 	else if(pwrq.u.freq.e == 5) aktchannel = pwrq.u.freq.m /10;
 	else if(pwrq.u.freq.e == 4) aktchannel = pwrq.u.freq.m /100;
 	else if(pwrq.u.freq.e == 3) aktchannel = pwrq.u.freq.m /1000;
