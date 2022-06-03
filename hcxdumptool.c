@@ -5650,14 +5650,20 @@ memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return;
-if(aktchannel != pwrq.u.freq.m)
-	{
-	errorcount++;
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
-	snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
-	if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
-	else fprintf(stdout, "%s", servermsg);
-	}
+
+if((pwrq.u.freq.e == 6) && (aktchannel = pwrq.u.freq.m)) return;
+else if((pwrq.u.freq.e == 5) && (aktchannel = pwrq.u.freq.m /10)) return;
+else if((pwrq.u.freq.e == 4) && (aktchannel = pwrq.u.freq.m /100)) return;
+else if((pwrq.u.freq.e == 3) && (aktchannel = pwrq.u.freq.m /1000)) return;
+else if((pwrq.u.freq.e == 2) && (aktchannel = pwrq.u.freq.m /10000)) return;
+else if((pwrq.u.freq.e == 1) && (aktchannel = pwrq.u.freq.m /100000)) return;
+else if((pwrq.u.freq.e == 0) && (aktchannel = pwrq.u.freq.m /1000000)) return;
+
+errorcount++;
+strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
+snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
+if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus(servermsg, strlen(servermsg));
+else fprintf(stdout, "%s", servermsg);
 return;
 }
 /*===========================================================================*/
