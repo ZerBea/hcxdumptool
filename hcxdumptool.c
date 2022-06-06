@@ -5631,10 +5631,10 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
 	else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
 	else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
 	else return;
-	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
-	else if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
-	else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+	else if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
+	else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 	return;
 	}
 ptrfscanlist->frequency = 0;
@@ -7614,10 +7614,10 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
-		if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-		else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
-		else if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
-		else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+		if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+		else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+		else if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
+		else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 		else
 			{
 			fprintf(stderr, "unexpected frequency/channel!\nwanted %d, reported from driver %d (exponent %d)\n", wantedfrequency, pwrq.u.freq.m, pwrq.u.freq.e);
@@ -7645,7 +7645,7 @@ static int c;
 static struct iwreq pwrq;
 
 ptrfscanlist = fscanlist;
-for(c = 2407; c < 2488; c++)
+for(c = 2412; c <= 2484; c++)
 	{
 	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7657,13 +7657,13 @@ for(c = 2407; c < 2488; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
-	if((ptrfscanlist->frequency >= 2407) && (ptrfscanlist->frequency <= 2474)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-	else if((ptrfscanlist->frequency >= 2481) && (ptrfscanlist->frequency <= 2487)) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
+	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
 	ptrfscanlist++;
 	}
-for(c = 5005; c < 5981; c++)
+for(c = 5180; c <= 5905; c++)
 	{
 	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7675,12 +7675,12 @@ for(c = 5005; c < 5981; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
-	if((ptrfscanlist->frequency >= 5005) && (ptrfscanlist->frequency <= 5980)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
+	if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
 	ptrfscanlist++;
 	}
-for(c = 5955; c < 6416; c++)
+for(c = 5955; c <= 7115; c++)
 	{
 	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7692,7 +7692,7 @@ for(c = 5955; c < 6416; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
-	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 6415)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
 	ptrfscanlist++;
@@ -7710,7 +7710,7 @@ static int frequency;
 static int exponent;
 
 fprintf(stdout, "%s available frequencies, channels and tx power reported by driver:\n", interfacename);
-for(c = 2407; c < 2488; c++)
+for(c = 2412; c <= 2484; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
@@ -7751,12 +7751,12 @@ for(c = 2407; c < 2488; c++)
 	pwrq.u.txpower.flags = IW_TXPOW_DBM;
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
 
-	if((frequency >= 2407) && (frequency <= 2474)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2407)/5, pwrq.u.txpower.value);
-	else if((frequency >= 2481) && (frequency <= 2487)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2412)/5, pwrq.u.txpower.value);
+	if((frequency >= 2412) && (frequency <= 2472)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2407)/5, pwrq.u.txpower.value);
+	else if(frequency == 2484) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2412)/5, pwrq.u.txpower.value);
 	else fprintf(stdout, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 
-for(c = 5005; c < 5981; c++)
+for(c = 5180; c <= 5905; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
@@ -7798,11 +7798,11 @@ for(c = 5005; c < 5981; c++)
 	pwrq.u.txpower.flags = IW_TXPOW_DBM;
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
 
-	if((frequency >= 5005) && (frequency <= 5980)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5000)/5, pwrq.u.txpower.value);
+	if((frequency >= 5180) && (frequency <= 5905)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5000)/5, pwrq.u.txpower.value);
 	else fprintf(stderr, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 
-for(c = 5955; c < 6416; c++)
+for(c = 5955; c <= 7115; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
@@ -7844,7 +7844,7 @@ for(c = 5955; c < 6416; c++)
 	pwrq.u.txpower.flags = IW_TXPOW_DBM;
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
 
-	if((frequency >= 5955) && (frequency <= 6415)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5950)/5, pwrq.u.txpower.value);
+	if((frequency >= 5955) && (frequency <= 7115)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -5950)/5, pwrq.u.txpower.value);
 	else fprintf(stderr, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 return;
