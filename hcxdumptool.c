@@ -9414,17 +9414,23 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		}
 	}
 
+setbuf(stdout, NULL);
+if(argc < 2)
+	{
+	fprintf(stderr, "no option selected\nrun %s --help to get more information\n", (basename(argv[0])));
+	exit(EXIT_FAILURE);
+	}
+
+if((argc == 3) && (interfacename[0] != 0))
+	{
+	fprintf(stderr, "not enough options selected for an attack vector\nrun %s --help to get more information\n", (basename(argv[0])));
+	exit(EXIT_FAILURE);
+	}
+
 if(infinityflag == true)
 	{
 	owm1m2roguemax = 1000000;
 	attackstopcount = 1000000;
-	}
-
-setbuf(stdout, NULL);
-if(argc < 2)
-	{
-	fprintf(stderr, "no option selected\n");
-	exit(EXIT_FAILURE);
 	}
 
 if(interfacename[0] != 0) getphyifname();
