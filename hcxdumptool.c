@@ -9421,7 +9421,7 @@ if(argc < 2)
 	exit(EXIT_FAILURE);
 	}
 
-if((argc == 3) && (interfacename[0] != 0))
+if((argc == 3) && (monitormodeflag ==false) && (interfacename[0] != 0))
 	{
 	fprintf(stderr, "not enough options selected for an attack vector\nrun %s --help to get more information\n", (basename(argv[0])));
 	exit(EXIT_FAILURE);
