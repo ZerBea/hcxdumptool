@@ -181,7 +181,7 @@ No support for a third party driver which is not part of the official kernel (ht
 No support for a driver which doesn't support monitor and packet injection, native <br /> If you need this features, do a request on www.kernel.org
 
 
-Not recommended WiFi chipsets:
+Not recommended WiFi chipsets (Broadcom, Intel, Realtek and Atheros), especially:
 
 * Broadcom (neither monitor mode nor frame injection)
 
