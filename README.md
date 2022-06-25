@@ -189,6 +189,8 @@ Not recommended WiFi chipsets (Broadcom, Intel, Realtek and Atheros), especially
 
 * Realtek RTL8811AU, RTL8812AU, RTL8814AU (due to NETLINK dependency)
 
+more information about possible issues on https://bugzilla.kernel.org
+
 
 Antennas
 --------------
