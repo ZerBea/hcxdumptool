@@ -1494,8 +1494,8 @@ static struct timespec tsfdtx;
 
 static char timestring[16];
 
-tsfdtx.tv_sec = 0;
-tsfdtx.tv_nsec = FDNSECTXTIMER;
+tsfdtx.tv_sec = FDSECTXTIMER;
+tsfdtx.tv_nsec = 0;
 FD_ZERO(&txfds);
 FD_SET(txsocket, &txfds);
 fdnum = pselect(txsocket +1, NULL, &txfds, NULL, &tsfdtx, NULL);
@@ -2594,8 +2594,8 @@ macftx = (mac_t*)(&packetsent[HDRRT_SIZE]);
 macftx->sequence = myapsequence++ << 4;
 if(myapsequence >= 4096) myapsequence = 1;
 macftx->retry = 1;
-tsfdtx.tv_sec = 0;
-tsfdtx.tv_nsec = FDNSECTXTIMER;
+tsfdtx.tv_sec = FDSECTXTIMER;
+tsfdtx.tv_nsec = 0;
 fdnum = pselect(fd_socket +1, NULL, &txfds, NULL, &tsfdtx, NULL);
 if(fdnum < 0)
 	{
