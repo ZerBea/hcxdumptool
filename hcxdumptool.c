@@ -7432,7 +7432,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	return false;
 	}
 #ifdef PACKET_IGNORE_OUTGOING
-if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0)  perror("disregarding outgoing packtes is not supported");
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) perror("failed to ignore outgoing packets, ioctl(PACKET_IGNORE_OUTGOING) not supported by driver");
 #endif
 
 if(set_channel_test(2412) == false)
