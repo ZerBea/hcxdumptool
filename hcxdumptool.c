@@ -7432,12 +7432,14 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	return false;
 	}
 #ifdef PACKET_IGNORE_OUTGOING
-if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
+if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0)  perror("disregarding outgoing packtes is not supported");
 #endif
 
-if(set_channel_test(2462) == false) return false;
-if(set_channel_test(2412) == false) return false;
-
+if(set_channel_test(2412) == false)
+	{
+	fprintf(stderr, "channel test failed\n");
+	return false;
+	}
 epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
 if(!epmaddr)
 	{
