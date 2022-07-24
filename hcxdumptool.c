@@ -7433,9 +7433,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	return false;
 	}
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
-#ifdef PACKET_IGNORE_OUTGOING
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) perror("failed to ignore outgoing packets, ioctl(PACKET_IGNORE_OUTGOING) not supported by driver");
-#endif
 #endif
 if(passiveflag == false)
 	{
