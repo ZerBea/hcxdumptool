@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <linux/version.h>
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 #include <linux/if_packet.h>
@@ -7239,7 +7240,7 @@ while(1)
 return;
 }
 /*===========================================================================*/
-static inline bool opensocket()
+static inline bool opensocket(bool passiveflag)
 {
 static struct ethtool_perm_addr *epmaddr;
 static struct ifreq ifr;
@@ -7431,14 +7432,18 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr)) < 0
 	perror("failed to set setsockopt(PACKET_MR_PROMISC)");
 	return false;
 	}
+#if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
 #ifdef PACKET_IGNORE_OUTGOING
 if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) perror("failed to ignore outgoing packets, ioctl(PACKET_IGNORE_OUTGOING) not supported by driver");
 #endif
-
-if(set_channel_test(2412) == false)
+#endif
+if(passiveflag == false)
 	{
-	fprintf(stderr, "channel test failed\n");
-	return false;
+	if(set_channel_test(2412) == false)
+		{
+		fprintf(stderr, "channel test failed\n");
+		return false;
+		}
 	}
 epmaddr = (struct ethtool_perm_addr*)calloc(1, sizeof(struct ethtool_perm_addr) +6);
 if(!epmaddr)
@@ -8855,7 +8860,7 @@ static const struct option long_options[] =
 	{"beaconparams",		required_argument,	NULL,	HCX_BEACONPARAMS},
 	{"wpaent",			no_argument,		NULL,	HCX_WPAENT},
 	{"eapreq",			required_argument,	NULL,	HCX_EAPREQ},
-	{"eapreq_follownak",	no_argument,		NULL,	HCX_EAPREQ_FOLLOWNAK},
+	{"eapreq_follownak",		no_argument,		NULL,	HCX_EAPREQ_FOLLOWNAK},
 	{"eaptlstun",			no_argument,		NULL,	HCX_EAPTUN},
 	{"eap_server_cert",		required_argument,	NULL,	HCX_EAP_SERVER_CERT},
 	{"eap_server_key",		required_argument,	NULL,	HCX_EAP_SERVER_KEY},
@@ -9461,7 +9466,7 @@ if(monitormodeflag == true)
 		fprintf(stderr, "no interface specified\n");
 		exit(EXIT_FAILURE);
 		}
-	if(opensocket() == false)
+	if(opensocket(passiveflag) == false)
 		{
 		fprintf(stderr, "failed to init socket\n");
 		exit(EXIT_FAILURE);
@@ -9546,7 +9551,7 @@ if(eapreqflag == true)
 		}
 	}
 
-if(opensocket() == false)
+if(opensocket(passiveflag) == false)
 	{
  	fprintf(stderr, "warning: failed to init socket\n");
 	errorcount++;
