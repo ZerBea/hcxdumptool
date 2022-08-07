@@ -1,3 +1,10 @@
+07.08.2022
+==========
+release v6.2.7
+several bug fixes
+still using OpenSSL 1.1
+
+
 02.06.2022
 ==========
 hcxdumptool: added warning if a not recommended driver has been detected
