@@ -7443,9 +7443,14 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int
 #endif
 if(passiveflag == false)
 	{
+	if(set_channel_test(2462) == false)
+		{
+		fprintf(stderr, "frequency test failed\n");
+		return false;
+		}
 	if(set_channel_test(2412) == false)
 		{
-		fprintf(stderr, "channel test failed\n");
+		fprintf(stderr, "frequency test failed\n");
 		return false;
 		}
 	}
