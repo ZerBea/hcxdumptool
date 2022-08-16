@@ -7755,7 +7755,7 @@ for(c = 2412; c <= 2484; c++)
 		}
 	else
 		{
-		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent (%d), reported frequency (%d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
+		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent: %d, reported frequency: %d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
 		return;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7802,7 +7802,7 @@ for(c = 5180; c <= 5905; c++)
 		}
 	else
 		{
-		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent (%d), reported frequency (%d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
+		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent: %d, reported frequency: %d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
 		return;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7848,7 +7848,7 @@ for(c = 5955; c <= 7115; c++)
 		}
 	else
 		{
-		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent (%d), reported frequency (%d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
+		fprintf(stderr, "driver doesn't support/allow frequency scan (reported exponent: %d, reported frequency: %d)\n", pwrq.u.freq.e, pwrq.u.freq.m);
 		return;
 		}
 	memset(&pwrq, 0, sizeof(pwrq));
