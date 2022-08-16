@@ -5712,6 +5712,8 @@ if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	fprintf(stderr, "driver doesn't support ioctl() SIOCSIWFREQ\n");
 	return false;
 	}
+memset(&pwrq, 0, sizeof(pwrq));
+memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0)
 	{
 	fprintf(stderr, "driver doesn't support ioctl() SIOCGIWFREQ\n");
