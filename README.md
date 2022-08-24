@@ -208,7 +208,7 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 | TP-LINK TL-ANT2409 A   | panel           |
 
 
-GPS devices
+GPS devices (NMEA 0183 protocol)
 --------------
 
 | VENDOR MODEL                | TYPE            |
