@@ -57,7 +57,7 @@ git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
-Solve dependencies (Debian based distributions: KALI, UBUNTU, ...) 
+Solve dependencies (Debian based distributions >= bullseye: KALI, UBUNTU, ...) 
 -------------- 
 
 You need to install missing dependencies before running `make`:
