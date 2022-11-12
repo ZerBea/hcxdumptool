@@ -1,3 +1,10 @@
+12.11.2022
+==========
+start moving to OpenSSL 3.0 EVP API
+this is a huge step forward an will break backward compatibility
+https://wiki.openssl.org/index.php/OpenSSL_3.0
+
+
 07.08.2022
 ==========
 release v6.2.7
