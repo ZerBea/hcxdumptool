@@ -57,6 +57,15 @@
 /*===========================================================================*/
 /* global var */
 
+static EVP_MAC *hmac;
+static EVP_MAC *cmac;
+static EVP_MAC_CTX *ctxhmac;
+static EVP_MAC_CTX *ctxcmac;
+static OSSL_PARAM paramsmd5[3];
+static OSSL_PARAM paramssha1[3];
+static OSSL_PARAM paramssha256[3];
+static OSSL_PARAM paramsaes128[3];
+
 static char *pcapngoutname;
 static char *gpsname;
 
@@ -548,11 +557,6 @@ if(rebootflag == true)
 		exit(EXIT_FAILURE);
 		}
 	}
-
-EVP_cleanup();
-CRYPTO_cleanup_all_ex_data();
-ERR_free_strings();
-
 if(errorcount != 0) exit(EXIT_FAILURE);
 if(totflag == true) exit(USER_EXIT_TOT);
 exit(EXIT_SUCCESS);
@@ -4207,50 +4211,20 @@ return;
 /*===========================================================================*/
 static inline bool detectweakpmkid(uint8_t *macclient, uint8_t *macap, uint8_t *pmkid, uint8_t essidlen, uint8_t *essid)
 {
-static size_t testpmkidlen;
-static EVP_MD_CTX *mdctx;
-static EVP_PKEY *pkey;
 static uint8_t *pmk;
 static char *pmkname = "PMK Name";
 
-static uint8_t message[EVP_MAX_MD_SIZE];
-static uint8_t testpmkid[EVP_MAX_MD_SIZE];
+static uint8_t pmkidcalculated[128];
 
 pmk = getpmk(essidlen, essid);
 if(pmk == NULL) return false;
-memcpy(&message, pmkname, 8);
-memcpy(&message[8], macap, 6);
-memcpy(&message[14], macclient, 6);
-testpmkidlen = 16;
-mdctx = EVP_MD_CTX_new();
-if(mdctx == 0) return false;
-pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, pmk, 32);
-if(pkey == NULL)
-	{
-	EVP_MD_CTX_free(mdctx);
-	return false;
-	}
-if(EVP_DigestSignInit(mdctx, NULL, EVP_sha1(), NULL, pkey) <= 0)
-	{
-	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
-	return false;
-	}
-if(EVP_DigestSignUpdate(mdctx, message, 20) <= 0)
-	{
-	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
-	return false;
-	}
-if(EVP_DigestSignFinal(mdctx, testpmkid, &testpmkidlen) <= 0)
-	{
-	EVP_PKEY_free(pkey);
-	EVP_MD_CTX_free(mdctx);
-	return false;
-	}
-EVP_PKEY_free(pkey);
-EVP_MD_CTX_free(mdctx);
-if(memcmp(&testpmkid, pmkid, 16) == 0) return true;
+memcpy(pmkidcalculated, pmkname, 8);
+memcpy(&pmkidcalculated[8], macap, 6);
+memcpy(&pmkidcalculated[14], macclient, 6);
+if(!EVP_MAC_init(ctxhmac, pmk, 32, paramssha1)) return false;
+if(!EVP_MAC_update(ctxhmac, pmkidcalculated, 20)) return false;
+if(!EVP_MAC_final(ctxhmac, pmkidcalculated, NULL, 20)) return false;
+if(memcmp(pmkid, pmkidcalculated, 16) == 0) return true;
 return false;
 }
 /*===========================================================================*/
@@ -8267,6 +8241,65 @@ while(opt_ptr != NULL)
 return true;
 }
 /*===========================================================================*/
+static bool evpdeinitwpa()
+{
+if(ctxhmac != NULL)
+	{
+	EVP_MAC_CTX_free(ctxhmac);
+	EVP_MAC_free(hmac);
+	}
+if(ctxcmac != NULL)
+	{
+	EVP_MAC_CTX_free(ctxcmac);
+	EVP_MAC_free(cmac);
+	}
+EVP_cleanup();
+CRYPTO_cleanup_all_ex_data();
+ERR_free_strings();
+return true;
+}
+/*===========================================================================*/
+static bool evpinitwpa()
+{
+static unsigned long opensslversion;
+
+ERR_load_crypto_strings();
+OpenSSL_add_all_algorithms();
+ERR_load_crypto_strings();
+OpenSSL_add_all_algorithms();
+opensslversion = OpenSSL_version_num();
+opensslversionmajor = (opensslversion & 0x10000000L) >> 28;
+opensslversionminor = (opensslversion & 0x01100000L) >> 20;
+
+hmac = NULL;
+ctxhmac = NULL;
+cmac = NULL;
+ctxcmac = NULL;
+
+hmac = EVP_MAC_fetch(NULL, "hmac", NULL);
+if(hmac == NULL) return false;
+cmac = EVP_MAC_fetch(NULL, "cmac", NULL);
+if(cmac == NULL) return false;
+
+paramsmd5[0] = OSSL_PARAM_construct_utf8_string("digest", "md5", 0);
+paramsmd5[1] = OSSL_PARAM_construct_end();
+
+paramssha1[0] = OSSL_PARAM_construct_utf8_string("digest", "sha1", 0);
+paramssha1[1] = OSSL_PARAM_construct_end();
+
+paramssha256[0] = OSSL_PARAM_construct_utf8_string("digest", "sha256", 0);
+paramssha256[1] = OSSL_PARAM_construct_end();
+
+paramsaes128[0] = OSSL_PARAM_construct_utf8_string("cipher", "aes-128-cbc", 0);
+paramsaes128[1] = OSSL_PARAM_construct_end();
+
+ctxhmac = EVP_MAC_CTX_new(hmac);
+if(ctxhmac == NULL) return false;
+ctxcmac = EVP_MAC_CTX_new(cmac);
+if(ctxcmac == NULL) return false;
+return true;
+}
+/*===========================================================================*/
 static inline bool tlsinit()
 {
 SSL_load_error_strings();
@@ -8307,7 +8340,6 @@ static inline bool globalinit()
 static int c;
 static unsigned int gpiobasemem = 0;
 static unsigned int seed;
-static unsigned long opensslversion;
 
 gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
@@ -8362,11 +8394,6 @@ if(gpiostatusled > 0)
 	}
 seed = rpisn +tv.tv_sec;
 srand(seed);
-ERR_load_crypto_strings();
-OpenSSL_add_all_algorithms();
-opensslversion = OpenSSL_version_num();
-opensslversionmajor = (opensslversion & 0x10000000L) >> 28;
-opensslversionminor = (opensslversion & 0x01100000L) >> 20;
 
 if((filteraplist = (maclist_t*)calloc((FILTERLIST_MAX +1), MACLIST_SIZE)) == NULL) return false;
 if((filterclientlist = (maclist_t*)calloc((FILTERLIST_MAX +1), MACLIST_SIZE)) == NULL) return false;
@@ -9445,6 +9472,12 @@ if((argc == 3) && (monitormodeflag ==false) && (interfacename[0] != 0))
 	exit(EXIT_FAILURE);
 	}
 
+if(evpinitwpa() == false)
+	{
+	fprintf(stderr, "EVP initialization failed\n");
+	exit(EXIT_FAILURE);
+	}
+
 if(infinityflag == true)
 	{
 	owm1m2roguemax = 1000000;
@@ -9659,7 +9692,11 @@ if(rcascanflag == false)
 	else process_no_cm_fd();
 	}
 else process_fd_rca();
-
+if(evpdeinitwpa() == false)
+	{
+	fprintf(stderr, "EVP initialization failed\n");
+	exit(EXIT_FAILURE);
+	}
 globalclose();
 return EXIT_SUCCESS;
 }
