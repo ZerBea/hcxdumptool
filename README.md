@@ -120,13 +120,13 @@ Requirements
 
 * chipset must be able to run in monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset
 
-* driver must support monitor mode as well as full packet injection.  
+* driver must support monitor mode as well as full packet injection and ioctl() system calls 
 
-* driver must not depend on NETLINK
+* driver must not depend on NETLINK (libnl)
 
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 
-* libopenssl and openssl-dev installed
+* libopenssl (>= 3.0) and openssl-dev installed
 
 * pkg-config installed
 
