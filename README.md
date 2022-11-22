@@ -124,6 +124,12 @@ Requirements
 If you decide to compile latest git head, make sure that your distribution is updated to latest version.
 
 
+ioctl() system calls versus NETLINK
+--------------
+* ioctl() system calls are purely synchronous and should be the first choice due to its immediacy and reliable delivery.
+* Netlink comms is very much asynchronous and should be used for bulk data.
+
+
 Adapters
 --------------
 
@@ -140,19 +146,12 @@ Manufacturers do change chipsets without changing model numbers. Sometimes they 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
 * ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
-
 * ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
-
 * ID 0e8d:7612 MediaTek Inc. MT7612U 802.11a/b/g/n/ac Wireless Adapter
-
 * ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
-
 * ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
-
 * ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
-
 * ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
-
 * ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
@@ -169,9 +168,7 @@ No support for a driver which doesn't support monitor and packet injection, nati
 Not recommended WiFi chipsets (Broadcom, Intel, Realtek and Atheros), especially:
 
 * Broadcom (neither monitor mode nor frame injection)
-
 * Intel PRO/Wireless (due to several driver issues and NETLINK dependency)
-
 * Realtek RTL8811AU, RTL8812AU, RTL8814AU (due to NETLINK dependency)
 
 more information about possible issues on https://bugzilla.kernel.org
@@ -326,3 +323,4 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 * Stop all services which take access to the physical interface (NetworkManager, wpa_supplicant,...)
 
 * Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
+
