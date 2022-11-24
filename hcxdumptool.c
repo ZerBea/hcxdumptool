@@ -377,6 +377,7 @@ static int written;
 static uint8_t msgtype;
 static struct msghdr msg;
 static struct iovec iov[2];
+
 if(!(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))) return;
 msgtype = SERVERMSG_TYPE_STATUS;
 iov[0].iov_base = (void*)&msgtype;
@@ -406,6 +407,7 @@ static int i;
 static uint8_t msgtype;
 static struct msghdr msg;
 static struct iovec iov[2];
+
 if(!(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0))) return;
 msgtype = SERVERMSG_TYPE_PCAPNG;
 iov[0].iov_base = (void*)&msgtype;
@@ -434,6 +436,7 @@ static inline void clientrequestpcapnghead(struct sockaddr *sockaddrFrom, int so
 {
 static int written;
 static uint8_t clientstatus[2];
+
 clientstatus[0] = SERVERMSG_TYPE_CONTROL;
 clientstatus[1] = SERVERMSG_CONTROL_SENDPCAPNGHEAD;
 written = sendto(fd_socket_mccli, clientstatus, 2, 0, (struct sockaddr*)sockaddrFrom, sockaddrFrom_len);
@@ -442,6 +445,7 @@ if(written != (SERVERMSG_HEAD_SIZE +1))
 	perror("clientpcapngheadrequest failed");
 	errorcount++;
 	}
+return;
 }
 /*===========================================================================*/
 static inline bool ismulticastip(char *ip)
@@ -754,6 +758,7 @@ static uint16_t c;
 static struct sock_filter *zeiger;
 static FILE *fh_filter;
 static char linein[128];
+
 if((fh_filter = fopen(bpfname, "r")) == NULL)
 	{
 	fprintf(stderr, "failed to open Berkeley Packet Filter list %s\n", bpfname);
