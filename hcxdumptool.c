@@ -3658,8 +3658,9 @@ static wpakey_t *wpak;
 static uint8_t *pkeptr;
 
 static uint8_t keymic[16];
-static uint8_t pkedata[102];
+static uint8_t pkedata[256];
 static uint8_t eapoltmp[1024];
+static uint8_t testmic[32];
 
 pmk = getpmk(essidlen, essid);
 if(pmk == NULL) return false;
@@ -3670,8 +3671,11 @@ wpakptr = eapauthptr +EAPAUTH_SIZE;
 wpak = (wpakey_t*)wpakptr;
 memcpy(keymic, wpak->keymic, 16);
 memset(wpak->keymic, 0, 16);
+memset(testmic, 0, 32);
 memset(eapoltmp, 0, sizeof(eapoltmp));
-memcpy(eapoltmp, eapauth, authlen);
+memcpy(eapoltmp, eapauthptr, authlen +EAPAUTH_SIZE);
+
+
 if((keyver == 1) || (keyver == 2))
 	{
 	memset(pkedata, 0, sizeof(pkedata));
@@ -3699,18 +3703,18 @@ if((keyver == 1) || (keyver == 2))
 		}
 	if(!EVP_MAC_init(ctxhmac, pmk, 32, paramssha1)) return false;
 	if(!EVP_MAC_update(ctxhmac, pkedata, 100)) return false;
-	if(!EVP_MAC_final(ctxhmac, pkedata, NULL, 100)) return false;
+	if(!EVP_MAC_final(ctxhmac, pkedata, NULL, 256)) return false;
 	if(keyver == 2)
 		{
 		if(!EVP_MAC_init(ctxhmac, pkedata, 16, paramssha1)) return false;
-		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen)) return false;
-		if(!EVP_MAC_final(ctxhmac, eapoltmp, NULL, authlen)) return false;
+		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
+		if(!EVP_MAC_final(ctxhmac, testmic, NULL, 32)) return false;
 		}
 	if(keyver == 1)
 		{
 		if(!EVP_MAC_init(ctxhmac, pkedata, 16, paramsmd5)) return false;
-		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen)) return false;
-		if(!EVP_MAC_final(ctxhmac, eapoltmp, NULL, authlen)) return false;
+		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
+		if(!EVP_MAC_final(ctxhmac, testmic, NULL, 32)) return false;
 		}
 	}
 else if(keyver == 3)
@@ -3746,10 +3750,10 @@ else if(keyver == 3)
 	if(!EVP_MAC_update(ctxhmac, pkedata, 102)) return false;
 	if(!EVP_MAC_final(ctxhmac, pkedata, NULL, 102)) return false;
 	if(!EVP_MAC_init(ctxcmac, pkedata, 16, paramsaes128)) return false;
-	if(!EVP_MAC_update(ctxcmac, eapoltmp, authlen)) return false;
-	if(!EVP_MAC_final(ctxcmac, eapoltmp, NULL, authlen)) return false;
+	if(!EVP_MAC_update(ctxcmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
+	if(!EVP_MAC_final(ctxcmac, testmic, NULL, authlen +EAPAUTH_SIZE)) return false;
 	}
-if(memcmp(keymic, eapoltmp, 16) == 0) return true;
+if(memcmp(keymic, testmic, 16) == 0) return true;
 return false;
 }
 
@@ -3950,6 +3954,7 @@ lastauthtimestamp = 0;
 wpak = (wpakey_t*)wpakptr;
 rc = be64toh(wpak->replaycount);
 keyver = ntohs(wpak->keyinfo) & WPA_KEY_INFO_TYPE_MASK;
+memcpy(&lastanonce, wpak->nonce, 32);
 if((lastkeyinfo == 2) && (lastkeyver == keyver) && (lastrc == (rc -1))
 	&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
 	&& (memcmp(&lastap, macfrx->addr2, 6) == 0)
@@ -4006,6 +4011,7 @@ if(rc == myrc)
 	}
 else if(lastrc == rc)
 	{
+	memcpy(&lastsnonce, wpak->nonce, 32);
 	if((lastkeyinfo == 1) && (lastkeyver == keyver) && (lastrc == rc)
 		&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
 		&& (memcmp(&lastap, macfrx->addr1, 6) == 0)
