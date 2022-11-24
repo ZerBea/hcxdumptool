@@ -133,15 +133,15 @@ ioctl() system calls versus NETLINK
 Adapters
 --------------
 
-hcxdumptool need full (monitor mode and full packet injection running all packet types) and exclusive access to the adapter! Otherwise it will not start!
+Driver must support (mandatory) ioctl() system calls, monitor mode and full packet injection.
 
-The driver must support monitor mode and full packet injection, as well as ioctl() system calls!
-
-Virtual Netlink (libnl) interfaces are not supported!
+NETLINK (libnl) is not supported (asynchronous). 
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
+
+Prefered chipsets MediaTek and Ralink because stock kernel drivers are well maintained, ioctl() system call support, monitor mode and full frame injection out of the box.  
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
@@ -158,18 +158,16 @@ Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
 Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
 
-Third party drivers may not compile or work as expected on latest kernels
-
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
-No support for a driver which doesn't support monitor and packet injection, native <br /> If you need this features, do a request on www.kernel.org
+No support for a driver which doesn't support ioctl() system calls and monitor and full frame injection, native <br /> If you need this features, do a request on www.kernel.org
 
-
-Not recommended WiFi chipsets (Broadcom, Intel, Realtek and Atheros), especially:
+Not recommended WiFi chipsets due to driver problems:
 
 * Broadcom (neither monitor mode nor frame injection)
-* Intel PRO/Wireless (due to several driver issues and NETLINK dependency)
-* Realtek RTL8811AU, RTL8812AU, RTL8814AU (due to NETLINK dependency)
+* Intel PRO/Wireless (several driver issues and NETLINK dependency)
+* Realtek (driver chaos - some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no ioctl() system call support, NETLINK dependency)
+* Atheros (some driver problems on older kernels)
 
 more information about possible issues on https://bugzilla.kernel.org
 
