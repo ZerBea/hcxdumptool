@@ -3658,8 +3658,9 @@ static wpakey_t *wpak;
 static uint8_t *pkeptr;
 
 static uint8_t keymic[16];
-static uint8_t pkedata[256];
+static uint8_t pkedata[102];
 static uint8_t eapoltmp[1024];
+static uint8_t testptk[256];
 static uint8_t testmic[32];
 
 pmk = getpmk(essidlen, essid);
@@ -3703,16 +3704,16 @@ if((keyver == 1) || (keyver == 2))
 		}
 	if(!EVP_MAC_init(ctxhmac, pmk, 32, paramssha1)) return false;
 	if(!EVP_MAC_update(ctxhmac, pkedata, 100)) return false;
-	if(!EVP_MAC_final(ctxhmac, pkedata, NULL, 256)) return false;
+	if(!EVP_MAC_final(ctxhmac, testptk, NULL, 256)) return false;
 	if(keyver == 2)
 		{
-		if(!EVP_MAC_init(ctxhmac, pkedata, 16, paramssha1)) return false;
+		if(!EVP_MAC_init(ctxhmac, testptk, 16, paramssha1)) return false;
 		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
 		if(!EVP_MAC_final(ctxhmac, testmic, NULL, 32)) return false;
 		}
 	if(keyver == 1)
 		{
-		if(!EVP_MAC_init(ctxhmac, pkedata, 16, paramsmd5)) return false;
+		if(!EVP_MAC_init(ctxhmac, testptk, 16, paramsmd5)) return false;
 		if(!EVP_MAC_update(ctxhmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
 		if(!EVP_MAC_final(ctxhmac, testmic, NULL, 32)) return false;
 		}
@@ -3748,10 +3749,10 @@ else if(keyver == 3)
 	pkedata[101] = 1;
 	if(!EVP_MAC_init(ctxhmac, pmk, 32, paramssha256)) return false;
 	if(!EVP_MAC_update(ctxhmac, pkedata, 102)) return false;
-	if(!EVP_MAC_final(ctxhmac, pkedata, NULL, 102)) return false;
-	if(!EVP_MAC_init(ctxcmac, pkedata, 16, paramsaes128)) return false;
+	if(!EVP_MAC_final(ctxhmac, testptk, NULL, 102)) return false;
+	if(!EVP_MAC_init(ctxcmac, testptk, 16, paramsaes128)) return false;
 	if(!EVP_MAC_update(ctxcmac, eapoltmp, authlen +EAPAUTH_SIZE)) return false;
-	if(!EVP_MAC_final(ctxcmac, testmic, NULL, authlen +EAPAUTH_SIZE)) return false;
+	if(!EVP_MAC_final(ctxcmac, testmic, NULL, 32)) return false;
 	}
 if(memcmp(keymic, testmic, 16) == 0) return true;
 return false;
@@ -3963,11 +3964,7 @@ if((lastkeyinfo == 2) && (lastkeyver == keyver) && (lastrc == (rc -1))
 		if((addown(OW_M2M3, macfrx->addr1, macfrx->addr2) == true) || (addownap(AP_M2M3, macfrx->addr2) == true))
 			{
 			eapolmp23count++;
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
-				{
-				memcpy(&lastanonce, wpak->nonce, 32);
-				printeapol(macfrx->addr1, macfrx->addr2, "M2M3", timestamp -lasttimestamp, rc, keyver, lastsnonce);
-				}
+			if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printeapol(macfrx->addr1, macfrx->addr2, "M2M3", timestamp -lasttimestamp, rc, keyver, lastsnonce);
 			}
 		}
 lasttimestamp = timestamp;
@@ -4009,21 +4006,20 @@ if(rc == myrc)
 		}
 	return;
 	}
-else if(lastrc == rc)
+else
 	{
 	memcpy(&lastsnonce, wpak->nonce, 32);
-	if((lastkeyinfo == 1) && (lastkeyver == keyver) && (lastrc == rc)
-		&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
-		&& (memcmp(&lastap, macfrx->addr1, 6) == 0)
-		&& (memcmp(&lastclient, macfrx->addr2, 6) == 0))
+	if(lastrc == rc)
 		{
-		if(addownap(AP_M1M2, macfrx->addr1) == true)
+		if((lastkeyinfo == 1) && (lastkeyver == keyver) && (lastrc == rc)
+			&& ((timestamp -lasttimestamp) <= eapoltimeoutvalue)
+			&& (memcmp(&lastap, macfrx->addr1, 6) == 0)
+			&& (memcmp(&lastclient, macfrx->addr2, 6) == 0))
 			{
-			eapolmp12count++;
-			if((statusout &STATUS_EAPOL) == STATUS_EAPOL)
+			if(addownap(AP_M1M2, macfrx->addr1) == true)
 				{
-				memcpy(&lastsnonce, wpak->nonce, 32);
-				printeapol(macfrx->addr2, macfrx->addr1, "M1M2", timestamp -lasttimestamp, rc, keyver, lastanonce);
+				eapolmp12count++;
+				if((statusout &STATUS_EAPOL) == STATUS_EAPOL) printeapol(macfrx->addr2, macfrx->addr1, "M1M2", timestamp -lasttimestamp, rc, keyver, lastanonce);
 				}
 			}
 		}
