@@ -3670,13 +3670,11 @@ wpakptr = eapauthptr +EAPAUTH_SIZE;
 wpak = (wpakey_t*)wpakptr;
 memcpy(keymic, wpak->keymic, 16);
 memset(wpak->keymic, 0, 16);
-
 memset(eapoltmp, 0, sizeof(eapoltmp));
-memcpy(eapoltmp, eapauth, eapauth->len);
-
+memcpy(eapoltmp, eapauth, authlen);
 if((keyver == 1) || (keyver == 2))
 	{
-	memset(&pkedata, 0, sizeof(pkedata));
+	memset(pkedata, 0, sizeof(pkedata));
 	pkeptr = pkedata;
 	memcpy(pkeptr, "Pairwise key expansion", 23);
 	if(memcmp(macfrx->addr1, macfrx->addr2, 6) < 0)
@@ -3717,7 +3715,7 @@ if((keyver == 1) || (keyver == 2))
 	}
 else if(keyver == 3)
 	{
-	memset(&pkedata, 0, sizeof(pkedata));
+	memset(pkedata, 0, sizeof(pkedata));
 	pkedata[0] = 1;
 	pkedata[1] = 0;
 	pkeptr = pkedata +2;
