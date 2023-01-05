@@ -57,14 +57,11 @@ git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
-Solve dependencies (Debian based distributions >= bullseye: KALI, UBUNTU, ...) 
+
+Solve dependencies 
 -------------- 
+as mentioned in Requirements chapter
 
-You need to install missing dependencies before running `make`:
-
-```
-sudo apt-get install libcurl4-openssl-dev libssl-dev pkg-config
-```
 
 Compile
 --------------
@@ -87,6 +84,10 @@ Or install via packet manager
 ### Black Arch
 [Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
 `pacman -S hcxtools`
+
+### Debian (e.g. Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
+To install use the following:  
+`apt-get install pkg-config libcurl4-openssl-dev libssl-dev zlib1g-dev make gcc`
 
 
 Compile for Android
