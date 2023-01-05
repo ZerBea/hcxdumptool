@@ -957,8 +957,7 @@ totallength = (total_length_t*)(cb +cblen);
 cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
-if(fd == fd_socket_mcsrv)
-	serversendpcapng(cb, cblen);
+if(fd == fd_socket_mcsrv) serversendpcapng(cb, cblen);
 else
 	{
 	written = write(fd, &cb, cblen);
@@ -991,8 +990,7 @@ totallenght = (total_length_t*)(epbown +epblen);
 epblen += TOTAL_SIZE;
 epbhdrown->total_length = epblen;
 totallenght->total_length = epblen;
-if(fd == fd_socket_mcsrv)
-	serversendpcapng(epbown, epblen);
+if(fd == fd_socket_mcsrv) serversendpcapng(epbown, epblen);
 else
 	{
 	written = write(fd, &epbown, epblen);
@@ -1025,8 +1023,7 @@ totallenght = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallenght->total_length = epblen;
-if(fd == fd_socket_mcsrv)
-	serversendpcapng(epb, epblen);
+if(fd == fd_socket_mcsrv) serversendpcapng(epb, epblen);
 else
 	{
 	written = write(fd, &epb, epblen);
