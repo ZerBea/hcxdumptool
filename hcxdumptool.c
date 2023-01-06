@@ -101,6 +101,7 @@ static FILE *fh_nmea;
 static struct ifreq ifr_old;
 static struct iwreq iwr_old;
 
+static bool gpiopresenceflag;
 static bool forceinterfaceflag;
 static bool targetscanflag;
 static bool totflag;
@@ -471,9 +472,8 @@ if(radiotaperrorcount > 1) fprintf(stdout, "%d radiotap errors encountered\n", r
 if(gpserrorcount == 1) fprintf(stdout, "%d GPS error encountered\n", gpserrorcount);
 if(gpserrorcount > 1) fprintf(stdout, "%d GPS errors encountered\n", gpserrorcount);
 if((errorcount > 0) && (errorcount < 10)) fprintf(stdout, "ERRORs < 10 are related to a slow initialization and can be ignored\n");
-
 if(((statusout &STATUS_SERVER) == STATUS_SERVER) && (fd_socket_mcsrv > 0)) serversendstatus("bye bye hcxdumptool clients...\n", sizeof ("bye bye hcxdumptool clients...\n"));
-if(gpiostatusled > 0)
+if((gpiopresenceflag == true) && (gpiostatusled > 0))
 	{
 	GPIO_CLR = 1 << gpiostatusled;
 	nanosleep(&sleepled, NULL);
@@ -8175,6 +8175,7 @@ sleepled2.tv_nsec = GPIO_LED_DELAY +GPIO_LED_DELAY;
 fd_socket_mccli = 0;
 fd_socket_mcsrv = 0;
 fd_socket_srv = 0;
+gpiopresenceflag = false;
 if((gpiobutton > 0) || (gpiostatusled > 0))
 	{
 	if(gpiobutton == gpiostatusled)
@@ -8202,6 +8203,7 @@ if((gpiobutton > 0) || (gpiostatusled > 0))
 		{
 		INP_GPIO(gpiobutton);
 		}
+	gpiopresenceflag = true;
 	}
 if(gpiostatusled > 0)
 	{
