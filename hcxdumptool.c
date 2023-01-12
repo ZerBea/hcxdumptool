@@ -7733,22 +7733,25 @@ close(fd_info);
 return true;
 }
 /*===========================================================================*/
-static void getphyifname()
+static bool getphyifname()
 {
 static int fd;
 static char *pos;
+static struct stat sinfo;
 static char interfacepathname[PATH_MAX];
 
+snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211", interfacename);
+if (stat(interfacepathname, &sinfo) != 0) return false;
 snprintf(interfacepathname, PATH_MAX -1, "/sys/class/net/%s/phy80211/name", interfacename);
 fd = open(interfacepathname, O_RDONLY);
-if(fd < 0) return;
+if(fd < 0) return false;
 if(read(fd, phyinterfacename, PHYIFNAMESIZE) > 0)
 	{
 	pos = strchr(phyinterfacename, '\n');
 	if(pos) *pos = '\0';
 	}
 close(fd);
-return;	
+return true;
 }
 /*===========================================================================*/
 static inline void show_wlaninterfaces()
@@ -7768,25 +7771,39 @@ else
 		{
 		if((ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_PACKET))
 			{
-
 			memset(&drivername, 0, 32);
 			if(get_perm_addr(ifa->ifa_name, permaddr, virtaddr, drivername) == true)
 				{
 				strncpy(interfacename, ifa->ifa_name, IFNAMSIZ);
 				memset(phyinterfacename, 0 , PHYIFNAMESIZE);
-				getphyifname();
-				if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
-				fprintf(stdout, "%s\t", phyinterfacename);
-				for(p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
-				if(memcmp(&permaddr, &virtaddr, 6) != 0)
+				if(getphyifname() == true)
 					{
-					fprintf(stdout, "\t(spoofed MAC:");
-					for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
-					fprintf(stdout, " detected)");
+					if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
+					fprintf(stdout, "%s\t", phyinterfacename);
+					for(p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
+					if(memcmp(&permaddr, &virtaddr, 6) != 0)
+						{
+						fprintf(stdout, "\t(spoofed MAC:");
+						for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
+						fprintf(stdout, " detected)");
+						}
+					if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, "\t%s\t(driver:%s)", ifa->ifa_name, drivername);
+					else fprintf(stdout, "\t%s\t(driver:%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
+					fprintf(stdout, "\n");
 					}
-				if(checkmonitorinterface(ifa->ifa_name) == false) fprintf(stdout, "\t%s\t(driver:%s)", ifa->ifa_name, drivername);
-				else fprintf(stdout, "\t%s\t(driver:%s) warning:probably a virtual monitor interface!", ifa->ifa_name, drivername);
-				fprintf(stdout, "\n");
+				else
+					{
+					if(phyinterfacename[0] == 0) memcpy(&phyinterfacename, notavailablestr, 3);
+					fprintf(stdout, "%s\t", phyinterfacename);
+					for(p = 0; p < 6; p++) fprintf(stdout, "%02x", (permaddr[p]));
+					if(memcmp(&permaddr, &virtaddr, 6) != 0)
+						{
+						fprintf(stdout, "\t(spoofed MAC:");
+						for (p = 0; p < 6; p++) printf("%02x", (virtaddr[p]));
+						fprintf(stdout, " detected)");
+						}
+					fprintf(stdout, "\t%s\t(driver:%s is not cfg80211 based and not useable)\n)", ifa->ifa_name, drivername);
+					}
 				}
 			}
 		}
@@ -9309,8 +9326,14 @@ if(infinityflag == true)
 	attackstopcount = 1000000;
 	}
 
-if(interfacename[0] != 0) getphyifname();
-
+if(interfacename[0] != 0)
+	{
+	if(getphyifname() == false)
+		{
+		fprintf(stderr, "setting poweroff and reboot together is not allowed\n");
+		exit(EXIT_FAILURE);
+		}
+	}
 if((rebootflag == true) && (poweroffflag == true))
 	{
 	fprintf(stderr, "setting poweroff and reboot together is not allowed\n");
