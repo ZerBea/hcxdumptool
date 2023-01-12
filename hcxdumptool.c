@@ -9330,7 +9330,7 @@ if(interfacename[0] != 0)
 	{
 	if(getphyifname() == false)
 		{
-		fprintf(stderr, "setting poweroff and reboot together is not allowed\n");
+		fprintf(stderr, "driver is not cfg80211 based and not useable\n");
 		exit(EXIT_FAILURE);
 		}
 	}
