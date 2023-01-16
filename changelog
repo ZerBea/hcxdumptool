@@ -1,6 +1,6 @@
 16.01.2023
 ==========
-hcxdumptool: added option to reset an USB device
+hcxdumptool: added option to reset an USB device without unplugging it
 --reset_usb_device=<sysfs dev path>: reset USB device by BUS ID and device ID (/dev/bus/usb/bus_id/device_id
                                      $ lsusb
                                      Bus 005 Device 006: ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
