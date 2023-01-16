@@ -49,6 +49,7 @@
 #define HCX_EAP_SERVER_CERT			49
 #define HCX_EAP_SERVER_KEY			50
 #define HCX_EAPOL_EAP_TIMEOUT			51
+#define HCX_RESET_USB_DEV			52
 #define HCX_INTERFACE_NAME			'i'
 #define HCX_PCAPNG_NAME				'o'
 #define HCX_PACPNG_FRAMES			'f'

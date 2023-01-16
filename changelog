@@ -1,3 +1,12 @@
+16.01.2023
+==========
+hcxdumptool: added option to reset an USB device
+--reset_usb_device=<sysfs dev path>: reset USB device by BUS ID and device ID (/dev/bus/usb/bus_id/device_id
+                                     $ lsusb
+                                     Bus 005 Device 006: ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
+                                     sysfs dev path = /dev/bus/usb/005/006
+
+
 12.11.2022
 ==========
 start moving to OpenSSL 3.0 EVP API

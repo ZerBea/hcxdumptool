@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #include <linux/if_ether.h>
 #include <linux/filter.h>
+#include <linux/usbdevice_fs.h>
 
 #ifdef __ANDROID__
 #include <libgen.h>
@@ -8364,6 +8365,21 @@ if(ec == 3) return false;
 return true;
 }
 /*===========================================================================*/
+static void resetusbif(char *sysfsusbdevpath)
+{
+static int fd_usb;
+
+if((fd_usb = open(sysfsusbdevpath, O_WRONLY)) < 0)
+	{
+	fprintf(stderr, "ERROR openening USB device\n");
+	return;
+	}
+if(ioctl(fd_usb, USBDEVFS_RESET, 0) < 0) fprintf(stderr, "ioctl failed\n");
+else fprintf(stdout, "reset successful\n");
+close(fd_usb);
+return;
+}
+/*===========================================================================*/
 __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
@@ -8623,6 +8639,10 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                                     allow hcxdumptool to run on a virtual NETLINK monitor interface\n"
 	"                                     warning: packet injection and/or channel change may not work as expected\n"
 	"                                     you have been warned: do not report issues!\n"
+	"--reset_usb_device=<sysfs dev path>: reset USB device by BUS ID and device ID (/dev/bus/usb/bus_id/device_id\n"
+	"                                     $ lsusb\n"
+	"                                     Bus 005 Device 006: ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi\n"
+	"                                     sysfs dev path = /dev/bus/usb/005/006\n"
 	"--example                          : show abbreviations and example command lines\n"
 	"--help                             : show this help\n"
 	"--version                          : show version\n"
@@ -8717,6 +8737,7 @@ static const char *userscanliststring;
 static char *nmeaoutname;
 static char *weakcandidateuser;
 static char *eapreqhex;
+static char *sysfsusbdevpath;
 static const char *short_options = "i:o:f:c:s:t:m:IChv";
 static const struct option long_options[] =
 {
@@ -8771,6 +8792,7 @@ static const struct option long_options[] =
 	{"check_driver",		no_argument,		NULL,	HCX_CHECK_DRIVER},
 	{"check_injection",		no_argument,		NULL,	HCX_CHECK_INJECTION},
 	{"force_interface",		no_argument,		NULL,	HCX_FORCE_INTERFACE},
+	{"reset_usb_device",		required_argument,	NULL,	HCX_RESET_USB_DEV},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"example",			no_argument,		NULL,	HCX_EXAMPLE},
 	{"help",			no_argument,		NULL,	HCX_HELP},
@@ -8795,6 +8817,7 @@ beaconextlistlen = 0;
 eapservercertname = NULL;
 eapserverkeyname = NULL;
 userscanliststring = NULL;
+sysfsusbdevpath = NULL;
 gpsname = NULL;
 nmeaoutname = NULL;
 weakcandidateuser = NULL;
@@ -8854,6 +8877,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 	{
 	switch (auswahl)
 		{
+		case HCX_RESET_USB_DEV:
+		sysfsusbdevpath = optarg;
+		break;
+
 		case HCX_INTERFACE_NAME:
 		if(strlen(optarg) > IFNAMSIZ)
 			{
@@ -9310,6 +9337,16 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 	}
 
 setbuf(stdout, NULL);
+if(sysfsusbdevpath != NULL)
+	{
+	if(getuid() != 0)
+		{
+		fprintf(stderr, "this program requires root privileges\n");
+		exit(EXIT_FAILURE);
+		}
+	resetusbif(sysfsusbdevpath);
+	exit(EXIT_SUCCESS);
+	}
 if(argc < 2)
 	{
 	fprintf(stderr, "no option selected\nrun %s --help to get more information\n", (basename(argv[0])));
