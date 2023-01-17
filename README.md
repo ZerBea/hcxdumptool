@@ -155,6 +155,7 @@ This list is for information purposes only and should not be regarded as a bindi
 * ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 * ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
 * ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
+* ID 2357:010c TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS] (third party driver: https://github.com/kimocoder/realtek_rtwifi)
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
@@ -168,7 +169,7 @@ Not recommended WiFi chipsets due to driver problems:
 
 * Broadcom (neither monitor mode nor frame injection)
 * Intel PRO/Wireless (several driver issues and NETLINK dependency)
-* Realtek (driver chaos - some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no ioctl() system call support, NETLINK dependency)
+* Realtek (some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no ioctl() system call support, NETLINK dependency)
 * Atheros (some driver problems on older kernels)
 
 more information about possible issues on https://bugzilla.kernel.org

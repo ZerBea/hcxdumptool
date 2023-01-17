@@ -7062,6 +7062,7 @@ static char *drvmediatek = "mt7";
 static char *drvralink2 = "rt2";
 static char *drvralink6 = "rt6";
 static char *drvralink7 = "rt7";
+static char *drvrealtek8xxx = "rtl8xxxu";
 static char *drvwarning = " (this driver is not recommended - expect driver errors)";
 static char *drvsimulation = " (hardware simulation)";
 
@@ -7296,6 +7297,7 @@ if(strlen(drivername) > 3)
 	if(memcmp(drivername, drvralink2, 3) == 0) return true;
 	if(memcmp(drivername, drvralink6, 3) == 0) return true;
 	if(memcmp(drivername, drvralink7, 3) == 0) return true;
+	if(memcmp(drivername, drvrealtek8xxx, 8) == 0) return true;
 	if(memcmp(drivername, drvhwsim, 3) == 0)
 		{
 		strncat(drivername, drvsimulation, 256 -36);
