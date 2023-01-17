@@ -110,6 +110,7 @@ Requirements
 * detailed knowledge of 802.11 protocol
 * detailed knowledge of key derivation functions
 * detailed knowledge of Linux
+* detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
 * operatingsystem: Linux distribution, Kernel >= 5.15
 * recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset
