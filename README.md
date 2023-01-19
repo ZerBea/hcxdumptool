@@ -289,7 +289,13 @@ OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 Warning
 --------------
 
-hcxdumptool is designed to be an analysis tool. This means that everything is requested/stored by default. Unwanted information must be filtered out by option/filter or later on (offline)! 
+hcxdumptool is designed to be an analysis tool. 
+
+It should only be used in a 100% controlled environment(!).
+
+If you can't control the environment it is absolutely mandatory to set the BPF.
+
+Everything is requested/stored by default and unwanted information must be filtered out by option/filter or later on (offline)! 
 
 You must use hcxdumptool only on networks you have permission to do this and if you know what you are doing, because:
 
