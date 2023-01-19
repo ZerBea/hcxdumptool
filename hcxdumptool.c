@@ -7093,6 +7093,7 @@ if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to set Berkeley Packet Filter");
 	}
+else fprintf(stderr, "BPF is unset. Make sure hcxdumptool is running in a 100%% controlled environment!\n");
 memset(&ifr_old, 0, sizeof(ifr));
 memcpy(&ifr_old.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
