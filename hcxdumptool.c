@@ -8651,7 +8651,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"--version                          : show version\n"
 	"\n"
 	"Warning:\n"
-	"This is a penetration testing tool. It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
+	"This is a penetration testing tool! It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
 	"Don't report bugs if this tool does exactly what it was coded to do!\n"
 	"\n"
 	"Make sure that the Wireless Regulatory Domain is not unset!\n"
@@ -9434,7 +9434,8 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	fprintf(stderr, "EAP requests are activated while CLIENT Attacks are disabled\n");
 	exit(EXIT_FAILURE);
 	}
-fprintf(stdout, "\nThis is a penetration testing tool. It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
+fprintf(stdout, "\nThis is a penetration testing tool!\n"
+		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
 		"Don't report bugs if this tool does exactly what it was coded to do!\n\n");
 fprintf(stdout, "initialization of %s %s (depending on the capabilities of the device, this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(phyinterfacename[0] != 0)
