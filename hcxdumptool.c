@@ -9435,6 +9435,9 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	exit(EXIT_FAILURE);
 	}
 
+fprintf(stdout, "\nWarning:\n"
+		"This is a penetration testing tool. It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
+		"Don't report bugs if this tool does exactly what it was coded to do!\n\n");
 fprintf(stdout, "initialization of %s %s (depending on the capabilities of the device, this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(phyinterfacename[0] != 0)
 	{
