@@ -7093,7 +7093,7 @@ if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) perror("failed to set Berkeley Packet Filter");
 	}
-else fprintf(stderr, "BPF is unset. Make sure hcxdumptool is running in a 100%% controlled environment!\n");
+else fprintf(stderr, "\nBPF is unset. Make sure hcxdumptool is running in a 100%% controlled environment!\n");
 memset(&ifr_old, 0, sizeof(ifr));
 memcpy(&ifr_old.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIFFLAGS, &ifr_old) < 0)
@@ -9434,8 +9434,7 @@ if((eapreqflag == true) && ((attackstatus &DISABLE_CLIENT_ATTACKS) == DISABLE_CL
 	fprintf(stderr, "EAP requests are activated while CLIENT Attacks are disabled\n");
 	exit(EXIT_FAILURE);
 	}
-fprintf(stdout, "\nWarning:\n"
-		"This is a penetration testing tool. It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
+fprintf(stdout, "\nThis is a penetration testing tool. It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
 		"Don't report bugs if this tool does exactly what it was coded to do!\n\n");
 fprintf(stdout, "initialization of %s %s (depending on the capabilities of the device, this may take some time)...\n", basename(argv[0]), VERSION_TAG);
 if(phyinterfacename[0] != 0)
