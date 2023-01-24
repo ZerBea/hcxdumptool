@@ -5470,7 +5470,7 @@ static struct iwreq pwrq;
 memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = ptrfscanlist->frequency * 100000;
+pwrq.u.freq.m = ptrfscanlist->frequency *100000;
 pwrq.u.freq.e = 1;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) return false;
 if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) return false;
@@ -5501,7 +5501,7 @@ static struct iwreq pwrq;
 memset(&pwrq, 0, sizeof(pwrq));
 memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 pwrq.u.freq.flags = IW_FREQ_FIXED;
-pwrq.u.freq.m = freq * 100000;
+pwrq.u.freq.m = freq *100000;
 pwrq.u.freq.e = 1;
 if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 	{
@@ -7402,15 +7402,15 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
 	wantedfrequency = strtol(tokptr, NULL, 10);
 	tokptr = strtok(NULL, ",");
-	if(wantedfrequency > 1000)
+	if(wantedfrequency < 1000)
 		{
-		pwrq.u.freq.m = wantedfrequency  * 100000;
-		pwrq.u.freq.e = 1;
+		pwrq.u.freq.m = wantedfrequency;
+		pwrq.u.freq.e = 0;
 		}
 	else
 		{
 		pwrq.u.freq.m = wantedfrequency;
-		pwrq.u.freq.e = 0;
+		pwrq.u.freq.e = 6;
 		}
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 		{
@@ -7476,13 +7476,13 @@ for(c = 2412; c <= 2484; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
@@ -7497,13 +7497,13 @@ for(c = 5180; c <= 5905; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
@@ -7517,13 +7517,13 @@ for(c = 5955; c <= 7115; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
@@ -7549,7 +7549,7 @@ for(c = 2412; c <= 2484; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7557,7 +7557,7 @@ for(c = 2412; c <= 2484; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	frequency = pwrq.u.freq.m;
 	exponent = pwrq.u.freq.e;
@@ -7606,7 +7606,7 @@ for(c = 5180; c <= 5905; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7614,7 +7614,7 @@ for(c = 5180; c <= 5905; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	frequency = pwrq.u.freq.m;
 	exponent = pwrq.u.freq.e;
@@ -7661,7 +7661,7 @@ for(c = 5955; c <= 7115; c++)
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
-	pwrq.u.freq.m = c * 100000;
+	pwrq.u.freq.m = c *100000;
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7669,7 +7669,7 @@ for(c = 5955; c <= 7115; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.e == 1)
 		{
-		if(pwrq.u.freq.m != c * 100000) continue;
+		if(pwrq.u.freq.m != c *100000) continue;
 		}
 	frequency = pwrq.u.freq.m;
 	exponent = pwrq.u.freq.e;
