@@ -7480,7 +7480,7 @@ for(c = 2412; c <= 2484; c++)
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
-	if(pwrq.u.freq.m == 0) continue;
+	if(pwrq.u.freq.m != c * 100000) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
 	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
@@ -7498,7 +7498,7 @@ for(c = 5180; c <= 5905; c++)
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
-	if(pwrq.u.freq.m == 0) continue;
+	if(pwrq.u.freq.m != c * 100000) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
 	else continue;
@@ -7515,7 +7515,7 @@ for(c = 5955; c <= 7115; c++)
 	pwrq.u.freq.e = 1;
 	if(ioctl(fd_socket , SIOCSIWFREQ, &pwrq) < 0) continue;
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
-	if(pwrq.u.freq.m == 0) continue;
+	if(pwrq.u.freq.m != c * 100000) continue;
 	ptrfscanlist->frequency = c;
 	if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
 	else continue;
