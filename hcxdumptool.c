@@ -7402,16 +7402,8 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 	pwrq.u.freq.flags = IW_FREQ_FIXED;
 	wantedfrequency = strtol(tokptr, NULL, 10);
 	tokptr = strtok(NULL, ",");
-	if(wantedfrequency < 1000)
-		{
-		pwrq.u.freq.m = wantedfrequency;
-		pwrq.u.freq.e = 0;
-		}
-	else
-		{
-		pwrq.u.freq.m = wantedfrequency;
-		pwrq.u.freq.e = 6;
-		}
+	pwrq.u.freq.m = wantedfrequency;
+	if(wantedfrequency > 1000) pwrq.u.freq.e = 6;
 	if(ioctl(fd_socket, SIOCSIWFREQ, &pwrq) < 0)
 		{
 		fprintf(stderr, "frequency/channel %d not accepted by driver\n", wantedfrequency);
