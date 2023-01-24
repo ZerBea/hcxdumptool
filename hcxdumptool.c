@@ -5425,7 +5425,6 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
 	else if(pwrq.u.freq.e == 3) ptrfscanlist->frequency = pwrq.u.freq.m /1000;
 	else if(pwrq.u.freq.e == 2) ptrfscanlist->frequency = pwrq.u.freq.m /10000;
 	else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
-	else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
 	else return;
 	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
 	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
@@ -5453,8 +5452,6 @@ else if((pwrq.u.freq.e == 4) && (aktchannel == pwrq.u.freq.m /100)) return;
 else if((pwrq.u.freq.e == 3) && (aktchannel == pwrq.u.freq.m /1000)) return;
 else if((pwrq.u.freq.e == 2) && (aktchannel == pwrq.u.freq.m /10000)) return;
 else if((pwrq.u.freq.e == 1) && (aktchannel == pwrq.u.freq.m /100000)) return;
-else if((pwrq.u.freq.e == 0) && (aktchannel == pwrq.u.freq.m /1000000)) return;
-
 errorcount++;
 strftime(timestring, 16, "%H:%M:%S", localtime(&tv.tv_sec));
 snprintf(servermsg, SERVERMSG_MAX, "%s     ERROR: %d [INTERFACE IS NOT ON EXPECTED CHANNEL, EXPECTED: %d, DETECTED: %d]\n", timestring, errorcount, aktchannel, pwrq.u.freq.m);
@@ -5480,7 +5477,6 @@ else if(pwrq.u.freq.e == 4) aktchannel = pwrq.u.freq.m /100;
 else if(pwrq.u.freq.e == 3) aktchannel = pwrq.u.freq.m /1000;
 else if(pwrq.u.freq.e == 2) aktchannel = pwrq.u.freq.m /10000;
 else if(pwrq.u.freq.e == 1) aktchannel = pwrq.u.freq.m /100000;
-else if(pwrq.u.freq.e == 0) aktchannel = pwrq.u.freq.m /1000000;
 else return false;
 if(aktchannel < 3000)
 	{
@@ -5522,11 +5518,7 @@ if(pwrq.u.freq.m > 1000)
 	else if(pwrq.u.freq.e == 4) freqreported = pwrq.u.freq.m /100;
 	else if(pwrq.u.freq.e == 3) freqreported = pwrq.u.freq.m /1000;
 	else if(pwrq.u.freq.e == 2) freqreported = pwrq.u.freq.m /10000;
-	else if(pwrq.u.freq.e == 1) 
-		{
-		freqreported = pwrq.u.freq.m /100000;
-		}
-	else if(pwrq.u.freq.e == 0) freqreported = pwrq.u.freq.m /1000000;
+	else if(pwrq.u.freq.e == 1) freqreported = pwrq.u.freq.m /100000;
 	else
 		{
 		fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
@@ -7425,7 +7417,6 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 		else if(pwrq.u.freq.e == 3) ptrfscanlist->frequency = pwrq.u.freq.m /1000;
 		else if(pwrq.u.freq.e == 2) ptrfscanlist->frequency = pwrq.u.freq.m /10000;
 		else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
-		else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
 		else
 			{
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
@@ -7561,7 +7552,6 @@ for(c = 2412; c <= 2484; c++)
 		else if(pwrq.u.freq.e == 3) frequency = pwrq.u.freq.m /1000;
 		else if(pwrq.u.freq.e == 2) frequency = pwrq.u.freq.m /10000;
 		else if(pwrq.u.freq.e == 1) frequency = pwrq.u.freq.m /100000;
-		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
@@ -7618,7 +7608,6 @@ for(c = 5180; c <= 5905; c++)
 		else if(pwrq.u.freq.e == 3) frequency = pwrq.u.freq.m /1000;
 		else if(pwrq.u.freq.e == 2) frequency = pwrq.u.freq.m /10000;
 		else if(pwrq.u.freq.e == 1) frequency = pwrq.u.freq.m /100000;
-		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
@@ -7673,7 +7662,6 @@ for(c = 5955; c <= 7115; c++)
 		else if(pwrq.u.freq.e == 3) frequency = pwrq.u.freq.m /1000;
 		else if(pwrq.u.freq.e == 2) frequency = pwrq.u.freq.m /10000;
 		else if(pwrq.u.freq.e == 1) frequency = pwrq.u.freq.m /100000;
-		else if(pwrq.u.freq.e == 0) frequency = pwrq.u.freq.m /1000000;
 		else
 			{
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
