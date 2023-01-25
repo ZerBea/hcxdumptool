@@ -7132,6 +7132,7 @@ if((iwr_old.u.mode & IW_MODE_MONITOR) != IW_MODE_MONITOR)
 	if(ioctl(fd_socket, SIOCSIWMODE, &iwr) < 0)
 		{
 		perror("failed to set monitor mode, ioctl(SIOCSIWMODE) not supported by driver");
+		fprintf(stderr, "try to use iw to set monitor mode and ip link to set interface up\n");
 		if(forceinterfaceflag == false) return false;
 		}
 	memset(&iwr, 0, sizeof(iwr));
