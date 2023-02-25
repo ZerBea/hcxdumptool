@@ -7051,6 +7051,7 @@ static struct packet_mreq mr;
 static struct ethtool_drvinfo drvinfo;
 static struct iw_param txpower;
 static double lfin;
+static const char *protocol80211 = "IEEE 802.11";
 #ifdef PACKET_IGNORE_OUTGOING
 static int enable = 1;
 #endif
@@ -7083,8 +7084,13 @@ memset(&iwr, 0, sizeof(iwr));
 memcpy(&iwr.ifr_name, interfacename, IFNAMSIZ);
 if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
 	{
-	perror("failed to detect wlan interface - possible reason:\ninterface not connected\ndriver doesn't support CFG80211\nkernel possible compiled without Wireless Extensions (CONFIG_CFG80211_WEXT=y and CONFIG_CFG80211_WEXT_EXPORT=y)");
+	perror("failed to detect wlan interface - possible reason:\ninterface not connected\ndriver/kernel does not support WIRLESS EXTENSIONS)");
 	if(forceinterfaceflag == false) return false;
+	}
+if(strncmp(protocol80211, iwr.u.name, IF_NAMESIZE) != 0)
+	{
+	fprintf(stderr, "this driver does not support WIRELESS EXTENSIONS\nplease try hcxlabtool: https://github.com/ZerBea/wifi_laboratory\n");
+	return false;
 	}
 memcpy(&interfaceprotocol, iwr.u.name, IFNAMSIZ);
 if(bpf.len > 0)
