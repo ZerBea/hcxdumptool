@@ -137,7 +137,7 @@ Adapters
 
 Driver must support (mandatory) ioctl() system calls, monitor mode and full packet injection.
 
-NETLINK (libnl) is not supported (asynchronous). 
+NETLINK (via libnl) is not supported (asynchronous). 
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
@@ -165,7 +165,7 @@ No support for a third party driver which is not part of the official kernel (ht
 
 No support for a driver which doesn't support ioctl() system calls and monitor and full frame injection, native <br /> If you need this features, do a request on www.kernel.org
 
-Not recommended WiFi chipsets due to driver problems:
+Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
 
 * Broadcom (neither monitor mode nor frame injection)
 * Intel PRO/Wireless (several driver issues and NETLINK dependency)
@@ -173,6 +173,9 @@ Not recommended WiFi chipsets due to driver problems:
 * Atheros (some driver problems on older kernels)
 
 more information about possible issues on https://bugzilla.kernel.org
+
+If you run into WIRELESS EXTENSIONS driver problems, please try hcxlabtool (https://github.com/ZerBea/wifi_laboratory).
+
 
 
 Antennas
