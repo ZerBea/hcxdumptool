@@ -57,7 +57,6 @@ git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
-
 Solve dependencies 
 -------------- 
 as mentioned in Requirements chapter
@@ -114,7 +113,7 @@ Requirements
 * operatingsystem: Linux distribution, Kernel >= 5.15
 * recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset
-* driver must (mandatory) support monitor mode as well as full packet injection and ioctl() system calls 
+* driver must (mandatory) support monitor and full frame injection mode as well as WIRELESS EXTENSIONS 
 * driver must not depend on NETLINK (libnl)
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 * libopenssl (>= 3.0) and openssl-dev installed
@@ -126,24 +125,18 @@ Requirements
 If you decide to compile latest git head, make sure that your distribution is updated to latest version.
 
 
-ioctl() system calls versus NETLINK
---------------
-* ioctl() system calls are purely synchronous and should be the first choice due to its immediacy and reliable delivery.
-* Netlink comms is very much asynchronous and should be used for bulk data.
-
-
 Adapters
 --------------
 
-Driver must support (mandatory) ioctl() system calls, monitor mode and full packet injection.
+Driver must support (mandatory) monitor mode and full packet injection as well as WIRELESS EXTENSIONS
 
-NETLINK (via libnl) is not supported (asynchronous). 
+NETLINK is not supported (asynchronous).
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Prefered chipsets MediaTek and Ralink because stock kernel drivers are well maintained, ioctl() system call support, monitor mode and full frame injection out of the box.  
+Prefered chipsets MediaTek and Ralink because stock kernel drivers are well maintained, NL80211 and WIRELESS EXTENSION support, monitor mode as well as full frame injection out of the box.  
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
@@ -163,19 +156,20 @@ Due to a bug in xhci subsystem other devices may not work at the moment: <br /> 
 
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
-No support for a driver which doesn't support ioctl() system calls and monitor and full frame injection, native <br /> If you need this features, do a request on www.kernel.org
+No support for a driver which doesn't WIRELESS EXTENSIONS and monitor and full frame injection, native <br /> If you need this features, do a request on www.kernel.org
 
 Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
 
 * Broadcom (neither monitor mode nor frame injection)
 * Intel PRO/Wireless (several driver issues and NETLINK dependency)
-* Realtek (some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no ioctl() system call support, NETLINK dependency)
+* Realtek (some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no WIRELESS EXTENSIONS)
 * Atheros (some driver problems on older kernels)
 
 more information about possible issues on https://bugzilla.kernel.org
 
 If you run into WIRELESS EXTENSIONS driver problems, please try hcxlabtool (https://github.com/ZerBea/wifi_laboratory).
 
+Sooner or later hcxdumptool code will be replaced by hcxlabtool code.
 
 
 Antennas
@@ -250,13 +244,15 @@ Procedure
 
 first run hcxdumptool -i interface --do_rcascan at least for 30 seconds
 
-to determine that the driver support monitor mode and required ioctl() calls,
+to determine that the driver has WIRELESS EXTENSIONS
+
+to determine that the driver support monitor mode
 
 to determine that the driver support full packet injection,
 
 to retrieve information about access points and
 
-to determine which access points are in attack range.
+to determine which access points are in transmit range.
 
 
 pcapng option codes (Section Header Block)
