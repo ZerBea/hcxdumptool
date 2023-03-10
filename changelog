@@ -1,3 +1,11 @@
+10.03.2023
+==========
+release v6.2.7
+move to OpenSSL 3.0 EVP API (from now on OPenSSL >= 3.0 is mandatory)
+new options
+several bug fixes
+
+
 16.01.2023
 ==========
 hcxdumptool: added option to reset an USB device without unplugging it
