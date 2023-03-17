@@ -154,6 +154,7 @@ static time_t tvlast_sec;
 static struct timeval tvold;
 static struct timeval tvtot;
 static struct timeval tvpacketsent;
+static struct timeval tvgps;
 static uint32_t staytime;
 static uint16_t reasoncode;
 static uint32_t attackcount;
@@ -920,6 +921,11 @@ static char gpwpl[NMEA_MAX];
 static const char gpgga[] = "$GPGGA";
 static const char gprmc[] = "$GPRMC";
 
+if((tv.tv_sec - tvgps.tv_sec) > 10)
+	{
+	fprintf(stderr, "\n\nERROR: gps socket is brocken\n\n");
+	return;
+	}
 if(nmealen < 30) return;
 if(memcmp(&gpgga, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[17], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
 else if(memcmp(&gprmc, &nmeasentence, 6) == 0) snprintf(gpwpl, NMEA_MAX-1, "$GPWPL,%.*s,%02x%02x%02x%02x%02x%02x*", 26, &nmeasentence[19], mac[0] , mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -945,6 +951,11 @@ static custom_block_t *cbhdr;
 static total_length_t *totallength;
 static uint8_t cb[2048];
 
+if((tv.tv_sec - tvgps.tv_sec) > 10)
+	{
+	fprintf(stderr, "\n\nERROR: gps socket is brocken\n\n");
+	return true;
+	}
 memset(&cb, 0, 2048);
 cbhdr = (custom_block_t*)cb;
 cblen = CB_SIZE;
@@ -5549,6 +5560,7 @@ if(nmeatemplen < 0)
 	}
 nmeatempsentence[nmeatemplen] = 0;
 if(nmeatemplen < 48) return;
+tvgps.tv_sec = tv.tv_sec;
 nmeaptr = strstr(nmeatempsentence, gpgga);
 if(nmeaptr == NULL) nmeaptr = strstr(nmeatempsentence, gprmc);
 if(nmeaptr == NULL) return;
@@ -8226,6 +8238,8 @@ gettimeofday(&tv, NULL);
 tvold.tv_sec = tv.tv_sec;
 tvold.tv_usec = tv.tv_usec;
 tvlast_sec = tv.tv_sec;
+tvgps.tv_sec = tv.tv_sec;
+tvgps.tv_usec = tv.tv_usec;
 timestampstart = ((uint64_t)tv.tv_sec *1000000) +tv.tv_usec;
 timestamp = timestampstart;
 sleepled.tv_sec = 0;
