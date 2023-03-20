@@ -7099,7 +7099,7 @@ if(ioctl(fd_socket, SIOCGIWNAME, &iwr) < 0)
 	perror("failed to detect wlan interface");
 	return false;
 	}
-if(memcmp(protocol80211, iwr.u.name, strlen(protocol80211)) != 0) fprintf(stderr, "warning this driver does not support WIRELESS EXTENSIONS\nplease try hcxlabtool: https://github.com/ZerBea/wifi_laboratory\n");
+if(memcmp(protocol80211, iwr.u.name, 11) != 0) fprintf(stderr, "warning this driver does not support WIRELESS EXTENSIONS\nplease try hcxlabtool: https://github.com/ZerBea/wifi_laboratory\n");
 memcpy(&interfaceprotocol, iwr.u.name, IFNAMSIZ);
 if(bpf.len > 0)
 	{
