@@ -156,7 +156,7 @@ Due to a bug in xhci subsystem other devices may not work at the moment: <br /> 
 
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
-No support for a driver which doesn't WIRELESS EXTENSIONS and monitor and full frame injection, native <br /> If you need this features, do a request on www.kernel.org
+No support for a driver which doesn't support WIRELESS EXTENSIONS and monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
 Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
 
