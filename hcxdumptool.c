@@ -9030,7 +9030,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		l= strlen(optarg);
 		if((l < 12) || (l > 17))
 			{
-			fprintf(stderr, "error wrong MAC size %s (alowed: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66)\n", optarg);
+			fprintf(stderr, "error wrong MAC size %s (allowed: 112233445566, 11:22:33:44:55:66, 11-22-33-44-55-66)\n", optarg);
 			exit(EXIT_FAILURE);
 			}
 		p2 = 0;
