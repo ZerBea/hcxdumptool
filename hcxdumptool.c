@@ -9489,6 +9489,7 @@ if(phyinterfacename[0] != 0)
 	if(isinterfaceshared() == true) fprintf(stderr, "\nwarning: interface %s (%s) is shared\nhcxdumptool may not work as expected on shared physical devices\n\n", interfacename, phyinterfacename);
 	}
 if(checkdriverflag == true) fprintf(stdout, "starting driver test...\n");
+
 if(globalinit() == false)
 	{
 	fprintf(stderr, "initialization failed\n");
