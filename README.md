@@ -136,7 +136,7 @@ Get information about VENDOR, model, chipset and driver here: https://wikidevi.w
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Prefered chipsets MediaTek and Ralink because stock kernel drivers are well maintained, NL80211 and WIRELESS EXTENSION support, monitor mode as well as full frame injection out of the box.  
+Prefered chipsets MediaTek (active monitor mode) and Ralink because stock kernel drivers are well maintained, NL80211 and WIRELESS EXTENSION support, monitor mode as well as full frame injection out of the box.  
 
 This list is for information purposes only and should not be regarded as a binding presentation of the products:
 
