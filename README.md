@@ -62,11 +62,20 @@ Solve dependencies
 as mentioned in Requirements chapter
 
 
-Compile
+Compile & install
 --------------
 ```
 make
+```
+
+install to `/usr/bin`:
+```
 make install (as super user)
+```
+
+or install to `/usr/local/bin`:
+```
+make install PREFIX=/usr/local (as super user)
 ```
 
 Or install via packet manager
