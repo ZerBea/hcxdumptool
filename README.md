@@ -95,7 +95,7 @@ Or install via package manager
 
 ### Debian (e.g. Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
 To install use the following:  
-`apt-get install pkg-config libcurl4-openssl-dev libssl-dev zlib1g-dev make gcc`
+`apt-get install make gcc`
 
 
 Compile for Android
