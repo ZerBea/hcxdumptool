@@ -1,3 +1,137 @@
+xx.04.2023
+==========
+removed pioff
+refactored hcxdumptool:
+$ ./hcxdumptool --help
+hcxdumptool 6.2.9  (C) 2023 ZeroBeat
+usage: hcxdumptool <options>
+        first stop all services that take access to the interface , e.g.:
+        $ sudo systemctl stop NetworkManager.service
+        $ sudo systemctl stop wpa_supplicant.service
+        than run hcxdumptool
+        press ctrl+c to terminate
+        press GPIO button to terminate
+        hardware modification is necessary, read more:
+        https://github.com/ZerBea/hcxdumptool/tree/master/docs
+        do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)
+        do not use logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw
+        do not use virtual machines or emulators
+        do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)
+        do not use tools to change MAC (like macchanger)
+        stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface
+
+short options:
+-i <INTERFACE> : name of INTERFACE to be used
+                  default: first suitable INTERFACE
+                  warning: hcxdumptool changes the virtual MAC address of the INTERFACE
+-w <outfile>   : write packets to a pcapng-format file named <outfile>
+                  default outfile name: yyyyddmmhhmmss-interfacename.pcapng
+                  get more information: https://pcapng.com/
+-c <digit>     : set channel (1a,2a,36b...)
+                  default: 1a,6a,11a
+                  important notice: channel numbers are not unique
+                  it is mandatory to add band information to the channel number (e.g. 12a)
+                   band a: NL80211_BAND_2GHZ
+                   band b: NL80211_BAND_5GHZ
+                   band c: NL80211_BAND_6GHZ
+                   band d: NL80211_BAND_60GHZ
+                   band e: NL80211_BAND_S1GHZ (902 MHz)
+                  to disable frequency management, set this option to a single frequency/channel
+-f <digit>     : set frequency (2412,2417,5180,...)
+-F             : use available frequencies from INTERFACE
+-t <second>    : minimum stay time (will increase on new stations and/or authentications
+                  default 1 seconds
+-m <INTERFACE> : set monitor mode and terminate
+-L             : show INTERFACE list
+-I <INTERFACE> : show detailed information about INTERFACE
+-h             : show this help
+-v             : show version
+
+long options:
+--bpf=<file>                   : input kernel space Berkeley Packet Filter (BPF) code
+                                  steps to create a BPF (it only has to be done once):
+                                  $ hcxdumptool -m <interface>
+                                  create BPF to protect MACs
+                                  $ tcpdump -i <INTERFACE> not wlan addr2 11:22:33:44:55:66 -ddd > protect.bpf
+                                  recommended to protect own devices
+                                  create BPF to attack a MAC
+                                  $ tcpdump -i <INTERFACE> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd > attack.bpf
+                                  it is strongly recommended to allow all PROBEREQUEST frames (wlan_type mgt && wlan_subtype probe-req)
+                                  $ tcpdump -i <interface> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 or wlan addr3 ff:ff:ff:ff:ff:ff -ddd > attack.bpf
+                                  see man pcap-filter for a list of all filter options
+                                  add BPF code: 
+                                  $ hcxdumptool -i <INTERFACE> --bpf=attack.bpf ...
+--disable_beacon               : do not transmit BEACON frames
+--disable_deauthentication     : do not transmit DEAUTHENTICATION/DISASSOCIATION frames
+--disable_proberequest         : do not transmit PROBEREQUEST frames
+--disable_association          : do not AUTHENTICATE/ASSOCIATE
+--disable_reassociation        : do not REASSOCIATE a CLIENT
+--beacontx=<digit>             : transmit BEACON of first n entries of ESSID list
+                                 default: 10
+--proberesponsetx=<digit>      : transmit PROBERESPONSEs of first n entries of ESSID list
+                                 default: 10
+--essidlist=<file>             : initialize ESSID list with this ESSIDs
+--errormax=<digit>             : set maximum allowed ERRORs
+                                 default: 100 ERRORs
+--watchdog=<seconds>           : set maximum TIMOUT when no packets received
+                                 default: 600 seconds
+--attemptclientmax=<digit>     : set maximum of attempts to request an EAPOL M2
+                                 default: 10 attempts
+--attemptapmax=<digit>         : set maximum of received BEACONs to request a PMKID or to get a 4-way handshake
+                                 default: stop after 4 received BEACONs
+--tot=<digit>                  : enable timeout timer in minutes
+--onsigterm=<action>           : action when the program has been terminated (poweroff, reboot)
+                                  poweroff: power off system
+                                 reboot:   reboot system
+--ongpiobutton=<action>        : action when the program has been terminated (poweroff, reboot)
+                                  poweroff: power off system
+                                  reboot:   reboot system
+--ongtot=<action>              : action when the program has been terminated (poweroff, reboot)
+                                  poweroff: power off system
+                                  reboot:   reboot system
+--onwatchdog=<action           : action when the program has been terminated (poweroff, reboot)
+                                  poweroff: power off system
+                                  reboot:   reboot system
+--onerror=<action>             : action when the program has been terminated (poweroff, reboot)
+                                  poweroff: power off system
+                                  reboot:   reboot system
+--gpio_button=<digit>          : Raspberry Pi GPIO pin number of button (2...27)
+                                  push GIPO button (> 10 seconds) to terminate program
+                                  default: 0 (GPIO not in use)
+--gpio_statusled=<digit>       : Raspberry Pi GPIO number of status LED (2...27)
+                                  default: 0 (GPIO not in use)
+--nmea_dev=<NMEA device>       : open NMEA device (/dev/ttyACM0, /dev/tty/USB0, ...)
+                                  baudrate = BD9600
+--gpsd                         : use gpsd to get position
+                                  gpsd will be switched to NMEA0183 mode
+--nmea_out=<outfile>           : write GPS information to a nmea-format file named <outfile>
+                                  default outfile name: yyyyddmmhhmmss.nmea
+                                  output: NMEA 0183 standard messages:
+                                          $GPRMC: Position, velocity, time and date
+                                          $GPGGA: Position, orthometric height, fix related data, time
+                                          $GPWPL: Position and MAC AP
+                                          $GPTXT: ESSID in HEX ASCII
+                                  use gpsbabel to convert to other formats:
+                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file_gpx
+                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
+                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183
+--rcascan_passive              : do passive (R)adio (C)hannel (A)ssignment scan
+--help                         : show this help
+--version                      : show version
+
+Legend
+real time display:
+ R = + AP is in TX range
+ P = + got PMKID
+ M = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)
+ M = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)
+ A = + AUTHENTICATION KEY MANAGEMENT PSK
+Notice:
+This is a penetration testing tool!
+It is made to detect vulnerabilities in your NETWORK mercilessly!
+To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel
+
+
 06.04.2023
 ==========
 release v6.2.9
