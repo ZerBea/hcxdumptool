@@ -1,6 +1,34 @@
+06.04.2023
+==========
+release v6.2.9
+several bug fixes
+
+This is the last version:
+that use WIRELESS EXTENSIONS
+that use ETHTOOL to get/set virtual MAC address
+that use old style status output
+that use soft coded filter lists
+that use msec timestamp
+that use crypto stuff
+
+Next version will go back to the roots:
+set focus on WPA PSK (WPA1, WPA2, WPA2 key version 3)
+set bandwidth to 20MHz to increase range
+set bitrate to lowest values to increase range
+use active monitor mode
+use NL80211 stack
+use RTNETLINK
+use NMEA messages:
+ $GPRMC: Position, velocity, time and date
+ $GPGGA: Position, orthometric height, fix related data, time
+ $GPWPL: Position and MAC AP
+ $GPTXT: ESSID in HEX ASCII
+remove options that slow hcxdumptool down
+
+
 10.03.2023
 ==========
-release v6.2.7
+release v6.2.8
 move to OpenSSL 3.0 EVP API (from now on OPenSSL >= 3.0 is mandatory)
 new options
 several bug fixes
