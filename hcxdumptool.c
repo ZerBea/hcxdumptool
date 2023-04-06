@@ -4560,7 +4560,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_ERROR_MAX:
 		if((errorcountmax = strtoul(optarg, NULL, 10)) < 1)
 			{
-			fprintf(stderr, "time out timer must be > 0\n");
+			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
