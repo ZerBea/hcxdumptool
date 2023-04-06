@@ -2543,7 +2543,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -2628,7 +2628,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
