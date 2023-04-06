@@ -29,7 +29,6 @@ Detailed description
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | hcxdumptool    | Tool to run several tests to determine if ACCESS POINTs or CLIENTs are vulnerable                      |
-| hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
 
 
 Work flow
