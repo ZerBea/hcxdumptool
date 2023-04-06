@@ -121,12 +121,9 @@ Requirements
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
 * operatingsystem: Linux distribution, Kernel >= 5.15
 * recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
-* chipset must be able to run in monitor mode. Recommended: MEDIATEK (MT7601) or RALINK (RT2870, RT3070, RT5370) chipset
-* driver must (mandatory) support monitor and full frame injection mode as well as WIRELESS EXTENSIONS 
-* driver must not depend on NETLINK (libnl)
+* chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
+* driver must (mandatory) support monitor and full frame injection mode
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
-* libopenssl (>= 3.0) and openssl-dev installed
-* pkg-config installed
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 * to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
@@ -137,48 +134,27 @@ If you decide to compile latest git head, make sure that your distribution is up
 Adapters
 --------------
 
-Driver must support (mandatory) monitor mode and full packet injection as well as WIRELESS EXTENSIONS
+Driver must support (mandatory) monitor mode and full packet injection
 
-NETLINK is not supported (asynchronous).
+WIRELESS EXTENSIONS are deprecated and not longer supported
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Prefered chipsets MediaTek (active monitor mode) and Ralink because stock kernel drivers are well maintained, NL80211 and WIRELESS EXTENSION support, monitor mode as well as full frame injection out of the box.  
-
-This list is for information purposes only and should not be regarded as a binding presentation of the products:
-
-* ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
-* ID 148f:761a Ralink Technology, Corp. MT7610U ("Archer T2U" 2.4G+5G WLAN Adapter
-* ID 0e8d:7612 MediaTek Inc. MT7612U 802.11a/b/g/n/ac Wireless Adapter
-* ID 0b05:17d1 ASUSTek Computer, Inc. AC51 802.11a/b/g/n/ac Wireless Adapter [Mediatek MT7610U]
-* ID 7392:7710 Edimax Technology Co., Ltd Edimax Wi-Fi
-* ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
-* ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
-* ID 148f:5572 Ralink Technology, Corp. RT5572 Wireless Adapter
-* ID 2357:010c TP-Link TL-WN722N v2/v3 [Realtek RTL8188EUS] (third party driver: https://github.com/kimocoder/realtek_rtwifi)
+Prefered chipsets MediaTek (active monitor mode)
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
-Due to a bug in xhci subsystem other devices may not work at the moment: <br /> https://bugzilla.kernel.org/show_bug.cgi?id=202541
-
 No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
-No support for a driver which doesn't support WIRELESS EXTENSIONS and monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
+No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
 Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
 
 * Broadcom (neither monitor mode nor frame injection)
-* Intel PRO/Wireless (several driver issues and NETLINK dependency)
-* Realtek (some drivers working, some not, monitor mode and frame injection mostly only on third party drivers, often no WIRELESS EXTENSIONS)
-* Atheros (some driver problems on older kernels)
 
 more information about possible issues on https://bugzilla.kernel.org
-
-If you run into WIRELESS EXTENSIONS driver problems, please try hcxlabtool (https://github.com/ZerBea/wifi_laboratory).
-
-Sooner or later hcxdumptool code will be replaced by hcxlabtool code.
 
 
 Antennas
@@ -214,54 +190,32 @@ Useful scripts
 | bash_profile | Autostart for Raspberry Pi (copy to /root/.bash_profile) |
 | pireadcard   | Back up a Pi SD card                                     |
 | piwritecard  | Restore a Pi SD card                                     |
-| makemonnb    | Example script to activate monitor mode                  |
-| killmonnb    | Example script to deactivate monitor mode                |
+| stopnm       | Example script to start NetworkManager                   |
+| startnm      | Example script to stop NetworkManager                    |
 
 
 Hardware mod - see docs gpiowait.odg (hcxdumptool)
 --------------
 
-LED flashes 5 times if hcxdumptool successfully started
+LED flashes every 10 seconds if everything is fine and signals are received
 
-LED flashes every 5 seconds if everything is fine and signals are received
-
-LED flashes twice, if no signal received during the last past 5 seconds
-
-Press push button at least > 5 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
-
-Green ACT LED flashes 10 times
+Press push button at least > 10 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
 
 Raspberry Pi turned off and can be disconnected from power supply
 
-Do not use hcxdumptool and hcxpioff together!
 
-
-Hardware mod - see docs gpiowait.odg (hcxpioff)
+Hardware mod - see docs gpiowait.odg
 --------------
 
-LED flashes every 5 seconds 2 times if hcxpioff successfully started
-
-Press push button at least > 5 seconds until LED turns on
-
-Green ACT LED flashes 10 times
-
-Raspberry Pi turned off safely and can be disconnected from power supply
+Press push button at least 10 seconds and Raspberry Pi turned off safely and can be disconnected from power supply
 
 
 Procedure
 --------------
 
-first run hcxdumptool -i interface --do_rcascan at least for 30 seconds
+first run hcxdumptool -L to get information about suitable interfaces
 
-to determine that the driver has WIRELESS EXTENSIONS
-
-to determine that the driver support monitor mode
-
-to determine that the driver support full packet injection,
-
-to retrieve information about access points and
-
-to determine which access points are in transmit range.
+run hcxdumptool --rca_scan to retrieve information about access points
 
 
 pcapng option codes (Section Header Block)
@@ -320,7 +274,7 @@ You must use hcxdumptool only on networks you have permission to do this and if 
   (use hcxpcapngtool to to a format hashcat and/Or JtR understand)
 
 * hcxdumptool is able to capture passwords from the wlan traffic
-  (use hcxpcapngtool -E to save them to file, together with networknames)
+  (use hcxpcapngtool -R to save them to file, or together with networknames [-E])
 
 * hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS)
   (hcxpcapngtool will show you information about them)
