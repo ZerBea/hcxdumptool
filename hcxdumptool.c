@@ -2542,7 +2542,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -2627,7 +2627,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -4559,7 +4559,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_ERROR_MAX:
 		if((errorcountmax = strtoul(optarg, NULL, 10)) < 1)
 			{
-			fprintf(stderr, "time out timer must be > 0\n");
+			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
