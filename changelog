@@ -1,9 +1,10 @@
-xx.04.2023
+07.04.2023
 ==========
-removed pioff
-refactored hcxdumptool:
-$ ./hcxdumptool --help
-hcxdumptool 6.2.9  (C) 2023 ZeroBeat
+removed hcxpioff
+refactored hcxdumptool: replaced entire hcxdumptool code by hcxlabtool code
+
+$ hcxdumptool --help
+hcxdumptool 6.2.9-22-gace924f  (C) 2023 ZeroBeat
 usage: hcxdumptool <options>
         first stop all services that take access to the interface , e.g.:
         $ sudo systemctl stop NetworkManager.service
@@ -144,6 +145,7 @@ that use old style status output
 that use soft coded filter lists
 that use msec timestamp
 that use crypto stuff
+that use server/client mode to display status
 
 Next version will go back to the roots:
 set focus on WPA PSK (WPA1, WPA2, WPA2 key version 3)
@@ -152,6 +154,7 @@ set bitrate to lowest values to increase range
 use active monitor mode
 use NL80211 stack
 use RTNETLINK
+band a, b, c, d, e support
 use NMEA messages:
  $GPRMC: Position, velocity, time and date
  $GPGGA: Position, orthometric height, fix related data, time
