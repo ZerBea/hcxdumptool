@@ -1,7 +1,7 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks
+Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol  
 (e.g.: PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
 
 
@@ -23,12 +23,30 @@ Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
 Unsupported: Windows OS, macOS, Android, emulators or wrappers!
 
 
+What doesn't hcxdumptool do
+--------------
+
+it does not crack WPA PSK related hashes (use hashat or JtR to recover the PSK)
+
+it does not crack WEP (use aircrack-ng instead)
+
+it does not crack WPS (use reaver or bully instead)
+
+it does not decrypt encrypted traffic (use Wireshark in parallel)
+
+it does not record entire traffic (use tshark or Wireshark in parallel)
+
+it does not perform Evil Twin attacks
+
+it is not a honey pod
+
+
 Detailed description
 --------------
 
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | Tool to run several tests to determine if ACCESS POINTs or CLIENTs are vulnerable                      |
+| hcxdumptool    | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable      |
 
 
 Work flow
