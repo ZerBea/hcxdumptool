@@ -68,7 +68,7 @@ static unsigned int seed = 7;
 
 static int fd_socket_nl = 0;
 static int fd_socket_rt = 0;
-static int fd_socket_unix = 0; 
+static int fd_socket_unix = 0;
 static int fd_socket_rx = 0;
 static int fd_socket_tx = 0;
 static int fd_timer1 = 0;
@@ -359,7 +359,7 @@ static char rtb[RTD_LEN] = { 0 };
 /*===========================================================================*/
 /*===========================================================================*/
 /* status print */
-static void show_interfacecapabilities2()
+static void show_interfacecapabilities2(void)
 {
 static size_t i;
 static const char *po = "N/A";
@@ -408,7 +408,7 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static void show_interfacecapabilities()
+static void show_interfacecapabilities(void)
 {
 static size_t i;
 static const char *po = "N/A";
@@ -445,7 +445,7 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static void show_interfacelist()
+static void show_interfacelist(void)
 {
 static size_t i;
 static const char *po = "N/A";
@@ -473,7 +473,7 @@ fprintf(stdout, "\n"
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void show_realtime_rca()
+static inline void show_realtime_rca(void)
 {
 static size_t i;
 static size_t p;
@@ -509,12 +509,12 @@ for(i = 0; i < 40 ; i++)
 	pa++;
 	}
 rtb[p] = 0;
-fprintf(stdout, "%s", rtb); 
+fprintf(stdout, "%s", rtb);
 return;
 }
 /*---------------------------------------------------------------------------*/
 #ifdef STATUSOUT
-static inline void show_realtime()
+static inline void show_realtime(void)
 {
 static size_t i;
 static size_t p;
@@ -567,7 +567,7 @@ for(i = 0; i < 20; i++)
 	p = strlen(rtb);
 	}
 rtb[p] = 0;
-fprintf(stdout, "%s", rtb); 
+fprintf(stdout, "%s", rtb);
 return;
 }
 #endif
@@ -740,7 +740,7 @@ optionhdr->option_length = colen -OH_SIZE;
 return colen;
 }
 /*===========================================================================*/
-static inline void writeepbm1()
+static inline void writeepbm1(void)
 {
 static ssize_t epblen;
 static ssize_t ii;
@@ -784,7 +784,7 @@ if(write(fd_pcapng, &epbown, epblen) != epblen) errorcount++;
 return;
 }
 /*===========================================================================*/
-static inline void writeepb()
+static inline void writeepb(void)
 {
 static ssize_t epblen;
 static u16 padding;
@@ -811,7 +811,7 @@ if(write(fd_pcapng, &epb, epblen) != epblen) errorcount++;
 return;	
 }
 /*---------------------------------------------------------------------------*/
-static bool writeshb()
+static bool writeshb(void)
 {
 static ssize_t shblen;
 static section_header_block_t *shbhdr;
@@ -846,7 +846,7 @@ if(write(fd_pcapng, &shb, shblen) != shblen) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool writeidb()
+static bool writeidb(void)
 {
 static ssize_t idblen;
 static interface_description_block_t *idbhdr;
@@ -874,7 +874,7 @@ if(write(fd_pcapng, &idb, idblen) != idblen) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool writecb()
+static bool writecb(void)
 {
 static ssize_t cblen;
 static custom_block_t *cbhdr;
@@ -1004,7 +1004,7 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_eapolm1()
+static inline void send_80211_eapolm1(void)
 {
 static ssize_t ii;
 
@@ -1057,7 +1057,7 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_associationresponse()
+static inline void send_80211_associationresponse(void)
 {
 static ssize_t ii;
 static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
@@ -1141,7 +1141,7 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_authenticationrequestnoack()
+static inline void send_80211_authenticationrequestnoack(void)
 {
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1159,7 +1159,7 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_authenticationrequest()
+static inline void send_80211_authenticationrequest(void)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1211,7 +1211,7 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_beacon()
+static inline void send_80211_beacon(void)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
