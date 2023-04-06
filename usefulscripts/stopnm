@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "deaktiviere NetworkManager"
+sudo systemctl stop NetworkManager.service
+sudo systemctl stop wpa_supplicant.service

@@ -1,7 +1,7 @@
+/*===========================================================================*/
 #define RASPBERRY_INFO	2048
-#define GPIO_LED_DELAY	100000000
+#define GPIO_LED_DELAY	100000000L
 
-#define RPI_PAGE_SIZE	(4*1024)
 #define RPI_BLOCK_SIZE	(4*1024)
 
 #define INP_GPIO(g) *(gpio +((g) /10)) &= ~(7 << (((g) %10) *3))
@@ -12,3 +12,4 @@
 
 static void *gpio_map;
 static volatile unsigned *gpio;
+/*===========================================================================*/

@@ -1,4 +1,4 @@
-PRODUCTION		:= 1
+PRODUCTION		:= 0
 PRODUCTION_VERSION	:= 6.2.9
 PRODUCTION_YEAR		:= 2023
 
@@ -19,23 +19,17 @@ CFLAGS		?= -O3 -Wall -Wextra
 CFLAGS		+= -std=gnu99
 #CFLAGS		+= -ggdb -fsanitize=address
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
+DEFS		+= -DSTATUSOUT -DNMEAOUT
 
 INSTALL		?= install
 INSTFLAGS	=
-PKG_CONFIG ?= pkg-config
 
 ifeq ($(HOSTOS), Linux)
 INSTFLAGS += -D
 endif
 
-OPENSSL_LIBS=$(shell $(PKG_CONFIG) --libs openssl)
-OPENSSL_CFLAGS=$(shell $(PKG_CONFIG) --cflags openssl)
 
-TOOLS=
-TOOLS+=hcxdumptool
-hcxdumptool_libs=$(OPENSSL_LIBS)
-hcxdumptool_cflags=$(OPENSSL_CFLAGS)
-TOOLS+=hcxpioff
+TOOLS=hcxdumptool
 
 .PHONY: all build install clean uninstall
 
@@ -43,17 +37,14 @@ all: build
 
 build: $(TOOLS)
 
-.deps:
-	mkdir -p .deps
-
 # $1: tool name
 define tool-build
 $(1)_src ?= $(1).c
 $(1)_libs ?=
 $(1)_cflags ?=
 
-$(1): $$($(1)_src) | .deps
-	$$(CC) $$(CFLAGS) $$($(1)_cflags) $$(CPPFLAGS) -MMD -MF .deps/$$@.d -o $$@ $$($(1)_src) $$($(1)_libs) $$(LDFLAGS) $$(DEFS)
+$(1): $$($(1)_src)
+	$$(CC) $$(CFLAGS) $$($(1)_cflags) $$(CPPFLAGS) -o $$@ $$($(1)_src) $$(DEFS)
 
 .deps/$(1).d: $(1)
 

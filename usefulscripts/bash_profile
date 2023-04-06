@@ -1,21 +1,12 @@
 #!/bin/bash
 
+sleep 10
+chmod 777 -R /home
 cd /home
-export WLANDEV=`ls -1 /sys/class/net | grep ^wl`
-if [[ ! -z $WLANDEV ]]
-then
-	ARCHIVNAME=`date +'%Y%m%d%H%M'`
-	/opt/vc/bin/tvservice -o
-	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -f 79 -o $ARCHIVNAME.pcapng --poweroff --stop_ap_attacks=6000 --resume_ap_attacks=12000 --active_beacon
-#	hcxdumptool --gpio_button=4 --gpio_statusled=17 -i $WLANDEV -o $ARCHIVNAME.pcapng --tot=1440 --disable_deauthentication --disable_ap_attacks --active_beacon -c 1,3,5,7,9,11,2,4,6,8,10 -t 60
-	hcxret=$?
-	if [ $hcxret -eq 2 ]
-	then
-		reboot
-	else
-		poweroff
-	fi
-fi
-systemctl start dhcpcd@eth0.service
-systemctl start sshd.service
-hcxpioff --gpio_button=4 --gpio_statusled=17 &
+iw reg set IN
+#hcxlabtool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect.bpfc --essidlist=standard.essidliste --attemptapmax=1000 --attemptclientmax=100 --beacontx=5
+#hcxlabtool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect.bpfc --essidlist=standard.essidliste --attemptapmax=1000 --attemptclientmax=20 --beacontx=5 -c 1a,6a,11a,2a,1a,6a,11a,13a,1a,6a,11a,3a,1a,6a,11a,12a,1a,6a,11a,4a,1a,6a,11a,10a,1a,6a,11a,5a,1a,6a,11a,9a,1a,6a,11a,7a,1a,6a,11a,8a
+#hcxlabtool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect_ext.bpfc --essidlist=standard.essidliste --tot=8640 -t 120  --beacontx=5 -c 1a,3a,6a,9a --disable_deauthentication --disable_proberequest --disable_association --disable_reassociation
+systemctl start dhcpcd.service
+systemctl start ssh.service
+#poweroff

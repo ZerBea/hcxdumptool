@@ -1,23 +1,20 @@
+/*===========================================================================*/
 #ifndef WIRELESS_LITE_H
 #define WIRELESS_LITE_H
 
 /* cleaned up from linux/wireless.h */
-
-#include <net/if.h>
 
 #define SIOCGIWNAME	0x8b01
 #define SIOCSIWFREQ	0x8b04
 #define SIOCGIWFREQ	0x8b05
 #define SIOCSIWMODE	0x8b06
 #define SIOCGIWMODE	0x8b07
-#define SIOCGIWTXPOW	0x8b27
+#define	SIOCGIWTXPOW	0x8b27
 #define SIOCSIWPOWER	0x8B2C
 #define SIOCGIWPOWER	0x8B2D
+#define IW_TXPOW_DBM	0x00
+#define IW_FREQ_FIXED	0x01
 
-#define IW_TXPOW_DBM		0x00
-#define IW_TXPOW_MWATT		0x01
-#define IW_FREQ_FIXED		0x01
-#define IW_TXPOW_RELATIVE	0x02
 
 #define IW_MODE_AUTO	0
 #define IW_MODE_ADHOC	1
@@ -89,6 +86,6 @@ struct iwreq
  } ifr_ifrn;
  union iwreq_data u;
 };
-
 #endif
+/*===========================================================================*/
 
