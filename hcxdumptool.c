@@ -4534,7 +4534,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_HOLD_TIME:
 		if((timehold = strtoull(optarg, NULL, 10)) < 2)
 			{
-			fprintf(stderr, "hold time must be > 2 secondsn");
+			fprintf(stderr, "hold time must be > 2 seconds");
 			exit(EXIT_FAILURE);
 			}
 		timehold *= 1000000000ULL;
