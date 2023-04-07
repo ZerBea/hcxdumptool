@@ -4834,7 +4834,7 @@ if(rcascanflag == false)
 	if(nl_scanloop() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to intitalize main scan loop\n");
+		fprintf(stderr, "failed to initialize main scan loop\n");
 		}
 	}
 else
@@ -4842,7 +4842,7 @@ else
 	if(nl_scanloop_rca() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to intitalize rca scan loop\n");
+		fprintf(stderr, "failed to initialize rca scan loop\n");
 		}
 	}
 /*---------------------------------------------------------------------------*/
