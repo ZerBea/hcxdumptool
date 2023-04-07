@@ -4825,7 +4825,7 @@ tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
-if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxlabtool is running in a 100%% controlled environment!\n\n");
+if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\e[?25l");
 nanosleep(&tspecifo, &tspeciforem);
 
