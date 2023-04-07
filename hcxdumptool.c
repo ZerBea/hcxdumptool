@@ -584,8 +584,7 @@ switch(band)
 	break;
 
 	case NL80211_BAND_5GHZ:
-	if(channel >= 182 && channel <= 196) return 4000 + (channel * 5);
-	else return 5000 + channel * 5;
+	return 5000 + channel * 5;
 	break;
 
 	case NL80211_BAND_6GHZ:
