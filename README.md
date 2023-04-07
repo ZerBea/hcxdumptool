@@ -38,7 +38,7 @@ it does not record entire traffic (use tshark or Wireshark in parallel)
 
 it does not perform Evil Twin attacks
 
-it is not a honey pod
+it is not a honey pot
 
 
 Detailed description
