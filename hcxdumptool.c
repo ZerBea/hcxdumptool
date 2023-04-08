@@ -484,7 +484,6 @@ static char *pmdef = " ";
 static char *pmok = "+";
 static char *ar;
 static char *ak;
-static char timestring[32];
 
 system("clear");
 sprintf(&rtb[0], "  CHA  FREQ    LAST   R A    MAC-AP    ESSID                 SCAN-FREQUENCY: %6u\n"
@@ -1249,8 +1248,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_proberequest_undirected(void)
 {
-static ieee80211_mac_t *macftx;
-
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_REQ;
