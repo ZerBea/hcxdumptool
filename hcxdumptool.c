@@ -3576,8 +3576,8 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 			usrfrequency_to_scanlist(ufreq);
 			tokptr = strtok(NULL, ",");
 			}
+		free(ufld);
 		}
-	free(ufld);
 	}
 else
 	{
