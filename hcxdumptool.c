@@ -4648,7 +4648,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_NMEA0183:
 		if(gpsdflag == true)
 			{
-			fprintf(stderr, "not allowed in combination with gpsd\n");
+			fprintf(stderr, "nmea_dev not allowed in combination with gpsd\n");
 			exit(EXIT_FAILURE);
 			}
 		nmea0183name = optarg;
@@ -4657,7 +4657,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_GPSD:
 		if(nmea0183name != NULL)
 			{
-			fprintf(stderr, "not allowed in combination nmea_dev\n");
+			fprintf(stderr, "gpsd not allowed in combination with nmea_dev\n");
 			exit(EXIT_FAILURE);
 			}
 		gpsdflag = true;
