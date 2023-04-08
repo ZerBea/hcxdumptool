@@ -1,7 +1,9 @@
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <errno.h>
+#if defined (_POSIX_VERSION)
 #include <fcntl.h>
+#endif
 #include <getopt.h>
 #include <inttypes.h>
 #include <linux/filter.h>
@@ -23,12 +25,13 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
+#if defined (_POSIX_VERSION)
+#include <sys/stat.h>
 #include <sys/utsname.h>
 #include <termios.h>
-
+#endif
 #include "include/types.h"
 #include "include/hcxdumptool.h"
 #include "include/raspberry.h"

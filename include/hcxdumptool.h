@@ -126,7 +126,7 @@ typedef struct __attribute__((__packed__))
 }essid_t;
 #define ESSID_SIZE (sizeof(essid_t))
 /*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
 #define	APIE_ESSID	0b0000000000000001
 #define APGS_CCMP	0b0000000000000010
@@ -146,7 +146,7 @@ typedef struct __attribute__((__packed__))
 }infoelement_t;
 #define INFOELEMENT_SIZE (sizeof(infoelement_t))
 /*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
  u64	tsakt;
  u64	tshold1;
@@ -178,7 +178,7 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
  u64	tsakt;
  u8	macaprg[6];
@@ -196,7 +196,7 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
  u64	tsakt;
  u64	tsauth;
@@ -223,7 +223,7 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
  u64	tsakt;
  u8	mac[6];
@@ -253,7 +253,7 @@ typedef struct __attribute__((__packed__))
 #define FREQUENCYLIST_SIZE (sizeof(frequencylist_t))
 /*---------------------------------------------------------------------------*/
 #define INTERFACELIST_MAX	64
-typedef struct __attribute__((__packed__)) 
+typedef struct __attribute__((__packed__))
 {
  int	index;
  u32	wiphy;
