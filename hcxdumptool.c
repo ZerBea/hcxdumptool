@@ -479,7 +479,6 @@ static inline void show_realtime_rca(void)
 {
 static size_t i;
 static size_t p;
-static size_t pa;
 static time_t tvlast;
 static char *pmdef = " ";
 static char *pmok = "+";
@@ -492,7 +491,6 @@ sprintf(&rtb[0], "  CHA  FREQ    LAST   R A    MAC-AP    ESSID                 S
 	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
-pa = 0;
 for(i = 0; i < 40 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -508,7 +506,6 @@ for(i = 0; i < 40 ; i++)
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	p = strlen(rtb);
-	pa++;
 	}
 rtb[p] = 0;
 fprintf(stdout, "%s", rtb);
@@ -3579,8 +3576,8 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 			usrfrequency_to_scanlist(ufreq);
 			tokptr = strtok(NULL, ",");
 			}
+		free(ufld);
 		}
-	free(ufld);
 	}
 else
 	{
@@ -3618,8 +3615,8 @@ static size_t i;
 nl_get_familyid();
 if(nlfamily == 0)
 	{
-	return false;
 	errorcount++;
+	return false;
 	}
 if(nl_get_interfacecapabilities() == false) return false;
 if(nl_get_interfacelist() == false) return false;
@@ -4181,12 +4178,12 @@ if(rpi == true)
 		if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
 		if(strstr(linein, ".gpio") != NULL)
 			{
-			if(linein[8] != '-') break;
+			if(linein[8] == '-')
 				{
 				linein[8] = 0;
 				gpioperibase = strtoul(linein, NULL, 16);
-				break;
 				}
+			break;
 			}
 		}
 	fclose(procinfo);
