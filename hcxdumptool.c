@@ -25,12 +25,10 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#if defined (_POSIX_VERSION)
-#include <sys/stat.h>
-#endif
 #include <sys/time.h>
 #include <sys/timerfd.h>
 #if defined (_POSIX_VERSION)
+#include <sys/stat.h>
 #include <sys/utsname.h>
 #include <termios.h>
 #endif
