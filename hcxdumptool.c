@@ -4077,7 +4077,7 @@ while(c < bpf.len)
 	bpfptr++;
 	c++;
 	}
-if(bpf.len != c) fprintf(stderr, "failed to read Berkeley Packet Filter\n");
+if(bpf.len != c) return false;
 fclose(fh_filter);
 return true;
 }
