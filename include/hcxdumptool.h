@@ -83,7 +83,7 @@
 #define CLIENTLIST_MAX		500
 #define MACLIST_MAX		250
 #define ESSID_MAX		32
-#define PMKID_MAX		32
+#define PMKID_MAX		16
 #define PSK_MAX			64
 #define DRIVERNAME_MAX		32
 #define EAPOLM2TIMEOUT		20000000ULL
