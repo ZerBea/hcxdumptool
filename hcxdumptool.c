@@ -114,7 +114,6 @@ static u64 tsfirst = 0;
 static u64 tshold = 0;
 static u64 tottime = 0;
 static u64 timehold = TIMEHOLD;
-static u64 clientm2count = CLIENTM2COUNT;
 static int timerwaitnd = TIMER_EPWAITND;
 
 static u64 errorcountmax = ERROR_MAX;
@@ -1865,7 +1864,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist + i)->tsakt = tsakt;
 (clientlist + i)->tsassoc = tsfirst;
 (clientlist + i)->tsreassoc = tsfirst;
-(clientlist + i)->count = clientm2count;
+(clientlist + i)->count = attemptclientmax;
 (clientlist + i)->aid = 1;
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
@@ -1923,7 +1922,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist + i)->tsakt = tsakt;
 (clientlist + i)->tsassoc = tsfirst;
 (clientlist + i)->tsreassoc = tsfirst;
-(clientlist + i)->count = clientm2count;
+(clientlist + i)->count = attemptclientmax;
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
 tagwalk_channel_essid_rsn(&(clientlist + i)->ie, associationrequestlen, associationrequest->ie);
@@ -1961,7 +1960,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist + i)->tsauth = tsfirst;
 (clientlist + i)->tsassoc = tsfirst;
 (clientlist + i)->tsreassoc = tsfirst;
-(clientlist + i)->count = clientm2count;
+(clientlist + i)->count = attemptclientmax;
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
 send_80211_authenticationresponse();
@@ -2543,7 +2542,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -2628,7 +2627,7 @@ sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
 while(!wanteventflag)
 	{
-	if(errorcount > ERROR_MAX) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -4295,10 +4294,10 @@ fprintf(stdout, "long options:\n"
 	"                                 default: %d\n"
 	"--proberesponsetx=<digit>      : transmit PROBERESPONSEs of first n entries of ESSID list\n"
 	"                                 default: %d\n"
-	"--essidlist=<file>             : initialize ESSID list with this ESSIDs\n"
+	"--essidlist=<file>             : initialize ESSID list with these ESSIDs\n"
 	"--errormax=<digit>             : set maximum allowed ERRORs\n"
 	"                                 default: %d ERRORs\n"
-	"--watchdog=<seconds>           : set maximum TIMOUT when no packets received\n"
+	"--watchdog=<seconds>           : set maximum TIMEOUT when no packets received\n"
 	"                                 default: %d seconds\n"
 	"--attemptclientmax=<digit>     : set maximum of attempts to request an EAPOL M2\n"
 	"                                 default: %d attempts\n"
@@ -4534,7 +4533,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_HOLD_TIME:
 		if((timehold = strtoull(optarg, NULL, 10)) < 2)
 			{
-			fprintf(stderr, "hold time must be > 2 secondsn");
+			fprintf(stderr, "hold time must be > 2 seconds");
 			exit(EXIT_FAILURE);
 			}
 		timehold *= 1000000000ULL;
@@ -4560,7 +4559,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_ERROR_MAX:
 		if((errorcountmax = strtoul(optarg, NULL, 10)) < 1)
 			{
-			fprintf(stderr, "time out timer must be > 0\n");
+			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -4826,7 +4825,7 @@ tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
-if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxlabtool is running in a 100%% controlled environment!\n\n");
+if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\e[?25l");
 nanosleep(&tspecifo, &tspeciforem);
 
@@ -4835,7 +4834,7 @@ if(rcascanflag == false)
 	if(nl_scanloop() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to intitalize main scan loop\n");
+		fprintf(stderr, "failed to initialize main scan loop\n");
 		}
 	}
 else
@@ -4843,7 +4842,7 @@ else
 	if(nl_scanloop_rca() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to intitalize rca scan loop\n");
+		fprintf(stderr, "failed to initialize rca scan loop\n");
 		}
 	}
 /*---------------------------------------------------------------------------*/

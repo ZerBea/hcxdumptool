@@ -1,7 +1,7 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks
+Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol  
 (e.g.: PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
 
 
@@ -20,7 +20,25 @@ Read this post: Hash mode 22000 explained (https://hashcat.net/forum/thread-1025
 
 Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
 
-Unsupported: Windows OS, macOS, Android, emulators or wrappers and NETLINK!
+Unsupported: Windows OS, macOS, Android, emulators or wrappers!
+
+
+What doesn't hcxdumptool do
+--------------
+
+it does not crack WPA PSK related hashes (use hashat or JtR to recover the PSK)
+
+it does not crack WEP (use aircrack-ng instead)
+
+it does not crack WPS (use reaver or bully instead)
+
+it does not decrypt encrypted traffic (use Wireshark in parallel)
+
+it does not record entire traffic (use tshark or Wireshark in parallel)
+
+it does not perform Evil Twin attacks
+
+it is not a honey pot
 
 
 Detailed description
@@ -28,8 +46,7 @@ Detailed description
 
 | Tool           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | Tool to run several tests to determine if ACCESS POINTs or CLIENTs are vulnerable                      |
-| hcxpioff       | Turns Raspberry Pi off via GPIO switch                                                                 |
+| hcxdumptool    | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable      |
 
 
 Work flow
@@ -95,7 +112,7 @@ Or install via package manager
 
 ### Debian (e.g. Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
 To install use the following:  
-`apt-get install pkg-config libcurl4-openssl-dev libssl-dev zlib1g-dev make gcc`
+`apt-get install make gcc`
 
 
 Compile for Android
@@ -136,13 +153,13 @@ Adapters
 
 Driver must support (mandatory) monitor mode and full packet injection
 
-WIRELESS EXTENSIONS are deprecated and not longer supported
+WIRELESS EXTENSIONS are deprecated and no longer supported
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Prefered chipsets MediaTek (active monitor mode)
+Preferred chipsets MediaTek (active monitor mode)
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
