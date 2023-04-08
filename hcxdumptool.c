@@ -476,7 +476,6 @@ static inline void show_realtime_rca(void)
 {
 static size_t i;
 static size_t p;
-static size_t pa;
 static time_t tvlast;
 static char *pmdef = " ";
 static char *pmok = "+";
@@ -489,7 +488,6 @@ sprintf(&rtb[0], "  CHA  FREQ    LAST   R A    MAC-AP    ESSID                 S
 	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
-pa = 0;
 for(i = 0; i < 40 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -505,7 +503,6 @@ for(i = 0; i < 40 ; i++)
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	p = strlen(rtb);
-	pa++;
 	}
 rtb[p] = 0;
 fprintf(stdout, "%s", rtb);
