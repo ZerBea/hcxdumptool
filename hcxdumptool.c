@@ -3615,8 +3615,8 @@ static size_t i;
 nl_get_familyid();
 if(nlfamily == 0)
 	{
-	return false;
 	errorcount++;
+	return false;
 	}
 if(nl_get_interfacecapabilities() == false) return false;
 if(nl_get_interfacelist() == false) return false;
