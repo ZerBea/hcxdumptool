@@ -4598,7 +4598,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			}
 		if(gpiostatusled == gpiobutton)
 			{
-			fprintf(stderr, "invalid GPIO option\n");
+			fprintf(stderr, "GPIO pin ERROR (same value of GPIO button and GPIO status LED)\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -4612,7 +4612,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			}
 		if(gpiostatusled == gpiobutton)
 			{
-			fprintf(stderr, "invalid GPIO option\n");
+			fprintf(stderr, "GPIO pin ERROR (same value of GPIO button and GPIO status LED)\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -4697,12 +4697,6 @@ if(set_signal_handler() == false)
 	}
 if((gpiobutton + gpiostatusled) > 0)
 	{
-	if(gpiobutton == gpiostatusled)
-		{
-		errorcount++;
-		fprintf(stderr, "GPIO pin ERROR (same value of GPIO button and GPIO status LED)\n");
-		goto byebye;
-		}
 	if(init_rpi() == false)
 		{
 		errorcount++;
