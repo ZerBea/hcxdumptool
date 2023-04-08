@@ -4178,12 +4178,12 @@ if(rpi == true)
 		if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
 		if(strstr(linein, ".gpio") != NULL)
 			{
-			if(linein[8] != '-') break;
+			if(linein[8] == '-')
 				{
 				linein[8] = 0;
 				gpioperibase = strtoul(linein, NULL, 16);
-				break;
 				}
+			break;
 			}
 		}
 	fclose(procinfo);
