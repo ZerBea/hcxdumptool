@@ -2345,7 +2345,7 @@ if((nmeaptr = strstr(nmeabuffer, gprmcid)) != NULL)
 		{
 		if(nmeaptr[gprmclen] == '*')
 			{
-			gprmclen += 5;
+			gprmclen += NMEA_CS_CR_LF;
 			memcpy(&gprmc, nmeaptr, gprmclen);
 			break;
 			}
@@ -2359,7 +2359,7 @@ if((nmeaptr = strstr(nmeabuffer, gpggaid)) != NULL)
 		{
 		if(nmeaptr[gpggalen] == '*')
 			{
-			gpggalen += 5;
+			gpggalen += NMEA_CS_CR_LF;
 			memcpy(&gpgga, nmeaptr, gpggalen);
 			return;
 			}
