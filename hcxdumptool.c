@@ -168,6 +168,15 @@ static u16 seqcounter2 = 1; /* proberequest authentication association */
 static u16 seqcounter3 = 1; /* probereresponse authentication response 3 */
 static u16 seqcounter4 = 1; /* beacon */
 /*---------------------------------------------------------------------------*/
+#ifdef NMEAOUT
+static const char gpwplid[] = "$GPWPL";
+static const char gptxtid[] = "$GPTXT,";
+static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+#endif
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+static const char *macaprgfirst = "internet";
+/*---------------------------------------------------------------------------*/
 static const uint8_t beacondata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
@@ -624,7 +633,6 @@ static ssize_t p1;
 static ssize_t p2;
 static size_t c;
 static u8 cs;
-static char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
 
 if(gprmclen == 0) return;
 if(write(fd_hcxpos, gprmc, gprmclen) != gprmclen) errorcount++;
@@ -2345,7 +2353,7 @@ if((nmeaptr = strstr(nmeabuffer, gprmcid)) != NULL)
 		{
 		if(nmeaptr[gprmclen] == '*')
 			{
-			gprmclen += NMEA_CS_CR_LF;
+			gprmclen += NMEA_CS_CR_LF_SIZE;
 			memcpy(&gprmc, nmeaptr, gprmclen);
 			break;
 			}
@@ -2359,7 +2367,7 @@ if((nmeaptr = strstr(nmeabuffer, gpggaid)) != NULL)
 		{
 		if(nmeaptr[gpggalen] == '*')
 			{
-			gpggalen += NMEA_CS_CR_LF;
+			gpggalen += NMEA_CS_CR_LF_SIZE;
 			memcpy(&gpgga, nmeaptr, gpggalen);
 			return;
 			}
@@ -3953,11 +3961,6 @@ static void init_values(void)
 {
 static size_t i;
 static struct timespec waitfordevice;
-static const char *macaprgfirst = "internet";
-#ifdef NMEAOUT
-static const char gpwplid[] = "$GPWPL";
-static const char gptxtid[] = "$GPTXT,";
-#endif
 
 waitfordevice.tv_sec = 1;
 waitfordevice.tv_nsec = 0;
@@ -4013,8 +4016,8 @@ memcpy(&wltxbuffer, &rthtxdata, RTHTX_SIZE);
 memcpy(&wltxnoackbuffer, &rthtxnoackdata, RTHTXNOACK_SIZE);
 memcpy(&epbown[EPB_SIZE], &rthtxdata, RTHTX_SIZE);
 #ifdef NMEAOUT
-memcpy(&gpwpl, &gpwplid, 6);
-memcpy(&gptxt, &gptxtid, 7);
+memcpy(&gpwpl, &gpwplid, NMEA_GPWPLID_SIZE);
+memcpy(&gptxt, &gptxtid, NMEA_GPTXTID_SIZE);
 #endif
 return;
 }

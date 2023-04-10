@@ -101,7 +101,10 @@
 #define NMEA_MSG_MAX		128
 #define NMEA_MIN		10
 #define NMEA_GPRMC_MIN		56
-#define NMEA_CS_CR_LF		5
+#define NMEA_CS_CR_LF_SIZE	5
+#define NMEA_GPWPLID_SIZE	6
+#define NMEA_GPTXTID_SIZE	6 +1
+
 
 #define NLTX_SIZE		0xfff
 #define NLRX_SIZE		0xffff
