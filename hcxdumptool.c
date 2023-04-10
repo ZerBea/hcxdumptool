@@ -386,7 +386,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
-	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power\n");
+	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
 	for(i = 0; i < FREQUENCYLIST_MAX; i++)
 		{
 		if((iffreql + i)->frequency == 0) break;
@@ -396,7 +396,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
 		}
 	fprintf(stdout, "\n");
-	fprintf(stdout, "\n\nscan frequencies: frequency [channel] for Regulatory Domain: %s\n", country);
+	fprintf(stdout, "\n\nscan frequencies: frequency [channel] of Regulatory Domain: %s\n", country);
 	for(i = 0; i < FREQUENCYLIST_MAX; i++)
 		{
 		if((scanlist + i)->frequency == 0) break;
@@ -435,7 +435,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
-	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power for Regulatory Domain: %s\n", country);
+	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
 	for(i = 0; i < FREQUENCYLIST_MAX; i++)
 		{
 		if((iffreql + i)->frequency == 0) break;
