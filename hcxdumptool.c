@@ -2672,21 +2672,6 @@ return true;
 /*===========================================================================*/
 /*===========================================================================*/
 /* IOCTL WIRELESS EXTENSIONS */
-static inline void ioctl_set_frequency(void)
-{
-static struct iwreq iwrq;
-
-if(((scanlist + scanlistindex)->frequency) == 0) scanlistindex = 0;
-memset(&iwrq, 0, sizeof(iwrq));
-strncpy(iwrq.ifr_name, ifaktname, IF_NAMESIZE);
-iwrq.u.freq.flags = IW_FREQ_FIXED;
-iwrq.u.freq.m = (scanlist + scanlistindex)->frequency;
-iwrq.u.freq.e = 6;
-if(ioctl(fd_socket_rx, SIOCSIWFREQ, &iwrq) != -1) return;
-errorcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
 static void ioctl_get_wireless_extensions(size_t i)
 {
 struct iwreq pwrq;
