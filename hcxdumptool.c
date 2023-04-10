@@ -339,6 +339,9 @@ static u8 snoncerg[32] = { 0 };
 static char weakcandidate[PSK_MAX];
 static char timestring[16];
 
+static char country[3];
+
+
 static authseqakt_t authseqakt = { 0 };
 
 static u8 nltxbuffer[NLTX_SIZE] = { 0 };
@@ -393,7 +396,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
 		}
 	fprintf(stdout, "\n");
-	fprintf(stdout, "\n\nscan frequencies: frequency [channel]\n");
+	fprintf(stdout, "\n\nscan frequencies: frequency [channel] for Regulatory Domain: %s\n", country);
 	for(i = 0; i < FREQUENCYLIST_MAX; i++)
 		{
 		if((scanlist + i)->frequency == 0) break;
@@ -432,7 +435,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
-	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power\n");
+	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power for Regulatory Domain: %s\n", country);
 	for(i = 0; i < FREQUENCYLIST_MAX; i++)
 		{
 		if((iffreql + i)->frequency == 0) break;
@@ -2896,6 +2899,66 @@ while(1)
 return false;
 }
 /*---------------------------------------------------------------------------*/
+static bool nl_get_regulatorydomain(void)
+{
+static ssize_t i;
+static ssize_t msglen;
+static int nlremlen = 0;
+static struct nlmsghdr *nlh;
+static struct genlmsghdr *glh;
+static struct nlattr *nla;
+static struct nlmsgerr *nle;
+
+country[0] = 0;
+country[1] = 0;
+country[2] = 0;
+i = 0;
+nlh = (struct nlmsghdr*)nltxbuffer;
+nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_seq = nlseqcounter++;
+nlh->nlmsg_pid = hcxpid;
+i += sizeof(struct nlmsghdr);
+glh = (struct genlmsghdr*)(nltxbuffer + i);
+glh->cmd = NL80211_CMD_GET_REG;
+glh->version = 1;
+glh->reserved = 0;
+i += sizeof(struct genlmsghdr);
+nlh->nlmsg_len = i;
+if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
+while(1)
+	{
+	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
+	if(msglen == -1) break;
+	if(msglen == 0) break;
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+		{
+		if(nlh->nlmsg_type == NLMSG_DONE) return true;
+		if(nlh->nlmsg_type == NLMSG_ERROR)
+			{
+			nle = (struct nlmsgerr*)(nlrxbuffer + sizeof(struct nlmsghdr));
+			if(nle->error == 0) return true;
+			errorcount++;
+			nlfamily = 0;
+			return false;
+			}
+		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
+		if(glh->cmd != NL80211_CMD_GET_REG) continue;
+		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		while(nla_ok(nla, nlremlen))
+			{
+			if(nla->nla_type == NL80211_ATTR_REG_ALPHA2)
+				{
+				if(nla->nla_len == 7) memcpy(country, nla_data(nla), 2);
+				}
+			nla = nla_next(nla, &nlremlen);
+			}
+		}
+	}
+return false;
+}
+/*---------------------------------------------------------------------------*/
 static bool nl_get_interfacecapabilities(void)
 {
 static ssize_t i;
@@ -3600,6 +3663,7 @@ if(nlfamily == 0)
 	errorcount++;
 	return false;
 	}
+nl_get_regulatorydomain();
 if(nl_get_interfacecapabilities() == false) return false;
 if(nl_get_interfacelist() == false) return false;
 for(i = 0; i < INTERFACELIST_MAX -1; i++)
