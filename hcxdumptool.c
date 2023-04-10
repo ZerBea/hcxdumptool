@@ -656,10 +656,10 @@ for (p1 = 0; p1 < ETH_ALEN; ++p1)
 gpwpl[p2++] = '*';
 gpwpl[p2++] = lookuptable[(cs & 0xf0) >> 4];
 gpwpl[p2++] = lookuptable[cs & 0x0f];
-gpwpl[p2++] = 0x0d;
-gpwpl[p2++] = 0x0a;
+gpwpl[p2++] = '\r';
+gpwpl[p2++] = '\n';
 if(write(fd_hcxpos, gpwpl, p2) != p2) errorcount++;
-gpwpl[p2++] = 0x00;
+gpwpl[p2++] = '\0';
 if(((aplist + i)->ie.essidlen == 0) || ((aplist + i)->ie.essidlen > ESSID_MAX)) return;
 
 p2 = 7;
@@ -674,10 +674,10 @@ for(p1 = 0; p1 < (aplist + i)->ie.essidlen; p1 ++)
 gptxt[p2++] = '*';
 gptxt[p2++] = lookuptable[(cs & 0xf0) >> 4];
 gptxt[p2++] = lookuptable[cs & 0x0f];
-gptxt[p2++] = 0x0d;
-gptxt[p2++] = 0x0a;
+gptxt[p2++] = '\r';
+gptxt[p2++] = '\n';
 if(write(fd_hcxpos, gptxt, p2) != p2) errorcount++;
-gptxt[p2++] = 0x00;
+gptxt[p2++] = '\0';
 return;
 }
 #endif
