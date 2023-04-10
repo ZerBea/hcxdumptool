@@ -2345,7 +2345,7 @@ if((nmeaptr = strstr(nmeabuffer, gprmcid)) != NULL)
 		{
 		if(nmeaptr[gprmclen] == '*')
 			{
-			gprmclen += 5;
+			gprmclen += strlen("00\r\n") + 1;
 			memcpy(&gprmc, nmeaptr, gprmclen);
 			break;
 			}
@@ -2359,7 +2359,7 @@ if((nmeaptr = strstr(nmeabuffer, gpggaid)) != NULL)
 		{
 		if(nmeaptr[gpggalen] == '*')
 			{
-			gpggalen += 5;
+			gpggalen += strlen("00\r\n") + 1;
 			memcpy(&gpgga, nmeaptr, gpggalen);
 			return;
 			}
