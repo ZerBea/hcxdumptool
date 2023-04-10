@@ -624,7 +624,7 @@ static ssize_t p1;
 static ssize_t p2;
 static size_t c;
 static u8 cs;
-static char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
 static const char gpwplid[] = "$GPWPL";
 static const char gptxtid[] = "$GPTXT,";
 
