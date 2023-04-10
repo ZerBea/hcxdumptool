@@ -625,6 +625,8 @@ static ssize_t p2;
 static size_t c;
 static u8 cs;
 static char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
+static const char gpwplid[] = "$GPWPL";
+static const char gptxtid[] = "$GPTXT,";
 
 if(gprmclen == 0) return;
 if(write(fd_hcxpos, gprmc, gprmclen) != gprmclen) errorcount++;
@@ -633,7 +635,7 @@ if(gpggalen != 0)
 	if(write(fd_hcxpos, gpgga, gpggalen) != gpggalen) errorcount++;
 	}
 p1 = 0;
-p2 = 6;
+p2 = strlen(gpwplid);
 c = 0;
 cs = 0x5c;
 while((p1 < gprmclen) && (c < 7))
@@ -662,7 +664,7 @@ if(write(fd_hcxpos, gpwpl, p2) != p2) errorcount++;
 gpwpl[p2++] = '\0';
 if(((aplist + i)->ie.essidlen == 0) || ((aplist + i)->ie.essidlen > ESSID_MAX)) return;
 
-p2 = 7;
+p2 = strlen(gptxtid);
 cs = 0x63;
 for(p1 = 0; p1 < (aplist + i)->ie.essidlen; p1 ++)
 	{
@@ -4013,8 +4015,8 @@ memcpy(&wltxbuffer, &rthtxdata, RTHTX_SIZE);
 memcpy(&wltxnoackbuffer, &rthtxnoackdata, RTHTXNOACK_SIZE);
 memcpy(&epbown[EPB_SIZE], &rthtxdata, RTHTX_SIZE);
 #ifdef NMEAOUT
-memcpy(&gpwpl, &gpwplid, 6);
-memcpy(&gptxt, &gptxtid, 7);
+memcpy(&gpwpl, &gpwplid, strlen(gpwplid));
+memcpy(&gptxt, &gptxtid, strlen(gptxtid));
 #endif
 return;
 }
