@@ -4764,6 +4764,7 @@ if(nmea0183name != NULL)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to open NMEA0183 device\n");
+		goto byebye;
 		}
 	}
 if(gpsdflag == true)
@@ -4772,6 +4773,7 @@ if(gpsdflag == true)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to connect to GPSD\n");
+		goto byebye;
 		}
 	}
 #endif
