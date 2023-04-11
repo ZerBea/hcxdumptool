@@ -134,22 +134,22 @@ Run `ndk-build` - built executables for some architectures will be created insid
 $ ndk-build
 [arm64-v8a] Compile        : hcxdumptool <= hcxdumptool.c
 ...
-70 warnings generated.
+1 warning generated.
 [arm64-v8a] Executable     : hcxdumptool
 [arm64-v8a] Install        : hcxdumptool => libs/arm64-v8a/hcxdumptool
 [armeabi-v7a] Compile thumb  : hcxdumptool <= hcxdumptool.c
 ...
-82 warnings generated.
+13 warnings generated.
 [armeabi-v7a] Executable     : hcxdumptool
 [armeabi-v7a] Install        : hcxdumptool => libs/armeabi-v7a/hcxdumptool
 [x86] Compile        : hcxdumptool <= hcxdumptool.c
 ...
-82 warnings generated.
+13 warnings generated.
 [x86] Executable     : hcxdumptool
 [x86] Install        : hcxdumptool => libs/x86/hcxdumptool
 [x86_64] Compile        : hcxdumptool <= hcxdumptool.c
 ...
-70 warnings generated.
+1 warning generated.
 [x86_64] Executable     : hcxdumptool
 [x86_64] Install        : hcxdumptool => libs/x86_64/hcxdumptool
 ```
