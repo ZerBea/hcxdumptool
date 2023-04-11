@@ -2164,7 +2164,7 @@ if(deauthenticationflag == true)
 	}
 if(associationflag == true)
 	{
-	if((((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist + i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
+	if((((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist + i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequestnoack();
 	}
 if(reassociationflag == true)
 	{
@@ -2317,7 +2317,7 @@ if(deauthenticationflag == true)
 	}
 if(associationflag == true)
 	{
-	if((((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist + i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
+	if((((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist + i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequestnoack();
 	}
 if(proberequestflag == true)
 	{
