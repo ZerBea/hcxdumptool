@@ -39,6 +39,10 @@
 #include "include/radiotap.h"
 #include "include/ieee80211.h"
 #include "include/pcapng.h"
+#ifdef __ANDROID__
+#include <libgen.h>
+#include <unistd.h>
+#endif
 /*===========================================================================*/
 /*
 static void debugprint();
