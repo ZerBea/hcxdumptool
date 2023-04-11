@@ -2805,7 +2805,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -2883,7 +2883,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -2943,7 +2943,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3010,7 +3010,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3113,7 +3113,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3167,7 +3167,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3230,7 +3230,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3286,7 +3286,7 @@ while(1)
 	msglen = read(fd_socket_rt, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return false;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3330,7 +3330,7 @@ while(1)
 	msglen = read(fd_socket_rt, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return false;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3374,7 +3374,7 @@ while(1)
 	msglen = read(fd_socket_rt, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return false;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3428,7 +3428,7 @@ while(1)
 	msglen = read(fd_socket_rt, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
@@ -3496,7 +3496,7 @@ while(1)
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
-	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT (nlh, msglen))
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
 		if(nlh->nlmsg_type == NLMSG_ERROR)
