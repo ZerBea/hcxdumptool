@@ -118,12 +118,41 @@ To install use the following:
 Compile for Android
 --------------
 
-You need:
-* Android NDK installed in your system and in path variable
+Install [Android NDK](https://developer.android.com/ndk/downloads) on your system and add it to `PATH`:
+```
+$ ndk-build --version
+GNU Make 4.3
+Built for x86_64-pc-linux-gnu
+Copyright (C) 1988-2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+```
 
-* This repository cloned with all submodules (`--recursive` flag in `git clone` or `git submodules update` command run)
-
-Just run `ndk-build` - built executables for some architectures should be created inside `libs` directory.
+Run `ndk-build` - built executables for some architectures will be created inside `libs` directory:
+```
+$ ndk-build
+[arm64-v8a] Compile        : hcxdumptool <= hcxdumptool.c
+...
+70 warnings generated.
+[arm64-v8a] Executable     : hcxdumptool
+[arm64-v8a] Install        : hcxdumptool => libs/arm64-v8a/hcxdumptool
+[armeabi-v7a] Compile thumb  : hcxdumptool <= hcxdumptool.c
+...
+82 warnings generated.
+[armeabi-v7a] Executable     : hcxdumptool
+[armeabi-v7a] Install        : hcxdumptool => libs/armeabi-v7a/hcxdumptool
+[x86] Compile        : hcxdumptool <= hcxdumptool.c
+...
+82 warnings generated.
+[x86] Executable     : hcxdumptool
+[x86] Install        : hcxdumptool => libs/x86/hcxdumptool
+[x86_64] Compile        : hcxdumptool <= hcxdumptool.c
+...
+70 warnings generated.
+[x86_64] Executable     : hcxdumptool
+[x86_64] Install        : hcxdumptool => libs/x86_64/hcxdumptool
+```
 Copy it to your phone and enjoy.
 
 
