@@ -1,6 +1,14 @@
+14.04.2023
+==========
+hcxdumptool: added new option to sort status display
+--rds=<digit>                  : sort real time display
+                                  default: sort by time (last seen on top)
+                                  1 = sort by status (last PMKID/EAPOL on top)
+
+
 07.04.2023
 ==========
-removed hcxpioff
+removed obsolete hcxpioff
 refactored hcxdumptool: replaced entire hcxdumptool code by hcxlabtool code
 
 $ hcxdumptool --help
