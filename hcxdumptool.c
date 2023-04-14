@@ -4424,8 +4424,6 @@ fprintf(stdout, "Legend\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
 	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
 	"\n");
-
-
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
