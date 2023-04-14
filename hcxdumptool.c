@@ -4901,6 +4901,7 @@ close_lists();
 if(errorcount > 0) fprintf(stderr, "\n%" PRIu64 " errors during runtime\n", errorcount);
 if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	{
+	fprintf(stdout, "\nexit on sigterm\n");
 	if(exitsigtermflag == EXIT_ACTION_REBOOT)
 		{
 		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
@@ -4912,6 +4913,7 @@ if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	}
 else if((wanteventflag & EXIT_ON_GPIOBUTTON) == EXIT_ON_GPIOBUTTON)
 	{
+	fprintf(stdout, "\nexit on GPIO button\n");
 	if(exitgpiobuttonflag == EXIT_ACTION_REBOOT)
 		{
 		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
@@ -4923,6 +4925,7 @@ else if((wanteventflag & EXIT_ON_GPIOBUTTON) == EXIT_ON_GPIOBUTTON)
 	}
 else if((wanteventflag & EXIT_ON_TOT) == EXIT_ON_TOT)
 	{
+	fprintf(stdout, "\nexit on TOT\n");
 	if(exittotflag == EXIT_ACTION_REBOOT)
 		{
 		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
@@ -4934,6 +4937,7 @@ else if((wanteventflag & EXIT_ON_TOT) == EXIT_ON_TOT)
 	}
 else if((wanteventflag & EXIT_ON_WATCHDOG) == EXIT_ON_WATCHDOG)
 	{
+	fprintf(stdout, "\nexit on watchdog\n");
 	if(exitwatchdogflag == EXIT_ACTION_REBOOT)
 		{
 		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
@@ -4945,6 +4949,7 @@ else if((wanteventflag & EXIT_ON_WATCHDOG) == EXIT_ON_WATCHDOG)
 	}
 else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 	{
+	fprintf(stdout, "\nexit on error\n");
 	if(exiterrorflag == EXIT_ACTION_REBOOT)
 		{
 		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
