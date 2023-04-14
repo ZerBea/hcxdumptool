@@ -80,6 +80,11 @@ static int fd_socket_rx = 0;
 static int fd_socket_tx = 0;
 static int fd_timer1 = 0;
 static int fd_pcapng = 0;
+
+#ifdef STATUSOUT
+static u8 rdsort = 0;
+#endif
+
 #ifdef NMEAOUT
 static int fd_gps = 0;
 static int fd_hcxpos = 0;
@@ -546,6 +551,7 @@ sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last seen on top)         S
 p = strlen(rtb);
 i = 0;
 pa = 0;
+if(rdsort == 1) qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
 for(i = 0; i < 20 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -582,6 +588,7 @@ for(i = 0; i < 20; i++)
 	}
 rtb[p] = 0;
 fprintf(stdout, "%s", rtb);
+if(rdsort > 0) qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 #endif
@@ -4393,7 +4400,12 @@ fprintf(stdout, "long options:\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
 	#endif
-	"--rcascan_passive              : do passive (R)adio (C)hannel (A)ssignment scan\n" 
+	"--rcascan_passive              : do passive (R)adio (C)hannel (A)ssignment scan\n"
+	#ifdef STATUSOUT
+	"--rds=<digit>                  : sort real time display\n"
+	"                                  default: sort by time (last seen on top)\n"
+	"                                  1 = sort by status (last PMKID/EAPOL on top)\n"
+	#endif
 	"--help                         : show this help\n"
 	"--version                      : show version\n"
 	"\n",
@@ -4484,6 +4496,9 @@ static const struct option long_options[] =
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"rcascan_passive",		no_argument,		NULL,	HCX_RCASCAN_PASSIVE},
+	#ifdef STATUSOUT
+	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
+	#endif
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
@@ -4720,6 +4735,12 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_RCASCAN_PASSIVE:
 		rcascanflag = true;
 		break;
+
+		#ifdef STATUSOUT
+		case HCX_RD_SORT:
+		rdsort = strtol(optarg, NULL, 10);
+		break;
+		#endif
 
 		case HCX_HELP:
 		usage(basename(argv[0]));

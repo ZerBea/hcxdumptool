@@ -25,6 +25,7 @@
 #define HCX_NMEA0183_OUT		24
 #define HCX_RCASCAN_PASSIVE		25
 #define HCX_RCASCAN_ACTVE		26
+#define HCX_RD_SORT			27
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'
@@ -181,6 +182,20 @@ if(ai->tsakt < bi->tsakt) return 1;
 else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
+/*---------------------------------------------------------------------------*/
+#ifdef STATUSOUT
+static int sort_aplist_by_status(const void *a, const void *b)
+{
+const aplist_t *ai = (const aplist_t *)a;
+const aplist_t *bi = (const aplist_t *)b;
+
+if(ai->status < bi->status) return 1;
+else if(ai->status > bi->status) return -1;
+if(ai->tsakt < bi->tsakt) return 1;
+else if(ai->tsakt > bi->tsakt) return -1;
+return 0;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
