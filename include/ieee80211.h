@@ -1,10 +1,12 @@
+#define PROTOCOL80211NAME_LEN	11
+
 /*===========================================================================*/
-#define	MAC_SIZE_ACK		(10)
-#define	MAC_SIZE_RTS		(16)
-#define	MAC_SIZE_NORM		(24)
-#define	MAC_SIZE_QOS		(26)
-#define	MAC_SIZE_LONG		(30)
-#define	MAC_SIZE_QOS_LONG	(32)
+#define MAC_SIZE_ACK		(10)
+#define MAC_SIZE_RTS		(16)
+#define MAC_SIZE_NORM		(24)
+#define MAC_SIZE_QOS		(26)
+#define MAC_SIZE_LONG		(30)
+#define MAC_SIZE_QOS_LONG	(32)
 
 #define FCS_LEN 4
 
@@ -366,6 +368,7 @@ typedef struct __attribute__((__packed__))
  ieee80211_qos_t	qos;
 }ieee80211_mac_t;
 /*===========================================================================*/
+static const char *protocol80211 = "IEEE 802.11";
 
 static const u8 zeroed[] =
 {

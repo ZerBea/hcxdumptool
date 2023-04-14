@@ -2690,12 +2690,11 @@ return true;
 static void ioctl_get_wireless_extensions(size_t i)
 {
 struct iwreq pwrq;
-static const char *protocol80211 = "IEEE 802.11";
 
 memset(&pwrq, 0, sizeof(pwrq));
 memcpy(pwrq.ifr_name, (ifpresentlist + i)->name, IF_NAMESIZE);
 if(ioctl(fd_socket_unix, SIOCGIWNAME, &pwrq) < 0) return;
-if(strncmp(protocol80211, pwrq.u.name, 11) == 0) (ifpresentlist + i)->type |= IF_HAS_WEXT;
+if(strncmp(protocol80211, pwrq.u.name, PROTOCOL80211NAME_LEN) == 0) (ifpresentlist + i)->type |= IF_HAS_WEXT;
 return;
 }
 /*===========================================================================*/
