@@ -34,11 +34,11 @@
 #endif
 #include "include/types.h"
 #include "include/hcxdumptool.h"
-#include "include/raspberry.h"
-#include "include/wireless-lite.h"
-#include "include/radiotap.h"
 #include "include/ieee80211.h"
 #include "include/pcapng.h"
+#include "include/radiotap.h"
+#include "include/raspberry.h"
+#include "include/wireless-lite.h"
 #ifdef __ANDROID__
 #include <libgen.h>
 #include <unistd.h>
