@@ -546,8 +546,16 @@ static char *ak;
 static char *ar;
 
 system("clear");
-sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last seen on top)         SCAN-FREQUENCY: %6u\n"
+if (rdsort == 1)
+	{
+	sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
 	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	}
+else
+	{
+	sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last seen on top)         SCAN-FREQUENCY: %6u\n"
+	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	}
 p = strlen(rtb);
 i = 0;
 pa = 0;
