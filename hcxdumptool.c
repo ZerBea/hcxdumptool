@@ -2615,11 +2615,11 @@ while(!wanteventflag)
 			{
 			read(fd_timer1, &timer1count, sizeof(u64));
 			lifetime++;
+			clock_gettime(CLOCK_REALTIME, &tspecakt);
+			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 			#ifdef STATUSOUT
 			show_realtime();
 			#endif
-			clock_gettime(CLOCK_REALTIME, &tspecakt);
-			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 			if((tsakt - tshold) > timehold)
 				{
 				scanlistindex++;
@@ -2700,6 +2700,8 @@ while(!wanteventflag)
 			{
 			read(fd_timer1, &timer1count, sizeof(u64));
 			lifetime++;
+			clock_gettime(CLOCK_REALTIME, &tspecakt);
+			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 			if((lifetime % 5) == 0) show_realtime_rca();
 			scanlistindex++;
 			if(nl_set_frequency() == false) errorcount++;
