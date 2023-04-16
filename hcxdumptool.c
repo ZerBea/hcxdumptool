@@ -2146,7 +2146,6 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	(aplist + i)->tsakt = tsakt;
 	if(((aplist + i)->status & AP_PROBERESPONSE) == 0)
 		{
-		tshold = tsakt;
 		(aplist + i)->status |= AP_PROBERESPONSE;
 		}
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
@@ -2167,7 +2166,6 @@ if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlis
 if((aplist + i)->ie.channel != (scanlist + scanlistindex)->channel) return;
 if(((aplist + i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist + i)->status |= AP_ESSID;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
-tshold = tsakt;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -2245,12 +2243,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
 	(aplist + i)->tsakt = tsakt;
-	if(((aplist + i)->status & AP_BEACON) == 0)
-		{
-		tshold = tsakt;
-		(aplist + i)->status |= AP_BEACON;
-		}
-	if((aplist + i)->status >= AP_EAPOL_M3) return;
+	if(((aplist + i)->status & AP_BEACON) == 0) (aplist + i)->status |= AP_BEACON;
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, beaconlen, beacon->ie);
 	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
 	if((aplist + i)->ie.channel != (scanlist + scanlistindex)->channel) return;
