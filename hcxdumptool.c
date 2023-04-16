@@ -2132,6 +2132,45 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+static inline void process80211proberesponse_rca(void)
+{
+static size_t i;
+static ieee80211_beacon_proberesponse_t *proberesponse;
+static u16 proberesponselen;
+
+proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
+if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	if(((aplist + i)->status & AP_PROBERESPONSE) == 0)
+		{
+		tshold = tsakt;
+		(aplist + i)->status |= AP_PROBERESPONSE;
+		}
+	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
+	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
+	if(((aplist + i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist + i)->status |= AP_ESSID;
+	return;
+	}
+memset((aplist + i), 0, APLIST_SIZE);
+(aplist + i)->tsakt = tsakt;
+(aplist + i)->tshold1 = tsakt;
+(aplist + i)->tsauth = tsfirst;
+(aplist + i)->count = attemptapmax;
+memcpy((aplist + i)->macap, macfrx->addr3, ETH_ALEN);
+memcpy((aplist + i)->macclient, &macbc, ETH_ALEN);
+(aplist + i)->status |= AP_PROBERESPONSE;
+tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
+if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
+if((aplist + i)->ie.channel != (scanlist + scanlistindex)->channel) return;
+if(((aplist + i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist + i)->status |= AP_ESSID;
+qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+tshold = tsakt;
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline void process80211proberesponse(void)
 {
 static size_t i;
@@ -2150,8 +2189,8 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		#ifdef NMEAOUT
 		if(fd_gps > 0) writegpwpl(i);
 		#endif
-		(aplist + i)->status |= AP_PROBERESPONSE;
 		tshold = tsakt;
+		(aplist + i)->status |= AP_PROBERESPONSE;
 		}
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
@@ -2442,7 +2481,7 @@ packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_rca();
-//	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse_rca();
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse_rca();
 	}
 return;
 }
