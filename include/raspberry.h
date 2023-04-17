@@ -1,5 +1,6 @@
 /*===========================================================================*/
 #define RPINAME_SIZE	12
+#define RPIGPIOBASE	0
 #define RASPBERRY_INFO	2048
 #define GPIO_LED_DELAY	100000000L
 

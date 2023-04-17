@@ -4267,7 +4267,7 @@ if((fd_devinfo = open("/dev/gpiomem", O_RDWR | O_SYNC)) < 0)
 	perror("failed to get GPIO memory");
 	return false;
 	}
-gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, 0);
+gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, RPIGPIOBASE);
 close(fd_devinfo);
 if(gpio_map == MAP_FAILED)
 	{
