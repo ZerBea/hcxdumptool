@@ -4223,16 +4223,51 @@ return;
 /*===========================================================================*/
 /*===========================================================================*/
 /* RASPBERRY PI */
-static bool init_rpigpio(unsigned int gpioperi)
+static bool init_rpi(void)
 {
+static FILE *modinfo;
+static FILE *procinfo;
 static int fd_devinfo;
+static int len = 0;
+static bool rpi = false;
+static char linein[RASPBERRY_INFO] = { 0 };
 
-if((fd_devinfo = open("/dev/mem", O_RDWR | O_SYNC)) < 0)
+if((modinfo = fopen("/proc/device-tree/model", "r")) == NULL)
 	{
-	fprintf(stderr, "failed to get device memory\n");
+	perror("failed to get model information");
 	return false;
 	}
-gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, gpioperi);
+if((len = fgetline(modinfo, RASPBERRY_INFO, linein)) > RPINAME_SIZE)
+	{
+	if(memcmp(&rpiname, &linein, RPINAME_SIZE) == 0) rpi = true;
+	}
+fclose(modinfo);
+if(rpi == false)
+	{
+	perror("failed to get model name");
+	return false;
+	}
+if((procinfo = fopen("/proc/cpuinfo", "r")) == NULL)
+	{
+	perror("failed to get cpuinfo");
+	return false;
+	}
+while(1)
+	{
+	if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
+	if(len < 18) continue;
+	if(strstr(linein, "Serial") != NULL)
+		{
+		if(len > 8) seed += strtoul(&linein[len - 6], NULL, 16);
+		}
+	}
+fclose(procinfo);
+if((fd_devinfo = open("/dev/gpiomem", O_RDWR | O_SYNC)) < 0)
+	{
+	perror("failed to get GPIO memory");
+	return false;
+	}
+gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, 0);
 close(fd_devinfo);
 if(gpio_map == MAP_FAILED)
 	{
@@ -4240,73 +4275,6 @@ if(gpio_map == MAP_FAILED)
 	return false;
 	}
 gpio = (volatile unsigned *)gpio_map;
-return true;
-}
-/*---------------------------------------------------------------------------*/
-static unsigned int get_rpigpiobasemem(void)
-{
-static FILE *procinfo;
-static int len = 0;
-static bool rpi = false;
-static unsigned int gpioperibase = 0;
-static char linein[RASPBERRY_INFO] = { 0 };
-
-if((procinfo = fopen("/proc/cpuinfo", "r")) == NULL)
-	{
-	perror("failed to retrieve cpuinfo");
-	return gpioperibase;
-	}
-while(1)
-	{
-	if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
-	if(len < 18) continue;
-	if(strstr(linein, "Raspberry Pi")) rpi = true;
-	if(strstr(linein, "Serial") != NULL)
-		{
-		if(len > 8) seed += strtoul(&linein[len - 6], NULL, 16);
-		}
-	}
-fclose(procinfo);
-if(rpi == true)
-	{
-	if((procinfo = fopen("/proc/iomem", "r")) == NULL)
-		{
-		perror("failed to retrieve iomem");
-		return gpioperibase;
-		}
-	while(1)
-		{
-		if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
-		if(strstr(linein, ".gpio") != NULL)
-			{
-			if(linein[8] == '-')
-				{
-				linein[8] = 0;
-				gpioperibase = strtoul(linein, NULL, 16);
-				}
-			break;
-			}
-		}
-	fclose(procinfo);
-	}
-return gpioperibase;
-}
-/*---------------------------------------------------------------------------*/
-static bool init_rpi(void)
-{
-static unsigned int gpiobasemem;
-
-gpiobasemem = get_rpigpiobasemem();
-if(gpiobasemem == 0)
-	{
-	fprintf(stderr, "failed to locate GPIO\n");
-	return false;
-	}
-if(init_rpigpio(gpiobasemem) == false)
-	{
-	fprintf(stderr, "failed to init GPIO\n");
-	return false;
-	}
 if(gpiostatusled > 0)
 	{
 	INP_GPIO(gpiostatusled);

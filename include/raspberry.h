@@ -1,4 +1,5 @@
 /*===========================================================================*/
+#define RPINAME_SIZE	12
 #define RASPBERRY_INFO	2048
 #define GPIO_LED_DELAY	100000000L
 
@@ -12,4 +13,5 @@
 
 static void *gpio_map;
 static volatile unsigned *gpio;
+static const char rpiname[] = "Raspberry Pi";
 /*===========================================================================*/
