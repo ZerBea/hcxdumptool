@@ -4024,7 +4024,7 @@ tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 tshold = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
 
-seed += tspecakt.tv_nsec & 0x7ffffffffff;
+seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);
 
 ouiaprg = (vendoraprg[rand() % ((VENDORAPRG_SIZE / sizeof(int)))]) &0xffffff;
