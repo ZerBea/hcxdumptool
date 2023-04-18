@@ -506,7 +506,7 @@ static char *pmok = "+";
 static char *ar;
 static char *ak;
 
-system("clear");
+if(system("clear") != 0) errorcount++;
 sprintf(&rtb[0], "  CHA  FREQ    LAST   R A    MAC-AP    ESSID                 SCAN-FREQUENCY: %6u\n"
 	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
@@ -545,7 +545,7 @@ static char *ms;
 static char *ak;
 static char *ar;
 
-system("clear");
+if(system("clear") != 0) errorcount++;
 if (rdsort == 1)
 	{
 	sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
@@ -2613,7 +2613,7 @@ while(!wanteventflag)
 		if(events[i].data.fd == fd_socket_rx) process_packet();
 		else if(events[i].data.fd == fd_timer1)
 			{
-			read(fd_timer1, &timer1count, sizeof(u64));
+			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
 			clock_gettime(CLOCK_REALTIME, &tspecakt);
 			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
@@ -2698,7 +2698,7 @@ while(!wanteventflag)
 		if(events[i].data.fd == fd_socket_rx) process_packet_rca();
 		else if(events[i].data.fd == fd_timer1)
 			{
-			read(fd_timer1, &timer1count, sizeof(u64));
+			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
 			clock_gettime(CLOCK_REALTIME, &tspecakt);
 			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
