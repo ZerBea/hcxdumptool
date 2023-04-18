@@ -158,7 +158,7 @@ Requirements
 * detailed knowledge of Linux
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
 * operatingsystem: Linux distribution, Kernel >= 5.15
-* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite on Raspberry Pi ARMv6 systems 
+* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Debian or Raspbian OS Lite on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
@@ -167,6 +167,8 @@ Requirements
 * to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
 If you decide to compile latest git head, make sure that your distribution is updated to latest version.
+
+Important notice: running Debian on arm it is mandatory to add "iomem=relaxed" to cmdline.txt to allow io memory mapping
 
 
 Adapters

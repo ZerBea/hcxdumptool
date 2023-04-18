@@ -4229,46 +4229,69 @@ static FILE *modinfo;
 static FILE *procinfo;
 static int fd_devinfo;
 static int len = 0;
-static bool rpi = false;
+static unsigned int gpioperibase = 0;
 static char linein[RASPBERRY_INFO] = { 0 };
 
+gpio_map = MAP_FAILED;
 if((modinfo = fopen("/proc/device-tree/model", "r")) == NULL)
 	{
 	perror("failed to get model information");
 	return false;
 	}
-if((len = fgetline(modinfo, RASPBERRY_INFO, linein)) > RPINAME_SIZE)
-	{
-	if(memcmp(&rpiname, &linein, RPINAME_SIZE) == 0) rpi = true;
-	}
+len = fgetline(modinfo, RASPBERRY_INFO, linein);
 fclose(modinfo);
-if(rpi == false)
+if(len < RPINAME_SIZE) return false;
+if(memcmp(&rpiname, &linein, RPINAME_SIZE) != 0) return false;
+
+if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 	{
-	perror("failed to get model name");
-	return false;
-	}
-if((procinfo = fopen("/proc/cpuinfo", "r")) == NULL)
-	{
-	perror("failed to get cpuinfo");
-	return false;
-	}
-while(1)
-	{
-	if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
-	if(len < 18) continue;
-	if(strstr(linein, "Serial") != NULL)
+	while(1)
 		{
-		if(len > 8) seed += strtoul(&linein[len - 6], NULL, 16);
+		if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
+		if(len > 8)
+			{
+			if(strstr(linein, "Serial") != NULL)
+				{
+				if(len > 8) seed += strtoul(&linein[len - 6], NULL, 16);
+				}
+			}
+		}
+	fclose(procinfo);
+	}
+
+if((procinfo = fopen("/proc/iomem", "r")) != NULL)
+	{
+	while(1)
+		{
+		if((len = fgetline(procinfo, RASPBERRY_INFO, linein)) == -1) break;
+		if(strstr(linein, ".gpio") != NULL)
+			{
+			if(linein[8] != '-') break;
+				{
+				linein[8] = 0;
+				gpioperibase = strtoul(linein, NULL, 16);
+				break;
+				}
+			}
+		}
+	fclose(procinfo);
+	}
+if(gpioperibase != 0)
+	{
+	if((fd_devinfo = open("/dev/mem", O_RDWR | O_SYNC)) > 0)
+		{
+		gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, gpioperibase);
+		close(fd_devinfo);
 		}
 	}
-fclose(procinfo);
-if((fd_devinfo = open("/dev/gpiomem", O_RDWR | O_SYNC)) < 0)
+else
 	{
-	perror("failed to get GPIO memory");
-	return false;
+	if((fd_devinfo = open("/dev/gpiomem", O_RDWR | O_SYNC)) > 0)
+		{
+		gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, gpioperibase);
+		close(fd_devinfo);
+		}
 	}
-gpio_map = mmap(NULL, RPI_BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd_devinfo, RPIGPIOBASE);
-close(fd_devinfo);
 if(gpio_map == MAP_FAILED)
 	{
 	fprintf(stderr, "failed to map GPIO memory\n");
