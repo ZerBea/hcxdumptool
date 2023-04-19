@@ -852,7 +852,7 @@ static ssize_t shblen;
 static section_header_block_t *shbhdr;
 static total_length_t *totallength;
 static struct utsname unameData;
-static char sysinfo[256];
+static char sysinfo[SHB_SYSINFO_LEN];
 static u8 shb[PCAPNG_BLOCK_SIZE];
 
 memset(&shb, 0, PCAPNG_BLOCK_SIZE);
@@ -866,9 +866,9 @@ shbhdr->section_length = -1;
 if(uname(&unameData) == 0)
 	{
 	shblen += addoption(shb +shblen, SHB_HARDWARE, strlen(unameData.machine), unameData.machine);
-	sprintf(sysinfo, "%s %s", unameData.sysname, unameData.release);
+	snprintf(sysinfo, SHB_SYSINFO_LEN, "%s %s", unameData.sysname, unameData.release);
 	shblen += addoption(shb +shblen, SHB_OS, strlen(sysinfo), sysinfo);
-	sprintf(sysinfo, "hcxdumptool %s", VERSION_TAG);
+	snprintf(sysinfo, SHB_SYSINFO_LEN, "hcxdumptool %s", VERSION_TAG);
 	shblen += addoption(shb +shblen, SHB_USER_APPL, strlen(sysinfo), sysinfo);
 	}
 shblen += addcustomoption(shb +shblen);
