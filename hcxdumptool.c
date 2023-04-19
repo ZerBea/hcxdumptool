@@ -519,9 +519,8 @@ for(i = 0; i < 40 ; i++)
 	else ar = pmdef;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
 	else ak = pmdef;
-	tvlast = (aplist + i)->tsakt / 1000000000;
-	strftime(timestring, 32, "%H:%M:%S", localtime(&tvlast));
-
+	tvlast = (aplist + i)->tsakt / 1000000000ULL;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
 	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
 			(aplist + i)->ie.channel, (aplist + i)->count, timestring, ar, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
@@ -539,6 +538,7 @@ static inline void show_realtime(void)
 static size_t i;
 static size_t p;
 static size_t pa;
+static time_t tvlast;
 static char *pmdef = " ";
 static char *pmok = "+";
 static char *ps;
@@ -547,20 +547,22 @@ static char *ak;
 static char *ar;
 
 if(system("clear") != 0) errorcount++;
-if (rdsort == 1)
+
+if(rdsort == 0)
 	{
-	sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
-	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+	sprintf(&rtb[0], "  CHA    LAST   R P M A    MAC-AP    ESSID (last seen on top)         SCAN-FREQUENCY: %6u\n"
+	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 else
 	{
-	sprintf(&rtb[0], "  CHA  R P M A    MAC-AP    ESSID (last seen on top)         SCAN-FREQUENCY: %6u\n"
-	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
+	sprintf(&rtb[0], "  CHA    LAST   R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
+	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 p = strlen(rtb);
 i = 0;
 pa = 0;
-if(rdsort == 1) qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
 for(i = 0; i < 20 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -572,24 +574,28 @@ for(i = 0; i < 20 ; i++)
 	else ak = pmdef;
 	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
 	else ar = pmdef;
-	sprintf(&rtb[p], " [%3d] %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, ar, ps, ms, ak,
+	tvlast = (aplist + i)->tsakt / 1000000000ULL;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
+	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
+			(aplist + i)->ie.channel, timestring, ar, ps, ms, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	p = strlen(rtb);
 	pa++;
 	}
 for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
-sprintf(&rtb[p], "  M2R    MAC-AP     MAC-CLIENT  ESSID (last seen on top)\n"
-	"------------------------------------------------------------------------------------\n");
+sprintf(&rtb[p], "   LAST   M2R    MAC-AP     MAC-CLIENT  ESSID (last seen on top)\n"
+	"---------------------------------------------------------------------------------------------\n");
 p = strlen(rtb);
 for(i = 0; i < 20; i++)
 	{
 	if((clientlist + i)->tsakt == 0) break;
 	if(((clientlist + i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) ms = pmok;
 	else ms = pmdef;
-	sprintf(&rtb[p], "   %s  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
-			ms,
+	tvlast = (clientlist + i)->tsakt / 1000000000ULL;
+	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
+	sprintf(&rtb[p], " %s  %s  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
+			timestring, ms,
 			(clientlist + i)->macap[0], (clientlist + i)->macap[1], (clientlist + i)->macap[2], (clientlist + i)->macap[3], (clientlist + i)->macap[4], (clientlist + i)->macap[5],
 			(clientlist + i)->macclient[0], (clientlist + i)->macclient[1], (clientlist + i)->macclient[2], (clientlist + i)->macclient[3], (clientlist + i)->macclient[4], (clientlist + i)->macclient[5],
 			(clientlist + i)->ie.essidlen, (clientlist + i)->ie.essid);
@@ -1699,6 +1705,7 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 							{
 							if(memcmp((aplist + i)->macap, authseqakt.macap, ETH_ALEN) == 0)
 								{
+								(aplist + i)->tsakt = tsakt;
 								authseqakt.status = 0;
 								(aplist + i)->status |= AP_EAPOL_M3;
 								return;
@@ -1793,6 +1800,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		{
 		if(((aplist + i)->status & AP_PMKID) == AP_PMKID) return;
 		(aplist + i)->status |= authseqakt.status;
+		(aplist + i)->tsakt = tsakt;
 		return;
 		}
 	}
@@ -2016,6 +2024,7 @@ if(auth->algorithm == OPEN_SYSTEM)
 				{
 				if(memcmp((aplist + i)->macap, macfrx->addr2, ETH_ALEN) == 0)
 					{
+					(aplist + i)->tsakt = tsakt;
 					(aplist + i)->status |= AP_IN_RANGE;
 					if((tsakt - (aplist + i)->tsauth) > TIMEAUTHWAIT)
 						{
@@ -2069,7 +2078,7 @@ if(memcmp(&macaprg, macfrx->addr1, 3) != 0)
 	for(i = 0; i < MACLIST_MAX - 1; i++)
 		{
 		if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
-		(aplist + i)->tsakt = tsakt;
+		(maclist + i)->tsakt = tsakt;
 		return;
 		}
 	(maclist + i)->tsakt = tsakt;
