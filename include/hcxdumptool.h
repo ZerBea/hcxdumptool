@@ -23,9 +23,8 @@
 #define HCX_NMEA0183			22
 #define HCX_GPSD			23
 #define HCX_NMEA0183_OUT		24
-#define HCX_RCASCAN_PASSIVE		25
-#define HCX_RCASCAN_ACTVE		26
-#define HCX_RD_SORT			27
+#define HCX_RCASCAN			25
+#define HCX_RD_SORT			26
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'

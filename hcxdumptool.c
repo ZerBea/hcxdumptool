@@ -2670,7 +2670,7 @@ return true;
 }
 /*===========================================================================*/
 /* RCA SCAN LOOP */
-static bool nl_scanloop_rca(void)
+static bool nl_scanloop_rca(char *rcatypeflag)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -2715,6 +2715,7 @@ while(!wanteventflag)
 			if((lifetime % 5) == 0) show_realtime_rca();
 			scanlistindex++;
 			if(nl_set_frequency() == false) errorcount++;
+			if(rcatypeflag[0] == 'a') send_80211_proberequest_undirected();
 			if((lifetime % 10) == 0)
 				{
 				if(gpiostatusled > 0)
@@ -4443,7 +4444,10 @@ fprintf(stdout, "long options:\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
 	#endif
-	"--rcascan_passive              : do passive (R)adio (C)hannel (A)ssignment scan\n"
+	"--rcascan=<character>          : do (R)adio (C)hannel (A)ssignment scan\n"
+	"                                  default = passive scan\n"
+	"                                  a = active scan\n"
+	"                                  p = passive scan\n"
 	#ifdef STATUSOUT
 	"--rds=<digit>                  : sort real time display\n"
 	"                                  default: sort by time (last seen on top)\n"
@@ -4492,7 +4496,7 @@ static bool monitormodeflag = false;
 static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
-static bool rcascanflag = false;
+static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
@@ -4536,7 +4540,7 @@ static const struct option long_options[] =
 	{"onerror",			required_argument,	NULL,	HCX_ON_ERROR},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
-	{"rcascan_passive",		no_argument,		NULL,	HCX_RCASCAN_PASSIVE},
+	{"rcascan",			required_argument,	NULL,	HCX_RCASCAN},
 	#ifdef STATUSOUT
 	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
 	#endif
@@ -4773,8 +4777,13 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 		#endif
 
-		case HCX_RCASCAN_PASSIVE:
-		rcascanflag = true;
+		case HCX_RCASCAN:
+		rcascanflag = optarg;
+		if((rcascanflag[0] != 'a') && (rcascanflag[0] != 'p'))
+			{
+			fprintf(stderr, "rcascan: only (a)active or (p) passive allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		#ifdef STATUSOUT
@@ -4891,7 +4900,7 @@ if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistn
 	goto byebye;
 	}
 if(essidlistname != NULL) read_essidlist(essidlistname);
-if(rcascanflag == false)
+if(rcascanflag == NULL)
 	{
 	if(open_pcapng(pcapngoutname) == false)
 		{
@@ -4912,7 +4921,7 @@ if(open_socket_tx() == false)
 	fprintf(stderr, "failed to open transmit socket\n");
 	goto byebye;
 	}
-if(rcascanflag == false)
+if(rcascanflag == NULL)
 	{
 	if(set_timer() == false)
 		{
@@ -4939,7 +4948,7 @@ if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running
 fprintf(stdout, "Initialize main scan loop...\e[?25l");
 nanosleep(&tspecifo, &tspeciforem);
 
-if(rcascanflag == false)
+if(rcascanflag == NULL)
 	{
 	if(nl_scanloop() == false)
 		{
@@ -4949,7 +4958,7 @@ if(rcascanflag == false)
 	}
 else
 	{
-	if(nl_scanloop_rca() == false)
+	if(nl_scanloop_rca(rcascanflag) == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize rca scan loop\n");

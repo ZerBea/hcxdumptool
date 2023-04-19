@@ -1,3 +1,12 @@
+19.04.2023
+==========
+hcxdumptool: changed rcascan
+--rcascan=<character>          : do (R)adio (C)hannel (A)ssignment scan
+                                  default = passive scan
+                                  a = active scan
+                                  p = passive scan
+
+
 14.04.2023
 ==========
 hcxdumptool: added new option to sort status display
