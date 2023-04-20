@@ -356,7 +356,8 @@ static u8 macclientrg[ETH_ALEN +2] = { 0 };
 static u8 anoncerg[32] = { 0 };
 static u8 snoncerg[32] = { 0 };
 static char weakcandidate[PSK_MAX];
-static char timestring[16];
+static char timestring1[TIMESTRING_LEN];
+static char timestring2[TIMESTRING_LEN];
 
 static char country[3];
 
@@ -501,28 +502,29 @@ static inline void show_realtime_rca(void)
 {
 static size_t i;
 static size_t p;
-static time_t tvlast;
+static time_t tvlastb;
+static time_t tvlastp;
 static char *pmdef = " ";
 static char *pmok = "+";
-static char *ar;
 static char *ak;
 
 if(system("clear") != 0) errorcount++;
-sprintf(&rtb[0], "  CHA  FREQ   BEACON  R A    MAC-AP    ESSID                 SCAN-FREQUENCY: %6u\n"
-	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE A    MAC-AP    ESSID                   SCAN-FREQUENCY: %6u\n"
+	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
 for(i = 0; i < 40 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
-	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
-	else ar = pmdef;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
 	else ak = pmdef;
-	tvlast = (aplist + i)->tsakt / 1000000000ULL;
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
+	tvlastb = (aplist + i)->tsakt / 1000000000ULL;
+	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastb));
+	tvlastp = (aplist + i)->tsauth / 1000000000ULL;
+	strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
 	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, (aplist + i)->count, timestring, ar, ak,
+			(aplist + i)->ie.channel, (aplist + i)->count, timestring1, timestring2, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	p = strlen(rtb);
@@ -575,9 +577,9 @@ for(i = 0; i < 20 ; i++)
 	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
 	else ar = pmdef;
 	tvlast = (aplist + i)->tsakt / 1000000000ULL;
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
+	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
 	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, timestring, ar, ps, ms, ak,
+			(aplist + i)->ie.channel, timestring1, ar, ps, ms, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	p = strlen(rtb);
@@ -593,9 +595,9 @@ for(i = 0; i < 20; i++)
 	if(((clientlist + i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) ms = pmok;
 	else ms = pmdef;
 	tvlast = (clientlist + i)->tsakt / 1000000000ULL;
-	strftime(timestring, 16, "%H:%M:%S", localtime(&tvlast));
+	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
 	sprintf(&rtb[p], " %s  %s  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
-			timestring, ms,
+			timestring1, ms,
 			(clientlist + i)->macap[0], (clientlist + i)->macap[1], (clientlist + i)->macap[2], (clientlist + i)->macap[3], (clientlist + i)->macap[4], (clientlist + i)->macap[5],
 			(clientlist + i)->macclient[0], (clientlist + i)->macclient[1], (clientlist + i)->macclient[2], (clientlist + i)->macclient[3], (clientlist + i)->macclient[4], (clientlist + i)->macclient[5],
 			(clientlist + i)->ie.essidlen, (clientlist + i)->ie.essid);
@@ -953,10 +955,10 @@ static char pcapngname[PATH_MAX];
 if(pcapngoutname == NULL)
 	{
 	c = 0;
-	snprintf(pcapngname, PATH_MAX, "%s-%s.pcapng", timestring, ifaktname);
+	snprintf(pcapngname, PATH_MAX, "%s-%s.pcapng", timestring1, ifaktname);
 	while(stat(pcapngname, &statinfo) == 0)
 		{
-		snprintf(pcapngname, PATH_MAX, "%s-%s-%02d.pcapng", timestring, ifaktname, c);
+		snprintf(pcapngname, PATH_MAX, "%s-%s-%02d.pcapng", timestring1, ifaktname, c);
 		c++;
 		}
 	pcapngfilename = pcapngname;
@@ -2153,7 +2155,7 @@ if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IE
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
-	(aplist + i)->tsakt = tsakt;
+	if(memcmp(&macclientrg, macfrx->addr1, 3) == 0) (aplist + i)->tsauth = tsakt;
 	if(((aplist + i)->status & AP_PROBERESPONSE) == 0)
 		{
 		(aplist + i)->status |= AP_PROBERESPONSE;
@@ -3844,10 +3846,10 @@ static char hcxposname[PATH_MAX];
 if(hcxposoutname == NULL)
 	{
 	c = 0;
-	snprintf(hcxposname, PATH_MAX, "%s.nmea", timestring);
+	snprintf(hcxposname, PATH_MAX, "%s.nmea", timestring1);
 	while(stat(hcxposname, &statinfo) == 0)
 		{
-		snprintf(hcxposname, PATH_MAX, "%s-%02d.nmea", timestring, c);
+		snprintf(hcxposname, PATH_MAX, "%s-%02d.nmea", timestring1, c);
 		c++;
 		}
 	hcxposfilename = hcxposname;
@@ -4033,7 +4035,7 @@ nanosleep(&waitfordevice, NULL);
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 tshold = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
+strftime(timestring1, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
 
 seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);

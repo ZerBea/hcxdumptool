@@ -94,6 +94,8 @@
 #define PCAPNG_SNAPLEN		0xffff
 #define RTD_LEN			9128
 
+#define TIMESTRING_LEN		128
+
 #define WLTXBUFFER		256
 
 #define NMEA_SIZE		9128
