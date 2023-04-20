@@ -1,0 +1,40 @@
+Lessons learned (to be continued)
+--------------
+
+a beautiful status output make the attack tool slow and sluggish
+
+too many features make an attack slow and sluggish
+
+response time behavior becomes very bad on big ringbuffers
+
+transmitting too many packets makes a channel busy
+
+a Raspberry Pi is not able to handle more than one interface at the same time
+
+multiple interfaces interfere with each other
+
+pselect doesn't like to be interrupted by another timer
+
+epoll is a better solution than pselect
+
+timerfd in combination with epoll is easier to handle than comparing timestamps
+
+active monitor require to set virtual MAC on interface - that is too slow
+
+setting a short preamble in radiotap header is ignored on tx
+
+entire AUTHENTICATION process should be done using a low data rate of 1.0 Mb/s and a low bandwidth
+
+there are (much) better ways than injecting stupid DEAUTHENTICATION frames to disconnect a CLIENT
+
+the most useful EAPOL frame is an EAPOL M2 frame(!)
+
+NL80211 provide a lot more features than WIRLESS EXTENSIONS
+
+NL80211 / RTNETLINK protocol can be used without libnl dependency
+
+sharing the interface (e.g. iw phy phy1 interface add mon0 type monitor) is counterproductive
+
+TX power is (completely) meaningless - RX sensitivity and a good antenna is all
+
+it is a thousand times faster using a Berkeley Packet Filter (BPF) than walking through endless filter lists 
