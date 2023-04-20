@@ -1,40 +1,44 @@
 #!/bin/bash
 
 lsblk
-printf "\nchoose device: "
+printf "\nplease select SD-card: "
 read DEVICE
 
-printf "\033[0;31m o p n p 1 <ret> +256M t c n p 2 <ret> <ret> w \033[1;0m\n"
-sudo fdisk /dev/$DEVICE
+sudo parted /dev/$DEVICE --script -- mklabel msdos
+sudo parted /dev/$DEVICE --script -- mkpart primary fat32 1 512
+sudo parted /dev/$DEVICE --script -- mkpart primary 512 100%
+sudo parted /dev/$DEVICE --script -- set 1 boot on
+sudo mkfs.vfat /dev/"$DEVICE"1
+sudo mlabel -i /dev/"$DEVICE"1 -s ::RASPIFIRM
+sudo mkfs.ext4 -F /dev/"$DEVICE"2
+sudo e2label /dev/"$DEVICE"2 RASPIROOT
 
-echo "erstelle Filesystem boot"
-sudo mkfs.fat -F32 /dev/"$DEVICE"1
-echo "erstelle Filesystem root"
-sudo mkfs.ext4 /dev/"$DEVICE"2
-
-echo "mount boot"
-if [ ! -d "boot" ]
+echo "mount RASPIFIRM"
+if [ ! -d "RASPIFIRM" ]
 then 
-	mkdir boot
+	mkdir RASPIFIRM
 fi
-sudo mount /dev/"$DEVICE"1 boot
-cd boot
-sudo tar -zxvf ../rpiboot.tgz
+sudo mount /dev/"$DEVICE"1 RASPIFIRM
+cd RASPIFIRM
+sudo tar -zxvf ../RASPIFIRM.tgz
 sync
 
 cd ..
-echo "mount root"
-if [ ! -d "root" ]
+echo "mount RASPIROOT"
+if [ ! -d "RASPIROOT" ]
 then 
-	mkdir root
+	mkdir RASPIROOT
 fi
-sudo mount /dev/"$DEVICE"2 root
-cd root
-sudo tar -zxvf ../rpiroot.tgz
+sudo mount /dev/"$DEVICE"2 RASPIROOT
+cd RASPIROOT
+sudo tar -zxvf ../RASPIROOT.tgz
 sync
 
 cd ..
-sudo umount boot
-sudo umount root
-rm -r boot
-rm -r root
+sudo umount RASPIFIRM
+sudo umount RASPIROOT
+rm -r RASPIFIRM
+rm -r RASPIROOT
+
+sudo fsck /dev/"$DEVICE"1
+sudo fsck /dev/"$DEVICE"2
