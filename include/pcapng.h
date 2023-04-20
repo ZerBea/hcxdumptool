@@ -9,6 +9,8 @@
 #define PCAPNG_MAJOR_VER	1
 #define PCAPNG_MINOR_VER	0
 #define PCAPNG_BLOCK_SIZE	2048
+
+#define SHB_SYSINFO_LEN		256
 /*===========================================================================*/
 /* Header of all pcapng options */
 typedef struct __attribute__((__packed__))
