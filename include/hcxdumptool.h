@@ -160,7 +160,9 @@ typedef struct __attribute__((__packed__))
  u8	macap[6];
  u8	macclient[6];
  u8	status;
+#define AP_IN_RANGE_TOT		120000000000ULL
 #define AP_IN_RANGE		0b00000001
+#define AP_IN_RANGE_MASK	0b11111110
 #define AP_ESSID		0b00000010
 #define AP_BEACON		0b00000100
 #define AP_PROBERESPONSE	0b00001000
@@ -169,6 +171,7 @@ typedef struct __attribute__((__packed__))
 #define AP_EAPOL_M3		0b01000000
 #define AP_PMKID		0b10000000
 #define AP_PMKID_EAPOL		0b11000000
+
  infoelement_t	ie;
 }aplist_t;
 #define APLIST_SIZE (sizeof(aplist_t))

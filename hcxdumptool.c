@@ -582,6 +582,7 @@ for(i = 0; i < 20 ; i++)
 			(aplist + i)->ie.channel, timestring1, ar, ps, ms, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
+	if(tsakt - (aplist + i)->tsakt > AP_IN_RANGE_TOT) (aplist +i)->status = ((aplist +i)->status & AP_IN_RANGE_MASK);
 	p = strlen(rtb);
 	pa++;
 	}
