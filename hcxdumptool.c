@@ -508,7 +508,7 @@ static char *ar;
 static char *ak;
 
 if(system("clear") != 0) errorcount++;
-sprintf(&rtb[0], "  CHA  FREQ    LAST   R A    MAC-AP    ESSID                 SCAN-FREQUENCY: %6u\n"
+sprintf(&rtb[0], "  CHA  FREQ   BEACON  R A    MAC-AP    ESSID                 SCAN-FREQUENCY: %6u\n"
 	"------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
