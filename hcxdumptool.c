@@ -3761,7 +3761,7 @@ static int socket_rx_flags;
 static int prioval;
 static socklen_t priolen;
 
-if((fd_socket_tx = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) return false;
+if((fd_socket_tx = socket(PF_PACKET, SOCK_RAW | SOCK_CLOEXEC, htons(ETH_P_ALL))) < 0) return false;
 memset(&mrq, 0, sizeof(mrq));
 mrq.mr_ifindex = ifaktindex;
 mrq.mr_type = PACKET_MR_PROMISC;
@@ -3801,7 +3801,7 @@ if(bpfname != NULL)
 		return false;
 		}
 	}
-if((fd_socket_rx = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) return false;
+if((fd_socket_rx = socket(PF_PACKET, SOCK_RAW | SOCK_CLOEXEC, htons(ETH_P_ALL))) < 0) return false;
 memset(&mrq, 0, sizeof(mrq));
 mrq.mr_ifindex = ifaktindex;
 mrq.mr_type = PACKET_MR_PROMISC;
@@ -3928,7 +3928,7 @@ return;
 /*---------------------------------------------------------------------------*/
 static bool open_socket_unix(void)
 {
-if((fd_socket_unix = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0) return false;
+if((fd_socket_unix = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0)) < 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -3938,7 +3938,7 @@ static struct sockaddr_nl saddr;
 static int nltxbuffsize = NLTX_SIZE;
 static int nlrxbuffsize = NLRX_SIZE;
 
-if((fd_socket_rt = socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC, NETLINK_ROUTE)) < 0) return false;
+if((fd_socket_rt = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, NETLINK_ROUTE)) < 0) return false;
 if(setsockopt(fd_socket_rt, SOL_SOCKET, SO_SNDBUF, &nltxbuffsize, sizeof(nltxbuffsize)) < 0) return false;
 if(setsockopt(fd_socket_rt, SOL_SOCKET, SO_RCVBUF, &nlrxbuffsize, sizeof(nlrxbuffsize)) < 0) return false;
 memset(&saddr, 0, sizeof(saddr));
