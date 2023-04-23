@@ -2075,28 +2075,16 @@ static essid_t essid;
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-if(memcmp(&macaprg, macfrx->addr1, 3) != 0)
+send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
+for(i = 0; i < MACLIST_MAX - 1; i++)
 	{
-	send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
-	for(i = 0; i < MACLIST_MAX - 1; i++)
-		{
-		if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
-		(maclist + i)->tsakt = tsakt;
-		return;
-		}
+	if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
 	(maclist + i)->tsakt = tsakt;
-	memcpy((maclist + i)->mac, macfrx->addr1, ETH_ALEN);
-	qsort(maclist, i + 1, MACLIST_SIZE, sort_maclist_by_tsakt);
-	writeepb();
 	return;
 	}
-for(i = 0; i < APRGLIST_MAX - 1; i++)
-	{
-	if(memcmp(&macaprg, macfrx->addr1, ETH_ALEN) != 0) continue;
-	(aprglist + i)->tsakt = tsakt;
-	send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
-	return;
-	}
+(maclist + i)->tsakt = tsakt;
+memcpy((maclist + i)->mac, macfrx->addr1, ETH_ALEN);
+qsort(maclist, i + 1, MACLIST_SIZE, sort_maclist_by_tsakt);
 writeepb();
 return;
 }
