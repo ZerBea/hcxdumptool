@@ -190,9 +190,11 @@ No support for a third party driver which is not part of the official kernel (ht
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
-Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
+Not recommended WiFi chipsets:
 
 * Broadcom (neither monitor mode nor frame injection)
+
+* Qualcomm (no frame injection)
 
 more information about possible issues on https://bugzilla.kernel.org
 
