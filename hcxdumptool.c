@@ -6,6 +6,7 @@
 #endif
 #include <getopt.h>
 #include <inttypes.h>
+#include <libgen.h>
 #include <linux/filter.h>
 #include <linux/genetlink.h>
 #include <linux/if_packet.h>
@@ -21,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/cdefs.h>
 #include <sys/epoll.h>
 #include <sys/file.h>
@@ -40,10 +42,6 @@
 #include "include/radiotap.h"
 #include "include/raspberry.h"
 #include "include/wireless-lite.h"
-#ifdef __ANDROID__
-#include <libgen.h>
-#include <unistd.h>
-#endif
 /*===========================================================================*/
 /*
 static void debugprint();
