@@ -182,22 +182,25 @@ Get information about VENDOR, model, chipset and driver here: https://wikidevi.w
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Preferred chipsets MediaTek (active monitor mode)
+Preferred chipsets MediaTek due to active monitor mode feature
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
-No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
+No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
 Not recommended WiFi chipsets:
 
-* Broadcom (neither monitor mode nor frame injection)
+* Broadcom (neither monitor mode nor frame injection by official Linux kernel)
 
-* Qualcomm (no frame injection)
+* Qualcomm (no frame injection by official Linux kernel)
 
-more information about possible issues on https://bugzilla.kernel.org
+more information about possible issues or limitations:
 
+https://bugzilla.kernel.org
+
+https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
 
 Antennas
 --------------
