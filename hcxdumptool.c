@@ -1810,7 +1810,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211eapol(void)
 {
-
 eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
 eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
 if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
