@@ -185,7 +185,7 @@ static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a
 /*---------------------------------------------------------------------------*/
 static const char *macaprgfirst = "internet";
 /*---------------------------------------------------------------------------*/
-static const uint8_t beacondata[] =
+static const u8 beacondata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -206,7 +206,7 @@ static const uint8_t beacondata[] =
 };
 #define BEACONDATA_SIZE sizeof(beacondata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t proberesponsedata[] =
+static const u8 proberesponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -225,7 +225,7 @@ static const uint8_t proberesponsedata[] =
 };
 #define PROBERESPONSEDATA_SIZE sizeof(proberesponsedata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t proberequest_undirected_data[] =
+static const u8 proberequest_undirected_data[] =
 {
 /* Tag: Wildcard */
 0x00, 0x00,
@@ -236,19 +236,19 @@ static const uint8_t proberequest_undirected_data[] =
 };
 #define PROBEREQUEST_UNDIRECTED_SIZE sizeof(proberequest_undirected_data)
 /*---------------------------------------------------------------------------*/
-static const uint8_t authenticationrequestdata[] =
+static const u8 authenticationrequestdata[] =
 {
 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t authenticationresponsedata[] =
+static const u8 authenticationresponsedata[] =
 {
 0x00, 0x00, 0x02, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t reassociationrequestdata[] =
+static const u8 reassociationrequestdata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -269,13 +269,13 @@ static const uint8_t reassociationrequestdata[] =
 };
 #define REASSOCIATIONREQUEST_SIZE sizeof(reassociationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationrequestcapa[] =
+static const u8 associationrequestcapa[] =
 {
 0x31, 0x04, 0x05, 0x00
 };
 #define ASSOCIATIONREQUESTCAPA_SIZE sizeof(associationrequestcapa)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationrequestdata[] =
+static const u8 associationrequestdata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -296,7 +296,7 @@ static const uint8_t associationrequestdata[] =
 };
 #define ASSOCIATIONREQUEST_SIZE sizeof(associationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationresponsedata[] =
+static const u8 associationresponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -307,7 +307,7 @@ static const uint8_t associationresponsedata[] =
 };
 #define ASSOCIATIONRESPONSEDATA_SIZE sizeof(associationresponsedata)
 /*---------------------------------------------------------------------------*/
-static uint8_t eapolm1data[] =
+static u8 eapolm1data[] =
 {
 /* LLC */
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
@@ -329,7 +329,7 @@ static uint8_t eapolm1data[] =
 };
 #define EAPOLM1DATA_SIZE sizeof(eapolm1data)
 /*---------------------------------------------------------------------------*/
-static const uint8_t eaprequestiddata[] =
+static const u8 eaprequestiddata[] =
 {
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
 0x01, 0x00, 0x00, 0x05, 0x01, 0x01, 0x00, 0x05, 0x01
@@ -337,7 +337,7 @@ static const uint8_t eaprequestiddata[] =
 #define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
 /*---------------------------------------------------------------------------*/
 /* interface bit rate */
-static const uint8_t legacy241mbdata[] =
+static const u8 legacy241mbdata[] =
 {
 0x10, 0x00,
 0x5a, 0x80,
@@ -347,7 +347,7 @@ static const uint8_t legacy241mbdata[] =
 };
 #define LEGACYXXXMB_SIZE sizeof(legacy241mbdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t legacy56mbdata[] =
+static const u8 legacy56mbdata[] =
 {
 0x10, 0x00,
 0x5a, 0x80,
@@ -1545,7 +1545,7 @@ return;
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static inline int get_keyinfo(uint16_t kyif)
+static inline int get_keyinfo(u16 kyif)
 {
 if(kyif & WPA_KEY_INFO_ACK)
 	{
