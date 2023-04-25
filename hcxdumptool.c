@@ -329,6 +329,13 @@ static uint8_t eapolm1data[] =
 };
 #define EAPOLM1DATA_SIZE sizeof(eapolm1data)
 /*---------------------------------------------------------------------------*/
+static const uint8_t eaprequestiddata[] =
+{
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x00, 0x00, 0x05, 0x01, 0x01, 0x00, 0x05, 0x01
+};
+#define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
+/*---------------------------------------------------------------------------*/
 /* interface bit rate */
 static const uint8_t legacy241mbdata[] =
 {
@@ -1040,7 +1047,31 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_eapolm1(void)
+static inline void send_80211_eap_request_id(void)
+{
+static ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_DATA;
+wltxbuffer[ii + 1] = 0;
+macftx->from_ds = 1;
+macftx->duration = 0x0431;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = seqcounter3++ << 4;
+if(seqcounter1 > 4095) seqcounter3 = 1;
+ii += MAC_SIZE_NORM;
+memcpy(&wltxbuffer[ii], &eaprequestiddata, EAPREQUESTID_SIZE);
+ii += EAPREQUESTID_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii) return;
+errorcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline void send_80211_eapol_m1(void)
 {
 static ssize_t ii;
 
@@ -1846,13 +1877,7 @@ eapauth = (ieee80211_eapauth_t*)eapauthplptr;
 eapauthlen = ntohs(eapauth->len);
 if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
 if(eapauth->type == EAPOL_KEY) process80211eapol();
-/*
-else if(auth->type == EAP_PACKET) process80211exteap(authlen);
-else if(auth->type == EAPOL_START)
-	{
-	send_eap_request_id(macfrx->addr2, macfrx->addr1);
-	}
-*/
+else if(eapauth->type == EAPOL_START) send_80211_eap_request_id();
 writeepb();
 return;
 }
@@ -1887,7 +1912,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 			{
 			send_80211_reassociationresponse((clientlist + i)->aid++);
 			if((clientlist + i)->aid > 0xff) (clientlist + i)->aid  = 1;
-			send_80211_eapolm1();
+			send_80211_eapol_m1();
 			(clientlist + i)->count--;
 			}
 		else (clientlist + i)->count = 0;
@@ -1908,7 +1933,7 @@ tagwalk_channel_essid_rsn(&(clientlist + i)->ie, reassociationrequestlen, reasso
 if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 	{
 	send_80211_reassociationresponse((clientlist + i)->aid++);
-	send_80211_eapolm1();
+	send_80211_eapol_m1();
 	}
 else (clientlist + i)->count = 0;
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
@@ -1945,7 +1970,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 		if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 			{
 			send_80211_associationresponse();
-			send_80211_eapolm1();
+			send_80211_eapol_m1();
 			(clientlist + i)->count--;
 			}
 		else (clientlist + i)->count = 0;
@@ -1965,7 +1990,7 @@ tagwalk_channel_essid_rsn(&(clientlist + i)->ie, associationrequestlen, associat
 if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 	{
 	send_80211_associationresponse();
-	send_80211_eapolm1();
+	send_80211_eapol_m1();
 	}
 else (clientlist + i)->count = 0;
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
