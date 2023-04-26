@@ -2844,7 +2844,6 @@ while(nla_ok(nlan, nlanremlen))
 	nlan = nla_next(nlan, &nlanremlen);
 	}
 if((freql + ipl->i)->frequency != 0) ipl->i++;
-
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -3249,7 +3248,6 @@ nla->nla_len = 8;
 nla->nla_type = NL80211_ATTR_PS_STATE;
 *(u32*)nla_data(nla) = NL80211_PS_DISABLED;
 i += 8;
-
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return;
 while(1)
@@ -3840,7 +3838,6 @@ if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) ret
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
 if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
 #endif
-
 if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) return false;
@@ -4031,10 +4028,7 @@ return true;
 /* SIGNALHANDLER */
 static void signal_handler(int signum)
 {
-if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum ==  SIGTSTP))
-	{
-	wanteventflag |= EXIT_ON_SIGTERM;
-	}
+if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum ==  SIGTSTP)) wanteventflag |= EXIT_ON_SIGTERM;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -4065,10 +4059,8 @@ clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 tshold = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 strftime(timestring1, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
-
 seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);
-
 ouiaprg = (vendoraprg[rand() % ((VENDORAPRG_SIZE / sizeof(int)))]) &0xffffff;
 nicaprg = rand() & 0xffffff;
 macaprg[5] = nicaprg & 0xff;
@@ -4077,13 +4069,11 @@ macaprg[3] = (nicaprg >> 16) & 0xff;
 macaprg[2] = ouiaprg & 0xff;
 macaprg[1] = (ouiaprg >> 8) & 0xff;
 macaprg[0] = (ouiaprg >> 16) & 0xff;
-
 aprglist->tsakt = tsakt;
 aprglist->essidlen = strnlen(macaprgfirst, ESSID_MAX);
 memcpy(aprglist->essid, macaprgfirst, strnlen(macaprgfirst, ESSID_MAX));
 memcpy(aprglist->macaprg, &macaprg, ETH_ALEN);
 nicaprg++;
-
 ouiclientrg = (vendorclientrg[rand() % ((VENDORCLIENTRG_SIZE / sizeof(int)))]) &0xffffff;
 nicclientrg = rand() & 0xffffff;
 macclientrg[7] = 0;
@@ -4094,7 +4084,6 @@ macclientrg[3] = (nicclientrg >> 16) & 0xff;
 macclientrg[2] = ouiclientrg & 0xff;
 macclientrg[1] = (ouiclientrg >> 8) & 0xff;
 macclientrg[0] = (ouiclientrg >> 16) & 0xff;
-
 strncpy(weakcandidate, WEAKCANDIDATEDEF, PSK_MAX);
 replaycountrg = (rand() % 0xfff) + 0xf000;
 eapolm1data[0x17] = (replaycountrg >> 8) &0xff;
@@ -4284,7 +4273,6 @@ len = fgetline(modinfo, RASPBERRY_INFO, linein);
 fclose(modinfo);
 if(len < RPINAME_SIZE) return false;
 if(memcmp(&rpiname, &linein, RPINAME_SIZE) != 0) return false;
-
 if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 	{
 	while(1)
@@ -4300,7 +4288,6 @@ if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 		}
 	fclose(procinfo);
 	}
-
 if((procinfo = fopen("/proc/iomem", "r")) != NULL)
 	{
 	while(1)
@@ -4533,13 +4520,11 @@ static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
 static char *pcapngoutname = NULL;
-
 #ifdef NMEAOUT
 static bool gpsdflag = false;
 static char *nmea0183name = NULL;
 static char *nmeaoutname = NULL;
 #endif
-
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLhv";
@@ -4978,7 +4963,6 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\e[?25l");
 nanosleep(&tspecifo, &tspeciforem);
-
 if(rcascanflag == NULL)
 	{
 	if(nl_scanloop() == false)
