@@ -158,7 +158,7 @@ Requirements
 * detailed knowledge of Linux
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
 * operating system: Linux distribution, Kernel >= 5.15
-* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Debian or Raspbian OS Lite on Raspberry Pi ARMv6 systems 
+* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
