@@ -1692,6 +1692,24 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
+static inline void process80211eap_start(void)
+{
+static size_t i;
+
+for(i = 0; i < CLIENTLIST_MAX - 1; i++)
+	{
+	if(memcmp(macfrx->addr2, (clientlist + i)->macclient, ETH_ALEN) != 0) continue;
+	if(memcmp(macfrx->addr1, (clientlist + i)->macap, ETH_ALEN) != 0) continue;
+	(clientlist + i)->tsakt = tsakt;
+	(clientlist + i)->status |= CLIENT_EAP_START;
+	if((clientlist + i)->count == 0) return;
+	send_80211_eap_request_id();
+	(clientlist + i)->count--;
+	return;
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline void process80211eapol_m4(void)
 {
 static size_t i;
@@ -1877,7 +1895,7 @@ eapauth = (ieee80211_eapauth_t*)eapauthplptr;
 eapauthlen = ntohs(eapauth->len);
 if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
 if(eapauth->type == EAPOL_KEY) process80211eapol();
-else if(eapauth->type == EAPOL_START) send_80211_eap_request_id();
+else if(eapauth->type == EAPOL_START) process80211eap_start();
 writeepb();
 return;
 }
