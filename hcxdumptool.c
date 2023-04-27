@@ -1704,7 +1704,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	(clientlist + i)->status |= CLIENT_EAP_START;
 	if((clientlist + i)->count == 0) return;
 	send_80211_eap_request_id();
-	(clientlist + i)->count--;
+	(clientlist + i)->count -= 1;
 	return;
 	}
 return;
@@ -1786,7 +1786,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	if((clientlist + i)->count == 0) return;
 	if(memcmp((clientlist + i)->mic, &wpakey->keymic[0], 4) == 0) send_80211_disassociation_fm_ap(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	memcpy((clientlist + i)->mic, &wpakey->keymic[0], 4);
-	(clientlist + i)->count--;
+	(clientlist + i)->count -= 1;
 	return;
 	}
 return;
@@ -1931,7 +1931,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 			send_80211_reassociationresponse((clientlist + i)->aid++);
 			if((clientlist + i)->aid > 0xff) (clientlist + i)->aid  = 1;
 			send_80211_eapol_m1();
-			(clientlist + i)->count--;
+			(clientlist + i)->count -= 1;
 			}
 		else (clientlist + i)->count = 0;
 		writeepb();
@@ -1989,7 +1989,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 			{
 			send_80211_associationresponse();
 			send_80211_eapol_m1();
-			(clientlist + i)->count--;
+			(clientlist + i)->count -= 1;
 			}
 		else (clientlist + i)->count = 0;
 		writeepb();
@@ -2381,7 +2381,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 			if(((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_reassociationrequest(i);
 			}
 		}
-	(aplist + i)->count--;
+	(aplist + i)->count -= 1;
 	return;
 	}
 memset((aplist + i), 0, APLIST_SIZE);
