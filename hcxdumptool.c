@@ -392,6 +392,7 @@ static char rtb[RTD_LEN] = { 0 };
 static void show_interfacecapabilities2(void)
 {
 static size_t i;
+static size_t ifl;
 static const char *po = "N/A";
 static const char *mode = "-";
 static frequencylist_t *iffreql;
@@ -412,27 +413,24 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
 	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((iffreql + i)->frequency == 0) break;
-		if(i % 4 == 0) fprintf(stdout, "\n");
+		if((iffreql + ifl)->frequency == 0) break;
+		if(ifl % 4 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		if((iffreql + i)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + i)->frequency, (iffreql + i)->channel, 0.01 *(iffreql + i)->pwr);
-		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
+		if((iffreql + ifl)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + ifl)->frequency, (iffreql + ifl)->channel, 0.01 *(iffreql + ifl)->pwr);
+		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + ifl)->frequency, (iffreql + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
 	fprintf(stdout, "\n\nscan frequencies: frequency [channel] of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((scanlist + i)->frequency == 0) break;
-		if(i % 5 == 0) fprintf(stdout, "\n");
+		if((scanlist + ifl)->frequency == 0) break;
+		if(ifl % 5 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		fprintf(stdout, "%6d [%3d]", (scanlist + i)->frequency, (scanlist + i)->channel);
+		fprintf(stdout, "%6d [%3d]", (scanlist + ifl)->frequency, (scanlist + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
-
-
-
 	}
 return;
 }
@@ -441,6 +439,8 @@ return;
 static void show_interfacecapabilities(void)
 {
 static size_t i;
+static size_t ifl;
+
 static const char *po = "N/A";
 static const char *mode = "-";
 static frequencylist_t *iffreql;
@@ -461,13 +461,13 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
 	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((iffreql + i)->frequency == 0) break;
-		if(i % 4 == 0) fprintf(stdout, "\n");
+		if((iffreql + ifl)->frequency == 0) break;
+		if(ifl % 4 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		if((iffreql + i)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + i)->frequency, (iffreql + i)->channel, 0.01 *(iffreql + i)->pwr);
-		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
+		if((iffreql + ifl)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + ifl)->frequency, (iffreql + ifl)->channel, 0.01 *(iffreql + ifl)->pwr);
+		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + ifl)->frequency, (iffreql + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
 	}
@@ -495,7 +495,6 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	}
-
 fprintf(stdout, "\n"
 		"* active monitor mode available\n"
 		"+ monitor mode available\n"
