@@ -4483,12 +4483,12 @@ fprintf(stdout, "long options:\n"
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
-	" R   = + AP is in TX range or under attack\n"
-	" P   = + got PMKID\n"
+	" R   = + AP display:     AP is in TX range or under attack\n"
+	" A   = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
+	" PID = + AP display:     got PMKID\n"
 	" M1C = + AP display:     got EAPOL M1 (CHALLENGE)\n"
 	" M3A = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
-	" M2R = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n"
-	" A   = + AUTHENTICATION KEY MANAGEMENT PSK\n");
+	" M2R = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
 
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
