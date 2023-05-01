@@ -262,7 +262,7 @@ Procedure
 
 first run hcxdumptool -L to get information about suitable interfaces
 
-run hcxdumptool [-i \<interface\>] [--rcascan_passive] to retrieve information about access points
+run hcxdumptool [-i \<interface\>] [--rcascan=p] to retrieve information about access points
 
 
 pcapng option codes (Section Header Block)

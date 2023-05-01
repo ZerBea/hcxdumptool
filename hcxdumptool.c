@@ -4803,7 +4803,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		rcascanflag = optarg;
 		if((rcascanflag[0] != 'a') && (rcascanflag[0] != 'p'))
 			{
-			fprintf(stderr, "rcascan: only (a)active or (p) passive allowed\n");
+			fprintf(stderr, "rcascan: only (a) active or (p) passive allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
