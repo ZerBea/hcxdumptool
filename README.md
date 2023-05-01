@@ -190,6 +190,8 @@ No support for a third party driver which is not part of the official Linux kern
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
+No support for prism devices.
+
 Not recommended WiFi chipsets:
 
 * Broadcom (neither monitor mode nor frame injection by official Linux kernel)
