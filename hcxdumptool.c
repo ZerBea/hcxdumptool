@@ -553,7 +553,6 @@ static char *ak;
 static char *ar;
 
 if(system("clear") != 0) errorcount++;
-
 if(rdsort == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -594,6 +593,7 @@ for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
 sprintf(&rtb[p], "   LAST   M2R    MAC-AP     MAC-CLIENT  ESSID (last seen on top)\n"
 	"---------------------------------------------------------------------------------------------\n");
 p = strlen(rtb);
+qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 for(i = 0; i < 20; i++)
 	{
 	if((clientlist + i)->tsakt == 0) break;
