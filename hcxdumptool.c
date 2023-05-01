@@ -557,13 +557,13 @@ if(system("clear") != 0) errorcount++;
 if(rdsort == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	sprintf(&rtb[0], "  CHA    LAST   R PID M1C M3A A    MAC-AP    ESSID (last seen on top)        SCAN-FREQUENCY: %6u\n"
+	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last seen on top)        SCAN-FREQUENCY: %6u\n"
 	"----------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 else
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], "  CHA    LAST   R PID M1C M3A A    MAC-AP    ESSID (last PMKID/EAPOL on top) SCAN-FREQUENCY: %6u\n"
+	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last PMKID/EAPOL on top) SCAN-FREQUENCY: %6u\n"
 	"----------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 
 	}
@@ -573,12 +573,12 @@ pa = 0;
 for(i = 0; i < 20 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
-	if(((aplist +i)->status & AP_PMKID) == AP_PMKID) ps = pmok;
-	else ps = pmdef;
 	if(((aplist +i)->status & AP_EAPOL_M1) == AP_EAPOL_M1) mc = pmok;
 	else mc = pmdef;
 	if(((aplist +i)->status & AP_EAPOL_M3) == AP_EAPOL_M3) ma = pmok;
 	else ma = pmdef;
+	if(((aplist +i)->status & AP_PMKID) == AP_PMKID) ps = pmok;
+	else ps = pmdef;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
 	else ak = pmdef;
 	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
@@ -586,7 +586,7 @@ for(i = 0; i < 20 ; i++)
 	tvlast = (aplist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
 	sprintf(&rtb[p], " [%3d] %s %s  %s   %s   %s  %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, timestring1, ar, ps, mc, ma, ak,
+			(aplist + i)->ie.channel, timestring1, ar, mc, ma, ps, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	if(tsakt - (aplist + i)->tsakt > AP_IN_RANGE_TOT) (aplist +i)->status = ((aplist +i)->status & AP_IN_RANGE_MASK);
