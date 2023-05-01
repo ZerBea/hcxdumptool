@@ -4462,7 +4462,7 @@ fprintf(stdout, "long options:\n"
 	"                                          $GPWPL: Position and MAC AP\n"
 	"                                          $GPTXT: ESSID in HEX ASCII\n"
 	"                                  use gpsbabel to convert to other formats:\n"
-	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file_gpx\n"
+	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
 	#endif
