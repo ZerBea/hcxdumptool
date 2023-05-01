@@ -340,4 +340,4 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 
 * Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
 
-* Do not merge (pcapng) dumpfiles because that destroys custum block hash assignments
+* Do not merge (pcapng) dumpfiles because that destroys custom block hash assignments
