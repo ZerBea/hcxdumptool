@@ -565,6 +565,7 @@ else
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
 	sprintf(&rtb[0], "  CHA    LAST   R PID M1C M3A A    MAC-AP    ESSID (last PMKID/EAPOL on top) SCAN-FREQUENCY: %6u\n"
 	"----------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+
 	}
 p = strlen(rtb);
 i = 0;
@@ -594,7 +595,7 @@ for(i = 0; i < 20 ; i++)
 	}
 for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
 sprintf(&rtb[p], "   LAST   M2R MAC-AP-ROGUE  MAC-CLIENT  ESSID (last seen on top)\n"
-	"--------------------------------------------------------------------------------------------------\n");
+	"----------------------------------------------------------------------------------------------------\n");
 p = strlen(rtb);
 qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 for(i = 0; i < 20; i++)
