@@ -548,6 +548,7 @@ static time_t tvlast;
 static char *pmdef = " ";
 static char *pmok = "+";
 static char *ps;
+static char *mc;
 static char *ms;
 static char *ak;
 static char *ar;
@@ -562,8 +563,8 @@ if(rdsort == 0)
 else
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], "  CHA    LAST   R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
-	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	sprintf(&rtb[0], "  CHA    LAST   R P M1C M3A A    MAC-AP    ESSID (last PMKID/EAPOL on top) SCAN-FREQUENCY: %6u\n"
+	"--------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 p = strlen(rtb);
 i = 0;
@@ -573,6 +574,8 @@ for(i = 0; i < 20 ; i++)
 	if((aplist + i)->tsakt == 0) break;
 	if(((aplist +i)->status & AP_PMKID) == AP_PMKID) ps = pmok;
 	else ps = pmdef;
+	if(((aplist +i)->status & AP_EAPOL_M1) == AP_EAPOL_M1) mc = pmok;
+	else mc = pmdef;
 	if(((aplist +i)->status & AP_EAPOL_M3) == AP_EAPOL_M3) ms = pmok;
 	else ms = pmdef;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
@@ -581,8 +584,8 @@ for(i = 0; i < 20 ; i++)
 	else ar = pmdef;
 	tvlast = (aplist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, timestring1, ar, ps, ms, ak,
+	sprintf(&rtb[p], " [%3d] %s %s %s  %s   %s  %s %02x%02x%02x%02x%02x%02x %.*s\n",
+			(aplist + i)->ie.channel, timestring1, ar, ps, mc, ms, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	if(tsakt - (aplist + i)->tsakt > AP_IN_RANGE_TOT) (aplist +i)->status = ((aplist +i)->status & AP_IN_RANGE_MASK);
@@ -591,7 +594,7 @@ for(i = 0; i < 20 ; i++)
 	}
 for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
 sprintf(&rtb[p], "   LAST   M2R MAC-AP-ROGUE  MAC-CLIENT  ESSID (last seen on top)\n"
-	"---------------------------------------------------------------------------------------------\n");
+	"--------------------------------------------------------------------------------------------------\n");
 p = strlen(rtb);
 qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 for(i = 0; i < 20; i++)
@@ -4479,11 +4482,12 @@ fprintf(stdout, "long options:\n"
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
-	" R = + AP is in TX range\n"
-	" P = + got PMKID\n"
-	" M = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
-	" M = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n"
-	" A = + AUTHENTICATION KEY MANAGEMENT PSK\n");
+	" R   = + AP is in TX range or under attack\n"
+	" P   = + got PMKID\n"
+	" M1C = + AP display:     got EAPOL M1 (CHALLENGE)\n"
+	" M3A = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
+	" M2R = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n"
+	" A   = + AUTHENTICATION KEY MANAGEMENT PSK\n");
 
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
