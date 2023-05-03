@@ -235,7 +235,7 @@ typedef struct __attribute__((__packed__))
  infoelement_t	ie;
 }clientlist_t;
 #define CLIENTLIST_SIZE (sizeof(clientlist_t))
-
+/*---------------------------------------------------------------------------*/
 static int sort_clientlist_by_tsakt(const void *a, const void *b)
 {
 const clientlist_t *ai = (const clientlist_t *)a;
@@ -245,6 +245,7 @@ if(ai->tsakt < bi->tsakt) return 1;
 else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
+/*---------------------------------------------------------------------------*/
 #ifdef STATUSOUT
 static int sort_clientlist_by_status(const void *a, const void *b)
 {
