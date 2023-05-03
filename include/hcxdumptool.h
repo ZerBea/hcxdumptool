@@ -245,6 +245,19 @@ if(ai->tsakt < bi->tsakt) return 1;
 else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
+#ifdef STATUSOUT
+static int sort_clientlist_by_status(const void *a, const void *b)
+{
+const clientlist_t *ai = (const clientlist_t *)a;
+const clientlist_t *bi = (const clientlist_t *)b;
+
+if(ai->status < bi->status) return 1;
+else if(ai->status > bi->status) return -1;
+if(ai->tsakt < bi->tsakt) return 1;
+else if(ai->tsakt > bi->tsakt) return -1;
+return 0;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {

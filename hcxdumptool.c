@@ -557,14 +557,14 @@ if(system("clear") != 0) errorcount++;
 if(rdsort == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last seen on top)  SCAN-FREQUENCY: %6u\n"
-	"----------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	sprintf(&rtb[0], "  CHA    LAST   R 1 3 P S    MAC-AP    ESSID (last seen on top)   SCAN-FREQUENCY: %6u\n"
+			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 else
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last EAPOL on top) SCAN-FREQUENCY: %6u\n"
-	"----------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	sprintf(&rtb[0], "  CHA    LAST   R 1 3 P S    MAC-AP    ESSID (last EAPOL on top)  SCAN-FREQUENCY: %6u\n"
+			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 p = strlen(rtb);
 i = 0;
@@ -584,7 +584,7 @@ for(i = 0; i < 20 ; i++)
 	else ar = pmdef;
 	tvlast = (aplist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " [%3d] %s %s  %s   %s   %s  %s %02x%02x%02x%02x%02x%02x %.*s\n",
+	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
 			(aplist + i)->ie.channel, timestring1, ar, mc, ma, ps, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
@@ -593,10 +593,19 @@ for(i = 0; i < 20 ; i++)
 	pa++;
 	}
 for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
-sprintf(&rtb[p], "   LAST   M2R MAC-AP-ROGUE   MAC-CLIENT   ESSID (last seen on top)\n"
-	"----------------------------------------------------------------------------------------------\n");
+if(rdsort == 0)
+	{
+	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
+	sprintf(&rtb[p], "   LAST   2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last seen on top)\n"
+			 "-----------------------------------------------------------------------------------------\n");
+	}
+else
+	{
+	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_status);
+	sprintf(&rtb[p], "   LAST   2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last M2ROGUE on top)\n"
+			 "-----------------------------------------------------------------------------------------\n");
+	}
 p = strlen(rtb);
-qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 for(i = 0; i < 20; i++)
 	{
 	if((clientlist + i)->tsakt == 0) break;
@@ -604,7 +613,7 @@ for(i = 0; i < 20; i++)
 	else mc = pmdef;
 	tvlast = (clientlist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " %s  %s  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
+	sprintf(&rtb[p], " %s %s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
 			timestring1, mc,
 			(clientlist + i)->macap[0], (clientlist + i)->macap[1], (clientlist + i)->macap[2], (clientlist + i)->macap[3], (clientlist + i)->macap[4], (clientlist + i)->macap[5],
 			(clientlist + i)->macclient[0], (clientlist + i)->macclient[1], (clientlist + i)->macclient[2], (clientlist + i)->macclient[3], (clientlist + i)->macclient[4], (clientlist + i)->macclient[5],
@@ -613,7 +622,11 @@ for(i = 0; i < 20; i++)
 	}
 rtb[p] = 0;
 fprintf(stdout, "%s", rtb);
-if(rdsort > 0) qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+if(rdsort > 0)
+	{
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
+	}
 return;
 }
 #endif
@@ -4482,12 +4495,12 @@ fprintf(stdout, "long options:\n"
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
-	" R   = + AP display:     AP is in TX range or under attack\n"
-	" A   = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
-	" PID = + AP display:     got PMKID\n"
-	" M1C = + AP display:     got EAPOL M1 (CHALLENGE)\n"
-	" M3A = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
-	" M2R = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
+	" R = + AP display:     AP is in TX range or under attack\n"
+	" S = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
+	" P = + AP display:     got PMKID\n"
+	" 1 = + AP display:     got EAPOL M1 (CHALLENGE)\n"
+	" 3 = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
+	" 2 = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
 
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
