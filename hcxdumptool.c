@@ -512,7 +512,7 @@ static char *pmdef = " ";
 static char *pmok = "+";
 static char *ak;
 
-//if(system("clear") != 0) errorcount++;
+if(system("clear") != 0) errorcount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE A   MAC-AP   ESSID   SCAN-FREQUENCY: %6u\n"
 	"-----------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
