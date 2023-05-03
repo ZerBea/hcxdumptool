@@ -157,8 +157,8 @@ Requirements
 * detailed knowledge of key derivation functions
 * detailed knowledge of Linux
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
-* operatingsystem: Linux distribution, Kernel >= 5.15
-* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Debian or Raspbian OS Lite on Raspberry Pi ARMv6 systems 
+* operating system: Linux distribution, Kernel >= 5.15
+* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
 * gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
@@ -182,20 +182,27 @@ Get information about VENDOR, model, chipset and driver here: https://wikidevi.w
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Preferred chipsets MediaTek (active monitor mode)
+Preferred chipsets MediaTek due to active monitor mode feature
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
-No support for a third party driver which is not part of the official kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
+No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
-Not recommended WiFi chipsets due to driver problems in combination with WIRELESS EXTENSIONS:
+No support for prism devices.
 
-* Broadcom (neither monitor mode nor frame injection)
+Not recommended WiFi chipsets:
 
-more information about possible issues on https://bugzilla.kernel.org
+* Broadcom (neither monitor mode nor frame injection by official Linux kernel)
 
+* Qualcomm (no frame injection by official Linux kernel)
+
+more information about possible issues or limitations:
+
+https://bugzilla.kernel.org
+
+https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
 
 Antennas
 --------------
@@ -255,7 +262,7 @@ Procedure
 
 first run hcxdumptool -L to get information about suitable interfaces
 
-run hcxdumptool [-i \<interface\>] [--rcascan_passive] to retrieve information about access points
+run hcxdumptool [-i \<interface\>] [--rcascan=p] to retrieve information about access points
 
 
 pcapng option codes (Section Header Block)
@@ -333,3 +340,4 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 
 * Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
 
+* Do not merge (pcapng) dumpfiles because that destroys custom block hash assignments

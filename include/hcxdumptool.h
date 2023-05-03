@@ -228,7 +228,8 @@ typedef struct __attribute__((__packed__))
  u8	macclient[6];
  u8	macap[6];
  u8	mic[4];
-#define CLIENT_EAPOL_M2		0b00010000
+#define CLIENT_EAP_START	0b00000001
+#define CLIENT_EAPOL_M2		0b00000010
  u8	status;
  u32	count;
  infoelement_t	ie;

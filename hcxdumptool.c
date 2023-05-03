@@ -6,6 +6,7 @@
 #endif
 #include <getopt.h>
 #include <inttypes.h>
+#include <libgen.h>
 #include <linux/filter.h>
 #include <linux/genetlink.h>
 #include <linux/if_packet.h>
@@ -21,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/cdefs.h>
 #include <sys/epoll.h>
 #include <sys/file.h>
@@ -40,10 +42,6 @@
 #include "include/radiotap.h"
 #include "include/raspberry.h"
 #include "include/wireless-lite.h"
-#ifdef __ANDROID__
-#include <libgen.h>
-#include <unistd.h>
-#endif
 /*===========================================================================*/
 /*
 static void debugprint();
@@ -187,7 +185,7 @@ static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a
 /*---------------------------------------------------------------------------*/
 static const char *macaprgfirst = "internet";
 /*---------------------------------------------------------------------------*/
-static const uint8_t beacondata[] =
+static const u8 beacondata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -208,7 +206,7 @@ static const uint8_t beacondata[] =
 };
 #define BEACONDATA_SIZE sizeof(beacondata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t proberesponsedata[] =
+static const u8 proberesponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -227,7 +225,7 @@ static const uint8_t proberesponsedata[] =
 };
 #define PROBERESPONSEDATA_SIZE sizeof(proberesponsedata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t proberequest_undirected_data[] =
+static const u8 proberequest_undirected_data[] =
 {
 /* Tag: Wildcard */
 0x00, 0x00,
@@ -238,19 +236,19 @@ static const uint8_t proberequest_undirected_data[] =
 };
 #define PROBEREQUEST_UNDIRECTED_SIZE sizeof(proberequest_undirected_data)
 /*---------------------------------------------------------------------------*/
-static const uint8_t authenticationrequestdata[] =
+static const u8 authenticationrequestdata[] =
 {
 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t authenticationresponsedata[] =
+static const u8 authenticationresponsedata[] =
 {
 0x00, 0x00, 0x02, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t reassociationrequestdata[] =
+static const u8 reassociationrequestdata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -271,13 +269,13 @@ static const uint8_t reassociationrequestdata[] =
 };
 #define REASSOCIATIONREQUEST_SIZE sizeof(reassociationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationrequestcapa[] =
+static const u8 associationrequestcapa[] =
 {
 0x31, 0x04, 0x05, 0x00
 };
 #define ASSOCIATIONREQUESTCAPA_SIZE sizeof(associationrequestcapa)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationrequestdata[] =
+static const u8 associationrequestdata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -298,7 +296,7 @@ static const uint8_t associationrequestdata[] =
 };
 #define ASSOCIATIONREQUEST_SIZE sizeof(associationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t associationresponsedata[] =
+static const u8 associationresponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
@@ -309,7 +307,7 @@ static const uint8_t associationresponsedata[] =
 };
 #define ASSOCIATIONRESPONSEDATA_SIZE sizeof(associationresponsedata)
 /*---------------------------------------------------------------------------*/
-static uint8_t eapolm1data[] =
+static u8 eapolm1data[] =
 {
 /* LLC */
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
@@ -331,8 +329,15 @@ static uint8_t eapolm1data[] =
 };
 #define EAPOLM1DATA_SIZE sizeof(eapolm1data)
 /*---------------------------------------------------------------------------*/
+static const u8 eaprequestiddata[] =
+{
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x00, 0x00, 0x05, 0x01, 0x01, 0x00, 0x05, 0x01
+};
+#define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
+/*---------------------------------------------------------------------------*/
 /* interface bit rate */
-static const uint8_t legacy241mbdata[] =
+static const u8 legacy241mbdata[] =
 {
 0x10, 0x00,
 0x5a, 0x80,
@@ -342,7 +347,7 @@ static const uint8_t legacy241mbdata[] =
 };
 #define LEGACYXXXMB_SIZE sizeof(legacy241mbdata)
 /*---------------------------------------------------------------------------*/
-static const uint8_t legacy56mbdata[] =
+static const u8 legacy56mbdata[] =
 {
 0x10, 0x00,
 0x5a, 0x80,
@@ -387,6 +392,7 @@ static char rtb[RTD_LEN] = { 0 };
 static void show_interfacecapabilities2(void)
 {
 static size_t i;
+static size_t ifl;
 static const char *po = "N/A";
 static const char *mode = "-";
 static frequencylist_t *iffreql;
@@ -407,27 +413,24 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
 	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((iffreql + i)->frequency == 0) break;
-		if(i % 4 == 0) fprintf(stdout, "\n");
+		if((iffreql + ifl)->frequency == 0) break;
+		if(ifl % 4 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		if((iffreql + i)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + i)->frequency, (iffreql + i)->channel, 0.01 *(iffreql + i)->pwr);
-		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
+		if((iffreql + ifl)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + ifl)->frequency, (iffreql + ifl)->channel, 0.01 *(iffreql + ifl)->pwr);
+		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + ifl)->frequency, (iffreql + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
 	fprintf(stdout, "\n\nscan frequencies: frequency [channel] of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((scanlist + i)->frequency == 0) break;
-		if(i % 5 == 0) fprintf(stdout, "\n");
+		if((scanlist + ifl)->frequency == 0) break;
+		if(ifl % 5 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		fprintf(stdout, "%6d [%3d]", (scanlist + i)->frequency, (scanlist + i)->channel);
+		fprintf(stdout, "%6d [%3d]", (scanlist + ifl)->frequency, (scanlist + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
-
-
-
 	}
 return;
 }
@@ -436,6 +439,8 @@ return;
 static void show_interfacecapabilities(void)
 {
 static size_t i;
+static size_t ifl;
+
 static const char *po = "N/A";
 static const char *mode = "-";
 static frequencylist_t *iffreql;
@@ -456,13 +461,13 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	iffreql = (ifpresentlist + i)->frequencylist;
 	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
-	for(i = 0; i < FREQUENCYLIST_MAX; i++)
+	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
-		if((iffreql + i)->frequency == 0) break;
-		if(i % 4 == 0) fprintf(stdout, "\n");
+		if((iffreql + ifl)->frequency == 0) break;
+		if(ifl % 4 == 0) fprintf(stdout, "\n");
 		else  fprintf(stdout, "\t");
-		if((iffreql + i)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + i)->frequency, (iffreql + i)->channel, 0.01 *(iffreql + i)->pwr);
-		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + i)->frequency, (iffreql + i)->channel);
+		if((iffreql + ifl)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + ifl)->frequency, (iffreql + ifl)->channel, 0.01 *(iffreql + ifl)->pwr);
+		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + ifl)->frequency, (iffreql + ifl)->channel);
 		}
 	fprintf(stdout, "\n");
 	}
@@ -490,7 +495,6 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
 	}
-
 fprintf(stdout, "\n"
 		"* active monitor mode available\n"
 		"+ monitor mode available\n"
@@ -544,23 +548,24 @@ static time_t tvlast;
 static char *pmdef = " ";
 static char *pmok = "+";
 static char *ps;
-static char *ms;
+static char *mc;
+static char *ma;
 static char *ak;
 static char *ar;
 
 if(system("clear") != 0) errorcount++;
-
 if(rdsort == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	sprintf(&rtb[0], "  CHA    LAST   R P M A    MAC-AP    ESSID (last seen on top)         SCAN-FREQUENCY: %6u\n"
-	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last seen on top)        SCAN-FREQUENCY: %6u\n"
+	"----------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 else
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], "  CHA    LAST   R P M A    MAC-AP    ESSID (last PMKID/EAPOL on top)  SCAN-FREQUENCY: %6u\n"
-	"---------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	sprintf(&rtb[0], "  CHA    LAST   R M1C M3A PID A    MAC-AP    ESSID (last PMKID/EAPOL on top) SCAN-FREQUENCY: %6u\n"
+	"----------------------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+
 	}
 p = strlen(rtb);
 i = 0;
@@ -568,18 +573,20 @@ pa = 0;
 for(i = 0; i < 20 ; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
+	if(((aplist +i)->status & AP_EAPOL_M1) == AP_EAPOL_M1) mc = pmok;
+	else mc = pmdef;
+	if(((aplist +i)->status & AP_EAPOL_M3) == AP_EAPOL_M3) ma = pmok;
+	else ma = pmdef;
 	if(((aplist +i)->status & AP_PMKID) == AP_PMKID) ps = pmok;
 	else ps = pmdef;
-	if(((aplist +i)->status & AP_EAPOL_M3) == AP_EAPOL_M3) ms = pmok;
-	else ms = pmdef;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
 	else ak = pmdef;
 	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
 	else ar = pmdef;
 	tvlast = (aplist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist + i)->ie.channel, timestring1, ar, ps, ms, ak,
+	sprintf(&rtb[p], " [%3d] %s %s  %s   %s   %s  %s %02x%02x%02x%02x%02x%02x %.*s\n",
+			(aplist + i)->ie.channel, timestring1, ar, mc, ma, ps, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
 			(aplist + i)->ie.essidlen, (aplist + i)->ie.essid);
 	if(tsakt - (aplist + i)->tsakt > AP_IN_RANGE_TOT) (aplist +i)->status = ((aplist +i)->status & AP_IN_RANGE_MASK);
@@ -587,18 +594,19 @@ for(i = 0; i < 20 ; i++)
 	pa++;
 	}
 for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
-sprintf(&rtb[p], "   LAST   M2R    MAC-AP     MAC-CLIENT  ESSID (last seen on top)\n"
-	"---------------------------------------------------------------------------------------------\n");
+sprintf(&rtb[p], "   LAST   M2R MAC-AP-ROGUE  MAC-CLIENT  ESSID (last seen on top)\n"
+	"----------------------------------------------------------------------------------------------------\n");
 p = strlen(rtb);
+qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 for(i = 0; i < 20; i++)
 	{
 	if((clientlist + i)->tsakt == 0) break;
-	if(((clientlist + i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) ms = pmok;
-	else ms = pmdef;
+	if(((clientlist + i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) mc = pmok;
+	else mc = pmdef;
 	tvlast = (clientlist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
 	sprintf(&rtb[p], " %s  %s  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
-			timestring1, ms,
+			timestring1, mc,
 			(clientlist + i)->macap[0], (clientlist + i)->macap[1], (clientlist + i)->macap[2], (clientlist + i)->macap[3], (clientlist + i)->macap[4], (clientlist + i)->macap[5],
 			(clientlist + i)->macclient[0], (clientlist + i)->macclient[1], (clientlist + i)->macclient[2], (clientlist + i)->macclient[3], (clientlist + i)->macclient[4], (clientlist + i)->macclient[5],
 			(clientlist + i)->ie.essidlen, (clientlist + i)->ie.essid);
@@ -1042,7 +1050,31 @@ errorcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_eapolm1(void)
+static inline void send_80211_eap_request_id(void)
+{
+static ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_DATA;
+wltxbuffer[ii + 1] = 0;
+macftx->from_ds = 1;
+macftx->duration = 0x0431;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = seqcounter3++ << 4;
+if(seqcounter1 > 4095) seqcounter3 = 1;
+ii += MAC_SIZE_NORM;
+memcpy(&wltxbuffer[ii], &eaprequestiddata, EAPREQUESTID_SIZE);
+ii += EAPREQUESTID_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii) return;
+errorcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline void send_80211_eapol_m1(void)
 {
 static ssize_t ii;
 
@@ -1516,7 +1548,7 @@ return;
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static inline int get_keyinfo(uint16_t kyif)
+static inline int get_keyinfo(u16 kyif)
 {
 if(kyif & WPA_KEY_INFO_ACK)
 	{
@@ -1663,6 +1695,24 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
+static inline void process80211eap_start(void)
+{
+static size_t i;
+
+for(i = 0; i < CLIENTLIST_MAX - 1; i++)
+	{
+	if(memcmp(macfrx->addr2, (clientlist + i)->macclient, ETH_ALEN) != 0) continue;
+	if(memcmp(macfrx->addr1, (clientlist + i)->macap, ETH_ALEN) != 0) continue;
+	(clientlist + i)->tsakt = tsakt;
+	(clientlist + i)->status |= CLIENT_EAP_START;
+	if((clientlist + i)->count == 0) return;
+	send_80211_eap_request_id();
+	(clientlist + i)->count -= 1;
+	return;
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline void process80211eapol_m4(void)
 {
 static size_t i;
@@ -1739,7 +1789,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	if((clientlist + i)->count == 0) return;
 	if(memcmp((clientlist + i)->mic, &wpakey->keymic[0], 4) == 0) send_80211_disassociation_fm_ap(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	memcpy((clientlist + i)->mic, &wpakey->keymic[0], 4);
-	(clientlist + i)->count--;
+	(clientlist + i)->count -= 1;
 	return;
 	}
 return;
@@ -1812,7 +1862,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211eapol(void)
 {
-
 eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
 eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
 if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
@@ -1849,13 +1898,7 @@ eapauth = (ieee80211_eapauth_t*)eapauthplptr;
 eapauthlen = ntohs(eapauth->len);
 if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
 if(eapauth->type == EAPOL_KEY) process80211eapol();
-/*
-else if(auth->type == EAP_PACKET) process80211exteap(authlen);
-else if(auth->type == EAPOL_START)
-	{
-	send_eap_request_id(macfrx->addr2, macfrx->addr1);
-	}
-*/
+else if(eapauth->type == EAPOL_START) process80211eap_start();
 writeepb();
 return;
 }
@@ -1890,8 +1933,8 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 			{
 			send_80211_reassociationresponse((clientlist + i)->aid++);
 			if((clientlist + i)->aid > 0xff) (clientlist + i)->aid  = 1;
-			send_80211_eapolm1();
-			(clientlist + i)->count--;
+			send_80211_eapol_m1();
+			(clientlist + i)->count -= 1;
 			}
 		else (clientlist + i)->count = 0;
 		writeepb();
@@ -1911,7 +1954,7 @@ tagwalk_channel_essid_rsn(&(clientlist + i)->ie, reassociationrequestlen, reasso
 if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 	{
 	send_80211_reassociationresponse((clientlist + i)->aid++);
-	send_80211_eapolm1();
+	send_80211_eapol_m1();
 	}
 else (clientlist + i)->count = 0;
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
@@ -1948,8 +1991,8 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 		if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 			{
 			send_80211_associationresponse();
-			send_80211_eapolm1();
-			(clientlist + i)->count--;
+			send_80211_eapol_m1();
+			(clientlist + i)->count -= 1;
 			}
 		else (clientlist + i)->count = 0;
 		writeepb();
@@ -1968,7 +2011,7 @@ tagwalk_channel_essid_rsn(&(clientlist + i)->ie, associationrequestlen, associat
 if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
 	{
 	send_80211_associationresponse();
-	send_80211_eapolm1();
+	send_80211_eapol_m1();
 	}
 else (clientlist + i)->count = 0;
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
@@ -2075,28 +2118,16 @@ static essid_t essid;
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-if(memcmp(&macaprg, macfrx->addr1, 3) != 0)
+send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
+for(i = 0; i < MACLIST_MAX - 1; i++)
 	{
-	send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
-	for(i = 0; i < MACLIST_MAX - 1; i++)
-		{
-		if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
-		(maclist + i)->tsakt = tsakt;
-		return;
-		}
+	if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
 	(maclist + i)->tsakt = tsakt;
-	memcpy((maclist + i)->mac, macfrx->addr1, ETH_ALEN);
-	qsort(maclist, i + 1, MACLIST_SIZE, sort_maclist_by_tsakt);
-	writeepb();
 	return;
 	}
-for(i = 0; i < APRGLIST_MAX - 1; i++)
-	{
-	if(memcmp(&macaprg, macfrx->addr1, ETH_ALEN) != 0) continue;
-	(aprglist + i)->tsakt = tsakt;
-	send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
-	return;
-	}
+(maclist + i)->tsakt = tsakt;
+memcpy((maclist + i)->mac, macfrx->addr1, ETH_ALEN);
+qsort(maclist, i + 1, MACLIST_SIZE, sort_maclist_by_tsakt);
 writeepb();
 return;
 }
@@ -2353,7 +2384,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 			if(((aplist + i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_reassociationrequest(i);
 			}
 		}
-	(aplist + i)->count--;
+	(aplist + i)->count -= 1;
 	return;
 	}
 memset((aplist + i), 0, APLIST_SIZE);
@@ -2816,7 +2847,6 @@ while(nla_ok(nlan, nlanremlen))
 	nlan = nla_next(nlan, &nlanremlen);
 	}
 if((freql + ipl->i)->frequency != 0) ipl->i++;
-
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -3221,7 +3251,6 @@ nla->nla_len = 8;
 nla->nla_type = NL80211_ATTR_PS_STATE;
 *(u32*)nla_data(nla) = NL80211_PS_DISABLED;
 i += 8;
-
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return;
 while(1)
@@ -3761,7 +3790,7 @@ static int socket_rx_flags;
 static int prioval;
 static socklen_t priolen;
 
-if((fd_socket_tx = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) return false;
+if((fd_socket_tx = socket(PF_PACKET, SOCK_RAW | SOCK_CLOEXEC, htons(ETH_P_ALL))) < 0) return false;
 memset(&mrq, 0, sizeof(mrq));
 mrq.mr_ifindex = ifaktindex;
 mrq.mr_type = PACKET_MR_PROMISC;
@@ -3801,7 +3830,7 @@ if(bpfname != NULL)
 		return false;
 		}
 	}
-if((fd_socket_rx = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) return false;
+if((fd_socket_rx = socket(PF_PACKET, SOCK_RAW | SOCK_CLOEXEC, htons(ETH_P_ALL))) < 0) return false;
 memset(&mrq, 0, sizeof(mrq));
 mrq.mr_ifindex = ifaktindex;
 mrq.mr_type = PACKET_MR_PROMISC;
@@ -3812,7 +3841,6 @@ if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) ret
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
 if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
 #endif
-
 if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) return false;
@@ -3928,7 +3956,7 @@ return;
 /*---------------------------------------------------------------------------*/
 static bool open_socket_unix(void)
 {
-if((fd_socket_unix = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0) return false;
+if((fd_socket_unix = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC, 0)) < 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -3938,7 +3966,7 @@ static struct sockaddr_nl saddr;
 static int nltxbuffsize = NLTX_SIZE;
 static int nlrxbuffsize = NLRX_SIZE;
 
-if((fd_socket_rt = socket(AF_NETLINK, SOCK_RAW|SOCK_CLOEXEC, NETLINK_ROUTE)) < 0) return false;
+if((fd_socket_rt = socket(AF_NETLINK, SOCK_RAW | SOCK_CLOEXEC, NETLINK_ROUTE)) < 0) return false;
 if(setsockopt(fd_socket_rt, SOL_SOCKET, SO_SNDBUF, &nltxbuffsize, sizeof(nltxbuffsize)) < 0) return false;
 if(setsockopt(fd_socket_rt, SOL_SOCKET, SO_RCVBUF, &nlrxbuffsize, sizeof(nlrxbuffsize)) < 0) return false;
 memset(&saddr, 0, sizeof(saddr));
@@ -4003,10 +4031,7 @@ return true;
 /* SIGNALHANDLER */
 static void signal_handler(int signum)
 {
-if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum ==  SIGTSTP))
-	{
-	wanteventflag |= EXIT_ON_SIGTERM;
-	}
+if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum ==  SIGTSTP)) wanteventflag |= EXIT_ON_SIGTERM;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -4037,10 +4062,8 @@ clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 tshold = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 strftime(timestring1, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
-
 seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);
-
 ouiaprg = (vendoraprg[rand() % ((VENDORAPRG_SIZE / sizeof(int)))]) &0xffffff;
 nicaprg = rand() & 0xffffff;
 macaprg[5] = nicaprg & 0xff;
@@ -4049,13 +4072,11 @@ macaprg[3] = (nicaprg >> 16) & 0xff;
 macaprg[2] = ouiaprg & 0xff;
 macaprg[1] = (ouiaprg >> 8) & 0xff;
 macaprg[0] = (ouiaprg >> 16) & 0xff;
-
 aprglist->tsakt = tsakt;
 aprglist->essidlen = strnlen(macaprgfirst, ESSID_MAX);
 memcpy(aprglist->essid, macaprgfirst, strnlen(macaprgfirst, ESSID_MAX));
 memcpy(aprglist->macaprg, &macaprg, ETH_ALEN);
 nicaprg++;
-
 ouiclientrg = (vendorclientrg[rand() % ((VENDORCLIENTRG_SIZE / sizeof(int)))]) &0xffffff;
 nicclientrg = rand() & 0xffffff;
 macclientrg[7] = 0;
@@ -4066,7 +4087,6 @@ macclientrg[3] = (nicclientrg >> 16) & 0xff;
 macclientrg[2] = ouiclientrg & 0xff;
 macclientrg[1] = (ouiclientrg >> 8) & 0xff;
 macclientrg[0] = (ouiclientrg >> 16) & 0xff;
-
 strncpy(weakcandidate, WEAKCANDIDATEDEF, PSK_MAX);
 replaycountrg = (rand() % 0xfff) + 0xf000;
 eapolm1data[0x17] = (replaycountrg >> 8) &0xff;
@@ -4256,7 +4276,6 @@ len = fgetline(modinfo, RASPBERRY_INFO, linein);
 fclose(modinfo);
 if(len < RPINAME_SIZE) return false;
 if(memcmp(&rpiname, &linein, RPINAME_SIZE) != 0) return false;
-
 if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 	{
 	while(1)
@@ -4272,7 +4291,6 @@ if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 		}
 	fclose(procinfo);
 	}
-
 if((procinfo = fopen("/proc/iomem", "r")) != NULL)
 	{
 	while(1)
@@ -4342,12 +4360,13 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"        press GPIO button to terminate\n"
 	"        hardware modification is necessary, read more:\n"
 	"        https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
+	"        stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
 	"        do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)\n"
 	"        do not use logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw\n"
 	"        do not use virtual machines or emulators\n"
 	"        do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)\n"
 	"        do not use tools to change MAC (like macchanger)\n"
-	"        stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
+	"        do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n"
 	"short options:\n"
 	"-i <INTERFACE> : name of INTERFACE to be used\n"
@@ -4436,14 +4455,14 @@ fprintf(stdout, "long options:\n"
 	"--gpsd                         : use gpsd to get position\n"
 	"                                  gpsd will be switched to NMEA0183 mode\n"
 	"--nmea_out=<outfile>           : write GPS information to a nmea-format file named <outfile>\n"
-	"                                  default outfile name: yyyyddmmhhmmss.nmea\n"
+	"                                  default outfile name: yyyymmddhhmmss.nmea\n"
 	"                                  output: NMEA 0183 standard messages:\n"
 	"                                          $GPRMC: Position, velocity, time and date\n"
 	"                                          $GPGGA: Position, orthometric height, fix related data, time\n"
 	"                                          $GPWPL: Position and MAC AP\n"
 	"                                          $GPTXT: ESSID in HEX ASCII\n"
 	"                                  use gpsbabel to convert to other formats:\n"
-	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file_gpx\n"
+	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
 	#endif
@@ -4464,12 +4483,14 @@ fprintf(stdout, "long options:\n"
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
-	" R = + AP is in TX range\n"
-	" P = + got PMKID\n"
-	" M = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
-	" M = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n"
-	" A = + AUTHENTICATION KEY MANAGEMENT PSK\n"
-	"Notice:\n"
+	" R   = + AP display:     AP is in TX range or under attack\n"
+	" A   = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
+	" PID = + AP display:     got PMKID\n"
+	" M1C = + AP display:     got EAPOL M1 (CHALLENGE)\n"
+	" M3A = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
+	" M2R = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
+
+fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
 	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
@@ -4505,13 +4526,11 @@ static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
 static char *pcapngoutname = NULL;
-
 #ifdef NMEAOUT
 static bool gpsdflag = false;
 static char *nmea0183name = NULL;
 static char *nmeaoutname = NULL;
 #endif
-
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLhv";
@@ -4784,7 +4803,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		rcascanflag = optarg;
 		if((rcascanflag[0] != 'a') && (rcascanflag[0] != 'p'))
 			{
-			fprintf(stderr, "rcascan: only (a)active or (p) passive allowed\n");
+			fprintf(stderr, "rcascan: only (a) active or (p) passive allowed\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
@@ -4950,7 +4969,6 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\e[?25l");
 nanosleep(&tspecifo, &tspeciforem);
-
 if(rcascanflag == NULL)
 	{
 	if(nl_scanloop() == false)
