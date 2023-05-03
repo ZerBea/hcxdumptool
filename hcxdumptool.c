@@ -550,6 +550,7 @@ static char *pmok = "+";
 static char *ps;
 static char *mc;
 static char *ma;
+static char *me;
 static char *ak;
 static char *ar;
 
@@ -596,25 +597,27 @@ for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
 if(rdsort == 0)
 	{
 	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-	sprintf(&rtb[p], "   LAST   2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last seen on top)\n"
+	sprintf(&rtb[p], "   LAST   E 2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last seen on top)\n"
 			 "-----------------------------------------------------------------------------------------\n");
 	}
 else
 	{
 	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_status);
-	sprintf(&rtb[p], "   LAST   2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last M2ROGUE on top)\n"
+	sprintf(&rtb[p], "   LAST   E 2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last M2ROGUE on top)\n"
 			 "-----------------------------------------------------------------------------------------\n");
 	}
 p = strlen(rtb);
 for(i = 0; i < 20; i++)
 	{
 	if((clientlist + i)->tsakt == 0) break;
+	if(((clientlist + i)->status & CLIENT_EAP_START) == CLIENT_EAP_START) me = pmok;
+	else me = pmdef;
 	if(((clientlist + i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) mc = pmok;
 	else mc = pmdef;
 	tvlast = (clientlist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " %s %s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
-			timestring1, mc,
+	sprintf(&rtb[p], " %s %s %s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
+			timestring1, mc, me,
 			(clientlist + i)->macap[0], (clientlist + i)->macap[1], (clientlist + i)->macap[2], (clientlist + i)->macap[3], (clientlist + i)->macap[4], (clientlist + i)->macap[5],
 			(clientlist + i)->macclient[0], (clientlist + i)->macclient[1], (clientlist + i)->macclient[2], (clientlist + i)->macclient[3], (clientlist + i)->macclient[4], (clientlist + i)->macclient[5],
 			(clientlist + i)->ie.essidlen, (clientlist + i)->ie.essid);
@@ -4500,6 +4503,7 @@ fprintf(stdout, "Legend\n"
 	" P = + AP display:     got PMKID\n"
 	" 1 = + AP display:     got EAPOL M1 (CHALLENGE)\n"
 	" 3 = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
+	" E = + CLIENT display: got EAP-START MESSAGE\n"
 	" 2 = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
 
 fprintf(stdout, "Notice:\n"
