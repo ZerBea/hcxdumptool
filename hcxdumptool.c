@@ -41,7 +41,6 @@
 #include "include/pcapng.h"
 #include "include/radiotap.h"
 #include "include/raspberry.h"
-#include "include/wireless-lite.h"
 /*===========================================================================*/
 /*
 static void debugprint();

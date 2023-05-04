@@ -1,5 +1,3 @@
-#define PROTOCOL80211NAME_LEN	11
-
 /*===========================================================================*/
 #define MAC_SIZE_ACK		(10)
 #define MAC_SIZE_RTS		(16)
