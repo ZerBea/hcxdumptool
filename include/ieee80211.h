@@ -368,8 +368,6 @@ typedef struct __attribute__((__packed__))
  ieee80211_qos_t	qos;
 }ieee80211_mac_t;
 /*===========================================================================*/
-static const char *protocol80211 = "IEEE 802.11";
-
 static const u8 zeroed[] =
 {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

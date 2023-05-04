@@ -402,9 +402,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 	if((ifpresentlist + i)->index != ifaktindex) continue;
 	fprintf(stdout, "\ninterface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 			"---------------------------------------------------------------------------------------------\n");
-	if(((ifpresentlist + i)->type & IF_HAS_NLWEXT) == IF_HAS_NLWEXT) po = "NETLINK & WIRELESS EXTENSIONS";
-	else if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	else if(((ifpresentlist + i)->type & IF_HAS_WEXT) == IF_HAS_WEXT) po = "WIRELESS EXTENSIONS";
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
 	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
 	else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
 	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
@@ -450,9 +448,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 	if((ifpresentlist + i)->index != ifaktindex) continue;
 	fprintf(stdout, "\ninterface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 			"---------------------------------------------------------------------------------------------\n");
-	if(((ifpresentlist + i)->type & IF_HAS_NLWEXT) == IF_HAS_NLWEXT) po = "NETLINK & WIRELESS EXTENSIONS";
-	else if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	else if(((ifpresentlist + i)->type & IF_HAS_WEXT) == IF_HAS_WEXT) po = "WIRELESS EXTENSIONS";
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
 	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
 	else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
 	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
@@ -485,9 +481,7 @@ fprintf(stdout, "\navailable wlan devices:\n\nphy idx hw-mac       virtual-mac  
 		"---------------------------------------------------------------------------------------------\n");
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
-	if(((ifpresentlist + i)->type & IF_HAS_NLWEXT) == IF_HAS_NLWEXT) po = "NETLINK & WIRELESS EXTENSIONS";
-	else if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	else if(((ifpresentlist + i)->type & IF_HAS_WEXT) == IF_HAS_WEXT) po = "WIRELESS EXTENSIONS";
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
 	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
 	else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
 	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
@@ -2795,18 +2789,6 @@ return true;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-/* IOCTL WIRELESS EXTENSIONS */
-static void ioctl_get_wireless_extensions(size_t i)
-{
-struct iwreq pwrq;
-
-memset(&pwrq, 0, sizeof(pwrq));
-memcpy(pwrq.ifr_name, (ifpresentlist + i)->name, IF_NAMESIZE);
-if(ioctl(fd_socket_unix, SIOCGIWNAME, &pwrq) < 0) return;
-if(strncmp(protocol80211, pwrq.u.name, PROTOCOL80211NAME_LEN) == 0) (ifpresentlist + i)->type |= IF_HAS_WEXT;
-return;
-}
-/*===========================================================================*/
 /* NETLINK */
 static struct nlattr *nla_next(const struct nlattr *nla, int *remaining)
 {
@@ -3787,7 +3769,6 @@ if(nl_get_interfacelist() == false) return false;
 for(i = 0; i < INTERFACELIST_MAX -1; i++)
 	{
 	if((ifpresentlist + i)->index == 0) break;
-	ioctl_get_wireless_extensions(i);
 	ifpresentlistcounter++;
 	}
 if(rt_get_interfacelist() == false) return false;
