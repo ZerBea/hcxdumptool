@@ -4,9 +4,11 @@ sleep 10
 chmod 777 -R /home
 cd /home
 iw reg set IN
-#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect.bpfc --essidlist=standard.essidliste --attemptapmax=1000 --attemptclientmax=100 --beacontx=5
-#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect.bpfc --essidlist=standard.essidliste --attemptapmax=1000 --attemptclientmax=20 --beacontx=5 -c 1a,6a,11a,2a,1a,6a,11a,13a,1a,6a,11a,3a,1a,6a,11a,12a,1a,6a,11a,4a,1a,6a,11a,10a,1a,6a,11a,5a,1a,6a,11a,9a,1a,6a,11a,7a,1a,6a,11a,8a
-#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=protect_ext.bpfc --essidlist=standard.essidliste --tot=8640 -t 120  --beacontx=5 -c 1a,3a,6a,9a --disable_deauthentication --disable_proberequest --disable_association --disable_reassociation
+#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=own.bpfc --essidlist=standard.essidlist --beacontx=5
+#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=own.bpfc --essidlist=standard.essidlist --beacontx=5 -c 1a,6a,11a,2a,1a,6a,11a,13a,1a,6a,11a,3a,1a,6a,11a,12a,1a,6a,11a,4a,1a,6a,11a,10a,1a,6a,11a,5a,1a,6a,11a,9a,1a,6a,11a,7a,1a,6a,11a,8a
+#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=own.bpfc --essidlist=standard.essidlist --beacontx=5 -c 1a,6a,11a,2a,1a,6a,11a,13a,1a,6a,11a,3a,1a,6a,11a,12a,1a,6a,11a,4a,1a,6a,11a,10a,1a,6a,11a,5a,1a,6a,11a,9a,1a,6a,11a,7a,1a,6a,11a,8a,1a,6a,11a,36b,1a,6a,11a,40b,1a,6a,11a,44b,1a,6a,11a,48b
+#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=own.bpfc --essidlist=standard.essidlist --tot=8640 --attemptclientmax=2 --beacontx=5 -t 120 -c 1a,8a,3a,6a,4a,7a,2a,5a --disable_deauthentication --disable_proberequest --disable_association --disable_reassociation
+#hcxdumptool --gpio_button=4 --gpio_statusled=17 --onsigterm=exit --ongpiobutton=poweroff --ontot=reboot --onerror=reboot --onwatchdog=reboot --bpf=own.bpfc --essidlist=standard.essidlist --attemptapmax=1000 --attemptclientmax=20 --beacontx=5 -c 1a,6a,11a,2a,1a,6a,11a,13a,1a,6a,11a,3a,1a,6a,11a,12a,1a,6a,11a,4a,1a,6a,11a,10a,1a,6a,11a,5a,1a,6a,11a,9a,1a,6a,11a,7a,1a,6a,11a,8a
 systemctl start dhcpcd.service
 systemctl start ssh.service
 #poweroff
