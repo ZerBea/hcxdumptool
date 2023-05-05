@@ -4848,7 +4848,7 @@ if((gpiobutton + gpiostatusled) > 0)
 if(init_lists() == false)
 	{
 	errorcount++;
-	fprintf(stderr, "failed to open control sockets\n");
+	fprintf(stderr, "failed to initialize lists\n");
 	goto byebye;
 	}
 init_values();
