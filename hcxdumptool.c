@@ -2711,7 +2711,7 @@ return true;
 }
 /*===========================================================================*/
 /* RCA SCAN LOOP */
-static bool nl_scanloop_rca(char *rcatypeflag)
+static bool nl_scanloop_rca(const char *rcatypeflag)
 {
 static ssize_t i;
 static int fd_epoll = 0;
