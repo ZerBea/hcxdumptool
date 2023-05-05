@@ -26,7 +26,6 @@
 #include <sys/cdefs.h>
 #include <sys/epoll.h>
 #include <sys/file.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
