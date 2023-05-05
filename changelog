@@ -1,9 +1,9 @@
-06.05.2023
+05.05.2023
 ==========
+release v6.3.0
+
 Since kernel 6.3 Kernel developer decided to print a dmesg warning if tools are detected that use deprecated WEXT:
-
 [ 2770.939021] warning: `hcxdumptool' uses wireless extensions which will stop working for Wi-Fi 7 hardware; use nl80211
-
 hcxdumptool used ioctl(SIOCGIWNAME) to detect presence of WEXT. That was the last remnant of WEXT code.
 To get rid of this dmesg warning, this detection has been removed by latest commit.
 
