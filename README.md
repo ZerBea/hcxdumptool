@@ -157,11 +157,11 @@ Requirements
 * detailed knowledge of key derivation functions
 * detailed knowledge of Linux
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
-* operating system: Linux distribution, Kernel >= 5.15
+* operating system: Linux Kernel >= 6.1
 * recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
-* gcc >= 11 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+* gcc >= 12 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 * to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
