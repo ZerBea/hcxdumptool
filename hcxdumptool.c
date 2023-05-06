@@ -2709,7 +2709,7 @@ while(!wanteventflag)
 			#ifdef NMEAOUT
 			if(((lifetime % 2) == 0) && (nmea2pcapflag == true))
 				{
-				if((gpggalen + gprmclen) > 0) writecbnmea();
+				if((gpggalen > 2) || (gprmclen > 2)) writecbnmea();
 				}
 			#endif
 			if((lifetime % 10) == 0)
