@@ -1,3 +1,9 @@
+06.05.2023
+==========
+hcxdumptool: added option to save GPS information to pcapng dumpfile
+--nmea_pcapng                  : write GPS information to pcapng dump file
+
+
 05.05.2023
 ==========
 release v6.3.0

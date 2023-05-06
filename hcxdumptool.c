@@ -85,7 +85,9 @@ static u8 rdsort = 0;
 #ifdef NMEAOUT
 static int fd_gps = 0;
 static int fd_hcxpos = 0;
+static bool nmea2pcapflag = false;
 #endif
+
 static struct sock_fprog bpf = { 0 };
 
 static int ifaktindex = 0;
@@ -959,6 +961,33 @@ totallength->total_length = cblen;
 if(write(fd_pcapng, &cb, cblen) != cblen) return false;
 return true;
 }
+/*---------------------------------------------------------------------------*/
+#ifdef NMEAOUT
+static bool writecbnmea(void)
+{
+static ssize_t cblen;
+static custom_block_t *cbhdr;
+static total_length_t *totallength;
+static u8 cb[PCAPNG_BLOCK_SIZE];
+
+memset(&cb, 0, PCAPNG_BLOCK_SIZE);
+cbhdr = (custom_block_t*)cb;
+cblen = CB_SIZE;
+cbhdr->block_type = CBID;
+cbhdr->total_length = CB_SIZE;
+memcpy(cbhdr->pen, &hcxmagic, 4);
+memcpy(cbhdr->hcxm, &hcxmagic, 32);
+if(gprmclen > 2) cblen += addoption(cb +cblen, OPTIONCODE_NMEA, gprmclen - 2, gprmc);
+if(gpggalen > 2) cblen += addoption(cb +cblen, OPTIONCODE_NMEA, gpggalen - 2, gpgga);
+cblen += addoption(cb +cblen, 0, 0, NULL);
+totallength = (total_length_t*)(cb +cblen);
+cblen += TOTAL_SIZE;
+cbhdr->total_length = cblen;
+totallength->total_length = cblen;
+if(write(fd_pcapng, &cb, cblen) != cblen) return false;
+return true;
+}
+#endif
 /*---------------------------------------------------------------------------*/
 static bool open_pcapng(char *pcapngoutname)
 {
@@ -2676,6 +2705,13 @@ while(!wanteventflag)
 				if(nl_set_frequency() == false) errorcount++;
 				tshold = tsakt;
 				}
+
+			#ifdef NMEAOUT
+			if(((lifetime % 2) == 0) && (nmea2pcapflag == true))
+				{
+				if((gpggalen + gprmclen) > 0) writecbnmea();
+				}
+			#endif
 			if((lifetime % 10) == 0)
 				{
 				if(gpiostatusled > 0)
@@ -4458,6 +4494,7 @@ fprintf(stdout, "long options:\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
+	"--nmea_pcapng                  : write GPS information to pcapng dump file\n"
 	#endif
 	"--rcascan=<character>          : do (R)adio (C)hannel (A)ssignment scan\n"
 	"                                  default = passive scan\n"
@@ -4546,6 +4583,7 @@ static const struct option long_options[] =
 	{"nmea_dev",			required_argument,	NULL,	HCX_NMEA0183},
 	{"gpsd",			no_argument,		NULL,	HCX_GPSD},
 	{"nmea_out",			required_argument,	NULL,	HCX_NMEA0183_OUT},
+	{"nmea_pcapng",			no_argument,		NULL,	HCX_NMEA0183_PCAPNG},
 	#endif
 	{"errormax",			required_argument,	NULL,	HCX_ERROR_MAX},
 	{"watchdogmax",			required_argument,	NULL,	HCX_WATCHDOG_MAX},
@@ -4790,6 +4828,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_NMEA0183_OUT:
 		nmeaoutname = optarg;
+		break;
+
+		case HCX_NMEA0183_PCAPNG:
+		nmea2pcapflag = true;
 		break;
 		#endif
 

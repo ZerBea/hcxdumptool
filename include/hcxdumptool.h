@@ -23,8 +23,9 @@
 #define HCX_NMEA0183			22
 #define HCX_GPSD			23
 #define HCX_NMEA0183_OUT		24
-#define HCX_RCASCAN			25
-#define HCX_RD_SORT			26
+#define HCX_NMEA0183_PCAPNG		25
+#define HCX_RCASCAN			26
+#define HCX_RD_SORT			27
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'
@@ -103,7 +104,6 @@
 #define NMEA_CS_CR_LF_SIZE	5
 #define NMEA_GPWPLID_SIZE	6
 #define NMEA_GPTXTID_SIZE	6 +1
-
 
 #define NLTX_SIZE		0xfff
 #define NLRX_SIZE		0xffff
