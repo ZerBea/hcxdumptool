@@ -713,7 +713,6 @@ gpwpl[p2++] = '\n';
 if(write(fd_hcxpos, gpwpl, p2) != p2) errorcount++;
 gpwpl[p2++] = '\0';
 if(((aplist + i)->ie.essidlen == 0) || ((aplist + i)->ie.essidlen > ESSID_MAX)) return;
-
 p2 = 7;
 cs = 0x63;
 for(p1 = 0; p1 < (aplist + i)->ie.essidlen; p1 ++)
