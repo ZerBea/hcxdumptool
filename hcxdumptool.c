@@ -4420,6 +4420,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                  default %llu seconds\n"
 	"-m <INTERFACE> : set monitor mode and terminate\n"
+	"-p             : do not set active monitor mode\n"
 	"-L             : show INTERFACE list\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE\n"
 	"-h             : show this help\n"
@@ -4506,7 +4507,6 @@ fprintf(stdout, "long options:\n"
 	"                                  default: sort by time (last seen on top)\n"
 	"                                  1 = sort by status (last PMKID/EAPOL on top)\n"
 	#endif
-	"--disable_active_monitor       : do not set active monitor mode flag\n"
 	"--help                         : show this help\n"
 	"--version                      : show version\n"
 	"\n",
@@ -4566,7 +4566,7 @@ static char *nmeaoutname = NULL;
 #endif
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
-static const char *short_options = "i:w:c:f:m:I:t:FLhv";
+static const char *short_options = "i:w:c:f:m:I:t:FLphv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -4600,7 +4600,6 @@ static const struct option long_options[] =
 	#ifdef STATUSOUT
 	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
 	#endif
-	{"disable_active_monitor",	no_argument,		NULL,	HCX_DISABLE_ACTIVE_MONITOR},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
@@ -4853,7 +4852,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 		#endif
 
-		case HCX_DISABLE_ACTIVE_MONITOR:
+		case HCX_SET_MONITORMODE_PASSIVE:
 		activemonitorflag = false;
 		break;
 
