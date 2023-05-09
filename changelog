@@ -8,7 +8,7 @@ Running active monitor mode, only frames addressed to the MAC of the device
 or addressed to BROADCAST MAC are received. This is a driver/firmware problem!
 To verify if you are affected:
 run hcxdumptool
-run Wireshark in parallel and set filte roption to "eapol"
+run Wireshark in parallel and set filter option to "eapol"
 if Wireshark only show EAPOL M1 frames it is mandatory to disable active monitor mode
 by option "-p"
 
