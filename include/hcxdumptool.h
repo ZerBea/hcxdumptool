@@ -26,6 +26,7 @@
 #define HCX_NMEA0183_PCAPNG		25
 #define HCX_RCASCAN			26
 #define HCX_RD_SORT			27
+#define HCX_DISABLE_ACTIVE_MONITOR	28
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'

@@ -60,6 +60,7 @@ static bool deauthenticationflag = true;
 static bool proberequestflag = true;
 static bool associationflag = true;
 static bool reassociationflag = true;
+static bool activemonitorflag = true;
 
 static u8 wanteventflag = 0;
 
@@ -3334,7 +3335,7 @@ nla->nla_len = 8;
 nla->nla_type = NL80211_ATTR_IFTYPE;
 *(u32*)nla_data(nla) = NL80211_IFTYPE_MONITOR;
 i += 8;
-if((ifakttype & IFTYPEMONACT) == IFTYPEMONACT)
+if(((ifakttype & IFTYPEMONACT) == IFTYPEMONACT) && (activemonitorflag == true))
 	{
 	nla = (struct nlattr*)(nltxbuffer + i);
 	nla->nla_len = 8;
@@ -4505,6 +4506,7 @@ fprintf(stdout, "long options:\n"
 	"                                  default: sort by time (last seen on top)\n"
 	"                                  1 = sort by status (last PMKID/EAPOL on top)\n"
 	#endif
+	"--disable_active_monitor       : do not set active monitor mode flag\n"
 	"--help                         : show this help\n"
 	"--version                      : show version\n"
 	"\n",
@@ -4598,6 +4600,7 @@ static const struct option long_options[] =
 	#ifdef STATUSOUT
 	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
 	#endif
+	{"disable_active_monitor",	no_argument,		NULL,	HCX_DISABLE_ACTIVE_MONITOR},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
@@ -4849,6 +4852,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		rdsort = strtol(optarg, NULL, 10);
 		break;
 		#endif
+
+		case HCX_DISABLE_ACTIVE_MONITOR:
+		activemonitorflag = false;
+		break;
 
 		case HCX_HELP:
 		usage(basename(argv[0]));

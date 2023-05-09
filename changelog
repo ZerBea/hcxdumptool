@@ -1,3 +1,19 @@
+09.05.2023
+==========
+hcxdumptool: added option to revemove active monitor flag
+--disable_active_monitor       : do not set active monitor mode flag
+
+This is a workaround on mt7601u devices/drivers.
+Running active monitor mode, only frames addressed to the MAC of the device
+or addressed to BROADCAST MAC are received. This is a driver/firmware problem!
+To verify if you are affected:
+run hcxdumptool
+run Wireshark in parallel and set filte roption to "eapol"
+if Wireshark only show EAPOL M1 frames it is mandatory to disable active monitor mode
+by "--disable_active_monitor"
+
+
+
 06.05.2023
 ==========
 hcxdumptool: added option to save GPS information to pcapng dumpfile
