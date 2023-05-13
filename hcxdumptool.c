@@ -2154,7 +2154,7 @@ static essid_t essid;
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
+if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
 for(i = 0; i < MACLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr1, (maclist + i)->mac, ETH_ALEN) != 0) continue;
@@ -2182,7 +2182,7 @@ if(essid.len == 0)
 	{
 	if(proberesponseindex >= proberesponsetxmax) proberesponseindex = 0;
 	if((aprglist + proberesponseindex)->essidlen == 0)  proberesponseindex = 0;
-	send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+	if (attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
 	proberesponseindex++;
 	return;
 	}
@@ -2191,7 +2191,7 @@ for(i = 0; i < APRGLIST_MAX - 1; i++)
 	if((aprglist + i)->essidlen != essid.len) continue;
 	if(memcmp((aprglist + i)->essid, essid.essid, essid.len) != 0) continue;
 	(aprglist + i)->tsakt = tsakt;
-	send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
+	if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
 	return;
 	}
 memset((aprglist + i), 0, APRGLIST_SIZE);
@@ -2205,7 +2205,7 @@ memcpy((aprglist + i)->essid, essid.essid, essid.len);
 (aprglist + i)->macaprg[1] = (ouiaprg >> 8) & 0xff;
 (aprglist + i)->macaprg[0] = (ouiaprg >> 16) & 0xff;
 nicaprg++;
-send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
+if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + i)->macaprg, essid.len, essid.essid);
 qsort(aprglist, i + 1, APRGLIST_SIZE, sort_aprglist_by_tsakt);
 writeepb();
 return;
