@@ -2182,7 +2182,7 @@ if(essid.len == 0)
 	{
 	if(proberesponseindex >= proberesponsetxmax) proberesponseindex = 0;
 	if((aprglist + proberesponseindex)->essidlen == 0)  proberesponseindex = 0;
-	if (attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+	if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
 	proberesponseindex++;
 	return;
 	}
@@ -4458,6 +4458,7 @@ fprintf(stdout, "long options:\n"
 	"                                 default: %d seconds\n"
 	"--attemptclientmax=<digit>     : set maximum of attempts to request an EAPOL M2\n"
 	"                                 default: %d attempts\n"
+	"                                 to disable CLIENT attacks set 0\n"
 	"--attemptapmax=<digit>         : set maximum of received BEACONs to request a PMKID or to get a 4-way handshake\n"
 	"                                 default: stop after %d received BEACONs\n"
 	"--tot=<digit>                  : enable timeout timer in minutes\n"
