@@ -4683,20 +4683,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_ATTEMPT_CLIENT_MAX:
-		if((attemptclientmax = strtoul(optarg, NULL, 10)) < 1)
-			{
-			fprintf(stderr, "number of attempts must be > 0\n");
-			exit(EXIT_FAILURE);
-			}
+		attemptclientmax = strtoul(optarg, NULL, 10);
 		break;
 
 		case HCX_ATTEMPT_AP_MAX:
-		if((attemptapmax = strtoul(optarg, NULL, 10)) < 1)
-			{
-			fprintf(stderr, "number of attempts must be > 0\n");
-			exit(EXIT_FAILURE);
-			}
-		attemptapmax *= 8;
+		if((attemptapmax = strtoul(optarg, NULL, 10)) > 0) attemptapmax *= 8;
 		break;
 
 		case HCX_HOLD_TIME:
