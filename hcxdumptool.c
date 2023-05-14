@@ -4689,6 +4689,13 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_ATTEMPT_AP_MAX:
 		if((attemptapmax = strtoul(optarg, NULL, 10)) > 0) attemptapmax *= 8;
+		else
+			{
+			deauthenticationflag = false;
+			proberequestflag = false;
+			associationflag = false;
+			reassociationflag = false;
+			}
 		break;
 
 		case HCX_HOLD_TIME:
