@@ -1987,7 +1987,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
 tagwalk_channel_essid_rsn(&(clientlist + i)->ie, reassociationrequestlen, reassociationrequest->ie);
-if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
+if((((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0) && (attemptclientmax > 0))
 	{
 	send_80211_reassociationresponse((clientlist + i)->aid++);
 	send_80211_eapol_m1();
@@ -2044,7 +2044,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
 tagwalk_channel_essid_rsn(&(clientlist + i)->ie, associationrequestlen, associationrequest->ie);
-if(((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0)
+if((((clientlist + i)->ie.flags & APRSNAKM_PSK) != 0) && (attemptclientmax > 0))
 	{
 	send_80211_associationresponse();
 	send_80211_eapol_m1();
@@ -2081,7 +2081,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist + i)->count = attemptclientmax;
 memcpy((clientlist + i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist + i)->macap, macfrx->addr1, ETH_ALEN);
-send_80211_authenticationresponse();
+if(attemptclientmax > 0) send_80211_authenticationresponse();
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 writeepb();
 return;
