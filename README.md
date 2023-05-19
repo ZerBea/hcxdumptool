@@ -157,7 +157,7 @@ Requirements
 * detailed knowledge of key derivation functions
 * detailed knowledge of Linux
 * detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
-* operating system: Linux Kernel >= 6.1
+* operating system: Linux (recommended: kernel >= 6.1, mandatory: kernel >= 5.10)
 * recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
