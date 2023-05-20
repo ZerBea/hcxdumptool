@@ -13,8 +13,8 @@ run Wireshark in parallel and set filter option to "eapol"
 if Wireshark only show EAPOL M1 frames it is mandatory to disable active monitor mode
 by option "-p"
 
-Problem is reported on upstream:
-https://github.com/openwrt/mt76/issues/778
+Problem is reported here:
+https://bugzilla.kernel.org/show_bug.cgi?id=217465
 
 
 06.05.2023
