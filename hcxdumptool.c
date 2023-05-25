@@ -654,9 +654,10 @@ switch(band)
 	case NL80211_BAND_60GHZ:
 	if(channel < 7) return 56160 + (channel * 2160);
 	break;
-
+	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	case NL80211_BAND_S1GHZ:
 	return 902000 + (channel * 500);
+	#endif
 	}
 return 0;
 }
@@ -3566,16 +3567,22 @@ while(1)
 		rtaremlen = NLMSG_PAYLOAD(nlh, 0) - sizeof(struct ifinfomsg);
 		while(RTA_OK(rta, rtaremlen))
 			{
+			#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 			if(rta->rta_type == IFLA_PERM_ADDRESS)
 				{
 				if(rta->rta_len == 10) memcpy(hwmac, rta_data(rta), ETH_ALEN);
 				}
+			#else
+			if(rta->rta_type == IFLA_ADDRESS)
+				{
+				if(rta->rta_len == 10) memcpy(hwmac, rta_data(rta), ETH_ALEN);
+				}
+			#endif
 			rta = RTA_NEXT(rta, rtaremlen);
 			}
 		for(i = 0; i < INTERFACELIST_MAX; i++)
 			{
-			if((ifpresentlist + i)->index == ifih->ifi_index)
-				memcpy((ifpresentlist + i)->hwmac, &hwmac, ETH_ALEN);
+			if((ifpresentlist + i)->index == ifih->ifi_index) memcpy((ifpresentlist + i)->hwmac, &hwmac, ETH_ALEN);
 			}
 		}
 	}
@@ -3751,7 +3758,9 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 			else if(userband[0] == 'b') ufreq = channel_to_frequency(uband, NL80211_BAND_5GHZ);
 			else if(userband[0] == 'c') ufreq = channel_to_frequency(uband, NL80211_BAND_6GHZ);
 			else if(userband[0] == 'd') ufreq = channel_to_frequency(uband, NL80211_BAND_60GHZ);
+			#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 			else if(userband[0] == 'e') ufreq = channel_to_frequency(uband, NL80211_BAND_S1GHZ);
+			#endif
 			usrfrequency_to_scanlist(ufreq);
 			tokptr = strtok(NULL, ",");
 			}
@@ -4413,7 +4422,9 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                   band b: NL80211_BAND_5GHZ\n"
 	"                   band c: NL80211_BAND_6GHZ\n"
 	"                   band d: NL80211_BAND_60GHZ\n"
+	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	"                   band e: NL80211_BAND_S1GHZ (902 MHz)\n" 
+	#endif
 	"                  to disable frequency management, set this option to a single frequency/channel\n" 
 	"-f <digit>     : set frequency (2412,2417,5180,...)\n"
 	"-F             : use available frequencies from INTERFACE\n"
