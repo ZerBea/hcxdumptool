@@ -510,7 +510,7 @@ static char *ak;
 if(system("clear") != 0) errorcount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE A   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
-	"------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
 for(i = 0; i < 40 ; i++)
@@ -2225,13 +2225,11 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
 	if(memcmp(&macclientrg, macfrx->addr1, 3) == 0) (aplist + i)->tsauth = tsakt;
-	if(((aplist + i)->status & AP_PROBERESPONSE) == 0)
-		{
-		(aplist + i)->status |= AP_PROBERESPONSE;
-		}
+	if(((aplist + i)->status & AP_PROBERESPONSE) == 0) (aplist + i)->status |= AP_PROBERESPONSE;
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
 	if(((aplist + i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist + i)->status |= AP_ESSID;
+	(aplist + i)->count = (scanlist + scanlistindex)->frequency;
 	return;
 	}
 memset((aplist + i), 0, APLIST_SIZE);
@@ -2246,6 +2244,7 @@ tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie
 if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
 if((aplist + i)->ie.channel != (scanlist + scanlistindex)->channel) return;
 if(((aplist + i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist + i)->status |= AP_ESSID;
+(aplist + i)->count = (scanlist + scanlistindex)->frequency;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -2791,8 +2790,11 @@ while(!wanteventflag)
 			clock_gettime(CLOCK_REALTIME, &tspecakt);
 			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 			if((lifetime % 5) == 0) show_realtime_rca();
-			scanlistindex++;
-			if(nl_set_frequency() == false) errorcount++;
+			if((lifetime % 2) == 0) 
+				{
+				scanlistindex++;
+				if(nl_set_frequency() == false) errorcount++;
+				}
 			if(rcatypeflag[0] == 'a') send_80211_proberequest_undirected();
 			if((lifetime % 10) == 0)
 				{
