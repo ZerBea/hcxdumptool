@@ -4537,11 +4537,11 @@ fprintf(stdout, "Legend\n"
 	"real time display:\n"
 	" R = + AP display:     AP is in TX range or under attack\n"
 	" S = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
-	" P = + AP display:     got PMKID\n"
+	" P = + AP display:     got PMKID hashcat / JtR can work on\n"
 	" 1 = + AP display:     got EAPOL M1 (CHALLENGE)\n"
-	" 3 = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION)\n"
+	" 3 = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
 	" E = + CLIENT display: got EAP-START MESSAGE\n"
-	" 2 = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE)\n");
+	" 2 = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
 
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
