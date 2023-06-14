@@ -95,6 +95,9 @@ or install to `/usr/local/bin`:
 make install PREFIX=/usr/local (as super user)
 ```
 
+On headless opearation remove -DSTATUSOUT from Makefile before compiling! The entire status display will not be compiled. That saves CPU cycles and prevent ERRORs.
+
+
 Or install via package manager
 --------------
 
