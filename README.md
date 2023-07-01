@@ -201,6 +201,8 @@ Not recommended WiFi chipsets:
 
 * Qualcomm (no frame injection by official Linux kernel)
 
+* Intel (frame injection)
+
 more information about possible issues or limitations:
 
 https://bugzilla.kernel.org
