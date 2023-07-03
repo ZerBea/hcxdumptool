@@ -39,24 +39,24 @@
 #define HCX_HELP			'h'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
-#define EXIT_EVENT_MASK		0b00011111
-#define EXIT_ON_SIGTERM		0b00000001
-#define EXIT_ON_GPIOBUTTON	0b00000010
-#define EXIT_ON_TOT		0b00000100
-#define EXIT_ON_WATCHDOG	0b00001000
-#define EXIT_ON_ERROR		0b00010000
+#define EXIT_EVENT_MASK		0x1f
+#define EXIT_ON_SIGTERM		0x01
+#define EXIT_ON_GPIOBUTTON	0x02
+#define EXIT_ON_TOT		0x04
+#define EXIT_ON_WATCHDOG	0x08
+#define EXIT_ON_ERROR		0x10
 
-#define EXIT_ACTION_REBOOT	0b00000001
-#define EXIT_ACTION_POWEROFF	0b00000010
+#define EXIT_ACTION_REBOOT	0x01
+#define EXIT_ACTION_POWEROFF	0x02
 
 #define ERROR_MAX		100
 #define WATCHDOG_MAX		600
 #define ATTEMPTCLIENT_MAX	10
 #define ATTEMPTAP_MAX		32
 
-#define IFTYPENL		0b00000001
-#define IFTYPEMON		0b00000010
-#define IFTYPEMONACT		0b00000100
+#define IFTYPENL		0x01
+#define IFTYPEMON		0x02
+#define IFTYPEMONACT		0x04
 #define ETHTOOL_STD_LEN		32
 
 #define TIMER_EPWAITND		100
@@ -132,17 +132,17 @@ typedef struct __attribute__((__packed__))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
-#define	APIE_ESSID	0b0000000000000001
-#define APGS_CCMP	0b0000000000000010
-#define APGS_TKIP	0b0000000000000100
-#define APCS_CCMP	0b0000000000001000
-#define APCS_TKIP	0b0000000000010000
-#define APRSNAKM_PSK	0b0000000000100000
-#define APRSNAKM_PSK256	0b0000000001000000
-#define APRSNAKM_PSKFT	0b0000000010000000
-#define APWPAAKM_PSK	0b0000000100000000
-#define APAKM_MASK	0b0000000111100000
-#define AP_MFP		0b0000001000000000
+#define	APIE_ESSID	0x001
+#define APGS_CCMP	0x002
+#define APGS_TKIP	0x004
+#define APCS_CCMP	0x008
+#define APCS_TKIP	0x010
+#define APRSNAKM_PSK	0x020
+#define APRSNAKM_PSK256	0x040
+#define APRSNAKM_PSKFT	0x080
+#define APWPAAKM_PSK	0x100
+#define APAKM_MASK	0x1e0
+#define AP_MFP		0x200
  u8	flags;
  u8	essidlen;
  u8	essid[ESSID_MAX];
@@ -160,16 +160,16 @@ typedef struct __attribute__((__packed__))
  u8	macclient[6];
  u8	status;
 #define AP_IN_RANGE_TOT		120000000000ULL
-#define AP_IN_RANGE		0b00000001
-#define AP_IN_RANGE_MASK	0b11111110
-#define AP_ESSID		0b00000010
-#define AP_BEACON		0b00000100
-#define AP_PROBERESPONSE	0b00001000
-#define AP_EAPOL_M1		0b00010000
-#define AP_EAPOL_M2		0b00100000
-#define AP_EAPOL_M3		0b01000000
-#define AP_PMKID		0b10000000
-#define AP_PMKID_EAPOL		0b11000000
+#define AP_IN_RANGE		0x01
+#define AP_IN_RANGE_MASK	0xfe
+#define AP_ESSID		0x02
+#define AP_BEACON		0x04
+#define AP_PROBERESPONSE	0x08
+#define AP_EAPOL_M1		0x10
+#define AP_EAPOL_M2		0x20
+#define AP_EAPOL_M3		0x40
+#define AP_PMKID		0x80
+#define AP_PMKID_EAPOL		0xc0
 
  infoelement_t	ie;
 }aplist_t;
@@ -227,8 +227,8 @@ typedef struct __attribute__((__packed__))
  u8	macclient[6];
  u8	macap[6];
  u8	mic[4];
-#define CLIENT_EAP_START	0b00000001
-#define CLIENT_EAPOL_M2		0b00000010
+#define CLIENT_EAP_START	0x01
+#define CLIENT_EAPOL_M2		0x02
  u8	status;
  u32	count;
  infoelement_t	ie;
@@ -283,7 +283,7 @@ typedef struct __attribute__((__packed__))
  u32	frequency;
  u32	channel;
  u32	pwr;
-#define IF_STAT_FREQ_DISABLED	0b00000001
+#define IF_STAT_FREQ_DISABLED	0x01
  u8	status;
 }frequencylist_t;
 #define FREQUENCYLIST_SIZE (sizeof(frequencylist_t))
@@ -293,15 +293,15 @@ typedef struct __attribute__((__packed__))
 {
  int	index;
  u32	wiphy;
-#define IF_HAS_NETLINK		0b00000001
-#define IF_HAS_MONITOR		0b00000010
-#define IF_HAS_MONITOR_ACTIVE	0b00000100
-#define IF_HAS_NLMON		0b00000011
-#define IF_HAS_NLMON_ACTIVE	0b00000111
+#define IF_HAS_NETLINK		0x01
+#define IF_HAS_MONITOR		0x02
+#define IF_HAS_MONITOR_ACTIVE	0x04
+#define IF_HAS_NLMON		0x03
+#define IF_HAS_NLMON_ACTIVE	0x07
  u8	type;
-#define IF_STAT_MONITOR		0b00000001
-#define IF_STAT_UP		0b00000010
-#define IF_STAT_OK		0b00000011
+#define IF_STAT_MONITOR		0x01
+#define IF_STAT_UP		0x02
+#define IF_STAT_OK		0x03
  u8	status;
  u8	hwmac[6];
  u8	vimac[6];

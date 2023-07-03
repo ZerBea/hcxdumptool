@@ -111,14 +111,14 @@ typedef struct __attribute__((packed))
  u64	timestamp;
  u16	beacon_interval;
  u16	capability;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_beacon_proberesponse_t;
 #define	IEEE80211_BEACON_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
 #define	IEEE80211_PROBERESPONSE_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((packed))
 {
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_proberequest_t;
 #define	IEEE80211_PROBEREQUEST_SIZE offsetof(ieee80211_proberequest_t, ie)
 /*===========================================================================*/
@@ -129,7 +129,7 @@ typedef struct __attribute__((__packed__))
  u8	code;
 #define NEIGHBOR_REPORT_REQUEST	4
  u8	dialog;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_action_t;
 #define	IEEE80211_ACTION_SIZE offsetof(ieee80211_action_t, ie)
 /*---------------------------------------------------------------------------*/
@@ -139,7 +139,7 @@ typedef struct __attribute__((__packed__))
  u16	algorithm;
  u16	sequence;
  u16	status;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_auth_t;
 #define	IEEE80211_AUTH_SIZE offsetof(ieee80211_auth_t, ie)
 /*---------------------------------------------------------------------------*/
@@ -148,7 +148,7 @@ typedef struct __attribute__((__packed__))
  u16	capability;
  u16	status;
  u16	aid;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_assoc_or_reassoc_resp_t;
 #define IEEE80211_ASSOCIATIONRESPONSE_SIZE offsetof(ieee80211_assoc_or_reassoc_resp_t, ie)
 #define IEEE80211_REASSOCIATIONRESPONSE_SIZE offsetof(ieee80211_assoc_or_reassoc_resp_t, ie)
@@ -157,7 +157,7 @@ typedef struct __attribute__((__packed__))
 {
  u16 capability;
  u16 listen_interval;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_assoc_req_t;
 #define IEEE80211_ASSOCIATIONREQUEST_SIZE offsetof(ieee80211_assoc_req_t, ie)
 /*---------------------------------------------------------------------------*/
@@ -166,7 +166,7 @@ typedef struct __attribute__((__packed__))
  u16 capability;
  u16 listen_interval;
  u8 current_macap[ETH_ALEN];
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_reassoc_req_t;
 #define IEEE80211_REASSOCIATIONREQUEST_SIZE offsetof(ieee80211_reassoc_req_t, ie)
 /*---------------------------------------------------------------------------*/
@@ -181,7 +181,7 @@ typedef struct __attribute__((__packed__))
 #define TAG_PAG		0xde
 #define TAG_VENDOR	0xdd
  u8 	len;
- u8	ie[0];
+ u8	ie[1];
 }ieee80211_ietag_t;
 #define	IEEE80211_IETAG_SIZE offsetof(ieee80211_ietag_t, ie)
 /*---------------------------------------------------------------------------*/
@@ -219,7 +219,7 @@ typedef struct __attribute__((__packed__))
 #define EAPOL_ASF 4
 #define EAPOL_MKA 5
  u16	len;
- u8	data[0];
+ u8	data[1];
 }ieee80211_eapauth_t;
 #define	IEEE80211_EAPAUTH_SIZE offsetof(ieee80211_eapauth_t, data)
 /*---------------------------------------------------------------------------*/
@@ -239,7 +239,7 @@ typedef struct __attribute__((__packed__))
  u8	keyid[8];
  u8	keymic[16];
  u16	wpadatalen;
- u8	data[0];
+ u8	data[1];
 }ieee80211_wpakey_t;
 #define	IEEE80211_WPAKEY_SIZE offsetof(ieee80211_wpakey_t, data)
 /*---------------------------------------------------------------------------*/
@@ -284,7 +284,7 @@ typedef struct __attribute__((__packed__))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
-#define MFP_REQUIRED	0b0000000001000000
+#define MFP_REQUIRED	0x40
  u16	capability;
 }ieee80211_rsncapability_t;
 #define	IEEE80211_RSNCAPABILITY_SIZE sizeof(ieee80211_rsncapability_t)
