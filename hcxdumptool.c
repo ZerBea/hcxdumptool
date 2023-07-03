@@ -2944,7 +2944,7 @@ while(1)
 			}
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_INTERFACE) continue;
-		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
@@ -3022,7 +3022,7 @@ while(1)
 			}
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_INTERFACE) continue;
-		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
@@ -3082,7 +3082,7 @@ while(1)
 			}
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_GET_REG) continue;
-		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
@@ -3149,7 +3149,7 @@ while(1)
 		nlremlen = 0;
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_WIPHY) continue;
-		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
@@ -3565,7 +3565,7 @@ while(1)
 			}
 		ifih = (struct ifinfomsg*)NLMSG_DATA(nlh);
 		if((ifih->ifi_flags & IFF_UP) == IFF_UP) ifaktstatus |= IF_STAT_UP;
-		rta = (struct rtattr*)(NLMSG_DATA(nlh) + sizeof(struct ifinfomsg));
+		rta = (struct rtattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct ifinfomsg));
 		rtaremlen = NLMSG_PAYLOAD(nlh, 0) - sizeof(struct ifinfomsg);
 		while(RTA_OK(rta, rtaremlen))
 			{
@@ -3639,7 +3639,7 @@ while(1)
 			return false;
 			}
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
-		nla = (struct nlattr*)(NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen = 0;
 		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
@@ -4478,8 +4478,11 @@ fprintf(stdout, "long options:\n"
 	"                                   disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
 	"                                   disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"                                   disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
-	"                                   disable_reassociation   : do not REASSOCIATE a CLIENT\n"
-	"--tot=<digit>                  : enable timeout timer in minutes\n"
+	"                                   disable_reassociation   : do not REASSOCIATE a CLIENT\n",
+	eigenname, eigenname,
+	BEACONTX_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
+
+fprintf(stdout, "--tot=<digit>                  : enable timeout timer in minutes\n"
 	"--onsigterm=<action>           : action when the program has been terminated (poweroff, reboot)\n"
 	"                                  poweroff: power off system\n"
 	"                                  reboot:   reboot system\n"
@@ -4529,9 +4532,7 @@ fprintf(stdout, "long options:\n"
 	#endif
 	"--help                         : show this help\n"
 	"--version                      : show version\n"
-	"\n",
-	eigenname, eigenname,
-	BEACONTX_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
+	"\n");
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
@@ -5027,7 +5028,7 @@ tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
-fprintf(stdout, "Initialize main scan loop...\e[?25l");
+fprintf(stdout, "Initialize main scan loop...\033[?25l");
 nanosleep(&tspecifo, &tspeciforem);
 if(rcascanflag == NULL)
 	{
@@ -5111,7 +5112,7 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
 		}
 	}
-fprintf(stdout, "\nbye-bye\n\e[?25h");
+fprintf(stdout, "\nbye-bye\n\033[?25h");
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
