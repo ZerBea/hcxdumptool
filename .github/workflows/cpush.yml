@@ -23,4 +23,4 @@ jobs:
       env:
        CC: gcc-${{matrix.cc}}
 
-      run: make install
+      run: make
