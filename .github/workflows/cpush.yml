@@ -1,0 +1,26 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        cc: ['gcc-latest']
+        deps: ['enabled']
+        platform: ['x64', 'x86'] 
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: make
+      env:
+       CC: gcc-${{matrix.cc}}
+
+      run: make install
