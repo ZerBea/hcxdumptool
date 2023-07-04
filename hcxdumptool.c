@@ -50,7 +50,6 @@ for(int x = 0; x < 6; x++) printf("%02x", macfrx->addr2[x]);
 printf(" ");
 for(int x = 0; x < 6; x++) printf("%02x", macfrx->addr1[x]);
 printf(" sende eapol m1\n");
-
 return;
 }
 */
