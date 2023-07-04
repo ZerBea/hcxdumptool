@@ -18,13 +18,11 @@ jobs:
         platform: ['x64', 'x86'] 
 
     steps:
-   - name: Setup GCC
-     uses: Dup4/actions-setup-gcc@v1
-       with:
-       version: latest
-
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Make
+      env:
+       CC: gcc-${{matrix.cc}}
+
       run: make
