@@ -10,6 +10,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    compiler: gcc-latest
 
     strategy:
       matrix:
@@ -22,7 +23,5 @@ jobs:
       with:
         fetch-depth: 0
     - name: Make
-      env:
-       CC: gcc-${{matrix.cc}}
 
       run: make
