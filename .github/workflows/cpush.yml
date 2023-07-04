@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: make
+    - name: Make
       env:
        CC: gcc-${{matrix.cc}}
 
