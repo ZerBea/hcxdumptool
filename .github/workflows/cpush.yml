@@ -10,11 +10,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    compiler: gcc-latest
 
     strategy:
       matrix:
-        cc: ['12']
+        os-version: [ ubuntu-latest ]
+        compiler: [ gcc-latest ]
         deps: ['enabled']
         platform: ['x64', 'x86'] 
 
@@ -23,5 +23,4 @@ jobs:
       with:
         fetch-depth: 0
     - name: Make
-
       run: make
