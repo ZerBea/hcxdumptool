@@ -12,7 +12,7 @@ jobs:
     name: Linux-GCC${{matrix.cc}}-deps=${{matrix.deps}}
     strategy:
       matrix:
-        cc: ['12']
+        cc: ['gcc-latest']
         deps: ['enabled', 'disabled']
         platform: ['x64', 'x86'] 
     steps:
