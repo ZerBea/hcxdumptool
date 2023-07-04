@@ -132,17 +132,17 @@ typedef struct __attribute__((__packed__))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
-#define	APIE_ESSID	0x001
-#define APGS_CCMP	0x002
-#define APGS_TKIP	0x004
-#define APCS_CCMP	0x008
-#define APCS_TKIP	0x010
-#define APRSNAKM_PSK	0x020
-#define APRSNAKM_PSK256	0x040
-#define APRSNAKM_PSKFT	0x080
-#define APWPAAKM_PSK	0x100
-#define APAKM_MASK	0x1e0
-#define AP_MFP		0x200
+#define	APIE_ESSID	0x0001
+#define APGS_CCMP	0x0002
+#define APGS_TKIP	0x0004
+#define APCS_CCMP	0x0008
+#define APCS_TKIP	0x0010
+#define APRSNAKM_PSK	0x0020
+#define APRSNAKM_PSK256	0x0040
+#define APRSNAKM_PSKFT	0x0080
+#define APWPAAKM_PSK	0x0100
+#define APAKM_MASK	0x01e0
+#define AP_MFP		0x0200
  u8	flags;
  u8	essidlen;
  u8	essid[ESSID_MAX];
