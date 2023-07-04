@@ -13,7 +13,8 @@ jobs:
 
     strategy:
       matrix:
-        cc: ['12']
+        compiler: [gcc]
+        version: latest
         deps: ['enabled']
         platform: ['x64', 'x86'] 
 
