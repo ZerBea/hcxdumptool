@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        cc: ['latest']
+        cc: ['12']
         deps: ['enabled']
         platform: ['x64', 'x86'] 
 
