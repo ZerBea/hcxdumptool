@@ -4894,7 +4894,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 setbuf(stdout, NULL);
 hcxpid = getpid();
 
-fprintf(stdout, "\nRequesting interface capabilities. This may take some time.\n"
+fprintf(stdout, "\nRequesting physical interface capabilities. This may take some time.\n"
 		"Please be patient...\n\n");
 if(set_signal_handler() == false)
 	{
