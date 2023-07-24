@@ -18,14 +18,15 @@
 #define HCX_ON_TOT			17
 #define HCX_ON_GPIOBUTTON		18
 #define HCX_ON_WATCHDOG			19
-#define HCX_ON_ERROR			20
-#define HCX_ESSIDLIST			21
-#define HCX_NMEA0183			22
-#define HCX_GPSD			23
-#define HCX_NMEA0183_OUT		24
-#define HCX_NMEA0183_PCAPNG		25
-#define HCX_RCASCAN			26
-#define HCX_RD_SORT			27
+#define HCX_EXIT_ON_EAPOL		20
+#define HCX_ON_ERROR			21
+#define HCX_ESSIDLIST			22
+#define HCX_NMEA0183			23
+#define HCX_GPSD			24
+#define HCX_NMEA0183_OUT		25
+#define HCX_NMEA0183_PCAPNG		26
+#define HCX_RCASCAN			27
+#define HCX_RD_SORT			28
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'
@@ -39,12 +40,14 @@
 #define HCX_HELP			'h'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
-#define EXIT_EVENT_MASK		0x1f
 #define EXIT_ON_SIGTERM		0x01
 #define EXIT_ON_GPIOBUTTON	0x02
 #define EXIT_ON_TOT		0x04
 #define EXIT_ON_WATCHDOG	0x08
-#define EXIT_ON_ERROR		0x10
+#define EXIT_ON_EAPOL_PMKID	0x10
+#define EXIT_ON_EAPOL_M2	0x20
+#define EXIT_ON_EAPOL_M3	0x40
+#define EXIT_ON_ERROR		0x80
 
 #define EXIT_ACTION_REBOOT	0x01
 #define EXIT_ACTION_POWEROFF	0x02

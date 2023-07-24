@@ -1,3 +1,14 @@
+24.07.2023
+==========
+hcxdumptool: added new option to EXIT on EAPOL
+--exitoneapol=<type>           : exit on first EAPOL occurrence:
+                                  bitmask:
+                                   1 = PMKID
+                                   2 = EAPOL M2
+                                   4 = EAPOL M3
+                                  target BPF filter is recommended
+
+
 03.07.2023
 ==========
 added -Wpedantic to compiler flags and fixed all warnings

@@ -62,6 +62,9 @@ static bool reassociationflag = true;
 static bool activemonitorflag = true;
 
 static u8 wanteventflag = 0;
+static u8 exiteapolpmkidflag = 0;
+static u8 exiteapolm2flag = 0;
+static u8 exiteapolm3flag = 0;
 
 static int gpiostatusled = 0;
 static int gpiobutton = 0;
@@ -1797,6 +1800,7 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 								(aplist + i)->tsakt = tsakt;
 								authseqakt.status = 0;
 								(aplist + i)->status |= AP_EAPOL_M3;
+								wanteventflag |= exiteapolm3flag;
 								return;
 								}
 							}
@@ -1848,7 +1852,11 @@ if((authseqakt.status & AP_EAPOL_M1) == AP_EAPOL_M1)
 			authseqakt.kdv2 = kdv;
 			if(authseqakt.kdv1 == authseqakt.kdv2)
 				{
-				if((tsakt - tshold) < EAPOLM2TIMEOUT) authseqakt.status |= AP_EAPOL_M2;
+				if((tsakt - tshold) < EAPOLM2TIMEOUT)
+					{
+					authseqakt.status |= AP_EAPOL_M2;
+					wanteventflag |= exiteapolm2flag;
+					}
 				else authseqakt.status = 0;
 				return;
 				}
@@ -1878,7 +1886,11 @@ if(ntohs(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
 			{
 			if(pmkid->type == PMKID_KDE)
 				{
-				if(memcmp(pmkid->pmkid, &zeroed, PMKID_MAX) != 0) authseqakt.status |= AP_PMKID;
+				if(memcmp(pmkid->pmkid, &zeroed, PMKID_MAX) != 0)
+					{
+					authseqakt.status |= AP_PMKID;
+					wanteventflag |= exiteapolpmkidflag;
+					}
 				}
 			}
 		}
@@ -4482,6 +4494,12 @@ fprintf(stdout, "long options:\n"
 	BEACONTX_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
 
 fprintf(stdout, "--tot=<digit>                  : enable timeout timer in minutes\n"
+	"--exitoneapol=<type>           : exit on first EAPOL occurrence:\n"
+	"                                  bitmask:\n"
+	"                                   1 = PMKID\n"
+	"                                   2 = EAPOL M2\n"
+	"                                   4 = EAPOL M3\n"
+	"                                  target BPF filter is recommended\n"
 	"--onsigterm=<action>           : action when the program has been terminated (poweroff, reboot)\n"
 	"                                  poweroff: power off system\n"
 	"                                  reboot:   reboot system\n"
@@ -4563,6 +4581,7 @@ int main(int argc, char *argv[])
 {
 static int auswahl = -1;
 static int index = 0;
+static u8 exiteapolflag = 0;
 static u8 exitsigtermflag = 0;
 static u8 exitgpiobuttonflag = 0;
 static u8 exittotflag = 0;
@@ -4613,6 +4632,7 @@ static const struct option long_options[] =
 	{"ongpiobutton",		required_argument,	NULL,	HCX_ON_GPIOBUTTON},
 	{"ontot",			required_argument,	NULL,	HCX_ON_TOT},
 	{"onwatchdog",			required_argument,	NULL,	HCX_ON_WATCHDOG},
+	{"exitoneapol",			required_argument,	NULL,	HCX_EXIT_ON_EAPOL},
 	{"onerror",			required_argument,	NULL,	HCX_ON_ERROR},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
@@ -4748,6 +4768,13 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
+
+		case HCX_EXIT_ON_EAPOL:
+		exiteapolflag = (atoi(optarg) & 0x0f) << 4;
+		exiteapolpmkidflag |= exiteapolflag & EXIT_ON_EAPOL_PMKID;
+		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
+		exiteapolm3flag |= exiteapolflag & EXIT_ON_EAPOL_M3;
 		break;
 
 		case HCX_ON_SIGTERM:
@@ -5053,6 +5080,13 @@ close_fds();
 close_sockets();
 close_lists();
 if(errorcount > 0) fprintf(stderr, "\n%" PRIu64 " errors during runtime\n", errorcount);
+
+if(exiteapolflag != 0)
+	{
+	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "\nexit on PMKID\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "\nexit on EAPOL M1M2\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M3) == EXIT_ON_EAPOL_M3) fprintf(stdout, "\nexit on EAPOL M1M2M3\n");
+	}
 if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	{
 	fprintf(stdout, "\nexit on sigterm\n");
