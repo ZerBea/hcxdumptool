@@ -7,6 +7,8 @@ hcxdumptool: added new option to EXIT on EAPOL
                                    2 = EAPOL M2
                                    4 = EAPOL M3
                                   target BPF filter is recommended
+get more information here:
+https://github.com/ZerBea/hcxdumptool/issues/333#issuecomment-1647684235
 
 
 03.07.2023
