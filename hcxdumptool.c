@@ -3870,7 +3870,9 @@ static bool open_socket_rx(char *bpfname)
 size_t c = 10;
 static struct sockaddr_ll saddr;
 static struct packet_mreq mrq;
+#if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
 static int enable = 1;
+#endif
 static int socket_rx_flags;
 static int prioval;
 static socklen_t priolen;
