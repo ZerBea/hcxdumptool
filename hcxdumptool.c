@@ -2925,7 +2925,7 @@ static u8 vimac[ETH_ALEN];
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -2956,7 +2956,7 @@ while(1)
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_INTERFACE) continue;
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
-		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == NL80211_ATTR_IFINDEX) ifindex = *((u32*)nla_data(nla));
@@ -2999,7 +2999,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3034,7 +3034,7 @@ while(1)
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_INTERFACE) continue;
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
-		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == NL80211_ATTR_IFTYPE)
@@ -3064,7 +3064,7 @@ country[2] = 0;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3094,7 +3094,7 @@ while(1)
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_GET_REG) continue;
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
-		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == NL80211_ATTR_REG_ALPHA2)
@@ -3125,7 +3125,7 @@ static char driverlink[128] = { 0 };
 
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3161,7 +3161,7 @@ while(1)
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		if(glh->cmd != NL80211_CMD_NEW_WIPHY) continue;
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
-		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == NL80211_ATTR_WIPHY) 
@@ -3206,7 +3206,7 @@ i = 0;
 if(((scanlist + scanlistindex)->frequency) == 0) scanlistindex = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3277,7 +3277,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3330,7 +3330,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily; 
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3354,7 +3354,7 @@ if(((ifakttype & IFTYPEMONACT) == IFTYPEMONACT) && (activemonitorflag == true))
 	nla = (struct nlattr*)(nltxbuffer + i);
 	nla->nla_len = 8;
 	nla->nla_type = NL80211_ATTR_MNTR_FLAGS;
-	nla =  (struct nlattr*)nla_data(nla);
+	nla = (struct nlattr*)nla_data(nla);
 	nla->nla_len = 4;
 	nla->nla_type = NL80211_MNTR_FLAG_ACTIVE;
 	i += 8;
@@ -3399,7 +3399,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = RTM_NEWLINK;
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3448,7 +3448,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = RTM_NEWLINK;
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3492,7 +3492,7 @@ static struct nlmsgerr *nle;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = RTM_GETLINK;
-nlh->nlmsg_flags =  NLM_F_REQUEST | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
@@ -3652,7 +3652,7 @@ while(1)
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen = 0;
-		nlremlen =  NLMSG_PAYLOAD(nlh, 0) -4;
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == CTRL_ATTR_FAMILY_ID) nlfamily = *((u32*)nla_data(nla));
@@ -4086,7 +4086,7 @@ return true;
 /* SIGNALHANDLER */
 static void signal_handler(int signum)
 {
-if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum ==  SIGTSTP)) wanteventflag |= EXIT_ON_SIGTERM;
+if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum == SIGTSTP)) wanteventflag |= EXIT_ON_SIGTERM;
 return;
 }
 /*---------------------------------------------------------------------------*/
