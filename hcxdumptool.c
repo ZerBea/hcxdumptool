@@ -3726,7 +3726,10 @@ else
 	}
 if(ifaktfrequencylist == NULL) return false;
 if(rt_set_interface(0) == false) return false;
-if(rt_set_interfacemac() == false) return false;
+if((ifakttype & IF_HAS_MONITOR_ACTIVE) == IF_HAS_MONITOR_ACTIVE)
+	{
+	if(rt_set_interfacemac() == false) return false;
+	}
 if(nl_set_monitormode() == false) return false;
 if(rt_set_interface(IFF_UP) == false) return false;
 nl_set_powersave_off();
