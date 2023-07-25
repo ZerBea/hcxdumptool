@@ -3896,7 +3896,7 @@ priolen = sizeof(prioval);
 prioval = 20;
 if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
-if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) return false;
+if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) fprintf(stderr, "PACKET_IGNORE_OUTGOING is not supported by kernel\nfalling back to radiotap header\n");
 #endif
 if(bpf.len > 0)
 	{
