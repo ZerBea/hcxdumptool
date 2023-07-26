@@ -4408,7 +4408,7 @@ fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_P
 fprintf(stdout, "compiler (__GNUC__) is not defined\n");
 #endif
 #if defined (LINUX_VERSION_MAJOR)
-fprintf(stdout, "Linux API headers %d.%d.%d\n", LINUX_VERSION_MAJOR, LINUX_VERSION_PATCHLEVEL, LINUX_VERSION_SUBLEVEL);
+fprintf(stdout, "compiled with Linux API headers %d.%d.%d\n", LINUX_VERSION_MAJOR, LINUX_VERSION_PATCHLEVEL, LINUX_VERSION_SUBLEVEL);
 #else
 fprintf(stdout, "Linux API headers (LINUX_VERSION_MAJOR) is not defined\n");
 #endif
