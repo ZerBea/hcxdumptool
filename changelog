@@ -8,7 +8,7 @@ compiled by gcc 13.1.1
 Linux API headers 6.3.0
 
 Under normal circumstances, the Linux kernel" version could be
-bigger than the "Linux API headers" version, but never smaller.
+greater than the "Linux API headers" version, but never less.
 
 
 24.07.2023
