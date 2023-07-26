@@ -4412,6 +4412,11 @@ fprintf(stdout, "compiled with Linux API headers %d.%d.%d\n", LINUX_VERSION_MAJO
 #else
 fprintf(stdout, "Linux API headers (LINUX_VERSION_MAJOR) is not defined\n");
 #endif
+#if defined (__GLIBC__)
+fprintf(stdout, "compiled with glibc %d.%d\n", __GLIBC__, __GLIBC_MINOR__);
+#else
+fprintf(stdout, "glibc (__GLIBC_MINOR__) is not defined\n");
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
