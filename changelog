@@ -5,7 +5,7 @@ hcxdumptool: added compil time information to version information
 $ hcxdumptool -v
 hcxdumptool 6.3.1-35-g1a0930e (C) 2023 ZeroBeat
 compiled by gcc 13.1.1
-compiled to be used on kernel >= 6.3.0
+Linux API headers 6.3.0
 
 
 24.07.2023
