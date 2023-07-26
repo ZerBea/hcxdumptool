@@ -4401,6 +4401,17 @@ __attribute__ ((noreturn))
 static inline void version(char *eigenname)
 {
 fprintf(stdout, "%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
+
+#if defined (__GNUC__)
+fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#else
+fprintf(stdout, "compiler (__GNUC__) is not defined\n");
+#endif
+#if defined (LINUX_VERSION_MAJOR)
+fprintf(stdout, "compiled to be used on kernel >= %d.%d.%d\n", LINUX_VERSION_MAJOR, LINUX_VERSION_PATCHLEVEL, LINUX_VERSION_SUBLEVEL);
+#else
+fprintf(stdout, "Linux version (LINUX_VERSION_MAJOR) is not defined\n");
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
