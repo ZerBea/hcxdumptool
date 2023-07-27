@@ -6,8 +6,9 @@ $ hcxdumptool -v
 hcxdumptool 6.3.1-35-g1a0930e (C) 2023 ZeroBeat
 compiled by gcc 13.1.1
 Linux API headers 6.3.0
+compiled with glibc 2.37
 
-Under normal circumstances, the Linux kernel" version could be
+Under normal circumstances, the Linux kernel version could be
 greater than the "Linux API headers" version, but never less.
 
 
