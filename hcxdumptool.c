@@ -94,6 +94,7 @@ static long int wshbcount = 0;
 static int fd_gps = 0;
 static int fd_hcxpos = 0;
 static bool nmea2pcapflag = false;
+static long int nmeapacketcount = 0;
 static long int wecbnmeacount = 0;
 static long int wgpwplcount = 0;
 #endif
@@ -2515,6 +2516,7 @@ if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
 	if(packetlen == - 1) errorcount++;
 	return;
 	}
+nmeapacketcount++;
 nmeabuffer[nmealen] = 0;
 if((nmeaptr = strstr(nmeabuffer, gprmcid)) != NULL)
 	{
@@ -2555,6 +2557,9 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	if(packetlen == - 1) errorcount++;
 	return;
 	}
+#ifdef STATUSOUT
+totalcapturedcount++;
+#endif
 rth = (rth_t*)packetptr;
 #ifndef __LITTLE_ENDIAN__
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
@@ -5132,19 +5137,20 @@ close_fds();
 close_sockets();
 close_lists();
 fprintf(stdout, "\n\n");
-if(errorcount > 0) fprintf(stderr,         "ERRORs during runtime.....................: %" PRIu64 "\n", errorcount);
+if(errorcount > 0) fprintf(stderr,         "%" PRIu64 " ERRORs during runtime\n", errorcount);
 #ifdef STATUSOUT
-if(totalcapturedcount > 0) fprintf(stdout, "packets captured..........................: %ld\n", totalcapturedcount);
-if(wshbcount > 0) fprintf(stdout,          "SHB blocks written to pcapng dumpfile.....: %ld\n", wshbcount);
-if(widbcount > 0) fprintf(stdout,          "IDB blocks written to pcapng dumpfile.....: %ld\n", widbcount);
-if(wecbcount > 0) fprintf(stdout,          "ECB blocks written to pcapng dumpfile.....: %ld\n", wecbcount);
-if(wepbcount > 0) fprintf(stdout,          "EPB blocks written to pcapng dumpfile.....: %ld\n", wepbcount);
+if(totalcapturedcount > 0) fprintf(stdout, "%ld packets captured\n", totalcapturedcount);
+if(wshbcount > 0) fprintf(stdout,          "%ld SHB blocks written to pcapng dumpfile\n", wshbcount);
+if(widbcount > 0) fprintf(stdout,          "%ld IDB blocks written to pcapng dumpfile\n", widbcount);
+if(wecbcount > 0) fprintf(stdout,          "%ld ECB blocks written to pcapng dumpfile\n", wecbcount);
+if(wepbcount > 0) fprintf(stdout,          "%ld EPB blocks written to pcapng dumpfile\n", wepbcount);
 #endif
 #ifdef NMEAOUT
-if(wecbnmeacount > 0) fprintf(stdout, "ECB NMEA blocks written to pcapng dumpfile: %ld\n", wecbnmeacount);
-if(wgpwplcount > 0)   fprintf(stdout, "GPWPL records written to file.............: %ld\n", wgpwplcount);
+if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentences received from device\n", nmeapacketcount);
+if(wecbnmeacount > 0) fprintf(stdout, "%ld ECB NMEA blocks written to pcapng dumpfile\n", wecbnmeacount);
+if(wgpwplcount > 0)   fprintf(stdout, "%ld GPWPL records written to file\n", wgpwplcount);
 #endif
-
+fprintf(stdout, "\n");
 if(exiteapolflag != 0)
 	{
 	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "exit on PMKID\n");
