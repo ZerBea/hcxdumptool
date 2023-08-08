@@ -5131,89 +5131,87 @@ byebye:
 close_fds();
 close_sockets();
 close_lists();
-if(errorcount > 0) fprintf(stderr, "\n%" PRIu64 " errors during runtime\n", errorcount);
-
+fprintf(stdout, "\n\n");
+if(errorcount > 0) fprintf(stderr,         "ERRORs during runtime.....................: %" PRIu64 "\n", errorcount);
 #ifdef STATUSOUT
-fprintf(stdout, "\n");
-if(totalcapturedcount > 0) fprintf(stdout, "packets captured.....................: %ld\n", totalcapturedcount);
-if(wshbcount > 0) fprintf(stdout, "SHB blocks written to pcapng dumpfile: %ld\n", wshbcount);
-if(widbcount > 0) fprintf(stdout, "IDB blocks written to pcapng dumpfile: %ld\n", widbcount);
-if(wecbcount > 0) fprintf(stdout, "ECB blocks written to pcapng dumpfile: %ld\n", wecbcount);
-if(wepbcount > 0) fprintf(stdout, "EPB blocks written to pcapng dumpfile: %ld\n", wepbcount);
+if(totalcapturedcount > 0) fprintf(stdout, "packets captured..........................: %ld\n", totalcapturedcount);
+if(wshbcount > 0) fprintf(stdout,          "SHB blocks written to pcapng dumpfile.....: %ld\n", wshbcount);
+if(widbcount > 0) fprintf(stdout,          "IDB blocks written to pcapng dumpfile.....: %ld\n", widbcount);
+if(wecbcount > 0) fprintf(stdout,          "ECB blocks written to pcapng dumpfile.....: %ld\n", wecbcount);
+if(wepbcount > 0) fprintf(stdout,          "EPB blocks written to pcapng dumpfile.....: %ld\n", wepbcount);
 #endif
 #ifdef NMEAOUT
-fprintf(stdout, "\n");
 if(wecbnmeacount > 0) fprintf(stdout, "ECB NMEA blocks written to pcapng dumpfile: %ld\n", wecbnmeacount);
 if(wgpwplcount > 0)   fprintf(stdout, "GPWPL records written to file.............: %ld\n", wgpwplcount);
 #endif
 
 if(exiteapolflag != 0)
 	{
-	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "\nexit on PMKID\n");
-	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "\nexit on EAPOL M1M2\n");
-	if((wanteventflag & EXIT_ON_EAPOL_M3) == EXIT_ON_EAPOL_M3) fprintf(stdout, "\nexit on EAPOL M1M2M3\n");
+	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "exit on PMKID\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "exit on EAPOL M1M2\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M3) == EXIT_ON_EAPOL_M3) fprintf(stdout, "exit on EAPOL M1M2M3\n");
 	}
 if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	{
-	fprintf(stdout, "\nexit on sigterm\n");
+	fprintf(stdout, "exit on sigterm\n");
 	if(exitsigtermflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
+		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitsigtermflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
+		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_GPIOBUTTON) == EXIT_ON_GPIOBUTTON)
 	{
-	fprintf(stdout, "\nexit on GPIO button\n");
+	fprintf(stdout, "exit on GPIO button\n");
 	if(exitgpiobuttonflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
+		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitgpiobuttonflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
+		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_TOT) == EXIT_ON_TOT)
 	{
-	fprintf(stdout, "\nexit on TOT\n");
+	fprintf(stdout, "exit on TOT\n");
 	if(exittotflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
+		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exittotflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
+		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_WATCHDOG) == EXIT_ON_WATCHDOG)
 	{
-	fprintf(stdout, "\nexit on watchdog\n");
+	fprintf(stdout, "exit on watchdog\n");
 	if(exitwatchdogflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
+		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitwatchdogflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
+		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 	{
-	fprintf(stdout, "\nexit on error\n");
+	fprintf(stdout, "exit on error\n");
 	if(exiterrorflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "\ncan't reboot system\n");
+		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exiterrorflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "\ncan't power off\n");
+		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
-fprintf(stdout, "\nbye-bye\n\033[?25h");
+fprintf(stdout, "bye-bye\n\033[?25h");
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
