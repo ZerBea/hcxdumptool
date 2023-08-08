@@ -83,12 +83,19 @@ static int fd_pcapng = 0;
 
 #ifdef STATUSOUT
 static u8 rdsort = 0;
+static long int totalcapturedcount = 0;
+static long int wecbcount = 0;
+static long int wepbcount = 0;
+static long int widbcount = 0;
+static long int wshbcount = 0;
 #endif
 
 #ifdef NMEAOUT
 static int fd_gps = 0;
 static int fd_hcxpos = 0;
 static bool nmea2pcapflag = false;
+static long int wecbnmeacount = 0;
+static long int wgpwplcount = 0;
 #endif
 
 static struct sock_fprog bpf = { 0 };
@@ -735,6 +742,9 @@ gptxt[p2++] = '\r';
 gptxt[p2++] = '\n';
 if(write(fd_hcxpos, gptxt, p2) != p2) errorcount++;
 gptxt[p2++] = '\0';
+#ifdef NMEAOUT
+wgpwplcount++;
+#endif
 return;
 }
 #endif
@@ -839,6 +849,9 @@ epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
 if(write(fd_pcapng, &epbown, epblen) != epblen) errorcount++;
+#ifdef STATUSOUT
+wepbcount++;
+#endif
 return;
 }
 /*===========================================================================*/
@@ -866,6 +879,9 @@ epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
 if(write(fd_pcapng, &epb, epblen) != epblen) errorcount++;
+#ifdef STATUSOUT
+wepbcount++;
+#endif
 return;	
 }
 /*---------------------------------------------------------------------------*/
@@ -901,6 +917,9 @@ shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
 totallength->total_length = shblen;
 if(write(fd_pcapng, &shb, shblen) != shblen) return false;
+#ifdef STATUSOUT
+wshbcount++;
+#endif
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -929,6 +948,9 @@ idblen += TOTAL_SIZE;
 idbhdr->total_length = idblen;
 totallength->total_length = idblen;
 if(write(fd_pcapng, &idb, idblen) != idblen) return false;
+#ifdef STATUSOUT
+widbcount++;
+#endif
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -963,6 +985,9 @@ cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
 if(write(fd_pcapng, &cb, cblen) != cblen) return false;
+#ifdef STATUSOUT
+wecbcount++;
+#endif
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -989,6 +1014,9 @@ cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
 if(write(fd_pcapng, &cb, cblen) != cblen) return false;
+#ifdef NMEAOUT
+wecbnmeacount++;
+#endif
 return true;
 }
 #endif
@@ -2577,6 +2605,9 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	if(packetlen == -1) errorcount++;
 	return;
 	}
+#ifdef STATUSOUT
+totalcapturedcount++;
+#endif
 rth = (rth_t*)packetptr;
 #ifndef __LITTLE_ENDIAN__
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
@@ -5101,6 +5132,20 @@ close_fds();
 close_sockets();
 close_lists();
 if(errorcount > 0) fprintf(stderr, "\n%" PRIu64 " errors during runtime\n", errorcount);
+
+#ifdef STATUSOUT
+fprintf(stdout, "\n");
+if(totalcapturedcount > 0) fprintf(stdout, "packets captured.....................: %ld\n", totalcapturedcount);
+if(wshbcount > 0) fprintf(stdout, "SHB blocks written to pcapng dumpfile: %ld\n", wshbcount);
+if(widbcount > 0) fprintf(stdout, "IDB blocks written to pcapng dumpfile: %ld\n", widbcount);
+if(wecbcount > 0) fprintf(stdout, "ECB blocks written to pcapng dumpfile: %ld\n", wecbcount);
+if(wepbcount > 0) fprintf(stdout, "EPB blocks written to pcapng dumpfile: %ld\n", wepbcount);
+#endif
+#ifdef NMEAOUT
+fprintf(stdout, "\n");
+if(wecbnmeacount > 0) fprintf(stdout, "ECB NMEA blocks written to pcapng dumpfile: %ld\n", wecbnmeacount);
+if(wgpwplcount > 0)   fprintf(stdout, "GPWPL records written to file.............: %ld\n", wgpwplcount);
+#endif
 
 if(exiteapolflag != 0)
 	{
