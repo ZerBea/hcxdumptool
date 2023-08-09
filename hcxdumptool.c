@@ -5136,14 +5136,14 @@ byebye:
 close_fds();
 close_sockets();
 close_lists();
-fprintf(stdout, "\n\n");
-if(errorcount > 0) fprintf(stderr,         "%" PRIu64 " ERRORs during runtime\n", errorcount);
+fprintf(stdout, "\n\n\033[?25h");
+if(errorcount > 0) fprintf(stderr,"%" PRIu64 " ERRORs during runtime\n", errorcount);
 #ifdef STATUSOUT
 if(totalcapturedcount > 0) fprintf(stdout, "%ld packets captured\n", totalcapturedcount);
-if(wshbcount > 0) fprintf(stdout,          "%ld SHB blocks written to pcapng dumpfile\n", wshbcount);
-if(widbcount > 0) fprintf(stdout,          "%ld IDB blocks written to pcapng dumpfile\n", widbcount);
-if(wecbcount > 0) fprintf(stdout,          "%ld ECB blocks written to pcapng dumpfile\n", wecbcount);
-if(wepbcount > 0) fprintf(stdout,          "%ld EPB blocks written to pcapng dumpfile\n", wepbcount);
+if(wshbcount > 0) fprintf(stdout,"%ld SHB blocks written to pcapng dumpfile\n", wshbcount);
+if(widbcount > 0) fprintf(stdout,"%ld IDB blocks written to pcapng dumpfile\n", widbcount);
+if(wecbcount > 0) fprintf(stdout,"%ld ECB blocks written to pcapng dumpfile\n", wecbcount);
+if(wepbcount > 0) fprintf(stdout,"%ld EPB blocks written to pcapng dumpfile\n", wepbcount);
 #endif
 #ifdef NMEAOUT
 if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentences received from device\n", nmeapacketcount);
@@ -5217,7 +5217,7 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
-fprintf(stdout, "bye-bye\n\033[?25h");
+fprintf(stdout, "\nbye-bye\n\n");
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
