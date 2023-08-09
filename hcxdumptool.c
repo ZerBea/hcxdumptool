@@ -5137,18 +5137,18 @@ close_fds();
 close_sockets();
 close_lists();
 fprintf(stdout, "\n\n\033[?25h");
-if(errorcount > 0) fprintf(stderr,"%" PRIu64 " ERRORs during runtime\n", errorcount);
+if(errorcount > 0) fprintf(stderr,"%" PRIu64 " ERROR(s) during runtime\n", errorcount);
 #ifdef STATUSOUT
-if(totalcapturedcount > 0) fprintf(stdout, "%ld packets captured\n", totalcapturedcount);
-if(wshbcount > 0) fprintf(stdout,"%ld SHB blocks written to pcapng dumpfile\n", wshbcount);
-if(widbcount > 0) fprintf(stdout,"%ld IDB blocks written to pcapng dumpfile\n", widbcount);
-if(wecbcount > 0) fprintf(stdout,"%ld ECB blocks written to pcapng dumpfile\n", wecbcount);
-if(wepbcount > 0) fprintf(stdout,"%ld EPB blocks written to pcapng dumpfile\n", wepbcount);
+if(totalcapturedcount > 0) fprintf(stdout, "%ld packet(s) captured\n", totalcapturedcount);
+if(wshbcount > 0) fprintf(stdout,"%ld SHB block(s) written to pcapng dumpfile\n", wshbcount);
+if(widbcount > 0) fprintf(stdout,"%ld IDB block(s) written to pcapng dumpfile\n", widbcount);
+if(wecbcount > 0) fprintf(stdout,"%ld ECB block(s) written to pcapng dumpfile\n", wecbcount);
+if(wepbcount > 0) fprintf(stdout,"%ld EPB block(s) written to pcapng dumpfile\n", wepbcount);
 #endif
 #ifdef NMEAOUT
-if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentences received from device\n", nmeapacketcount);
-if(wecbnmeacount > 0) fprintf(stdout, "%ld ECB NMEA blocks written to pcapng dumpfile\n", wecbnmeacount);
-if(wgpwplcount > 0)   fprintf(stdout, "%ld GPWPL records written to file\n", wgpwplcount);
+if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentence(s) received from device\n", nmeapacketcount);
+if(wecbnmeacount > 0) fprintf(stdout, "%ld ECB NMEA block(s) written to pcapng dumpfile\n", wecbnmeacount);
+if(wgpwplcount > 0)   fprintf(stdout, "%ld GPWPL record(s) written to file\n", wgpwplcount);
 #endif
 fprintf(stdout, "\n");
 if(exiteapolflag != 0)
