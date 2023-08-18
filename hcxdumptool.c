@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/cdefs.h>
 #include <sys/epoll.h>
 #include <sys/file.h>
 #include <sys/mman.h>
