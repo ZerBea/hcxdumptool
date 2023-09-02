@@ -4928,10 +4928,20 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_SHOW_INTERFACE_LIST:
+		if(interfacelistshortflag == true)
+			{
+			fprintf(stderr, "combination of options -L and -l is not allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		interfacelistflag = true;
 		break;
 
 		case HCX_SHOW_INTERFACE_LIST_SHORT:
+		if(interfacelistflag == true)
+			{
+			fprintf(stderr, "combination of options -L and -l is not allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		interfacelistshortflag = true;
 		break;
 
