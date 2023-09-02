@@ -761,9 +761,7 @@ gptxt[p2++] = '\r';
 gptxt[p2++] = '\n';
 if(write(fd_hcxpos, gptxt, p2) != p2) errorcount++;
 gptxt[p2++] = '\0';
-#ifdef NMEAOUT
 wgpwplcount++;
-#endif
 return;
 }
 #endif
@@ -2771,7 +2769,6 @@ while(!wanteventflag)
 				if(nl_set_frequency() == false) errorcount++;
 				tshold = tsakt;
 				}
-
 			#ifdef NMEAOUT
 			if(((lifetime % 2) == 0) && (nmea2pcapflag == true))
 				{
