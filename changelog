@@ -1,6 +1,11 @@
+01.09.2023
+==========
+hcxdumptool: added new option to get shart and grepable interface list
+
+
 26.07.2023
 ==========
-hcxdumptool: added compil time information to version information
+hcxdumptool: added compile time information to version information
 
 $ hcxdumptool -v
 hcxdumptool 6.3.1-35-g1a0930e (C) 2023 ZeroBeat

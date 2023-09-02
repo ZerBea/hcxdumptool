@@ -410,7 +410,7 @@ static frequencylist_t *iffreql;
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
 	if((ifpresentlist + i)->index != ifaktindex) continue;
-	fprintf(stdout, "\ninterface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
+	fprintf(stdout, "interface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 			"---------------------------------------------------------------------------------------------\n");
 	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
 	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
@@ -456,7 +456,7 @@ static frequencylist_t *iffreql;
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
 	if((ifpresentlist + i)->index != ifaktindex) continue;
-	fprintf(stdout, "\ninterface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
+	fprintf(stdout, "interface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 			"---------------------------------------------------------------------------------------------\n");
 	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
 	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
@@ -481,13 +481,32 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+static void show_interfacelist_short(void)
+{
+static size_t i;
+static const char *po = "N/A";
+static const char *mode = "-";
+
+for(i = 0; i < ifpresentlistcounter; i++)
+	{
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
+	if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
+	else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
+	fprintf(stdout, "%3d\t%3d\t%02x%02x%02x%02x%02x%02x\t%02x%02x%02x%02x%02x%02x\t%s\t%-*s\t%s\t(%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
 static void show_interfacelist(void)
 {
 static size_t i;
 static const char *po = "N/A";
 static const char *mode = "-";
 
-fprintf(stdout, "\navailable wlan devices:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
+fprintf(stdout, "available wlan devices:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 		"---------------------------------------------------------------------------------------------\n");
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
@@ -4503,6 +4522,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-p             : do not set monitor mode: active (do not ACK incoming frames addressed to the device MAC)\n"
 	"                 default monitor mode: active (ACK all incoming frames addressed to the device MAC)\n"
 	"-L             : show INTERFACE list\n"
+	"-l             : show INTERFACE list (tabulator separated and grepable)\n" 
 	"-I <INTERFACE> : show detailed information about INTERFACE\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
@@ -4648,6 +4668,7 @@ static bool monitormodeflag = false;
 static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
+static bool interfacelistshortflag = false;
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 static char *essidlistname = NULL;
@@ -4661,7 +4682,7 @@ static char *nmeaoutname = NULL;
 #endif
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
-static const char *short_options = "i:w:c:f:m:I:t:FLphv";
+static const char *short_options = "i:w:c:f:m:I:t:FLlphv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -4910,6 +4931,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		interfacelistflag = true;
 		break;
 
+		case HCX_SHOW_INTERFACE_LIST_SHORT:
+		interfacelistshortflag = true;
+		break;
+
 		#ifdef NMEAOUT
 		case HCX_NMEA0183:
 		if(gpsdflag == true)
@@ -4977,8 +5002,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 setbuf(stdout, NULL);
 hcxpid = getpid();
 
-fprintf(stdout, "\nRequesting physical interface capabilities. This may take some time.\n"
-		"Please be patient...\n\n");
+if(interfacelistshortflag == false)
+	{
+	fprintf(stdout, "\nRequesting physical interface capabilities. This may take some time.\n"
+			"Please be patient...\n\n");
+	}
 if(set_signal_handler() == false)
 	{
 	errorcount++;
@@ -5037,6 +5065,11 @@ if(get_interfacelist() == false)
 if(interfacelistflag == true)
 	{
 	show_interfacelist();
+	goto byebye;
+	}
+if(interfacelistshortflag == true)
+	{
+	show_interfacelist_short();
 	goto byebye;
 	}
 if(interfaceinfoflag == true)
@@ -5135,7 +5168,8 @@ byebye:
 close_fds();
 close_sockets();
 close_lists();
-fprintf(stdout, "\n\n\033[?25h");
+if(interfacelistshortflag == true) return EXIT_SUCCESS;
+fprintf(stdout, "\n\033[?25h");
 if(errorcount > 0) fprintf(stderr,"%" PRIu64 " ERROR(s) during runtime\n", errorcount);
 #ifdef STATUSOUT
 if(totalcapturedcount > 0) fprintf(stdout, "%ld packet(s) captured\n", totalcapturedcount);
@@ -5216,7 +5250,7 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
-fprintf(stdout, "\nbye-bye\n\n");
+fprintf(stdout, "bye-bye\n\n");
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
