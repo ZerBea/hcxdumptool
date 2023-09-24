@@ -537,7 +537,7 @@ static char *ak;
 
 if(system("clear") != 0) errorcount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
-sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE A   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
+sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE S   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
 	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
@@ -4626,14 +4626,14 @@ fprintf(stdout, "--tot=<digit>                  : enable timeout timer in minute
 
 fprintf(stdout, "Legend\n"
 	"real time display:\n"
-	" R = + AP display:     AP is in TX range or under attack\n"
-	" S = + AP display:     AUTHENTICATION KEY MANAGEMENT PSK\n"
-	" P = + AP display:     got PMKID hashcat / JtR can work on\n"
-	" 1 = + AP display:     got EAPOL M1 (CHALLENGE)\n"
-	" 3 = + AP display:     got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
-	" E = + CLIENT display: got EAP-START MESSAGE\n"
-	" 2 = + CLIENT display: got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
-
+	" R = + AP display     : AP is in TX range or under attack\n"
+	" S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
+	" P = + AP display     : got PMKID hashcat / JtR can work on\n"
+	" 1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
+	" 3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
+	" E = + CLIENT display : got EAP-START MESSAGE\n"
+	" 2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n"
+	"\n");
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
