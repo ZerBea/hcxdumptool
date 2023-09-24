@@ -531,9 +531,10 @@ static size_t i;
 static size_t p;
 static time_t tvlastb;
 static time_t tvlastp;
+static char *ak;
 static char *pmdef = " ";
 static char *pmok = "+";
-static char *ak;
+static char *notime = "        ";
 
 if(system("clear") != 0) errorcount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -548,8 +549,12 @@ for(i = 0; i < 40 ; i++)
 	else ak = pmdef;
 	tvlastb = (aplist + i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastb));
-	tvlastp = (aplist + i)->tsauth / 1000000000ULL;
-	strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
+	if(((aplist + i)->status & AP_PROBERESPONSE) == AP_PROBERESPONSE)
+		{
+		tvlastp = (aplist + i)->tsauth / 1000000000ULL;
+		strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
+		}
+	else strncpy(timestring2, notime, TIMESTRING_LEN);
 	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
 			(aplist + i)->ie.channel, (aplist + i)->count, timestring1, timestring2, ak,
 			(aplist + i)->macap[0], (aplist + i)->macap[1], (aplist + i)->macap[2], (aplist + i)->macap[3], (aplist + i)->macap[4], (aplist + i)->macap[5],
