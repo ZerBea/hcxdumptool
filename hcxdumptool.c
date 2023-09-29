@@ -679,6 +679,7 @@ switch(band)
 	else return 5000 + channel * 5;
 	break;
 
+	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	case NL80211_BAND_6GHZ:
 	if(channel == 2) return 5935;
 	if(channel <= 233) return 5950 + (channel * 5);
@@ -687,7 +688,7 @@ switch(band)
 	case NL80211_BAND_60GHZ:
 	if(channel < 7) return 56160 + (channel * 2160);
 	break;
-	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
+
 	case NL80211_BAND_S1GHZ:
 	return 902000 + (channel * 500);
 	#endif
@@ -3828,9 +3829,9 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 			uband = strtol(tokptr, &userband, 10);
 			if(userband[0] == 'a') ufreq = channel_to_frequency(uband, NL80211_BAND_2GHZ);
 			else if(userband[0] == 'b') ufreq = channel_to_frequency(uband, NL80211_BAND_5GHZ);
+			#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 			else if(userband[0] == 'c') ufreq = channel_to_frequency(uband, NL80211_BAND_6GHZ);
 			else if(userband[0] == 'd') ufreq = channel_to_frequency(uband, NL80211_BAND_60GHZ);
-			#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 			else if(userband[0] == 'e') ufreq = channel_to_frequency(uband, NL80211_BAND_S1GHZ);
 			#endif
 			usrfrequency_to_scanlist(ufreq);
@@ -4510,9 +4511,9 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                  it is mandatory to add band information to the channel number (e.g. 12a)\n"
 	"                   band a: NL80211_BAND_2GHZ\n"
 	"                   band b: NL80211_BAND_5GHZ\n"
+	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	"                   band c: NL80211_BAND_6GHZ\n"
 	"                   band d: NL80211_BAND_60GHZ\n"
-	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	"                   band e: NL80211_BAND_S1GHZ (902 MHz)\n" 
 	#endif
 	"                  to disable frequency management, set this option to a single frequency/channel\n" 
