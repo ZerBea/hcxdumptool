@@ -144,7 +144,8 @@ static u32 attemptapmax = ATTEMPTAP_MAX;
 static u32 attemptclientmax = ATTEMPTCLIENT_MAX;
 
 static u64 packetcount = 1;
-
+static u64 packetrcarxcount = 0;
+static u64 packetrcatxcount = 0;
 static size_t beaconindex = 0;
 static size_t proberesponseindex = 0;
 
@@ -2286,7 +2287,11 @@ if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IE
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
-	if(memcmp(&macclientrg, macfrx->addr1, 3) == 0) (aplist + i)->tsauth = tsakt;
+	if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) == 0)
+		{
+		(aplist + i)->tsauth = tsakt;
+		packetrcarxcount++;
+		}
 	if(((aplist + i)->status & AP_PROBERESPONSE) == 0) (aplist + i)->status |= AP_PROBERESPONSE;
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
@@ -2301,6 +2306,7 @@ memset((aplist + i), 0, APLIST_SIZE);
 (aplist + i)->count = attemptapmax;
 memcpy((aplist + i)->macap, macfrx->addr3, ETH_ALEN);
 memcpy((aplist + i)->macclient, &macbc, ETH_ALEN);
+if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) == 0) packetrcarxcount++;
 (aplist + i)->status |= AP_PROBERESPONSE;
 tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
@@ -2863,7 +2869,11 @@ while(!wanteventflag)
 				scanlistindex++;
 				if(nl_set_frequency() == false) errorcount++;
 				}
-			if(rcatypeflag[0] == 'a') send_80211_proberequest_undirected();
+			if(rcatypeflag[0] == 'a') 
+				{
+				send_80211_proberequest_undirected();
+				packetrcatxcount += 1;
+				}
 			if((lifetime % 10) == 0)
 				{
 				if(gpiostatusled > 0)
@@ -5183,7 +5193,14 @@ close_sockets();
 close_lists();
 if(interfacelistshortflag == true) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
-if(errorcount > 0) fprintf(stderr,"%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+if(errorcount > 0) fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+if(rcascanflag != NULL)
+	{
+	if(rcascanflag[0] == 'a')
+		{
+		if(packetrcarxcount == 0) fprintf(stderr, "Warning: no responses received (packet injection may not work)\n");
+		}
+	}
 #ifdef STATUSOUT
 if(totalcapturedcount > 0) fprintf(stdout, "%ld packet(s) captured\n", totalcapturedcount);
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
