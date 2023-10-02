@@ -1286,7 +1286,7 @@ reassociationrequest = (ieee80211_reassoc_req_t*)&wltxnoackbuffer[ii];
 reassociationrequest->capability = 0x431;
 reassociationrequest->listen_interval = 0x14;
 memcpy(reassociationrequest->current_macap, (aplist + i)->macap, ETH_ALEN);
-ii += sizeof(ieee80211_reassoc_req_t);
+ii += sizeof(ieee80211_reassoc_req_t) -1;
 wltxnoackbuffer[ii ++] = 0;
 wltxnoackbuffer[ii ++] = (aplist + i)->ie.essidlen;
 memcpy(&wltxnoackbuffer[ii], (aplist + i)->ie.essid, (aplist + i)->ie.essidlen);
