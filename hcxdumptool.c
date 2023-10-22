@@ -4776,6 +4776,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_DISABLE_BEACON:
 		timerwaitnd = -1;
+		beacontxmax = 0;
 		break;
 
 		case HCX_DISABLE_DEAUTHENTICATION:
