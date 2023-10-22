@@ -4561,6 +4561,7 @@ fprintf(stdout, "long options:\n"
 	"--disable_association          : do not AUTHENTICATE/ASSOCIATE\n"
 	"--disable_reassociation        : do not REASSOCIATE a CLIENT\n"
 	"--beacontx=<digit>             : transmit BEACON of first n entries of ESSID list\n"
+	"                                  0 = disable beacon (same as disable_beacon)\n"
 	"                                  default: %d\n"
 	"--proberesponsetx=<digit>      : transmit PROBERESPONSEs of first n entries of ESSID list\n"
 	"                                 default: %d\n"
@@ -4795,9 +4796,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_BEACONTX_MAX:
 		beacontxmax = strtoul(optarg, NULL, 10);
-		if((beacontxmax == 0) || (beacontxmax > (APRGLIST_MAX - 1)))
+		if(beacontxmax == 0) timerwaitnd = -1;
+		else if(beacontxmax > (APRGLIST_MAX - 1))
 			{
-			fprintf(stderr, "must be greater than > 0 and < than %d \n", APRGLIST_MAX - 1);
+			fprintf(stderr, "must be lower than < than %d \n", APRGLIST_MAX - 1);
 			exit(EXIT_FAILURE);
 			}
 		break;
