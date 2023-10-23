@@ -195,6 +195,12 @@ No support for a driver which doesn't support monitor mode and full frame inject
 
 No support for prism devices.
 
+Recommended WiFi chipsets:
+
+* Ralink
+
+* MediaTek
+
 Not recommended WiFi chipsets:
 
 * Broadcom (neither monitor mode nor frame injection by official Linux kernel)
@@ -212,6 +218,8 @@ https://bugzilla.kernel.org
 https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
 
 https://github.com/morrownr/USB-WiFi/issues/314
+
+Do not expect flawless drivers on brand new hardware.
 
 
 Antennas
