@@ -179,7 +179,7 @@ Adapters
 
 Driver must support (mandatory) monitor mode and full packet injection
 
-WIRELESS EXTENSIONS are deprecated and no longer supported
+WIRELESS EXTENSIONS are deprecated and not longer supported
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
@@ -201,13 +201,18 @@ Not recommended WiFi chipsets:
 
 * Qualcomm (no frame injection by official Linux kernel)
 
-* Intel (frame injection)
+* Intel (frame injection problems)
 
-more information about possible issues or limitations:
+* Realtek (this drivers may work or they may not work)
+
+More information about possible issues or limitations:
 
 https://bugzilla.kernel.org
 
 https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
+
+https://github.com/morrownr/USB-WiFi/issues/314
+
 
 Antennas
 --------------
