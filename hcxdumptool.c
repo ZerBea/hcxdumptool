@@ -2282,16 +2282,14 @@ static size_t i;
 static ieee80211_beacon_proberesponse_t *proberesponse;
 static u16 proberesponselen;
 
+if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) != 0) return;
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr3, (aplist + i)->macap, ETH_ALEN) != 0) continue;
-	if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		(aplist + i)->tsauth = tsakt;
-		packetrcarxcount++;
-		}
+	(aplist + i)->tsauth = tsakt;
+	packetrcarxcount++;
 	if(((aplist + i)->status & AP_PROBERESPONSE) == 0) (aplist + i)->status |= AP_PROBERESPONSE;
 	tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 	if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
@@ -2306,7 +2304,7 @@ memset((aplist + i), 0, APLIST_SIZE);
 (aplist + i)->count = attemptapmax;
 memcpy((aplist + i)->macap, macfrx->addr3, ETH_ALEN);
 memcpy((aplist + i)->macclient, &macbc, ETH_ALEN);
-if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) == 0) packetrcarxcount++;
+packetrcarxcount++;
 (aplist + i)->status |= AP_PROBERESPONSE;
 tagwalk_channel_essid_rsn(&(aplist + i)->ie, proberesponselen, proberesponse->ie);
 if((aplist + i)->ie.channel == 0) (aplist + i)->ie.channel = (scanlist + scanlistindex)->channel;
@@ -5195,7 +5193,7 @@ if(rcascanflag != NULL)
 	{
 	if(rcascanflag[0] == 'a')
 		{
-		if(packetrcarxcount == 0) fprintf(stderr, "Warning: no responses received (packet injection may not work)\n");
+		if(packetrcarxcount == 0) fprintf(stderr, "Warning: no responses received (packet injection may not work as expected)\n");
 		}
 	}
 #ifdef STATUSOUT
