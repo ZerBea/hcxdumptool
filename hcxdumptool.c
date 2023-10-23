@@ -4700,7 +4700,6 @@ static const char *short_options = "i:w:c:f:m:I:t:FLlphv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
-	{"disable_beacon",		no_argument,		NULL,	HCX_DISABLE_BEACON},
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
 	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
 	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
@@ -4772,11 +4771,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_ESSIDLIST:
 		essidlistname = optarg;
-		break;
-
-		case HCX_DISABLE_BEACON:
-		timerwaitnd = -1;
-		beacontxmax = 0;
 		break;
 
 		case HCX_DISABLE_DEAUTHENTICATION:
