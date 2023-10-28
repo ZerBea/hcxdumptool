@@ -5199,10 +5199,12 @@ if(rcascanflag != NULL)
 							  " frames are filtered out by BPF\n"
 							  " driver is broken\n"
 							  " driver does not support frame injection\n\n");
+
 		}
 	}
 #ifdef STATUSOUT
 if(totalcapturedcount > 0) fprintf(stdout, "%ld packet(s) captured\n", totalcapturedcount);
+if(packetrcarxcount > 0) fprintf(stdout, "%ld RESPONSE(s) received\n", packetrcarxcount);
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
 if(widbcount > 0) fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
 if(wecbcount > 0) fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
