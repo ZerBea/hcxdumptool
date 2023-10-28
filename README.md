@@ -4,13 +4,15 @@ hcxdumptool
 Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol  
 (e.g.: PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
 
+Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
+
 
 Brief description
 --------------
 
-Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
-
-Capture format pcapng is compatible to Wireshark and tshark.
+You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbees.
+If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
+However, if you have that knowledge there’s no better toolkit than hcxdumtool/hcxtools.
 
 Read this post: hcxtools - solution for capturing wlan traffic and conversion to hashcat formats (https://hashcat.net/forum/thread-6661.html)
 
@@ -19,8 +21,6 @@ Read this post: New attack on WPA/WPA2 using PMKID (https://hashcat.net/forum/th
 Read this post: Hash mode 22000 explained (https://hashcat.net/forum/thread-10253.html)
 
 Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
-
-Unsupported: Windows OS, macOS, Android, emulators or wrappers!
 
 
 What doesn't hcxdumptool do
@@ -39,6 +39,8 @@ it does not record entire traffic (use tshark or Wireshark in parallel)
 it does not perform Evil Twin attacks
 
 it is not a honey pot
+
+Unsupported: Windows OS, macOS, Android, emulators or wrappers!
 
 
 Detailed description
@@ -359,3 +361,5 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 * Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
 
 * Do not merge (pcapng) dumpfiles because that destroys custom block hash assignments
+
+* Capture format pcapng is compatible to Wireshark and tshark
