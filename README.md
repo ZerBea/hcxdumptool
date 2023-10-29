@@ -1,18 +1,13 @@
 hcxdumptool
 ==============
 
-Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol  
-(e.g.: PreSharedKey or PlainMasterKey is transmitted unencrypted by a CLIENT).
-
-Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
+Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol.
 
 
 Brief description
 --------------
 
-You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbees.
-If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
-However, if you have that knowledge there’s no better toolkit than hcxdumtool/hcxtools.
+Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
 
 Read this post: hcxtools - solution for capturing wlan traffic and conversion to hashcat formats (https://hashcat.net/forum/thread-6661.html)
 
@@ -318,7 +313,11 @@ OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 Warning
 --------------
 
-hcxdumptool is designed to be an analysis tool. 
+You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbees.
+If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
+However, if you have that knowledge there’s no better toolkit than hcxdumtool/hcxtools.
+
+The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis toolkit. 
 
 It should only be used in a 100% controlled environment(!).
 
