@@ -4473,7 +4473,7 @@ struct utsname utsbuffer;
 fprintf(stdout, "%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 if(uname(&utsbuffer) == 0) fprintf(stdout, "running on Linux kernel %s\n", utsbuffer.release);
 #if defined (__GLIBC__)
-fprintf(stdout, "using GNU libc version: %s\n", gnu_get_libc_version());
+fprintf(stdout, "running GNU libc version: %s\n", gnu_get_libc_version());
 #endif
 #if defined (__GNUC__)
 fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
