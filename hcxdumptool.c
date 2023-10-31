@@ -4,6 +4,9 @@
 #if defined (_POSIX_VERSION)
 #include <fcntl.h>
 #endif
+#if defined (__GLIBC__)
+#include <gnu/libc-version.h>
+#endif
 #include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
@@ -4469,6 +4472,9 @@ struct utsname utsbuffer;
 
 fprintf(stdout, "%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 if(uname(&utsbuffer) == 0) fprintf(stdout, "running on Linux kernel %s\n", utsbuffer.release);
+#if defined (__GLIBC__)
+fprintf(stdout, "using GNU libc version: %s\n", gnu_get_libc_version());
+#endif
 #if defined (__GNUC__)
 fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #else
@@ -4480,7 +4486,7 @@ fprintf(stdout, "compiled with Linux API headers %d.%d.%d\n", LINUX_VERSION_MAJO
 fprintf(stdout, "Linux API headers (LINUX_VERSION_MAJOR) is not defined\n");
 #endif
 #if defined (__GLIBC__)
-fprintf(stdout, "compiled with glibc %d.%d\n", __GLIBC__, __GLIBC_MINOR__);
+fprintf(stdout, "compiled with GNU libc headers %d.%d\n", __GLIBC__, __GLIBC_MINOR__);
 #else
 fprintf(stdout, "glibc (__GLIBC_MINOR__) is not defined\n");
 #endif
