@@ -1368,7 +1368,7 @@ wltxnoackbuffer[ii ++] = essidlenrsp;
 memcpy(&wltxnoackbuffer[ii], essidrsp, essidlenrsp);
 ii += essidlenrsp;
 memcpy(&wltxnoackbuffer[ii], proberesponsedata, PROBERESPONSEDATA_SIZE);
-wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel; 
+wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
 ii += PROBERESPONSEDATA_SIZE;
 if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
 errorcount++;
@@ -1405,7 +1405,7 @@ wltxnoackbuffer[ii ++] = (aprglist + beaconindex)->essidlen;
 memcpy(&wltxnoackbuffer[ii], (aprglist + beaconindex)->essid, (aprglist + beaconindex)->essidlen);
 ii += (aprglist + beaconindex)->essidlen;
 memcpy(&wltxnoackbuffer[ii], beacondata, BEACONDATA_SIZE);
-wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel; 
+wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
 ii += BEACONDATA_SIZE;
 if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
 errorcount++;
@@ -2215,7 +2215,7 @@ static inline void process80211proberequest_directed(void)
 {
 static size_t i;
 static ieee80211_proberequest_t *proberequest;
-static u16 proberequestlen; 
+static u16 proberequestlen;
 static essid_t essid;
 
 proberequest = (ieee80211_proberequest_t*)payloadptr;
@@ -2239,7 +2239,7 @@ static inline void process80211proberequest_undirected(void)
 {
 static size_t i;
 static ieee80211_proberequest_t *proberequest;
-static u16 proberequestlen; 
+static u16 proberequestlen;
 static essid_t essid;
 
 proberequest = (ieee80211_proberequest_t*)payloadptr;
@@ -2865,12 +2865,12 @@ while(!wanteventflag)
 			clock_gettime(CLOCK_REALTIME, &tspecakt);
 			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 			if((lifetime % 5) == 0) show_realtime_rca();
-			if((lifetime % 2) == 0) 
+			if((lifetime % 2) == 0)
 				{
 				scanlistindex++;
 				if(nl_set_frequency() == false) errorcount++;
 				}
-			if(rcatypeflag[0] == 'a') 
+			if(rcatypeflag[0] == 'a')
 				{
 				send_80211_proberequest_undirected();
 				packetrcatxcount += 1;
@@ -2992,7 +2992,7 @@ static u8 vimac[ETH_ALEN];
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3066,7 +3066,7 @@ static struct nlmsgerr *nle;
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3131,7 +3131,7 @@ country[1] = 0;
 country[2] = 0;
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3192,7 +3192,7 @@ static char driverfmt[128] = { 0 };
 static char driverlink[128] = { 0 };
 
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3232,7 +3232,7 @@ while(1)
 		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
-			if(nla->nla_type == NL80211_ATTR_WIPHY) 
+			if(nla->nla_type == NL80211_ATTR_WIPHY)
 				{
 				(ifpresentlist + ii)->wiphy = *((u32*)nla_data(nla));
 				snprintf(driverfmt, 64, "/sys/class/ieee80211/phy%d/device/driver", (ifpresentlist + ii)->wiphy);
@@ -3273,7 +3273,7 @@ static struct nlmsgerr *nle;
 i = 0;
 if(((scanlist + scanlistindex)->frequency) == 0) scanlistindex = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3344,7 +3344,7 @@ static struct nlmsgerr *nle;
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3397,7 +3397,7 @@ static struct nlmsgerr *nle;
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
-nlh->nlmsg_type = nlfamily; 
+nlh->nlmsg_type = nlfamily;
 nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
@@ -3481,7 +3481,7 @@ i += sizeof(struct ifinfomsg);
 rta = (struct rtattr*)(nltxbuffer+ i);
 rta->rta_len = 10;
 rta->rta_type = IFLA_ADDRESS;
-memcpy(&nltxbuffer[i + 4], &macclientrg, ETH_ALEN +2); 
+memcpy(&nltxbuffer[i + 4], &macclientrg, ETH_ALEN +2);
 i += 12;
 nlh->nlmsg_len = i;
 if((write(fd_socket_rt, nltxbuffer, i)) != i) return false;
@@ -4040,7 +4040,7 @@ if(flock(fd_gps, LOCK_EX) < 0) return false;
 if(tcgetattr(fd_gps, &tty) < 0) return false;
 tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
 tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
-tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size 
+tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size
 tty.c_cflag |= CS8; // 8 bits per byte (most common)
 tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control (most common)
 tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
@@ -4473,7 +4473,7 @@ struct utsname utsbuffer;
 fprintf(stdout, "%s %s (C) %s ZeroBeat\n", eigenname, VERSION_TAG, VERSION_YEAR);
 if(uname(&utsbuffer) == 0) fprintf(stdout, "running on Linux kernel %s\n", utsbuffer.release);
 #if defined (__GLIBC__)
-fprintf(stdout, "running GNU libc version: %s\n", gnu_get_libc_version());
+fprintf(stdout, "running GNU libc version %s\n", gnu_get_libc_version());
 #endif
 #if defined (__GNUC__)
 fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
@@ -4530,9 +4530,9 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 	"                   band c: NL80211_BAND_6GHZ\n"
 	"                   band d: NL80211_BAND_60GHZ\n"
-	"                   band e: NL80211_BAND_S1GHZ (902 MHz)\n" 
+	"                   band e: NL80211_BAND_S1GHZ (902 MHz)\n"
 	#endif
-	"                  to disable frequency management, set this option to a single frequency/channel\n" 
+	"                  to disable frequency management, set this option to a single frequency/channel\n"
 	"-f <digit>     : set frequency (2412,2417,5180,...)\n"
 	"-F             : use available frequencies from INTERFACE\n"
 	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
@@ -4541,7 +4541,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-p             : do not set monitor mode: active (do not ACK incoming frames addressed to the device MAC)\n"
 	"                 default monitor mode: active (ACK all incoming frames addressed to the device MAC)\n"
 	"-L             : show INTERFACE list and terminate\n"
-	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n" 
+	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
@@ -4659,7 +4659,7 @@ fprintf(stdout, "Legend\n"
 	"\n");
 fprintf(stdout, "Notice:\n"
 	"This is a penetration testing tool!\n"
-	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n" 
+	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
 	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
 	"\n");
 exit(EXIT_SUCCESS);
