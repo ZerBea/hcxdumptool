@@ -1,3 +1,8 @@
+01.11.2023
+==========
+release v6.3.2
+
+
 23.10.2023
 ==========
 hcxdumptool: removed option "disable_beacon" because it is cover by option beacontx=0
