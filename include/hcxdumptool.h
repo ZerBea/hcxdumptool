@@ -333,5 +333,5 @@ typedef struct
 }req_t;
 /*===========================================================================*/
 static bool read_bpf(char *bpfname);
-static inline bool nl_set_frequency();
+static inline bool nl_set_frequency(void);
 /*===========================================================================*/
