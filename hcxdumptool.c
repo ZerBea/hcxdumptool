@@ -85,7 +85,7 @@ static int fd_pcapng = 0;
 
 #ifdef STATUSOUT
 static u8 rdsort = 0;
-static long int totalcapturedcount = 0;
+static u64 totalcapturedcount = 0;
 static long int wecbcount = 0;
 static long int wepbcount = 0;
 static long int widbcount = 0;
@@ -5205,12 +5205,11 @@ if(rcascanflag != NULL)
 							  " frames are filtered out by BPF\n"
 							  " driver is broken\n"
 							  " driver does not support frame injection\n\n");
-
 		}
 	}
 #ifdef STATUSOUT
-if(totalcapturedcount > 0) fprintf(stdout, "%ld packet(s) captured\n", totalcapturedcount);
-if(packetrcarxcount > 0) fprintf(stdout, "%ld RESPONSE(s) received\n", packetrcarxcount);
+if(totalcapturedcount > 0) fprintf(stdout, "%" PRIu64 " packet(s) captured\n", totalcapturedcount);
+if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " RESPONSE(s) received\n", packetrcarxcount);
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
 if(widbcount > 0) fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
 if(wecbcount > 0) fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
