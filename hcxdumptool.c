@@ -4687,6 +4687,9 @@ static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
 static bool interfacelistshortflag = false;
+#ifdef STATUSOUT
+static bool scanflag = false;
+#endif
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 static char *essidlistname = NULL;
@@ -5164,6 +5167,9 @@ else
 		}
 	}
 /*---------------------------------------------------------------------------*/
+#ifdef STATUSOUT
+scanflag = true;
+#endif
 tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
@@ -5209,14 +5215,14 @@ if(rcascanflag != NULL)
 	}
 #ifdef STATUSOUT
 if(totalcapturedcount > 0) fprintf(stdout, "%" PRIu64 " packet(s) captured\n", totalcapturedcount);
-else
+else if(scanflag == true)
 	{
 	fprintf(stderr, "Warning: no packets received (frame injection may not work as expected)\n"
-							  "Possible reasons:\n"
-							  " no AP in range\n"
-							  " frames are filtered out by BPF\n"
-							  " driver is broken\n"
-							  " driver does not support frame injection\n\n");
+			"Possible reasons:\n"
+			" no AP in range\n"
+			" frames are filtered out by BPF\n"
+			" driver is broken\n"
+			" driver does not support frame injection\n\n");
 	}
 if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " RESPONSE(s) received\n", packetrcarxcount);
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
