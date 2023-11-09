@@ -182,7 +182,7 @@ Get information about VENDOR, model, chipset and driver here: https://wikidevi.w
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Preferred chipsets MediaTek due to active monitor mode feature (important notice: massive problems with MT76 USB3 devices if connected to USB3 ports)
+Preferred chipsets MediaTek due to active monitor mode feature (important notice: massive problems with MT76 USB3 devices if connected to some USB3 ports)
 
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
