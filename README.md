@@ -184,6 +184,8 @@ Manufacturers do change chipsets without changing model numbers. Sometimes they 
 
 Preferred chipsets MediaTek due to active monitor mode feature (important notice: massive problems with MT76 USB3 devices if connected to some USB3 ports)
 
+Some device and driver tests are here: https://github.com/ZerBea/hcxdumptool/discussions/361
+
 Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 
 No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
