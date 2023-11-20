@@ -206,9 +206,7 @@ Not recommended WiFi chipsets:
 
 * Qualcomm (no frame injection by official Linux kernel)
 
-* Intel (frame injection problems)
-
-* Realtek (this drivers may work or they may not work)
+* Intel (monitor mode and frame injection problems)
 
 More information about possible issues or limitations:
 
