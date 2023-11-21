@@ -38,6 +38,7 @@
 #define HCX_SHOW_INTERFACE_LIST_SHORT	'l'
 #define HCX_HOLD_TIME			't'
 #define HCX_HELP			'h'
+#define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
 #define EXIT_ON_SIGTERM		0x01

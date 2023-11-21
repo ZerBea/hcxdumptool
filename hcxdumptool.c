@@ -4492,34 +4492,44 @@ exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
+static inline void usage_additional(char *eigenname)
+{
+fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
+	"Additional information:\n-----------------------\n"
+	"first stop all services that take access to the interface, e.g.:\n"
+	"$ sudo systemctl stop NetworkManager.service\n"
+	"$ sudo systemctl stop wpa_supplicant.service\n"
+	"run %s\n"
+	"press ctrl+c to terminate\n"
+	"press GPIO button to terminate\n"
+	" hardware modification is necessary, read more:\n"
+	" https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
+	"stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
+	"do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)\n"
+	"do not use logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw\n"
+	"do not use virtual machines or emulators\n"
+	"do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)\n"
+	"do not use tools to change MAC (like macchanger)\n"
+	"do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
+	"\n",
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+exit(EXIT_SUCCESS);
+}
+/*---------------------------------------------------------------------------*/
+__attribute__ ((noreturn))
 static inline void usage(char *eigenname)
 {
 fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"usage: %s <options>\n"
-	"        first stop all services that take access to the interface, e.g.:\n"
-	"        $ sudo systemctl stop NetworkManager.service\n"
-	"        $ sudo systemctl stop wpa_supplicant.service\n"
-	"        run %s\n"
-	"        press ctrl+c to terminate\n"
-	"        press GPIO button to terminate\n"
-	"         hardware modification is necessary, read more:\n"
-	"         https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
-	"        stop all services (e.g.: wpa_supplicant.service, NetworkManager.service) that take access to the interface\n"
-	"        do not set monitor mode by third party tools (iwconfig, iw, airmon-ng)\n"
-	"        do not use logical (NETLINK) interfaces (monx, wlanxmon, prismx, ...) created by airmon-ng and iw\n"
-	"        do not use virtual machines or emulators\n"
-	"        do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)\n"
-	"        do not use tools to change MAC (like macchanger)\n"
-	"        do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n"
-	"short options:\n"
+	"most common options:\n--------------------\n"
 	"-i <INTERFACE> : name of INTERFACE to be used\n"
 	"                  default: first suitable INTERFACE\n"
 	"                  warning: %s changes the virtual MAC address of the INTERFACE\n"
 	"-w <outfile>   : write packets to a pcapng-format file named <outfile>\n"
 	"                  default outfile name: yyyyddmmhhmmss-interfacename.pcapng\n"
 	"                  get more information: https://pcapng.com/\n"
-	"-c <digit>     : set channel (1a,2a,36b...)\n"
+	"-c <digit>     : set channel (1a,2a,36b,...)\n"
 	"                  default: 1a,6a,11a\n"
 	"                  important notice: channel numbers are not unique\n"
 	"                  it is mandatory to add band information to the channel number (e.g. 12a)\n"
@@ -4541,125 +4551,114 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
+	"--bpf=<file>   : input kernel space Berkeley Packet Filter (BPF) code\n"
+	"                  steps to create a BPF (it only has to be done once):\n"
+	"                  set monitor mode\n"
+	"                   $ %s -m <interface>\n"
+	"                  create BPF to protect MACs (recommended to protect own devices)\n"
+	"                   $ tcpdump -i <INTERFACE> not wlan addr2 11:22:33:44:55:66 -ddd > protect.bpf\n"
+	"                  create BPF to attack a MAC\n"
+	"                   $ tcpdump -i <INTERFACE> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd > attack.bpf\n"
+	"                   it is strongly recommended to allow all PROBEREQUEST frames (wlan_type mgt && wlan_subtype probe-req)\n"
+	"                   $ tcpdump -i <interface> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 or wlan addr3 ff:ff:ff:ff:ff:ff -ddd > attack.bpf\n"
+	"                  see man pcap-filter for a list of all filter options\n"
+	"                  add BPF code: \n"
+	"                   $ %s -i <INTERFACE> --bpf=attack.bpf ...\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, TIMEHOLD / 1000000000ULL);
-fprintf(stdout, "long options:\n"
-	"--bpf=<file>                   : input kernel space Berkeley Packet Filter (BPF) code\n"
-	"                                  steps to create a BPF (it only has to be done once):\n"
-	"                                  $ %s -m <interface>\n"
-	"                                  create BPF to protect MACs\n"
-	"                                  $ tcpdump -i <INTERFACE> not wlan addr2 11:22:33:44:55:66 -ddd > protect.bpf\n"
-	"                                  recommended to protect own devices\n"
-	"                                  create BPF to attack a MAC\n"
-	"                                  $ tcpdump -i <INTERFACE> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd > attack.bpf\n"
-	"                                  it is strongly recommended to allow all PROBEREQUEST frames (wlan_type mgt && wlan_subtype probe-req)\n"
-	"                                  $ tcpdump -i <interface> wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 or wlan addr3 ff:ff:ff:ff:ff:ff -ddd > attack.bpf\n"
-	"                                  see man pcap-filter for a list of all filter options\n"
-	"                                  add BPF code: \n"
-	"                                  $ %s -i <INTERFACE> --bpf=attack.bpf ...\n"
-	"--disable_beacon               : do not transmit BEACON frames\n"
-	"--disable_deauthentication     : do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
-	"--disable_proberequest         : do not transmit PROBEREQUEST frames\n"
-	"--disable_association          : do not AUTHENTICATE/ASSOCIATE\n"
-	"--disable_reassociation        : do not REASSOCIATE a CLIENT\n"
-	"--beacontx=<digit>             : transmit BEACON of first n entries of ESSID list\n"
-	"                                  0 = disable beacon (same as disable_beacon)\n"
-	"                                  default: %d\n"
-	"--proberesponsetx=<digit>      : transmit PROBERESPONSEs of first n entries of ESSID list\n"
-	"                                 default: %d\n"
-	"--essidlist=<file>             : initialize ESSID list with these ESSIDs\n"
-	"--errormax=<digit>             : set maximum allowed ERRORs\n"
-	"                                  default: %d ERRORs\n"
-	"--watchdogmax=<seconds>        : set maximum TIMEOUT when no packets received\n"
-	"                                  default: %d seconds\n"
-	"--attemptclientmax=<digit>     : set maximum of attempts to request an EAPOL M2\n"
-	"                                  default: %d attempts\n"
-	"                                  to disable CLIENT attacks set 0\n"
-	"--attemptapmax=<digit>         : set maximum of received BEACONs to request a PMKID or to get a 4-way handshake\n"
-	"                                  default: stop after %d received BEACONs\n"
-	"                                  attemptapmax=0 include this options:\n"
-	"                                   disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
-	"                                   disable_proberequest    : do not transmit PROBEREQUEST frames\n"
-	"                                   disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
-	"                                   disable_reassociation   : do not REASSOCIATE a CLIENT\n",
-	eigenname, eigenname,
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, eigenname, eigenname);
+fprintf(stdout, "less common options:\n--------------------\n"
+	"--disable_beacon          : do not transmit BEACON frames\n"
+	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
+	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
+	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
+	"--disable_reassociation   : do not REASSOCIATE a CLIENT\n"
+	"--beacontx=<digit>        : transmit BEACON of first n entries of ESSID list\n"
+	"                             0 = disable beacon (same as disable_beacon)\n"
+	"                             default: %d\n"
+	"--proberesponsetx=<digit> : transmit PROBERESPONSEs of first n entries of ESSID list\n"
+	"                            default: %d\n"
+	"--essidlist=<file>        : initialize ESSID list with these ESSIDs\n"
+	"--errormax=<digit>        : set maximum allowed ERRORs\n"
+	"                             default: %d ERRORs\n"
+	"--watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received\n"
+	"                             default: %d seconds\n"
+	"--attemptclientmax=<digit>: set maximum of attempts to request an EAPOL M2\n"
+	"                             default: %d attempts\n"
+	"                             to disable CLIENT attacks set 0\n"
+	"--attemptapmax=<digit>    : set maximum of received BEACONs to request a PMKID or to get a 4-way handshake\n"
+	"                             default: stop after %d received BEACONs\n"
+	"                             attemptapmax=0 include this options:\n"
+	"                              disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
+	"                              disable_proberequest    : do not transmit PROBEREQUEST frames\n"
+	"                              disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
+	"                              disable_reassociation   : do not REASSOCIATE a CLIENT\n",
 	BEACONTX_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
-
-fprintf(stdout, "--tot=<digit>                  : enable timeout timer in minutes\n"
-	"--exitoneapol=<type>           : exit on first EAPOL occurrence:\n"
-	"                                  bitmask:\n"
-	"                                   1 = PMKID\n"
-	"                                   2 = EAPOL M2\n"
-	"                                   4 = EAPOL M3\n"
-	"                                  target BPF filter is recommended\n"
-	"--onsigterm=<action>           : action when the program has been terminated (poweroff, reboot)\n"
-	"                                  poweroff: power off system\n"
-	"                                  reboot:   reboot system\n"
-	"--ongpiobutton=<action>        : action when the program has been terminated (poweroff, reboot)\n"
-	"                                  poweroff: power off system\n"
-	"                                  reboot:   reboot system\n"
-	"--ontot=<action>               : action when the program has been terminated (poweroff, reboot)\n"
-	"                                  poweroff: power off system\n"
-	"                                  reboot:   reboot system\n"
-	"--onwatchdog=<action>          : action when the program has been terminated (poweroff, reboot)\n"
-	"                                  poweroff: power off system\n"
-	"                                  reboot:   reboot system\n"
-	"--onerror=<action>             : action when the program has been terminated (poweroff, reboot)\n"
-	"                                  poweroff: power off system\n"
-	"                                  reboot:   reboot system\n"
-	"--gpio_button=<digit>          : Raspberry Pi GPIO pin number of button (2...27)\n"
-	"                                  push GPIO button (> 10 seconds) to terminate program\n"
-	"                                  default: 0 (GPIO not in use)\n"
-	"--gpio_statusled=<digit>       : Raspberry Pi GPIO number of status LED (2...27)\n"
-	"                                  default: 0 (GPIO not in use)\n"
+fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
+	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
+	"                             bitmask:\n"
+	"                              1 = PMKID\n"
+	"                              2 = EAPOL M2\n"
+	"                              4 = EAPOL M3\n"
+	"                             target BPF filter is recommended\n"
+	"--onsigterm=<action>      : action when the program has been terminated (poweroff, reboot)\n"
+	"                             poweroff: power off system\n"
+	"                             reboot:   reboot system\n"
+	"--ongpiobutton=<action>   : action when the program has been terminated (poweroff, reboot)\n"
+	"                             poweroff: power off system\n"
+	"                             reboot:   reboot system\n"
+	"--ontot=<action>          : action when the program has been terminated (poweroff, reboot)\n"
+	"                             poweroff: power off system\n"
+	"                             reboot:   reboot system\n"
+	"--onwatchdog=<action>     : action when the program has been terminated (poweroff, reboot)\n"
+	"                             poweroff: power off system\n"
+	"                             reboot:   reboot system\n"
+	"--onerror=<action>        : action when the program has been terminated (poweroff, reboot)\n"
+	"                             poweroff: power off system\n"
+	"                             reboot:   reboot system\n"
+	"--gpio_button=<digit>     : Raspberry Pi GPIO pin number of button (2...27)\n"
+	"                             push GPIO button (> 10 seconds) to terminate program\n"
+	"                             default: 0 (GPIO not in use)\n"
+	"--gpio_statusled=<digit>  : Raspberry Pi GPIO number of status LED (2...27)\n"
+	"                             default: 0 (GPIO not in use)\n"
 	#ifdef NMEAOUT
-	"--nmea_dev=<NMEA device>       : open NMEA device (/dev/ttyACM0, /dev/tty/USB0, ...)\n"
-	"                                  baudrate = BD9600\n"
-	"--gpsd                         : use gpsd to get position\n"
-	"                                  gpsd will be switched to NMEA0183 mode\n"
-	"--nmea_out=<outfile>           : write GPS information to a nmea-format file named <outfile>\n"
-	"                                  default outfile name: yyyymmddhhmmss.nmea\n"
-	"                                  output: NMEA 0183 standard messages:\n"
-	"                                          $GPRMC: Position, velocity, time and date\n"
-	"                                          $GPGGA: Position, orthometric height, fix related data, time\n"
-	"                                          $GPWPL: Position and MAC AP\n"
-	"                                          $GPTXT: ESSID in HEX ASCII\n"
-	"                                  use gpsbabel to convert to other formats:\n"
-	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
-	"                                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
-	"                                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
-	"--nmea_pcapng                  : write GPS information to pcapng dump file\n"
+	"--nmea_dev=<NMEA device>  : open NMEA device (/dev/ttyACM0, /dev/tty/USB0, ...)\n"
+	"                             baudrate = BD9600\n"
+	"--gpsd                    : use gpsd to get position\n"
+	"                             gpsd will be switched to NMEA0183 mode\n"
+	"--nmea_out=<outfile>      : write GPS information to a nmea-format file named <outfile>\n"
+	"                             default outfile name: yyyymmddhhmmss.nmea\n"
+	"                             output: NMEA 0183 standard messages:\n"
+	"                                     $GPRMC: Position, velocity, time and date\n"
+	"                                     $GPGGA: Position, orthometric height, fix related data, time\n"
+	"                                     $GPWPL: Position and MAC AP\n"
+	"                                     $GPTXT: ESSID in HEX ASCII\n"
+	"                             use gpsbabel to convert to other formats:\n"
+	"                              gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
+	"                              gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
+	"                             get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
+	"--nmea_pcapng             : write GPS information to pcapng dump file\n"
 	#endif
-	"--rcascan=<character>          : do (R)adio (C)hannel (A)ssignment scan\n"
-	"                                  default = passive scan\n"
-	"                                  a = active scan\n"
-	"                                  p = passive scan\n"
+	"--rcascan=<character>     : do (R)adio (C)hannel (A)ssignment scan\n"
+	"                             default = passive scan\n"
+	"                             a = active scan\n"
+	"                             p = passive scan\n");
 	#ifdef STATUSOUT
-	"--rds=<digit>                  : sort real time display\n"
-	"                                  default: sort by time (last seen on top)\n"
-	"                                  1 = sort by status (last PMKID/EAPOL on top)\n"
+	fprintf(stdout, "--rds=<digit>             : sort real time display\n"
+			"                             default: sort by time (last seen on top)\n"
+			"                             1 = sort by status (last PMKID/EAPOL on top)\n"
+			"                            Columns:\n"
+			"                             R = + AP display     : AP is in TX range or under attack\n"
+			"                             S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
+			"                             P = + AP display     : got PMKID hashcat / JtR can work on\n"
+			"                             1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
+			"                             3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
+			"                             E = + CLIENT display : got EAP-START MESSAGE\n"
+			"                             2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
 	#endif
-	"--help                         : show this help\n"
-	"--version                      : show version\n"
-	"\n");
-
-fprintf(stdout, "Legend\n"
-	"real time display:\n"
-	" R = + AP display     : AP is in TX range or under attack\n"
-	" S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
-	" P = + AP display     : got PMKID hashcat / JtR can work on\n"
-	" 1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
-	" 3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
-	" E = + CLIENT display : got EAP-START MESSAGE\n"
-	" 2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n"
-	"\n");
-fprintf(stdout, "Notice:\n"
-	"This is a penetration testing tool!\n"
-	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
-	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
-	"\n");
+fprintf(stdout, "--help                    : show additional help\n"
+		"--version                 : show version\n\n");
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -4667,7 +4666,11 @@ __attribute__ ((noreturn))
 static inline void usageerror(char *eigenname)
 {
 fprintf(stdout, "%s %s (C) %s by ZeroBeat\n"
-	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	"This is a penetration testing tool!\n"
+	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
+	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
+	"\n"
+	"usage: %s -h or --help for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
 }
 /*===========================================================================*/
@@ -4703,7 +4706,7 @@ static char *nmeaoutname = NULL;
 #endif
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
-static const char *short_options = "i:w:c:f:m:I:t:FLlphv";
+static const char *short_options = "i:w:c:f:m:I:t:FLlphHv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -4738,7 +4741,7 @@ static const struct option long_options[] =
 	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
 	#endif
 	{"version",			no_argument,		NULL,	HCX_VERSION},
-	{"help",			no_argument,		NULL,	HCX_HELP},
+	{"help",			no_argument,		NULL,	HCX_HELP_ADDITIONAL},
 	{NULL,				0,			NULL,	0}
 };
 optind = 1;
@@ -5011,6 +5014,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_HELP:
 		usage(basename(argv[0]));
+		break;
+
+		case HCX_HELP_ADDITIONAL:
+		usage_additional(basename(argv[0]));
 		break;
 
 		case HCX_VERSION:
