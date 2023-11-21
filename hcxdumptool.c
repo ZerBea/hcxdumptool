@@ -4511,6 +4511,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)\n"
 	"do not use tools to change MAC (like macchanger)\n"
 	"do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
+	"to store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel on the same interface\n"
 	"\n",
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_SUCCESS);
@@ -4668,7 +4669,6 @@ static inline void usageerror(char *eigenname)
 fprintf(stdout, "%s %s (C) %s by ZeroBeat\n"
 	"This is a penetration testing tool!\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
-	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
 	"\n"
 	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
