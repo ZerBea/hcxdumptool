@@ -4670,7 +4670,7 @@ fprintf(stdout, "%s %s (C) %s by ZeroBeat\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
 	"To store entire traffic, run <tshark -i <interface> -w allframes.pcapng> in parallel\n"
 	"\n"
-	"usage: %s -h or --help for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_FAILURE);
 }
 /*===========================================================================*/
