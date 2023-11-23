@@ -541,12 +541,12 @@ static char *pmok = "+";
 static char *notime = "        ";
 
 if(system("clear") != 0) errorcount++;
-qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE S   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
 	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
-for(i = 0; i < 40 ; i++)
+for(i = 0; i < RCAD_MAX ; i++)
 	{
 	if((aplist +i)->tsakt == 0) break;
 	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
