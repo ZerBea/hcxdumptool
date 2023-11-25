@@ -5227,7 +5227,7 @@ if(rcascanflag != NULL)
 	{
 	if(rcascanflag[0] == 'a')
 		{
-		if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " PROBERESPONSE(s) received\n", packetrcarxcount);
+		if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " PROBERESPONSE(s) captured\n", packetrcarxcount);
 		else fprintf(stderr, "Warning: no PROBERESPONSES received (frame injection may not work as expected)\n"
 							  "Possible reasons:\n"
 							  " no AP in range\n"
