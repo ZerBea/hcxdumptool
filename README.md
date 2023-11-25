@@ -9,13 +9,13 @@ Brief description
 
 Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
 
+Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
+
 Read this post: hcxtools - solution for capturing wlan traffic and conversion to hashcat formats (https://hashcat.net/forum/thread-6661.html)
 
 Read this post: New attack on WPA/WPA2 using PMKID (https://hashcat.net/forum/thread-7717.html)
 
 Read this post: Hash mode 22000 explained (https://hashcat.net/forum/thread-10253.html)
-
-Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
 
 
 What doesn't hcxdumptool do
@@ -27,7 +27,7 @@ it does not crack WEP (use aircrack-ng instead)
 
 it does not crack WPS (use reaver or bully instead)
 
-it does not decrypt encrypted traffic (use Wireshark in parallel)
+it does not decrypt encrypted traffic (use tshark or Wireshark in parallel)
 
 it does not record entire traffic (use tshark or Wireshark in parallel)
 
