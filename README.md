@@ -362,3 +362,20 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 * Do not merge (pcapng) dumpfiles because that destroys custom block hash assignments
 
 * Capture format pcapng is compatible to Wireshark and tshark
+
+
+Useful Links
+--------------
+
+https://www.kernel.org/doc/html/latest/
+
+https://www.kernel.org/doc/html/latest/bpf/index.html
+
+https://www.freecodecamp.org/news/the-linux-commands-handbook/
+
+https://en.wikipedia.org/wiki/Wpa2
+
+https://en.wikipedia.org/wiki/802.11_Frame_Types
+
+https://en.wikipedia.org/wiki/IEEE_802.11i-2004
+
