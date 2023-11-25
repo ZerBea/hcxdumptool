@@ -5226,11 +5226,11 @@ if(rcascanflag != NULL)
 		{
 		if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " PROBERESPONSE(s) captured\n", packetrcarxcount);
 		else fprintf(stderr, "Warning: no PROBERESPONSES received (frame injection may not work as expected)\n"
-							  "Possible reasons:\n"
-							  " no AP in range\n"
-							  " frames are filtered out by BPF\n"
-							  " driver is broken\n"
-							  " driver does not support frame injection\n\n");
+					"Possible reasons:\n"
+					" no AP in range\n"
+					" frames are filtered out by BPF\n"
+					" driver is broken\n"
+					" driver does not support frame injection\n\n");
 		}
 	}
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
