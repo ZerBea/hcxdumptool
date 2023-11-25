@@ -4707,8 +4707,10 @@ static char *nmeaoutname = NULL;
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLlphHv";
+#ifdef STATUSOUT
 static struct tpacket_stats lStats = { 0 };
 static socklen_t lStatsLength = sizeof(lStats);
+#endif
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -5201,11 +5203,9 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
-if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0)
-	{
-	lStats.tp_packets = 0;
-	lStats.tp_drops = 0;
-	}
+#ifdef STATUSOUT
+if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
+#endif
 close_fds();
 close_sockets();
 close_lists();
