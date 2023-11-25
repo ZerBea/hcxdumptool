@@ -5218,10 +5218,9 @@ if(errorcount > 0) fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", erro
 if(lStats.tp_packets > 0) fprintf(stdout, "%u Packet(s) captured\n", lStats.tp_packets);
 else fprintf(stderr, "Warning: no packets received (monitor mode may not work as expected)\n"
 			"Possible reasons:\n"
-			" no AP in range\n"
+			" no transmitter in range\n"
 			" frames are filtered out by BPF\n"
-			" driver is broken\n"
-			" driver does not support frame injection\n\n");
+			" driver is broken\n");
 if(lStats.tp_drops > 0) fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 if(rcascanflag != NULL)
 	{
