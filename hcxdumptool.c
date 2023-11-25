@@ -85,7 +85,6 @@ static int fd_pcapng = 0;
 
 #ifdef STATUSOUT
 static u8 rdsort = 0;
-static u64 totalcapturedcount = 0;
 static long int wecbcount = 0;
 static long int wepbcount = 0;
 static long int widbcount = 0;
@@ -2584,9 +2583,6 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	if(packetlen == - 1) errorcount++;
 	return;
 	}
-#ifdef STATUSOUT
-totalcapturedcount++;
-#endif
 rth = (rth_t*)packetptr;
 #ifndef __LITTLE_ENDIAN__
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
@@ -2637,9 +2633,6 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	if(packetlen == -1) errorcount++;
 	return;
 	}
-#ifdef STATUSOUT
-totalcapturedcount++;
-#endif
 rth = (rth_t*)packetptr;
 #ifndef __LITTLE_ENDIAN__
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
@@ -4700,9 +4693,6 @@ static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
 static bool interfacelistshortflag = false;
-#ifdef STATUSOUT
-static bool scanflag = false;
-#endif
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 static char *essidlistname = NULL;
@@ -4717,6 +4707,8 @@ static char *nmeaoutname = NULL;
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLlphHv";
+static struct tpacket_stats lStats = { 0 };
+static socklen_t lStatsLength = sizeof(lStats);
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -5184,9 +5176,6 @@ else
 		}
 	}
 /*---------------------------------------------------------------------------*/
-#ifdef STATUSOUT
-scanflag = true;
-#endif
 tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
@@ -5212,17 +5201,34 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
+
+if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0)
+	{
+	lStats.tp_packets = 0;
+	lStats.tp_drops = 0;
+	}
+
 close_fds();
 close_sockets();
 close_lists();
 if(interfacelistshortflag == true) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
 if(errorcount > 0) fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+#ifdef STATUSOUT
+if(lStats.tp_packets > 0) fprintf(stdout, "%u Packet(s) captured\n", lStats.tp_packets);
+else fprintf(stderr, "Warning: no packets received (monitor mode may not work as expected)\n"
+			"Possible reasons:\n"
+			" no AP in range\n"
+			" frames are filtered out by BPF\n"
+			" driver is broken\n"
+			" driver does not support frame injection\n\n");
+if(lStats.tp_drops > 0) fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 if(rcascanflag != NULL)
 	{
 	if(rcascanflag[0] == 'a')
 		{
-		if(packetrcarxcount == 0) fprintf(stderr, "Warning: no PROBERESPONSES received (frame injection may not work as expected)\n"
+		if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " PROBERESPONSE(s) received\n", packetrcarxcount);
+		else fprintf(stderr, "Warning: no PROBERESPONSES received (frame injection may not work as expected)\n"
 							  "Possible reasons:\n"
 							  " no AP in range\n"
 							  " frames are filtered out by BPF\n"
@@ -5230,18 +5236,6 @@ if(rcascanflag != NULL)
 							  " driver does not support frame injection\n\n");
 		}
 	}
-#ifdef STATUSOUT
-if(totalcapturedcount > 0) fprintf(stdout, "%" PRIu64 " packet(s) captured\n", totalcapturedcount);
-else if(scanflag == true)
-	{
-	fprintf(stderr, "Warning: no packets received (frame injection may not work as expected)\n"
-			"Possible reasons:\n"
-			" no AP in range\n"
-			" frames are filtered out by BPF\n"
-			" driver is broken\n"
-			" driver does not support frame injection\n\n");
-	}
-if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " RESPONSE(s) received\n", packetrcarxcount);
 if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
 if(widbcount > 0) fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
 if(wecbcount > 0) fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
