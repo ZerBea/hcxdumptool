@@ -4502,6 +4502,11 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	" $ sudo systemctl stop NetworkManager.service\n"
 	" $ sudo systemctl stop wpa_supplicant.service\n"
 	"run %s\n"
+	" %s -i INTERFACENAME -w dumpfile.pcapng -F --rds=1\n"
+	"  i     : name of the interface to be used\n"
+	"  w     : name of file to which packets are written\n"
+	"  F     : use all available channels\n"
+	"  rds=1 : sort real time display by status (last PMKID/EAPOL on top)\n"
 	"press ctrl+c to terminate\n"
 	"press GPIO button to terminate\n"
 	" hardware modification is necessary, read more:\n"
@@ -4515,7 +4520,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"do not use tools to change MAC (like macchanger)\n"
 	"do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
