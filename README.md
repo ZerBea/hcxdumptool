@@ -315,7 +315,7 @@ Warning
 
 You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbees.
 If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
-However, if you have that knowledge there’s no better toolkit than hcxdumtool/hcxtools.
+However, if you have that knowledge hcxdumtool/hcxtools can do magic
 
 The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis toolkit. 
 
