@@ -5201,13 +5201,11 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
-
 if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0)
 	{
 	lStats.tp_packets = 0;
 	lStats.tp_drops = 0;
 	}
-
 close_fds();
 close_sockets();
 close_lists();
