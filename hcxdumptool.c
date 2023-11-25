@@ -4665,7 +4665,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 			"                             E = + CLIENT display : got EAP-START MESSAGE\n"
 			"                             2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
 	#endif
-fprintf(stdout, "--help                    : show additional help\n"
+fprintf(stdout, "--help                    : show additional help (example and trouble shooting)\n"
 		"--version                 : show version\n\n");
 exit(EXIT_SUCCESS);
 }
@@ -4677,7 +4677,10 @@ fprintf(stdout, "%s %s (C) %s by ZeroBeat\n"
 	"This is a penetration testing tool!\n"
 	"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
 	"\n"
-	"usage: %s -h for help\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	"usage:\n"
+	" $ %s -h for an overview of all options\n"
+	" $ %s --help for an example and trouble shooting\n",
+	 eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname);
 exit(EXIT_FAILURE);
 }
 /*===========================================================================*/
