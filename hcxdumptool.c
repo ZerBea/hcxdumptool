@@ -4495,11 +4495,14 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	" $ sudo systemctl stop NetworkManager.service\n"
 	" $ sudo systemctl stop wpa_supplicant.service\n"
 	"run %s\n"
-	" $ %s -i INTERFACENAME -w dumpfile.pcapng -F --rds=1\n"
-	"  i     : name of the interface to be used\n"
-	"  w     : name of file to which packets are written\n"
-	"  F     : use all available channels\n"
-	"  rds=1 : sort real time display by status (last PMKID/EAPOL on top)\n"
+	" scan for ACCESS POINTS in range (not in combination with attack modes)\n"
+	"  $ %s -i INTERFACENAME -F --rcascan=active\n"
+	" attack target(s) (not in combination with rcascan)\n"
+	"  $ %s -i INTERFACENAME -w dumpfile.pcapng -F --rds=1\n"
+	"   i     : name of the interface to be used\n"
+	"   w     : name of file to which packets are written\n"
+	"   F     : use all available channels\n"
+	"   rds=1 : sort real time display by status (last PMKID/EAPOL on top)\n"
 	"press ctrl+c to terminate\n"
 	"press GPIO button to terminate\n"
 	" hardware modification is necessary, read more:\n"
@@ -4513,7 +4516,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"do not use tools to change MAC (like macchanger)\n"
 	"do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -4641,10 +4644,11 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                             get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
 	"--nmea_pcapng             : write GPS information to pcapng dump file\n"
 	#endif
-	"--rcascan=<character>     : do (R)adio (C)hannel (A)ssignment scan\n"
+	"--rcascan=<character>     : do (R)adio (C)hannel (A)ssignment scan only\n"
 	"                             default = passive scan\n"
 	"                             a = active scan\n"
-	"                             p = passive scan\n");
+	"                             p = passive scan\n"
+	"                            not in combination with attack modes\n");
 	#ifdef STATUSOUT
 	fprintf(stdout, "--rds=<digit>             : sort real time display\n"
 			"                             default: sort by time (last seen on top)\n"
@@ -4707,10 +4711,8 @@ static char *nmeaoutname = NULL;
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLlphHv";
-#ifdef STATUSOUT
 static struct tpacket_stats lStats = { 0 };
 static socklen_t lStatsLength = sizeof(lStats);
-#endif
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -5203,24 +5205,29 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
-#ifdef STATUSOUT
 if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
-#endif
 close_fds();
 close_sockets();
 close_lists();
 if(interfacelistshortflag == true) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
-if(errorcount > 0) fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+fprintf(stdout, "%u Packet(s) captured\n", lStats.tp_packets);
+fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 #ifdef STATUSOUT
-if(lStats.tp_packets > 0) fprintf(stdout, "%u Packet(s) captured\n", lStats.tp_packets);
-else fprintf(stderr, "Warning: no packets received (monitor mode may not work as expected)\n"
+if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
 			"Possible reasons:\n"
 			" no transmitter in range\n"
 			" frames are filtered out by BPF\n"
 			" driver is broken\n");
-if(lStats.tp_drops > 0) fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
-if(rcascanflag != NULL)
+if(rcascanflag == NULL)
+	{
+	fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
+	fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
+	fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
+	fprintf(stdout,"%ld EPB written to pcapng dumpfile\n", wepbcount);
+	}
+else
 	{
 	if(rcascanflag[0] == 'a')
 		{
@@ -5233,10 +5240,6 @@ if(rcascanflag != NULL)
 					" driver does not support frame injection\n\n");
 		}
 	}
-if(wshbcount > 0) fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
-if(widbcount > 0) fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
-if(wecbcount > 0) fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
-if(wepbcount > 0) fprintf(stdout,"%ld EPB written to pcapng dumpfile\n", wepbcount);
 #endif
 #ifdef NMEAOUT
 if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentence(s) received from device\n", nmeapacketcount);
