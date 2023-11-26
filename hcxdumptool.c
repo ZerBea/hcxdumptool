@@ -4699,6 +4699,7 @@ static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
 static bool interfacelistshortflag = false;
+static bool rooterrorflag = false;
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 static char *essidlistname = NULL;
@@ -5124,6 +5125,7 @@ if(getuid() != 0)
 	{
 	errorcount++;
 	fprintf(stderr, "%s must be run as root\n", basename(argv[0]));
+	rooterrorflag = true;
 	goto byebye;
 	}
 if(monitormodeflag == true)
@@ -5207,11 +5209,15 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
-if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
+if((monitormodeflag != true) && (interfacelistflag != true) && (interfaceinfoflag != true) && (interfacelistshortflag != true) && (rooterrorflag == false))
+	{
+	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
+	}
 close_fds();
 close_sockets();
 close_lists();
-if(interfacelistshortflag == true) return EXIT_SUCCESS;
+if(rooterrorflag == true) exit(EXIT_FAILURE);
+if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
 fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
@@ -5315,7 +5321,6 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
 		}
 	}
-fprintf(stdout, "bye-bye\n\n");
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
