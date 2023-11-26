@@ -5212,14 +5212,14 @@ close_lists();
 if(interfacelistshortflag == true) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
 fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
-fprintf(stdout, "%u Packet(s) captured\n", lStats.tp_packets);
+fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
-#ifdef STATUSOUT
 if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
 			"Possible reasons:\n"
 			" no transmitter in range\n"
 			" frames are filtered out by BPF\n"
 			" driver is broken\n");
+#ifdef STATUSOUT
 if(rcascanflag == NULL)
 	{
 	fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
