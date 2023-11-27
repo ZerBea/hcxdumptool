@@ -2827,6 +2827,7 @@ static size_t packetcountlast = 0;
 static u64 timer1count;
 static struct timespec sleepled;
 
+tottime *= 5;
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
 ev.events = EPOLLIN;
