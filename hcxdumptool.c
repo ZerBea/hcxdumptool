@@ -4308,31 +4308,29 @@ return len;
 static bool read_bpf(char *bpfname)
 {
 static int len;
-static u16 c;
 static struct sock_filter *bpfptr;
 static FILE *fh_filter;
 static char linein[128];
 
 if((fh_filter = fopen(bpfname, "r")) == NULL) return false;
-if((len = fgetline(fh_filter, 128, linein)) < 0) return false;
-sscanf(linein, "%"SCNu16, &bpf.len);
-if(bpf.len == 0) return false;
-bpf.filter = (struct sock_filter*)calloc(bpf.len, sizeof(struct sock_filter));
-c = 0;
+bpf.filter = (struct sock_filter*)calloc(BPF_MAXINSNS, sizeof(struct sock_filter));
+bpf.len = 0;
 bpfptr = bpf.filter;
-while(c < bpf.len)
+while(bpf.len < BPF_MAXINSNS +1)
 	{
-	if((len = fgetline(fh_filter, 128, linein)) == -1)
+	if((len = fgetline(fh_filter, 128, linein)) == -1) break;
+	if(bpf.len == BPF_MAXINSNS)
 		{
 		bpf.len = 0;
 		break;
 		}
+	if(len < 7) continue;
 	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k);
 	bpfptr++;
-	c++;
+	bpf.len++;
 	}
-if(bpf.len != c) return false;
 fclose(fh_filter);
+if(bpf.len == 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -4556,21 +4554,17 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
-	"--bpf=<file>   : input kernel space Berkeley Packet Filter (BPF) code\n"
-	"                  steps to create a BPF (it only has to be done once):\n"
-	"                  create BPF to protect MACs (recommended to protect own devices)\n"
-	"                   $ tcpdump -y IEEE802_11_RADIO not wlan addr2 11:22:33:44:55:66 -ddd > protect.bpf\n"
-	"                  create BPF to attack a MAC\n"
-	"                   $ tcpdump -y IEEE802_11_RADIO wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd > attack.bpf\n"
-	"                   it is strongly recommended to allow all PROBEREQUEST frames (wlan_type mgt or wlan_subtype probe-req)\n"
-	"                   $ tcpdump -y IEEE802_11_RADIO wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 or wlan addr3 ff:ff:ff:ff:ff:ff -ddd > attack.bpf\n"
-	"                  see man pcap-filter for a list of all filter options\n"
-	"                  add BPF code: \n"
-	"                   $ %s -i <INTERFACE> --bpf=attack.bpf ...\n"
+	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code in tcpdump raw format\n"
+	"                  tcpdump high level syntax:\n"
+	"                   $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf\n"
+	"                   see man pcap-filter\n"
+	"                  bpfc low level syntax:\n"
+	"                   $ bpfc -f tcpdump -i filter.asm\n"
+	"                   see man bpfc\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL);
 fprintf(stdout, "less common options:\n--------------------\n"
 	"--disable_beacon          : do not transmit BEACON frames\n"
 	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
