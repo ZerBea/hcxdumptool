@@ -17,12 +17,15 @@ HOSTOS		:= $(shell uname -s)
 CC		?= gcc
 CFLAGS		?= -O3 -Wall -Wextra -Wpedantic
 CFLAGS		+= -std=gnu99
+# uncomment to enable debug mode
 #CFLAGS		+= -ggdb -fsanitize=address
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 # comment to disable GPS support
 DEFS		+= -DNMEAOUT
 # comment to disable STATUS display (headless operation)
 DEFS		+= -DSTATUSOUT
+# uncomment to enable BPF high level compiler
+#DEFS		+= -DWANTLIBPCAP
 
 INSTALL		?= install
 INSTFLAGS	=
