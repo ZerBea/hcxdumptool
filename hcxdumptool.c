@@ -36,6 +36,9 @@
 #include <sys/utsname.h>
 #include <termios.h>
 #endif
+#ifdef WANTLIBPCAP
+#include <pcap/pcap.h>
+#endif
 #include "include/types.h"
 #include "include/hcxdumptool.h"
 #include "include/ieee80211.h"
@@ -4349,6 +4352,29 @@ if(bpf.len == 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
+#ifdef WANTLIBPCAP
+static bool compile_bpf(char *bpfs)
+{
+static u16 i;
+static pcap_t *hpcap = NULL;
+static struct bpf_program bpfp;
+struct bpf_insn *bpfins;
+
+hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN);
+if(hpcap == NULL) return false;
+
+if(pcap_compile(hpcap, &bpfp, bpfs, 1, 0))
+	{
+	fprintf(stderr, "failed to compile BPF\n");
+	return false;
+	}
+bpfins = bpfp.bf_insns;
+for(i = 0; i < bpfp.bf_len; ++bpfins, ++i) fprintf(stdout, "%u %u %u %u\n", bpfins->code, bpfins->jt, bpfins->jf, bpfins->k);
+pcap_freecode(&bpfp);
+return true;
+}
+#endif
+/*---------------------------------------------------------------------------*/
 static void read_essidlist(char *listname)
 {
 static size_t i;
@@ -4720,6 +4746,9 @@ static bool interfacelistshortflag = false;
 static bool rooterrorflag = false;
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
+#ifdef WANTLIBPCAP
+static char *bpfs = NULL;
+#endif
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
