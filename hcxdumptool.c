@@ -4325,11 +4325,27 @@ while(bpf.len < BPF_MAXINSNS +1)
 		break;
 		}
 	if(len < 7) continue;
-	sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k);
+	if(linein[0] != '{')
+		{
+		if(sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
+			{
+			bpf.len = 0;
+			break;
+			}
+		}
+	else
+		{
+		if(sscanf(linein, "{ %" SCNx16 ", %"  SCNu8 ", %" SCNu8 ", %" SCNx32 " },",&bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
+			{
+			bpf.len = 0;
+			break;
+			}
+		}
 	bpfptr++;
 	bpf.len++;
 	}
 fclose(fh_filter);
+exit(EXIT_FAILURE);
 if(bpf.len == 0) return false;
 return true;
 }
@@ -4554,16 +4570,24 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
-	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump raw format\n"
-	"                  example: tcpdump high level compiler:\n"
-	"                   $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf\n"
-	"                   see man pcap-filter\n"
-	"                  eample: bpf_asm low level compiler\n"
-	"                   $ bpf_asm filter.asm | tr ',' '\n' > filter.bpf\n"
-	"                   see https://www.kernel.org/doc/html/latest/networking/filter.html\n"
-	"                  example: bpfc low level compiler:\n"
-	"                   $ bpfc -f tcpdump -i filter.asm > filter.bpf\n"
-	"                   see man bpfc\n"
+	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions)\n"
+	"                  in tcpdump raw format:\n"
+	"                   example: tcpdump high level compiler:\n"
+	"                    $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf\n"
+	"                    see man pcap-filter\n"
+	"                   eample: bpf_asm low level compiler\n"
+	"                    $ bpf_asm filter.asm | tr ',' '\\n' > filter.bpf\n"
+	"                    see https://www.kernel.org/doc/html/latest/networking/filter.html\n"
+	"                   example: bpfc low level compiler:\n"
+	"                    $ bpfc -f tcpdump -i filter.asm > filter.bpf\n"
+	"                    see man bpfc\n"
+	"                  in tcpdump c style format:\n"
+	"                   example: tcpdump high level compiler:\n"
+	"                    $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -dd > filter.bpf\n"
+	"                    see man pcap-filter\n"
+	"                   example: bpfc low level compiler:\n"
+	"                    $ bpfc -f C -i filter.asm > filter.bpf\n"
+	"                    see man bpfc\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n",
