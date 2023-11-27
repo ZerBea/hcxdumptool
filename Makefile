@@ -19,7 +19,10 @@ CFLAGS		?= -O3 -Wall -Wextra -Wpedantic
 CFLAGS		+= -std=gnu99
 #CFLAGS		+= -ggdb -fsanitize=address
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
-DEFS		+= -DSTATUSOUT -DNMEAOUT
+# comment to disable GPS support
+DEFS		+= -DNMEAOUT
+# comment to disable STATUS display (headless operation)
+DEFS		+= -DSTATUSOUT
 
 INSTALL		?= install
 INSTFLAGS	=
