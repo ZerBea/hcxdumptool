@@ -4345,7 +4345,6 @@ while(bpf.len < BPF_MAXINSNS +1)
 	bpf.len++;
 	}
 fclose(fh_filter);
-exit(EXIT_FAILURE);
 if(bpf.len == 0) return false;
 return true;
 }
