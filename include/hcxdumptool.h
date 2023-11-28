@@ -165,6 +165,7 @@ typedef struct __attribute__((__packed__))
  u64	tshold1;
  u64	tsauth;
  u32	count;
+ u32	frequency;
  u8	macap[6];
  u8	macclient[6];
  u8	status;
@@ -189,6 +190,18 @@ static int sort_aplist_by_tsakt(const void *a, const void *b)
 const aplist_t *ai = (const aplist_t *)a;
 const aplist_t *bi = (const aplist_t *)b;
 
+if(ai->tsakt < bi->tsakt) return 1;
+else if(ai->tsakt > bi->tsakt) return -1;
+return 0;
+}
+/*---------------------------------------------------------------------------*/
+static int sort_aplist_by_count(const void *a, const void *b)
+{
+const aplist_t *ai = (const aplist_t *)a;
+const aplist_t *bi = (const aplist_t *)b;
+
+if(ai->count < bi->count) return 1;
+else if(ai->count > bi->count) return -1;
 if(ai->tsakt < bi->tsakt) return 1;
 else if(ai->tsakt > bi->tsakt) return -1;
 return 0;

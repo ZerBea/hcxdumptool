@@ -86,8 +86,8 @@ static int fd_socket_tx = 0;
 static int fd_timer1 = 0;
 static int fd_pcapng = 0;
 
-#ifdef STATUSOUT
 static u8 rdsort = 0;
+#ifdef STATUSOUT
 static long int wecbcount = 0;
 static long int wepbcount = 0;
 static long int widbcount = 0;
@@ -543,7 +543,8 @@ static char *pmok = "+";
 static char *notime = "        ";
 
 if(system("clear") != 0) errorcount++;
-qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+if(rdsort == 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+else qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_count);
 sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE S   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
 	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
@@ -561,14 +562,15 @@ for(i = 0; i < RCAD_MAX ; i++)
 		strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
 		}
 	else strncpy(timestring2, notime, TIMESTRING_LEN);
-	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist +i)->ie.channel, (aplist +i)->count, timestring1, timestring2, ak,
+	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s [%u]\n",
+			(aplist +i)->ie.channel, (aplist +i)->frequency, timestring1, timestring2, ak,
 			(aplist +i)->macap[0], (aplist +i)->macap[1], (aplist +i)->macap[2], (aplist +i)->macap[3], (aplist +i)->macap[4], (aplist +i)->macap[5],
-			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid);
+			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid, (aplist +i)->count);
 	p = strlen(rtb);
 	}
 rtb[p] = 0;
 fprintf(stdout, "%s", rtb);
+if(rdsort > 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -2297,14 +2299,14 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie);
 	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
 	if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-	(aplist +i)->count = (scanlist + scanlistindex)->frequency;
+	(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
+	(aplist +i)->count += 1;
 	return;
 	}
 memset((aplist + i), 0, APLIST_SIZE);
 (aplist +i)->tsakt = tsakt;
 (aplist +i)->tshold1 = tsakt;
 (aplist +i)->tsauth = tsfirst;
-(aplist +i)->count = attemptapmax;
 memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
 memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
 packetrcarxcount++;
@@ -2313,7 +2315,8 @@ tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie)
 if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
 if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
 if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-(aplist +i)->count = (scanlist + scanlistindex)->frequency;
+(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
+(aplist +i)->count = 1;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -2396,21 +2399,20 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
 	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
 	if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-	(aplist +i)->count = (scanlist + scanlistindex)->frequency;
+	(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
 	return;
 	}
 memset((aplist + i), 0, APLIST_SIZE);
 (aplist +i)->tsakt = tsakt;
 (aplist +i)->tshold1 = tsakt;
 (aplist +i)->tsauth = tsfirst;
-(aplist +i)->count = attemptapmax;
 memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
 memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
 (aplist +i)->status |= AP_BEACON;
 tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
 if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
 if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-(aplist +i)->count = (scanlist + scanlistindex)->frequency;
+(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -4715,16 +4717,20 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                            not in combination with attack modes\n");
 	#ifdef STATUSOUT
 	fprintf(stdout, "--rds=<digit>             : sort real time display\n"
-			"                             default: sort by time (last seen on top)\n"
-			"                             1 = sort by status (last PMKID/EAPOL on top)\n"
-			"                            Columns:\n"
-			"                             R = + AP display     : AP is in TX range or under attack\n"
-			"                             S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
-			"                             P = + AP display     : got PMKID hashcat / JtR can work on\n"
-			"                             1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
-			"                             3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
-			"                             E = + CLIENT display : got EAP-START MESSAGE\n"
-			"                             2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
+			"                             attack mode:\n"
+			"                              default: sort by time (last seen on top)\n"
+			"                               1 = sort by status (last PMKID/EAPOL on top)\n"
+			"                             scan mode:\n"
+			"                               1 = sort by PROBERESPONSE count\n"
+			"                             Columns:\n"
+			"                              R = + AP display     : AP is in TX range or under attack\n"
+			"                              S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
+			"                              P = + AP display     : got PMKID hashcat / JtR can work on\n"
+			"                              1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
+			"                              3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
+			"                              E = + CLIENT display : got EAP-START MESSAGE\n"
+			"                              2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
+
 	#endif
 fprintf(stdout, "--help                    : show additional help (example and trouble shooting)\n"
 		"--version                 : show version\n\n");
