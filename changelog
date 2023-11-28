@@ -1,10 +1,15 @@
+28.11.2023
+==========
+hcxdumptool: added full featured BPF compiler
+             due to additional dependency this feature must be enabled in Makefile
+
 27.11.2023
 ==========
 hcxdumptool: accept Berklev Packet filter code in tcpdump raw format and in tcpdump c style format
 -bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum 4096 instructions)
                   in tcpdump raw format:
                    example: tcpdump high level compiler:
-                    $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf
+                    $ tcpdump -s 65535 -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf
                     see man pcap-filter
                    eample: bpf_asm low level compiler
                     $ bpf_asm filter.asm | tr ',' '\n' > filter.bpf
@@ -14,7 +19,7 @@ hcxdumptool: accept Berklev Packet filter code in tcpdump raw format and in tcpd
                     see man bpfc
                   in tcpdump c style format:
                    example: tcpdump high level compiler:
-                    $ tcpdump -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -dd > filter.bpf
+                    $ tcpdump -s 65535 -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -dd > filter.bpf
                     see man pcap-filter
                    example: bpfc low level compiler:
                     $ bpfc -f C -i filter.asm > filter.bpf

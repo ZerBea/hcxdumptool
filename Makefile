@@ -23,9 +23,10 @@ DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 DEFS		+= -DSTATUSOUT
 # comment to disable GPS support
 DEFS		+= -DNMEAOUT
-#DEFS		+= -DWANTLIBPCAP
 LDFLAGS		+=
-#LDFLAGS		+= -lpcap
+# uncomment to enable BPF compiler
+#DEFS		+= -DWANTLIBPCAP
+#LDFLAGS	+= -lpcap
 
 INSTALL		?= install
 INSTFLAGS	=

@@ -4361,9 +4361,11 @@ static pcap_t *hpcap = NULL;
 static struct bpf_program bpfp;
 struct bpf_insn *bpfins;
 
-hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN);
-if(hpcap == NULL) return false;
-
+if((hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN)) == NULL)
+	{
+	fprintf(stderr, "to 0pen libpcap\n");
+	return false;
+}	
 if(pcap_compile(hpcap, &bpfp, bpfs, 1, 0))
 	{
 	fprintf(stderr, "failed to compile BPF\n");
@@ -4596,6 +4598,11 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
+#ifdef WANTLIBPCAP
+	"--bpfc=<filter>: compile Berkeley Packet Filter (BPF) and exit\n"
+	"                  $ %s --bpfc=\"wlan addr3 112233445566\" > filter.bpf\n"
+	"                  see man pcap-filter\n"
+#endif
 	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions)\n"
 	"                  in tcpdump decimal numbers format:\n"
 	"                   example: tcpdump high level compiler:\n"
@@ -4617,7 +4624,11 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n",
+#ifdef WANTLIBPCAP
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, eigenname, BPF_MAXINSNS);
+#else
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, BPF_MAXINSNS);
+#endif
 fprintf(stdout, "less common options:\n--------------------\n"
 	"--disable_beacon          : do not transmit BEACON frames\n"
 	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
@@ -4748,7 +4759,7 @@ static bool rooterrorflag = false;
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
 #ifdef WANTLIBPCAP
-static char *bpfs = NULL;
+static char *bpfstring = NULL;
 #endif
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
@@ -4767,6 +4778,9 @@ static socklen_t lStatsLength = sizeof(lStats);
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
+#ifdef WANTLIBPCAP
+	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
+#endif
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
 	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
 	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
@@ -4820,6 +4834,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		bpfname = optarg;
 		break;
 
+#ifdef WANTLIBPCAP
+		case HCX_BPFC:
+		bpfstring = optarg;
+		break;
+#endif
 		case HCX_PCAPNGNAME:
 		pcapngoutname = optarg;
 		break;
@@ -5092,7 +5111,13 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 setbuf(stdout, NULL);
 hcxpid = getpid();
-
+#ifdef WANTLIBPCAP
+if(bpfstring != NULL)
+	{
+	if(compile_bpf(bpfstring) == true) exit(EXIT_SUCCESS);
+	else exit(EXIT_SUCCESS);
+	}
+#endif
 if(interfacelistshortflag == false)
 	{
 	fprintf(stdout, "\nRequesting physical interface capabilities. This may take some time.\n"
