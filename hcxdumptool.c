@@ -4525,6 +4525,21 @@ fprintf(stdout, "compiled with GNU libc headers %d.%d\n", __GLIBC__, __GLIBC_MIN
 #else
 fprintf(stdout, "glibc (__GLIBC_MINOR__) is not defined\n");
 #endif
+#ifdef STATUSOUT
+fprintf(stdout, "enabled REALTIME DISPLAY\n");
+#else
+fprintf(stdout, "disabled REALTIME DISPLAY\n");
+#endif
+#ifdef NMEAOUT
+fprintf(stdout, "enabled GPS support\n");
+#else
+fprintf(stdout, "enabled GPS support\n");
+#endif
+#ifdef WANTLIBPCAP
+fprintf(stdout, "enabled BPF compiler\n");
+#else
+fprintf(stdout, "disabled BPF compiler\n");
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
