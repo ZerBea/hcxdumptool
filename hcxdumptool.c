@@ -545,7 +545,7 @@ static char *notime = "        ";
 if(system("clear") != 0) errorcount++;
 if(rdsort == 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 else qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_count);
-sprintf(&rtb[0], "  CHA  FREQ   BEACON  RESPONSE S   MAC-AP   ESSID  SCAN-FREQUENCY: %6u\n"
+sprintf(&rtb[0], " CHA  FREQ  BEACON  RESPONSE S    MAC-AP    ESSID  SCAN-FREQUENCY: %6u\n"
 	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 p = strlen(rtb);
 i = 0;
@@ -562,7 +562,7 @@ for(i = 0; i < RCAD_MAX ; i++)
 		strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
 		}
 	else strncpy(timestring2, notime, TIMESTRING_LEN);
-	sprintf(&rtb[p], " [%3d %5d] %s %s %s %02x%02x%02x%02x%02x%02x %.*s [%u]\n",
+	sprintf(&rtb[p], " %3d %5d %s %s %s %02x%02x%02x%02x%02x%02x %.*s [%u]\n",
 			(aplist +i)->ie.channel, (aplist +i)->frequency, timestring1, timestring2, ak,
 			(aplist +i)->macap[0], (aplist +i)->macap[1], (aplist +i)->macap[2], (aplist +i)->macap[3], (aplist +i)->macap[4], (aplist +i)->macap[5],
 			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid, (aplist +i)->count);
@@ -594,13 +594,13 @@ if(system("clear") != 0) errorcount++;
 if(rdsort == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	sprintf(&rtb[0], "  CHA    LAST   R 1 3 P S    MAC-AP    ESSID (last seen on top)   SCAN-FREQUENCY: %6u\n"
+	sprintf(&rtb[0], " CHA   LAST   R 1 3 P S    MAC-AP    ESSID (last seen on top)     SCAN-FREQUENCY: %6u\n"
 			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 else
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], "  CHA    LAST   R 1 3 P S    MAC-AP    ESSID (last EAPOL on top)  SCAN-FREQUENCY: %6u\n"
+	sprintf(&rtb[0], " CHA   LAST   R 1 3 P S    MAC-AP    ESSID (last EAPOL on top)    SCAN-FREQUENCY: %6u\n"
 			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
 	}
 p = strlen(rtb);
@@ -621,7 +621,7 @@ for(i = 0; i < 20 ; i++)
 	else ar = pmdef;
 	tvlast = (aplist +i)->tsakt / 1000000000ULL;
 	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " [%3d] %s %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
+	sprintf(&rtb[p], " %3d %s %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
 			(aplist +i)->ie.channel, timestring1, ar, mc, ma, ps, ak,
 			(aplist +i)->macap[0], (aplist +i)->macap[1], (aplist +i)->macap[2], (aplist +i)->macap[3], (aplist +i)->macap[4], (aplist +i)->macap[5],
 			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid);
