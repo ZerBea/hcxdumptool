@@ -162,6 +162,7 @@ Requirements
 * chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
 * driver must (mandatory) support monitor and full frame injection mode
 * gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+* libpcap and libpcap-dev (if internal BPF compiler has been enabled)
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 * to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
