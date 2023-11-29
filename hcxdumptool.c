@@ -4533,7 +4533,7 @@ fprintf(stdout, "disabled REALTIME DISPLAY\n");
 #ifdef NMEAOUT
 fprintf(stdout, "enabled GPS support\n");
 #else
-fprintf(stdout, "enabled GPS support\n");
+fprintf(stdout, "disabled GPS support\n");
 #endif
 #ifdef WANTLIBPCAP
 fprintf(stdout, "enabled BPF compiler\n");
