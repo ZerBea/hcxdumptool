@@ -1166,7 +1166,7 @@ macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eaprequestiddata, EAPREQUESTID_SIZE);
 ii += EAPREQUESTID_SIZE;
-if(write(fd_socket_tx, wltxbuffer, ii) == ii) return;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
 errorcount++;
 return;
 }
@@ -1189,7 +1189,7 @@ macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eapolm1data, EAPOLM1DATA_SIZE);
 ii += EAPOLM1DATA_SIZE;
-if(write(fd_socket_tx, wltxbuffer, ii) == ii) return;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
 errorcount++;
 return;
 }
