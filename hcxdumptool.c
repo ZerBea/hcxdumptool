@@ -4864,6 +4864,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 #ifdef WANTLIBPCAP
 		case HCX_BPFC:
 		bpfstring = optarg;
+		if(strlen(bpfstring) < 2)
+			{
+			fprintf(stderr, "BPF ERROR\n");
+			exit(EXIT_FAILURE);
+			}
 		break;
 #endif
 		case HCX_PCAPNGNAME:
