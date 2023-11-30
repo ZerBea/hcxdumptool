@@ -1481,7 +1481,7 @@ memcpy(macftx->addr3, macap, ETH_ALEN);
 macftx->sequence = seqcounter1++ << 4;
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE +MAC_SIZE_NORM] = reason;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) ==RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
 errorcount++;
 return;
 }
