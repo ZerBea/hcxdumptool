@@ -1,7 +1,7 @@
 28.11.2023
 ==========
 hcxdumptool: added full featured BPF compiler
-             due to additional dependency this feature must be enabled in Makefile
+             due to additional dependency (libpcap and libpcap-dev) this feature must be enabled in Makefile
              added PROBEREQUEST counter to rcascan mode
              added option to sort rcascan display by PROBEREQUEST counter
 
