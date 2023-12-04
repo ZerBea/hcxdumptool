@@ -26,8 +26,8 @@ DEFS		+= -DSTATUSOUT
 DEFS		+= -DNMEAOUT
 LDFLAGS		+=
 # uncomment to enable BPF compiler
-DEFS		+= -DWANTLIBPCAP
-LDFLAGS		+= -lpcap
+#DEFS		+= -DWANTLIBPCAP
+#LDFLAGS	+= -lpcap
 
 INSTALL		?= install
 INSTFLAGS	=
