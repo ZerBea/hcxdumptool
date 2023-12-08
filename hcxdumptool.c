@@ -525,7 +525,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
 	}
 fprintf(stdout, "\n"
-		"* active monitor mode available (reported by driver)\n"
+		"* active monitor mode available (reported by driver - do not trust it)\n"
 		"+ monitor mode available (reported by driver)\n"
 		"- no monitor mode available\n");
 return;
