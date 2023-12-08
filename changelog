@@ -4,7 +4,7 @@ Some drivers report incorrectly active monitor mode capability.
 hcxdumptool: do not set active monitor mode by default if driver report that it is possible
              removed option -p
              added new option -A in case active monitor mode is working as expected
-             -A             : ACK incomming frames
+             -A             : ACK incoming frames
                                INTERFACE must support active monitor mode
 
 
@@ -1109,7 +1109,7 @@ long options:
 --reboot                           : once hcxdumptool terminated, reboot system
 --poweroff                         : once hcxdumptool terminated, power off system
 --enable_status=<digit>            : enable real-time display (waterfall)
-                                     only incomming traffic
+                                     only incoming traffic
                                      only once at the first occurrence due to MAC randomization of CLIENTs
                                      bitmask:
                                         0: no status (default)
@@ -1815,7 +1815,7 @@ from now on GPIO LED blinks twice every 5 seconds
 - if a possbile driver issue is detected
 - if no packets received during the last past 5 seconds
 
-another indicator is that the incomming packetcounter (rx=xxxx)
+another indicator is that the incoming packetcounter (rx=xxxx)
 doesn't increase
 
 or dmesg show this error:
@@ -1865,7 +1865,7 @@ added option to set ERRORMAX
                  default: 100 errors
 
 Remarks:
-errorcount will increase by one, if send packet (tx=xxx) > 3*incomming packets (rx=xxx)
+errorcount will increase by one, if send packet (tx=xxx) > 3*incoming packets (rx=xxx)
 
 
 15.12.2018
