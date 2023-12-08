@@ -64,7 +64,7 @@ static bool deauthenticationflag = true;
 static bool proberequestflag = true;
 static bool associationflag = true;
 static bool reassociationflag = true;
-static bool activemonitorflag = true;
+static bool activemonitorflag = false;
 
 static u8 wanteventflag = 0;
 static u8 exiteapolpmkidflag = 0;
@@ -3791,7 +3791,7 @@ else
 	}
 if(ifaktfrequencylist == NULL) return false;
 if(rt_set_interface(0) == false) return false;
-if((ifakttype & IF_HAS_MONITOR_ACTIVE) == IF_HAS_MONITOR_ACTIVE)
+if(((ifakttype & IF_HAS_MONITOR_ACTIVE) == IF_HAS_MONITOR_ACTIVE) && (activemonitorflag == true))
 	{
 	if(rt_set_interfacemac() == false) return false;
 	}
@@ -4631,9 +4631,8 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-F             : use available frequencies from INTERFACE\n"
 	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                  default %llu seconds\n"
-	"-m <INTERFACE> : set monitor mode and terminate\n"
-	"-p             : do not set monitor mode: active (do not ACK incoming frames addressed to the device MAC)\n"
-	"                 default monitor mode: active (ACK all incoming frames addressed to the device MAC)\n"
+	"-A             : ACK incomming frames\n"
+	"                  INTERFACE must support active monitor mode\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
@@ -4653,6 +4652,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, BPF_MAXINSNS);
 #endif
 fprintf(stdout, "less common options:\n--------------------\n"
+	"-m <INTERFACE>            : set monitor mode and terminate\n"
 	"--disable_beacon          : do not transmit BEACON frames\n"
 	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
 	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
@@ -4799,7 +4799,7 @@ static char *nmeaoutname = NULL;
 #endif
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
-static const char *short_options = "i:w:c:f:m:I:t:FLlphHv";
+static const char *short_options = "i:w:c:f:m:I:t:FLlAhHv";
 static struct tpacket_stats lStats = { 0 };
 static socklen_t lStatsLength = sizeof(lStats);
 static const struct option long_options[] =
@@ -5116,8 +5116,8 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 		#endif
 
-		case HCX_SET_MONITORMODE_PASSIVE:
-		activemonitorflag = false;
+		case HCX_SET_MONITORMODE_ACTIVE:
+		activemonitorflag = true;
 		break;
 
 		case HCX_HELP:
