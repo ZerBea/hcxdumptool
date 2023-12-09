@@ -65,6 +65,7 @@ static bool proberequestflag = true;
 static bool associationflag = true;
 static bool reassociationflag = true;
 static bool activemonitorflag = false;
+static bool vmflag = true;
 
 static u8 wanteventflag = 0;
 static u8 exiteapolpmkidflag = 0;
@@ -3791,7 +3792,7 @@ else
 	}
 if(ifaktfrequencylist == NULL) return false;
 if(rt_set_interface(0) == false) return false;
-if(rt_set_interfacemac() == false) fprintf(stdout, "failed to set virtual MAC\n");
+if(rt_set_interfacemac() == false) vmflag = false;
 if(nl_set_monitormode() == false) return false;
 if(rt_set_interface(IFF_UP) == false) return false;
 nl_set_powersave_off();
@@ -5290,6 +5291,7 @@ tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
+if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\033[?25l");
 nanosleep(&tspecifo, &tspeciforem);
