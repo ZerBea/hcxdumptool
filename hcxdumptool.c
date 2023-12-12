@@ -3721,7 +3721,7 @@ while(1)
 		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
-			if(nla->nla_type == CTRL_ATTR_FAMILY_ID) nlfamily = *((u32*)nla_data(nla));
+			if(nla->nla_type == CTRL_ATTR_FAMILY_ID) nlfamily = *((u16*)nla_data(nla));
 			nla = nla_next(nla, &nlremlen);
 			}
 		}
