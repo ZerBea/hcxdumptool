@@ -2590,16 +2590,7 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-#ifndef __LITTLE_ENDIAN__
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(rth->it_len > packetlen)
-	{
-	errorcount++;
-	return;
-	}
-ieee82011ptr = packetptr + rth->it_len;
-ieee82011len = packetlen - rth->it_len;
-#else
+
 if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 if(le16toh(rth->it_len) > packetlen)
 	{
@@ -2608,7 +2599,7 @@ if(le16toh(rth->it_len) > packetlen)
 	}
 ieee82011ptr = packetptr + le16toh(rth->it_len);
 ieee82011len = packetlen - le16toh(rth->it_len);
-#endif
+
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -2640,16 +2631,7 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-#ifndef __LITTLE_ENDIAN__
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(rth->it_len > packetlen)
-	{
-	errorcount++;
-	return;
-	}
-ieee82011ptr = packetptr + rth->it_len;
-ieee82011len = packetlen - rth->it_len;
-#else
+
 if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 if(le16toh(rth->it_len) > packetlen)
 	{
@@ -2658,7 +2640,7 @@ if(le16toh(rth->it_len) > packetlen)
 	}
 ieee82011ptr = packetptr + le16toh(rth->it_len);
 ieee82011len = packetlen - le16toh(rth->it_len);
-#endif
+
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
