@@ -1954,7 +1954,11 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
 		{
-		if(authseqakt.replaycountm2 == (be64toh(wpakey->replaycount) - 1))
+		#if __BYTE_ORDER == __LITTLE_ENDIAN
+		if(authseqakt.replaycountm2 == (__builtin_bswap64(wpakey->replaycount) - 1))
+		#elif __BYTE_ORDER == __BIG_ENDIAN
+		if(authseqakt.replaycountm2 == (wpakey->replaycount - 1))
+		#endif
 			{
 			if(authseqakt.kdv2 == kdv)
 				{
@@ -2006,7 +2010,11 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211eapol_m2(void)
 {
-authseqakt.replaycountm2 = be64toh(wpakey->replaycount);
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+authseqakt.replaycountm2 = __builtin_bswap64(wpakey->replaycount);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+authseqakt.replaycountm2 = wpakey->replaycount;
+#endif
 if(replaycountrg == authseqakt.replaycountm2)
 	{
 	process80211eapol_m2rg();
@@ -2043,7 +2051,11 @@ static size_t i;
 memset(&authseqakt, 0, AUTHSEQAKT_SIZE);
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
 authseqakt.kdv1 = kdv;
-authseqakt.replaycountm1 = be64toh(wpakey->replaycount);
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+authseqakt.replaycountm1 = __builtin_bswap64(wpakey->replaycount);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+authseqakt.replaycountm1 = wpakey->replaycount;
+#endif
 memcpy(&authseqakt.noncem1, &wpakey->nonce[28], 4);
 authseqakt.status = AP_EAPOL_M1;
 if(ntohs(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
