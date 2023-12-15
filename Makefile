@@ -28,8 +28,8 @@ DEFS		+= -DHCXSTATUSOUT
 DEFS		+= -DHCXNMEAOUT
 LDFLAGS		+=
 # uncomment to enable BPF compiler
-#DEFS		+= -DHCXWANTLIBPCAP
-#LDFLAGS		+= -lpcap
+DEFS		+= -DHCXWANTLIBPCAP
+LDFLAGS		+= -lpcap
 
 INSTALL		?= install
 INSTFLAGS	=
