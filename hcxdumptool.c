@@ -2830,7 +2830,6 @@ else
 	}
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-packetcount++;
 #ifdef HCXDEBUGMODE
 if(writeownflag == true)
 	{
@@ -2839,6 +2838,7 @@ if(writeownflag == true)
 	return;
 	}
 #endif
+packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
