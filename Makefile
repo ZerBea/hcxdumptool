@@ -20,7 +20,7 @@ CFLAGS		+= -std=gnu99
 # uncomment to enable DEBUG symbols
 #CFLAGS		+= -ggdb -fsanitize=address
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
-# comment to enable debug mode
+# uncomment to enable debug mode
 #DEFS		+= -DHCXDEBUGMODE
 # comment to disable STATUS display (headless operation)
 DEFS		+= -DHCXSTATUSOUT
