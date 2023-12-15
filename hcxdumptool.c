@@ -2773,7 +2773,7 @@ return;
 static inline __attribute__((always_inline)) void process_packet(void)
 {
 #ifdef HCXDEBUGMODE
-static bool writeownflag = false;
+static bool writeownflag;
 #endif
 if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	{
@@ -2782,14 +2782,14 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	}
 rth = (rth_t*)packetptr;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0)
-	{
-	#ifndef HCXDEBUGMODE
-	return;
-	#else
-	writeownflag = true;
-	#endif
-	}
+
+#ifndef HCXDEBUGMODE
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+#else
+writeownflag = false;
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+#endif
+
 if(rth->it_len > packetlen)
 	{
 	errorcount++;
@@ -2798,14 +2798,12 @@ if(rth->it_len > packetlen)
 ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
 #elif __BYTE_ORDER == __BIG_ENDIAN
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0)
-	{
-	#ifndef HCXDEBUGMODE
-	return;
-	#else
-	writeownflag = true;
-	#endif
-	}
+#ifndef HCXDEBUGMODE
+if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+#else
+writeownflag = false;
+if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+#endif
 if(le16toh(rth->it_len) > packetlen)
 	{
 	errorcount++;
@@ -2834,7 +2832,6 @@ tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 if(writeownflag == true)
 	{
 	writeepb();
-	writeownflag = false;
 	return;
 	}
 #endif
