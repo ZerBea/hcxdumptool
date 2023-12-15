@@ -2782,14 +2782,12 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	}
 rth = (rth_t*)packetptr;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-
 #ifndef HCXDEBUGMODE
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 #else
 writeownflag = false;
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
 #endif
-
 if(rth->it_len > packetlen)
 	{
 	errorcount++;
