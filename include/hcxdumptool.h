@@ -1,6 +1,6 @@
 /*===========================================================================*/
 #define HCX_BPF				1
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 #define HCX_BPFC			2
 #endif
 #define HCX_DISABLE_DEAUTHENTICATION	3
@@ -207,7 +207,7 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 static int sort_aplist_by_status(const void *a, const void *b)
 {
 const aplist_t *ai = (const aplist_t *)a;
@@ -267,7 +267,7 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 static int sort_clientlist_by_status(const void *a, const void *b)
 {
 const clientlist_t *ai = (const clientlist_t *)a;

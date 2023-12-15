@@ -37,7 +37,7 @@
 #include <sys/utsname.h>
 #include <termios.h>
 #endif
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 #include <pcap/pcap.h>
 #endif
 #include "include/types.h"
@@ -89,14 +89,14 @@ static int fd_timer1 = 0;
 static int fd_pcapng = 0;
 
 static u8 rdsort = 0;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 static long int wecbcount = 0;
 static long int wepbcount = 0;
 static long int widbcount = 0;
 static long int wshbcount = 0;
 #endif
 
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static int fd_gps = 0;
 static int fd_hcxpos = 0;
 static bool nmea2pcapflag = false;
@@ -183,7 +183,7 @@ static u16 keyinfo = 0;
 static u8 kdv = 0;
 
 static enhanced_packet_block_t *epbhdr = NULL;
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static ssize_t nmealen = 0;
 static ssize_t gprmclen = 0;
 static ssize_t gpggalen = 0;
@@ -194,7 +194,7 @@ static u16 seqcounter2 = 1; /* proberequest authentication association */
 static u16 seqcounter3 = 1; /* probereresponse authentication response 3 */
 static u16 seqcounter4 = 1; /* beacon */
 /*---------------------------------------------------------------------------*/
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static const char gpwplid[] = "$GPWPL";
 static const char gptxtid[] = "$GPTXT,";
 static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
@@ -395,7 +395,7 @@ static u8 epbown[WLTXBUFFER] = { 0 };
 static u8 wltxbuffer[WLTXBUFFER] = { 0 };
 static u8 wltxnoackbuffer[WLTXBUFFER] = { 0 };
 
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static char nmeabuffer[NMEA_SIZE] = { 0 };
 static char gpwpl[NMEA_MSG_MAX] = { 0 };
 static char gprmc[NMEA_MSG_MAX] = { 0 };
@@ -576,7 +576,7 @@ if(rdsort > 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 static inline void show_realtime(void)
 {
 static size_t i;
@@ -718,7 +718,7 @@ else if(frequency >= 58320 && frequency <= 70200) return (frequency - 56160) / 2
 else return 0;
 }
 /*===========================================================================*/
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static void writegpwpl(size_t i)
 {
 static ssize_t p1;
@@ -882,7 +882,7 @@ epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
 if(write(fd_pcapng, &epbown, epblen) != epblen) errorcount++;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 wepbcount++;
 #endif
 return;
@@ -912,7 +912,7 @@ epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
 if(write(fd_pcapng, &epb, epblen) != epblen) errorcount++;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 wepbcount++;
 #endif
 return;	
@@ -950,7 +950,7 @@ shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
 totallength->total_length = shblen;
 if(write(fd_pcapng, &shb, shblen) != shblen) return false;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 wshbcount++;
 #endif
 return true;
@@ -981,7 +981,7 @@ idblen += TOTAL_SIZE;
 idbhdr->total_length = idblen;
 totallength->total_length = idblen;
 if(write(fd_pcapng, &idb, idblen) != idblen) return false;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 widbcount++;
 #endif
 return true;
@@ -1018,13 +1018,13 @@ cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
 if(write(fd_pcapng, &cb, cblen) != cblen) return false;
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 wecbcount++;
 #endif
 return true;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static bool writecbnmea(void)
 {
 static ssize_t cblen;
@@ -1047,7 +1047,7 @@ cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
 if(write(fd_pcapng, &cb, cblen) != cblen) return false;
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 wecbnmeacount++;
 #endif
 return true;
@@ -2448,7 +2448,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(((aplist +i)->status & AP_PROBERESPONSE) == 0)
 		{
 		writeepb();
-		#ifdef NMEAOUT
+		#ifdef HCXNMEAOUT
 		if(fd_gps > 0) writegpwpl(i);
 		#endif
 		tshold = tsakt;
@@ -2487,7 +2487,7 @@ if(reassociationflag == true)
 	if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_reassociationrequest(i);
 	}
 writeepb();
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(fd_gps > 0) writegpwpl(i);
 #endif
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2545,7 +2545,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		{
 		writeepb();
 		tshold = tsakt;
-		#ifdef NMEAOUT
+		#ifdef HCXNMEAOUT
 		if(fd_gps > 0) writegpwpl(i);
 		#endif
 		(aplist +i)->status |= AP_BEACON;
@@ -2638,7 +2638,7 @@ if(reassociationflag == true)
 	if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_associationrequest_org(i);
 	}
 writeepb();
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(fd_gps > 0) writegpwpl(i);
 #endif
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2647,7 +2647,7 @@ return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
 static char *nmeaptr;
@@ -2855,7 +2855,7 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(fd_gps > 0)
 	{
 	ev.data.fd = fd_gps;
@@ -2885,7 +2885,7 @@ while(!wanteventflag)
 			lifetime++;
 			clock_gettime(CLOCK_REALTIME, &tspecakt);
 			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-			#ifdef STATUSOUT
+			#ifdef HCXSTATUSOUT
 			show_realtime();
 			#endif
 			if((tsakt - tshold) > timehold)
@@ -2894,7 +2894,7 @@ while(!wanteventflag)
 				if(nl_set_frequency() == false) errorcount++;
 				tshold = tsakt;
 				}
-			#ifdef NMEAOUT
+			#ifdef HCXNMEAOUT
 			if(((lifetime % 2) == 0) && (nmea2pcapflag == true))
 				{
 				if((gpggalen > 2) || (gprmclen > 2)) writecbnmea();
@@ -2924,7 +2924,7 @@ while(!wanteventflag)
 				packetcountlast = packetcount;
 				}
 			}
-		#ifdef NMEAOUT
+		#ifdef HCXNMEAOUT
 		else if(events[i].data.fd == fd_gps) process_nmea0183();
 		#endif
 		}
@@ -4099,7 +4099,7 @@ return true;
 }
 /*===========================================================================*/
 /* GPS */
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static bool open_nmea0183_file(char *hcxposoutname)
 {
 static int c;
@@ -4336,7 +4336,7 @@ packetptr = &epb[EPB_SIZE];
 memcpy(&wltxbuffer, &rthtxdata, RTHTX_SIZE);
 memcpy(&wltxnoackbuffer, &rthtxnoackdata, RTHTXNOACK_SIZE);
 memcpy(&epbown[EPB_SIZE], &rthtxdata, RTHTX_SIZE);
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 memcpy(&gpwpl, &gpwplid, NMEA_GPWPLID_SIZE);
 memcpy(&gptxt, &gptxtid, NMEA_GPTXTID_SIZE);
 #endif
@@ -4367,7 +4367,7 @@ static void close_fds(void)
 {
 if(fd_timer1 != 0) close(fd_timer1);
 if(fd_pcapng != 0) close(fd_pcapng);
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(fd_gps != 0) close(fd_gps);
 if(fd_hcxpos != 0) close(fd_hcxpos);
 #endif
@@ -4468,7 +4468,7 @@ if(bpf.len == 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 static bool compile_bpf(char *bpfs)
 {
 static u16 i;
@@ -4638,17 +4638,17 @@ fprintf(stdout, "compiled with GNU libc headers %d.%d\n", __GLIBC__, __GLIBC_MIN
 #else
 fprintf(stdout, "glibc (__GLIBC_MINOR__) is not defined\n");
 #endif
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 fprintf(stdout, "enabled REALTIME DISPLAY\n");
 #else
 fprintf(stdout, "disabled REALTIME DISPLAY\n");
 #endif
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 fprintf(stdout, "enabled GPS support\n");
 #else
 fprintf(stdout, "disabled GPS support\n");
 #endif
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 fprintf(stdout, "enabled BPF compiler\n");
 #else
 fprintf(stdout, "disabled BPF compiler\n");
@@ -4749,7 +4749,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 	"--bpfc=<filter>: compile Berkeley Packet Filter (BPF) and exit\n"
 	"                  $ %s --bpfc=\"wlan addr3 112233445566\" > filter.bpf\n"
 	"                  see man pcap-filter\n"
@@ -4759,7 +4759,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-h             : show this help\n"
 	"-v             : show version\n"
 	"\n",
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, eigenname, BPF_MAXINSNS);
 #else
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, TIMEHOLD / 1000000000ULL, BPF_MAXINSNS);
@@ -4819,7 +4819,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                             default: 0 (GPIO not in use)\n"
 	"--gpio_statusled=<digit>  : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                             default: 0 (GPIO not in use)\n"
-	#ifdef NMEAOUT
+	#ifdef HCXNMEAOUT
 	"--nmea_dev=<NMEA device>  : open NMEA device (/dev/ttyACM0, /dev/tty/USB0, ...)\n"
 	"                             baudrate = BD9600\n"
 	"--gpsd                    : use gpsd to get position\n"
@@ -4843,7 +4843,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                             p = passive scan\n"
 	"                            packets are not stored to dump file\n"
 	"                            not in combination with attack modes\n");
-	#ifdef STATUSOUT
+	#ifdef HCXSTATUSOUT
 	fprintf(stdout, "--rds=<digit>             : sort real time display\n"
 			"                             attack mode:\n"
 			"                              default: sort by time (last seen on top)\n"
@@ -4898,14 +4898,14 @@ static bool interfacelistshortflag = false;
 static bool rooterrorflag = false;
 static char *rcascanflag = NULL;
 static char *bpfname = NULL;
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 static char *bpfstring = NULL;
 #endif
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
 static char *pcapngoutname = NULL;
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 static bool gpsdflag = false;
 static char *nmea0183name = NULL;
 static char *nmeaoutname = NULL;
@@ -4918,7 +4918,7 @@ static socklen_t lStatsLength = sizeof(lStats);
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
 #endif
 	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
@@ -4931,7 +4931,7 @@ static const struct option long_options[] =
 	{"attemptapmax",		required_argument,	NULL,	HCX_ATTEMPT_AP_MAX},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
 	{"essidlist",			required_argument,	NULL,	HCX_ESSIDLIST},
-	#ifdef NMEAOUT
+	#ifdef HCXNMEAOUT
 	{"nmea_dev",			required_argument,	NULL,	HCX_NMEA0183},
 	{"gpsd",			no_argument,		NULL,	HCX_GPSD},
 	{"nmea_out",			required_argument,	NULL,	HCX_NMEA0183_OUT},
@@ -4948,7 +4948,7 @@ static const struct option long_options[] =
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"rcascan",			required_argument,	NULL,	HCX_RCASCAN},
-	#ifdef STATUSOUT
+	#ifdef HCXSTATUSOUT
 	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
 	#endif
 	{"version",			no_argument,		NULL,	HCX_VERSION},
@@ -4974,7 +4974,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		bpfname = optarg;
 		break;
 
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 		case HCX_BPFC:
 		bpfstring = optarg;
 		if(strlen(bpfstring) < 2)
@@ -5186,7 +5186,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		interfacelistshortflag = true;
 		break;
 
-		#ifdef NMEAOUT
+		#ifdef HCXNMEAOUT
 		case HCX_NMEA0183:
 		if(gpsdflag == true)
 			{
@@ -5223,7 +5223,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			}
 		break;
 
-		#ifdef STATUSOUT
+		#ifdef HCXSTATUSOUT
 		case HCX_RD_SORT:
 		rdsort = strtol(optarg, NULL, 10);
 		break;
@@ -5256,7 +5256,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 setbuf(stdout, NULL);
 hcxpid = getpid();
-#ifdef WANTLIBPCAP
+#ifdef HCXWANTLIBPCAP
 if(bpfstring != NULL)
 	{
 	if(compile_bpf(bpfstring) == true) exit(EXIT_SUCCESS);
@@ -5290,7 +5290,7 @@ if(init_lists() == false)
 	goto byebye;
 	}
 init_values();
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(nmea0183name != NULL)
 	{
 	if(open_device_nmea0183(nmea0183name, nmeaoutname) == false)
@@ -5446,7 +5446,7 @@ if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (
 			" no transmitter in range\n"
 			" frames are filtered out by BPF\n"
 			" driver is broken\n");
-#ifdef STATUSOUT
+#ifdef HCXSTATUSOUT
 if(rcascanflag == NULL)
 	{
 	fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
@@ -5468,7 +5468,7 @@ else
 		}
 	}
 #endif
-#ifdef NMEAOUT
+#ifdef HCXNMEAOUT
 if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentence(s) received from device\n", nmeapacketcount);
 if(wecbnmeacount > 0) fprintf(stdout, "%ld ECB NMEA written to pcapng dumpfile\n", wecbnmeacount);
 if(wgpwplcount > 0)   fprintf(stdout, "%ld GPWPL record(s) written to file\n", wgpwplcount);
