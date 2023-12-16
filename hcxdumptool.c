@@ -61,6 +61,10 @@ return;
 */
 /*===========================================================================*/
 /* global var */
+#ifdef HCXDEBUGMODE
+static bool writeownflag = false;
+#endif
+
 static bool deauthenticationflag = true;
 static bool proberequestflag = true;
 static bool associationflag = true;
@@ -2736,14 +2740,14 @@ if(rth->it_len > packetlen)
 ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
 #elif __BYTE_ORDER == __BIG_ENDIAN
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(le16toh(rth->it_len) > packetlen)
+if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if(__builtin_bswap16(rth->it_len) > packetlen)
 	{
 	errorcount++;
 	return;
 	}
-ieee82011ptr = packetptr + le16toh(rth->it_len);
-ieee82011len = packetlen - le16toh(rth->it_len);
+ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
+ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
 #else
 # error "Please fix ENDIANESS <endian.h>"
 #endif
@@ -2772,9 +2776,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process_packet(void)
 {
-#ifdef HCXDEBUGMODE
-static bool writeownflag;
-#endif
 if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	{
 	if(packetlen == -1) errorcount++;
@@ -2785,8 +2786,8 @@ rth = (rth_t*)packetptr;
 #ifndef HCXDEBUGMODE
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 #else
-writeownflag = false;
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+else writeownflag = false;
 #endif
 if(rth->it_len > packetlen)
 	{
@@ -2797,18 +2798,18 @@ ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
 #elif __BYTE_ORDER == __BIG_ENDIAN
 #ifndef HCXDEBUGMODE
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 #else
-writeownflag = false;
-if((le32toh(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+else writeownflag = false;
 #endif
-if(le16toh(rth->it_len) > packetlen)
+if(__builtin_bswap16(rth->it_len) > packetlen)
 	{
 	errorcount++;
 	return;
 	}
-ieee82011ptr = packetptr + le16toh(rth->it_len);
-ieee82011len = packetlen - le16toh(rth->it_len);
+ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
+ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
 #else
 # error "Please fix ENDIANESS <endian.h>"
 #endif
