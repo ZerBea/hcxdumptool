@@ -1283,11 +1283,12 @@ ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 associationresponsetx->capability = 0x431;
+associationresponsetx->aid = 0xc001;
 #elif __BYTE_ORDER == __BIG_ENDIAN
 associationresponsetx->capability = __builtin_bswap16(0x431);
 #endif
 associationresponsetx->status = 0;
-associationresponsetx->aid = 1;
+associationresponsetx->aid = 0xc001;
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
 memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
 ii += ASSOCIATIONRESPONSEDATA_SIZE;
@@ -2151,8 +2152,26 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211reassociationresponse(void)
 {
+static size_t i;
+static ieee80211_assoc_or_reassoc_resp_t *reassociationresponse;
+
 tshold = tsakt;
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
+reassociationresponse = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
+if(payloadlen < IEEE80211_REASSOCIATIONRESPONSE_SIZE) return;
+for(i = 0; i < CLIENTLIST_MAX - 1; i++)
+	{
+	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
+	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
+	(clientlist +i)->aid = reassociationresponse->aid;
+	return;
+	}
+memset((clientlist + i), 0, CLIENTLIST_SIZE);
+(clientlist +i)->tsakt = tsakt;
+memcpy((clientlist +i)->macclient, macfrx->addr1, ETH_ALEN);
+memcpy((clientlist +i)->macap, macfrx->addr2, ETH_ALEN);
+(clientlist +i)->aid = reassociationresponse->aid;
+qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -2177,8 +2196,8 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 		tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
 		if(((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0)
 			{
-			send_80211_reassociationresponse((clientlist +i)->aid++);
-			if((clientlist +i)->aid > 0xff) (clientlist +i)->aid  = 1;
+			if(((clientlist +i)->aid & 0xc0) == 0) (clientlist +i)->aid = 0xc001;
+			send_80211_reassociationresponse((clientlist +i)->aid);
 			send_80211_eapol_m1();
 			(clientlist +i)->count -= 1;
 			}
@@ -2193,13 +2212,13 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist +i)->tsassoc = tsfirst;
 (clientlist +i)->tsreassoc = tsfirst;
 (clientlist +i)->count = attemptclientmax;
-(clientlist +i)->aid = 1;
+(clientlist +i)->aid = 0xc001;
 memcpy((clientlist +i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist +i)->macap, macfrx->addr1, ETH_ALEN);
 tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
 if((((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0) && (attemptclientmax > 0))
 	{
-	send_80211_reassociationresponse((clientlist +i)->aid++);
+	send_80211_reassociationresponse((clientlist +i)->aid);
 	send_80211_eapol_m1();
 	}
 else (clientlist +i)->count = 0;
@@ -2210,8 +2229,27 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211associationresponse(void)
 {
+static size_t i;
+static ieee80211_assoc_or_reassoc_resp_t *associationresponse;
+
 tshold = tsakt;
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
+associationresponse = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
+if(payloadlen < IEEE80211_ASSOCIATIONRESPONSE_SIZE) return;
+
+for(i = 0; i < CLIENTLIST_MAX - 1; i++)
+	{
+	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
+	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
+	(clientlist +i)->aid = associationresponse->aid;
+	return;
+	}
+memset((clientlist + i), 0, CLIENTLIST_SIZE);
+(clientlist +i)->tsakt = tsakt;
+memcpy((clientlist +i)->macclient, macfrx->addr1, ETH_ALEN);
+memcpy((clientlist +i)->macap, macfrx->addr2, ETH_ALEN);
+(clientlist +i)->aid = associationresponse->aid;
+qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
