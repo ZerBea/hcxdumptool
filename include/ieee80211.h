@@ -328,13 +328,13 @@ typedef struct __attribute__((__packed__))
  *  1       0       BSSID   SA      DA      -       AP <- STA
  *  1       1       RA      TA      DA      SA      unspecified (WDS)
  */
+
 typedef struct __attribute__((__packed__))
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
  unsigned	version : 2;
  unsigned	type : 	2;
  unsigned	subtype : 4;
-
  unsigned	to_ds : 1;
  unsigned	from_ds : 1;
  unsigned	more_frag : 1;
@@ -347,7 +347,6 @@ typedef struct __attribute__((__packed__))
  unsigned	subtype : 4;
  unsigned	type : 	2;
  unsigned	version : 2;
-
  unsigned	ordered : 1;
  unsigned	prot : 1;
  unsigned	more_data : 1;
