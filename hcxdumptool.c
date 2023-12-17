@@ -2866,11 +2866,8 @@ else
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
 #ifdef HCXDEBUGMODE
-if(writeownflag == true)
-	{
-	writeepb();
-	return;
-	}
+writeepb();
+if(writeownflag == true) return;
 #endif
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
