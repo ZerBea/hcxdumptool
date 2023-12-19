@@ -2348,12 +2348,21 @@ static essid_t essid;
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-if(essid.len == 0)
+if(attemptclientmax > 0)
 	{
-	if(proberesponseindex >= proberesponsetxmax) proberesponseindex = 0;
-	if((aprglist + proberesponseindex)->essidlen == 0)  proberesponseindex = 0;
-	if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
-	proberesponseindex++;
+	if(essid.len == 0)
+		{
+		for(i = 0; i < proberesponsetxmax; i++)
+			{
+			if((aprglist + proberesponseindex)->essidlen == 0)
+				{
+				proberesponseindex = 0;
+				return;
+				}
+			send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+			proberesponseindex++;
+			}
+		}
 	return;
 	}
 for(i = 0; i < APRGLIST_MAX - 1; i++)
