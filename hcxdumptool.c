@@ -1221,15 +1221,9 @@ macftx->sequence = seqcounter3++ << 4;
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 associationresponsetx->capability = 0x431;
 associationresponsetx->status = 0;
 associationresponsetx->aid = aid;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-associationresponsetx->capability = __builtin_bswap16(0x431);
-associationresponsetx->status = 0;
-associationresponsetx->aid = __builtin_bswap16(aid);
-#endif
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
 memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
 ii += ASSOCIATIONRESPONSEDATA_SIZE;
@@ -1256,12 +1250,7 @@ macftx->sequence = seqcounter3++ << 4;
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 associationresponsetx->capability = 0x431;
-associationresponsetx->aid = 0xc001;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-associationresponsetx->capability = __builtin_bswap16(0x431);
-#endif
 associationresponsetx->status = 0;
 associationresponsetx->aid = 0xc001;
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
@@ -1308,13 +1297,8 @@ macftx->sequence = seqcounter3++ << 4;
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 reassociationrequest = (ieee80211_reassoc_req_t*)&wltxnoackbuffer[ii];
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 reassociationrequest->capability = 0x431;
 reassociationrequest->listen_interval = 0x14;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-reassociationrequest->capability = __builtin_bswap16(0x431);
-reassociationrequest->listen_interval = __builtin_bswap16(0x14);
-#endif
 memcpy(reassociationrequest->current_macap, (aplist +i)->macap, ETH_ALEN);
 ii += sizeof(ieee80211_reassoc_req_t) -1;
 wltxnoackbuffer[ii ++] = 0;
@@ -1334,10 +1318,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_authenticationrequestnoack(void)
 {
-#ifdef HCXDEBUGMODE
-printf("debug send AUTH 2\n");
-#endif
-
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
@@ -1356,10 +1336,6 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_authenticationrequest(void)
 {
-#ifdef HCXDEBUGMODE
-printf("debug send AUTH 1\n");
-#endif
-
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
@@ -1394,15 +1370,9 @@ macftx->sequence = seqcounter3++ << 4;
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 beacontx = (ieee80211_beacon_proberesponse_t*)&wltxnoackbuffer[ii];
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 beacontx->timestamp = beacontimestamp++;
 beacontx->beacon_interval = 1024;
 beacontx->capability = 0x431;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-beacontx->timestamp = __builtin_bswap64(beacontimestamp++);
-beacontx->beacon_interval = __builtin_bswap16(1024);
-beacontx->capability = __builtin_bswap16(0x431);
-#endif
 ii += IEEE80211_PROBERESPONSE_SIZE;
 wltxnoackbuffer[ii ++] = 0;
 wltxnoackbuffer[ii ++] = essidlenrsp;
@@ -2717,8 +2687,6 @@ if(__builtin_bswap16(rth->it_len) > packetlen)
 	}
 ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
 ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
-#else
-# error "Please fix ENDIANESS <endian.h>"
 #endif
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
@@ -2755,8 +2723,8 @@ rth = (rth_t*)packetptr;
  #ifndef HCXDEBUGMODE
  if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
  #else
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
-else writeownflag = false;
+ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+ else writeownflag = false;
  #endif
 if(rth->it_len > packetlen)
 	{
@@ -2833,7 +2801,7 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		llcptr = payloadptr;
 		llc = (ieee80211_llc_t*)llcptr;
 		#if __BYTE_ORDER == __LITTLE_ENDIAN
-		if(((__builtin_bswap16(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
+		if((__builtin_bswap16(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
 		#elif __BYTE_ORDER == __BIG_ENDIAN
 		if((llc->type == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
 		#endif
