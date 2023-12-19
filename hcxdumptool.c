@@ -1,6 +1,9 @@
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <endian.h>
+#if !defined __BYTE_ORDER
+# error "Please fix ENDIANESS <endian.h>"
+#endif
 #include <errno.h>
 #if defined (_POSIX_VERSION)
 #include <fcntl.h>
@@ -2821,12 +2824,12 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	}
 rth = (rth_t*)packetptr;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-#ifndef HCXDEBUGMODE
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-#else
+ #ifndef HCXDEBUGMODE
+ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+ #else
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
 else writeownflag = false;
-#endif
+ #endif
 if(rth->it_len > packetlen)
 	{
 	errorcount++;
@@ -2835,12 +2838,12 @@ if(rth->it_len > packetlen)
 ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
 #elif __BYTE_ORDER == __BIG_ENDIAN
-#ifndef HCXDEBUGMODE
-if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-#else
-if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
-else writeownflag = false;
-#endif
+ #ifndef HCXDEBUGMODE
+ if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+ #else
+ if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+ else writeownflag = false;
+ #endif
 if(__builtin_bswap16(rth->it_len) > packetlen)
 	{
 	errorcount++;
@@ -2848,8 +2851,6 @@ if(__builtin_bswap16(rth->it_len) > packetlen)
 	}
 ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
 ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
-#else
-# error "Please fix ENDIANESS <endian.h>"
 #endif
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
@@ -2903,8 +2904,6 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		{
 		llcptr = payloadptr;
 		llc = (ieee80211_llc_t*)llcptr;
-
-
 		#if __BYTE_ORDER == __LITTLE_ENDIAN
 		if(((__builtin_bswap16(llc->type)) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
 		#elif __BYTE_ORDER == __BIG_ENDIAN

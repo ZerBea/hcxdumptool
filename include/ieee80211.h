@@ -331,9 +331,11 @@ typedef struct __attribute__((__packed__))
 
 typedef struct __attribute__((__packed__))
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
  unsigned	version : 2;
- unsigned	type : 2;
+ unsigned	type : 	2;
  unsigned	subtype : 4;
+
  unsigned	to_ds : 1;
  unsigned	from_ds : 1;
  unsigned	more_frag : 1;
@@ -342,6 +344,20 @@ typedef struct __attribute__((__packed__))
  unsigned	more_data : 1;
  unsigned	prot : 1;
  unsigned	ordered : 1;
+#elif __BYTE_ORDER == __BIG_ENDIAN
+ unsigned	subtype : 4;
+ unsigned	type : 	2;
+ unsigned	version : 2;
+
+ unsigned	ordered : 1;
+ unsigned	prot : 1;
+ unsigned	more_data : 1;
+ unsigned	power : 1;
+ unsigned	retry : 1;
+ unsigned	more_frag : 1;
+ unsigned	from_ds : 1;
+ unsigned	to_ds : 1;
+#endif
  u16		duration;
  u8		addr1[6];
  u8		addr2[6];
