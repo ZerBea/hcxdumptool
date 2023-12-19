@@ -1100,16 +1100,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
 wltxnoackbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter2++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter2++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter2 = 1;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxnoackbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
@@ -1138,16 +1133,11 @@ macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
 wltxbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macclientrg, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter2++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter2++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter2 = 1;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
@@ -1177,14 +1167,10 @@ macftx->type = IEEE80211_FTYPE_DATA;
 macftx->subtype = IEEE80211_STYPE_DATA;
 wltxbuffer[ii + 1] = 0;
 macftx->from_ds = 1;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x0431;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x0431);
-#endif
 macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eaprequestiddata, EAPREQUESTID_SIZE);
@@ -1204,14 +1190,10 @@ macftx->type = IEEE80211_FTYPE_DATA;
 macftx->subtype = IEEE80211_STYPE_DATA;
 wltxbuffer[ii + 1] = 0;
 macftx->from_ds = 1;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x0431;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x0431);
-#endif
 macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eapolm1data, EAPOLM1DATA_SIZE);
@@ -1231,16 +1213,11 @@ macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_REASSOC_RESP;
 wltxbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter3++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter3++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
@@ -1271,16 +1248,11 @@ macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_ASSOC_RESP;
 wltxbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter3++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter3++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
@@ -1306,16 +1278,11 @@ macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
 wltxbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter3++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter3++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter3 = 1;
 memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
 if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE) return;
@@ -1333,16 +1300,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
 wltxnoackbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, (aplist +i)->macap, ETH_ALEN);
 memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
 memcpy(macftx->addr3, (aplist +i)->macap, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter3++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter3++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 reassociationrequest = (ieee80211_reassoc_req_t*)&wltxnoackbuffer[ii];
@@ -1372,20 +1334,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_authenticationrequestnoack(void)
 {
+#ifdef HCXDEBUGMODE
+printf("debug send AUTH 2\n");
+#endif
+
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
 wltxnoackbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macclientrg, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter2++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter2++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE) return;
@@ -1395,20 +1356,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_authenticationrequest(void)
 {
+#ifdef HCXDEBUGMODE
+printf("debug send AUTH 1\n");
+#endif
+
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_AUTH;
 wltxbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macclientrg, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter2++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter2++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
 if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE) return;
@@ -1426,16 +1386,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_RESP;
 wltxnoackbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macclientrsp, ETH_ALEN);
 memcpy(macftx->addr2, macaprgrsp, ETH_ALEN);
 memcpy(macftx->addr3, macaprgrsp, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter3++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter3++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 beacontx = (ieee80211_beacon_proberesponse_t*)&wltxnoackbuffer[ii];
@@ -1470,32 +1425,21 @@ beaconindex++;
 if(beaconindex >= beacontxmax) beaconindex = 0;
 if((aprglist + beaconindex)->essidlen == 0) beaconindex = 0;
 ii = RTHTXNOACK_SIZE;
+wltxnoackbuffer[ii + 1] = 0;
+macftx->duration = 0;
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_BEACON;
-wltxnoackbuffer[ii + 1] = 0;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
 memcpy(macftx->addr2, (aprglist + beaconindex)->macaprg, ETH_ALEN);
 memcpy(macftx->addr3, (aprglist + beaconindex)->macaprg, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter4++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter4++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter4 = 1;
 ii += MAC_SIZE_NORM;
 beacontx = (ieee80211_beacon_proberesponse_t*)&wltxnoackbuffer[ii];
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 beacontx->timestamp = beacontimestamp++;
 beacontx->beacon_interval = 1024;
 beacontx->capability = 0x431;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-beacontx->timestamp = __builtin_bswap64(beacontimestamp++);
-beacontx->beacon_interval = __builtin_bswap16(1024);
-beacontx->capability = __builtin_bswap16(0x431);
-#endif
 ii += IEEE80211_BEACON_SIZE;
 wltxnoackbuffer[ii ++] = 0;
 wltxnoackbuffer[ii ++] = (aprglist + beaconindex)->essidlen;
@@ -1515,16 +1459,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_REQ;
 wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
 memcpy(macftx->addr2, macclientrg, ETH_ALEN);
 memcpy(macftx->addr3, macbc, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter2++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter2++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE) return;
@@ -1538,16 +1477,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DISASSOC;
 wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macclient, ETH_ALEN);
 memcpy(macftx->addr2, macap, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter1++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter1++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
@@ -1561,16 +1495,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DISASSOC;
 wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macap, ETH_ALEN);
 memcpy(macftx->addr2, macclient, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter1++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter1++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
@@ -1584,16 +1513,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DEAUTH;
 wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macclient, ETH_ALEN);
 memcpy(macftx->addr2, macap, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter1++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter1++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE +MAC_SIZE_NORM] = reason;
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
@@ -1607,16 +1531,11 @@ macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DEAUTH;
 wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macap, ETH_ALEN);
 memcpy(macftx->addr2, macclient, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-macftx->duration = 0x013a;
 macftx->sequence = seqcounter1++ << 4;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-macftx->duration = __builtin_bswap16(0x013a);
-macftx->sequence = __builtin_bswap16(seqcounter1++ << 4);
-#endif
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + 2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
@@ -2871,21 +2790,6 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
-
-#ifdef HCXDEBUGMODE
-#if __BYTE_ORDER == __BIG_ENDIAN
- printf("\ntype %d sbtype %d\n", macfrx->type, macfrx->subtype);
- for(int x = 0; x < 4; x++) printf("%02x", ieee82011ptr[x]);
- printf("\n");
- if(macfrx->type == IEEE80211_FTYPE_MGMT)
-	{
-	if(macfrx->subtype == IEEE80211_STYPE_BEACON)
-		{
-		exit(EXIT_FAILURE);
-		}
-	}
- #endif
-#endif 
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
