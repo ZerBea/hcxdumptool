@@ -208,10 +208,10 @@ static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a
 #endif
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static const char *macaprgfirst = "internet";
-/*---------------------------------------------------------------------------*/
 static const u8 beacondata[] =
 {
+/* Tag SSID: WILDCARD */
+0x00, 0x00,
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
 0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
 /* Tag: DS Parameter set: Current Channel: 1 */
@@ -230,6 +230,7 @@ static const u8 beacondata[] =
 0x00, 0x00,
 };
 #define BEACONDATA_SIZE sizeof(beacondata)
+
 /*---------------------------------------------------------------------------*/
 static const u8 proberesponsedata[] =
 {
@@ -381,6 +382,7 @@ static const u8 legacy56mbdata[] =
 0x05, 0x00, 0x01, 0x00, 0x0c, 0x00, 0x00, 0x00
 };
 /*---------------------------------------------------------------------------*/
+static u8 macaprghidden[ETH_ALEN] = { 0 };
 static u8 macaprg[ETH_ALEN] = { 0 };
 static u8 macclientrg[ETH_ALEN +2] = { 0 };
 static u8 anoncerg[32] = { 0 };
@@ -1395,14 +1397,14 @@ beaconindex++;
 if(beaconindex >= beacontxmax) beaconindex = 0;
 if((aprglist + beaconindex)->essidlen == 0) beaconindex = 0;
 ii = RTHTXNOACK_SIZE;
-wltxnoackbuffer[ii + 1] = 0;
-macftx->duration = 0;
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_BEACON;
+wltxnoackbuffer[ii + 1] = 0;
+macftx->duration = 0x013a;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
-memcpy(macftx->addr2, (aprglist + beaconindex)->macaprg, ETH_ALEN);
-memcpy(macftx->addr3, (aprglist + beaconindex)->macaprg, ETH_ALEN);
+memcpy(macftx->addr2, macaprghidden, ETH_ALEN);
+memcpy(macftx->addr3, macaprghidden, ETH_ALEN);
 macftx->sequence = seqcounter4++ << 4;
 if(seqcounter1 > 4095) seqcounter4 = 1;
 ii += MAC_SIZE_NORM;
@@ -1411,12 +1413,8 @@ beacontx->timestamp = beacontimestamp++;
 beacontx->beacon_interval = 1024;
 beacontx->capability = 0x431;
 ii += IEEE80211_BEACON_SIZE;
-wltxnoackbuffer[ii ++] = 0;
-wltxnoackbuffer[ii ++] = (aprglist + beaconindex)->essidlen;
-memcpy(&wltxnoackbuffer[ii], (aprglist + beaconindex)->essid, (aprglist + beaconindex)->essidlen);
-ii += (aprglist + beaconindex)->essidlen;
 memcpy(&wltxnoackbuffer[ii], &beacondata, BEACONDATA_SIZE);
-wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
+wltxnoackbuffer[ii + 0x0e] = (u8)(scanlist + scanlistindex)->channel;
 ii += BEACONDATA_SIZE;
 if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
 errorcount++;
@@ -2905,12 +2903,12 @@ while(!wanteventflag)
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
+			send_80211_beacon();
 			}
 		#ifdef HCXNMEAOUT
 		else if(events[i].data.fd == fd_gps) process_nmea0183();
 		#endif
 		}
-	if(epret == 0) send_80211_beacon();
 	}
 return true;
 }
@@ -4287,17 +4285,19 @@ seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);
 ouiaprg = (vendoraprg[rand() % ((VENDORAPRG_SIZE / sizeof(int)))]) &0xffffff;
 nicaprg = rand() & 0xffffff;
+macaprghidden[5] = nicaprg & 0xff;
+macaprghidden[4] = (nicaprg >> 8) & 0xff;
+macaprghidden[3] = (nicaprg >> 16) & 0xff;
+macaprghidden[2] = ouiaprg & 0xff;
+macaprghidden[1] = (ouiaprg >> 8) & 0xff;
+macaprghidden[0] = (ouiaprg >> 16) & 0xff;
+nicaprg++;
 macaprg[5] = nicaprg & 0xff;
 macaprg[4] = (nicaprg >> 8) & 0xff;
 macaprg[3] = (nicaprg >> 16) & 0xff;
 macaprg[2] = ouiaprg & 0xff;
 macaprg[1] = (ouiaprg >> 8) & 0xff;
 macaprg[0] = (ouiaprg >> 16) & 0xff;
-aprglist->tsakt = tsakt;
-aprglist->essidlen = strnlen(macaprgfirst, ESSID_MAX);
-memcpy(aprglist->essid, macaprgfirst, strnlen(macaprgfirst, ESSID_MAX));
-memcpy(aprglist->macaprg, &macaprg, ETH_ALEN);
-nicaprg++;
 ouiclientrg = (vendorclientrg[rand() % ((VENDORCLIENTRG_SIZE / sizeof(int)))]) &0xffffff;
 nicclientrg = rand() & 0xffffff;
 macclientrg[7] = 0;
