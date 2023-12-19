@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <endian.h>
-#if !defined __BYTE_ORDER
+#ifndef __BYTE_ORDER
 # error "Please fix ENDIANESS <endian.h>"
 #endif
 #include <errno.h>
@@ -2871,6 +2871,21 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
+
+#ifdef HCXDEBUGMODE
+#if __BYTE_ORDER == __BIG_ENDIAN
+ printf("\ntype %d sbtype %d\n", macfrx->type, macfrx->subtype);
+ for(int x = 0; x < 4; x++) printf("%02x", ieee82011ptr[x]);
+ printf("\n");
+ if(macfrx->type == IEEE80211_FTYPE_MGMT)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON)
+		{
+		exit(EXIT_FAILURE);
+		}
+	}
+ #endif
+#endif 
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
