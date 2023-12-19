@@ -1746,7 +1746,7 @@ while(0 < infolen)
 		}
 	else if(infoptr->id == TAG_CHAN)
 		{
-		if(infoptr->len == 1) infoelement->channel = (u16)infoptr->ie[0];
+		if(infoptr->len == 1) infoelement->channel = infoptr->ie[0];
 		}
 	else if(infoptr->id == TAG_RSN)
 		{
