@@ -4027,7 +4027,7 @@ return true;
 /*---------------------------------------------------------------------------*/
 static bool open_socket_rx(char *bpfname)
 {
-size_t c = 10;
+static size_t c = 10;
 static struct sockaddr_ll saddr;
 static struct packet_mreq mrq;
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
