@@ -7,7 +7,7 @@ Small tool to capture packets from wlan devices and to discover potential weak p
 Brief description
 --------------
 
-Stand-alone binaries - designed to run on Arch Linux, but other Linux distributions should work, too.
+Stand-alone binaries - designed to run on Arch Linux and Raspbian Lite, but other Linux distributions should work, too.
 
 Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
 
@@ -110,12 +110,13 @@ Or install via package manager
 [Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
 `pacman -S hcxdumptool`
 
-### Debian (e.g. Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
+### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
 To install use the following:  
 `apt-get install make gcc`
 
+It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well but feature requests will be rejected.
 
-Compile for Android
+### Android (example)
 --------------
 
 Install [Android NDK](https://developer.android.com/ndk/downloads) on your system and add it to `PATH`:
@@ -147,8 +148,6 @@ $ ndk-build
 ```
 Copy it to your phone and enjoy.
 
-Please note that Android is unsupported and feature requests are rejected.
-
 
 Requirements
 --------------
@@ -167,7 +166,7 @@ Requirements
 * libpcap and libpcap-dev (if internal BPF compiler has been enabled)
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
-* to allow 5/6GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
+* to allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
 If you decide to compile latest git head, make sure that your distribution is updated to latest version.
 
