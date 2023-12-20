@@ -94,27 +94,8 @@ make install PREFIX=/usr/local (as super user)
 
 On headless opearation remove -DSTATUSOUT from Makefile before compiling! The entire status display will not be compiled. That saves CPU cycles and prevent ERRORs.
 
-
-Or install via package manager
---------------
-
-### Arch Linux
-[Arch Linux](https://www.archlinux.org/) 
-`pacman -S hcxdumptool`
-
-### Arch Linux ARM
-[Arch Linux ARM ](https://archlinuxarm.org/) 
-`pacman -S hcxdumptool`
-
-### Black Arch
-[Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
-`pacman -S hcxdumptool`
-
-### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
-To install use the following:  
-`apt-get install make gcc`
-
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well but feature requests will be rejected.
+
 
 ### Android (example)
 --------------
@@ -146,7 +127,27 @@ $ ndk-build
 [x86_64] Executable     : hcxdumptool
 [x86_64] Install        : hcxdumptool => libs/x86_64/hcxdumptool
 ```
-Copy it to your phone and enjoy.
+Copy it to your phone.
+
+
+Or install via package manager
+--------------
+
+### Arch Linux
+[Arch Linux](https://www.archlinux.org/) 
+`pacman -S hcxdumptool`
+
+### Arch Linux ARM
+[Arch Linux ARM ](https://archlinuxarm.org/) 
+`pacman -S hcxdumptool`
+
+### Black Arch
+[Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
+`pacman -S hcxdumptool`
+
+### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
+To install use the following:  
+`apt-get install make gcc`
 
 
 Requirements
