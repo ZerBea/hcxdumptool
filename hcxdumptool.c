@@ -1403,8 +1403,8 @@ macftx->subtype = IEEE80211_STYPE_BEACON;
 wltxnoackbuffer[ii + 1] = 0;
 macftx->duration = 0x013a;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
-memcpy(macftx->addr2, macaprghidden, ETH_ALEN);
-memcpy(macftx->addr3, macaprghidden, ETH_ALEN);
+memcpy(macftx->addr2, &macaprghidden, ETH_ALEN);
+memcpy(macftx->addr3, &macaprghidden, ETH_ALEN);
 macftx->sequence = seqcounter4++ << 4;
 if(seqcounter1 > 4095) seqcounter4 = 1;
 ii += MAC_SIZE_NORM;
@@ -2071,6 +2071,7 @@ static size_t i;
 static ieee80211_reassoc_req_t *reassociationrequest;
 static u16 reassociationrequestlen;
 
+if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
 tshold = tsakt;
 reassociationrequest = (ieee80211_reassoc_req_t*)payloadptr;
 if((reassociationrequestlen = payloadlen - IEEE80211_REASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
@@ -2149,6 +2150,7 @@ static size_t i;
 static ieee80211_assoc_req_t *associationrequest;
 static u16 associationrequestlen;
 
+if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
 tshold = tsakt;
 associationrequest = (ieee80211_assoc_req_t*)payloadptr;
 if((associationrequestlen = payloadlen - IEEE80211_ASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
@@ -2197,6 +2199,7 @@ static inline void process80211authentication_fmclient(void)
 {
 size_t i;
 
+if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
 for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
@@ -2289,6 +2292,7 @@ static ieee80211_proberequest_t *proberequest;
 static u16 proberequestlen;
 static essid_t essid;
 
+if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
