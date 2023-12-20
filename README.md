@@ -35,7 +35,7 @@ it does not perform Evil Twin attacks
 
 it is not a honey pot
 
-Unsupported: Windows OS, macOS, Android, emulators or wrappers!
+Unsupported: Big endian systems, Windows OS, macOS, Android, emulators or wrappers!
 
 
 Detailed description
