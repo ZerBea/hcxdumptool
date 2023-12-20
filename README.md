@@ -147,7 +147,7 @@ $ ndk-build
 ```
 Copy it to your phone and enjoy.
 
-Please note that Android is unsupported and feature requests are recected.
+Please note that Android is unsupported and feature requests are rejected.
 
 
 Requirements
