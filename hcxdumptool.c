@@ -7,7 +7,6 @@
 #if __BYTE_ORDER == __BIG_ENDIAN
 # error "BIG ENDIAN systems are not supported"
 #endif 
-
 #include <errno.h>
 #if defined (_POSIX_VERSION)
 #include <fcntl.h>
