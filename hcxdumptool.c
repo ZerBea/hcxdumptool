@@ -4,6 +4,10 @@
 #ifndef __BYTE_ORDER
 # error "Please fix ENDIANESS <endian.h>"
 #endif
+#if __BYTE_ORDER == __BIG_ENDIAN
+# error "BIG ENDIAN systems are not supported"
+#endif 
+
 #include <errno.h>
 #if defined (_POSIX_VERSION)
 #include <fcntl.h>
@@ -1849,11 +1853,7 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
 		{
-		#if __BYTE_ORDER == __LITTLE_ENDIAN
 		if(authseqakt.replaycountm2 == (__builtin_bswap64(wpakey->replaycount) - 1))
-		#elif __BYTE_ORDER == __BIG_ENDIAN
-		if(authseqakt.replaycountm2 == (wpakey->replaycount - 1))
-		#endif
 			{
 			if(authseqakt.kdv2 == kdv)
 				{
@@ -1905,11 +1905,7 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211eapol_m2(void)
 {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 authseqakt.replaycountm2 = __builtin_bswap64(wpakey->replaycount);
-#elif __BYTE_ORDER == __BIG_ENDIAN
-authseqakt.replaycountm2 = wpakey->replaycount;
-#endif
 if(replaycountrg == authseqakt.replaycountm2)
 	{
 	process80211eapol_m2rg();
@@ -1946,18 +1942,10 @@ static size_t i;
 memset(&authseqakt, 0, AUTHSEQAKT_SIZE);
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
 authseqakt.kdv1 = kdv;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 authseqakt.replaycountm1 = __builtin_bswap64(wpakey->replaycount);
-#elif __BYTE_ORDER == __BIG_ENDIAN
-authseqakt.replaycountm1 = wpakey->replaycount;
-#endif
 memcpy(&authseqakt.noncem1, &wpakey->nonce[28], 4);
 authseqakt.status = AP_EAPOL_M1;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 if(__builtin_bswap16(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
-#elif __BYTE_ORDER == __BIG_ENDIAN
-if(wpakey->wpadatalen == IEEE80211_PMKID_SIZE)
-#endif
 	{
 	pmkid = (ieee80211_pmkid_t*)(eapolplptr + IEEE80211_WPAKEY_SIZE);
 	if(memcmp(&rsnsuiteoui, pmkid->oui, 3) == 0)
@@ -1994,13 +1982,8 @@ eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
 eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
 if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
 wpakey = (ieee80211_wpakey_t*)eapolplptr;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 if((kdv = __builtin_bswap16(wpakey->keyinfo) & WPA_KEY_INFO_TYPE_MASK) == 0) return;
 keyinfo = (get_keyinfo(__builtin_bswap16(wpakey->keyinfo)));
-#elif __BYTE_ORDER == __BIG_ENDIAN
-if((kdv = wpakey->keyinfo & WPA_KEY_INFO_TYPE_MASK) == 0) return;
-keyinfo = (get_keyinfo(wpakey->keyinfo));
-#endif
 switch(keyinfo)
 	{
 	case M1:
@@ -2028,11 +2011,7 @@ tshold = tsakt;
 eapauthplptr = payloadptr + IEEE80211_LLC_SIZE;
 eapauthpllen = payloadlen - IEEE80211_LLC_SIZE;
 eapauth = (ieee80211_eapauth_t*)eapauthplptr;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 eapauthlen = __builtin_bswap16(eapauth->len);
-#elif __BYTE_ORDER == __BIG_ENDIAN
-eapauthlen = eapauth->len;
-#endif
 if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
 if(eapauth->type == EAPOL_KEY) process80211eapol();
 else if(eapauth->type == EAPOL_START) process80211eap_start();
@@ -2671,7 +2650,6 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 if(rth->it_len > packetlen)
 	{
@@ -2680,16 +2658,6 @@ if(rth->it_len > packetlen)
 	}
 ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
-#elif __BYTE_ORDER == __BIG_ENDIAN
-if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(__builtin_bswap16(rth->it_len) > packetlen)
-	{
-	errorcount++;
-	return;
-	}
-ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
-ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
-#endif
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -2721,13 +2689,12 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
- #ifndef HCXDEBUGMODE
- if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
- #else
- if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
- else writeownflag = false;
- #endif
+#ifndef HCXDEBUGMODE
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+#else
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+else writeownflag = false;
+#endif
 if(rth->it_len > packetlen)
 	{
 	errorcount++;
@@ -2735,21 +2702,6 @@ if(rth->it_len > packetlen)
 	}
 ieee82011ptr = packetptr + rth->it_len;
 ieee82011len = packetlen - rth->it_len;
-#elif __BYTE_ORDER == __BIG_ENDIAN
- #ifndef HCXDEBUGMODE
- if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
- #else
- if((__builtin_bswap32(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
- else writeownflag = false;
- #endif
-if(__builtin_bswap16(rth->it_len) > packetlen)
-	{
-	errorcount++;
-	return;
-	}
-ieee82011ptr = packetptr + __builtin_bswap16(rth->it_len);
-ieee82011len = packetlen - __builtin_bswap16(rth->it_len);
-#endif
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -2802,11 +2754,7 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		{
 		llcptr = payloadptr;
 		llc = (ieee80211_llc_t*)llcptr;
-		#if __BYTE_ORDER == __LITTLE_ENDIAN
 		if((__builtin_bswap16(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
-		#elif __BYTE_ORDER == __BIG_ENDIAN
-		if((llc->type == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
-		#endif
 		}
 	if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC) process80211qosnull();
 	else if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) process80211null();
