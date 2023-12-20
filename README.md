@@ -98,7 +98,6 @@ It is theoretically possible to compile hcxdumptool for other systems (e.g. Andr
 
 
 ### Android (example)
---------------
 Install [Android NDK](https://developer.android.com/ndk/downloads) on your system and add it to `PATH`:
 ```
 $ ndk-build --version
