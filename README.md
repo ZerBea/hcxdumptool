@@ -94,7 +94,7 @@ make install PREFIX=/usr/local (as super user)
 
 On headless opearation remove -DSTATUSOUT from Makefile before compiling! The entire status display will not be compiled. That saves CPU cycles and prevent ERRORs.
 
-It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well but feature requests will be rejected.
+It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
 
 ### Android (example)
