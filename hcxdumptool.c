@@ -47,6 +47,7 @@
 #include <pcap/pcap.h>
 #endif
 #include "include/types.h"
+#include "include/byteorder.h"
 #include "include/hcxdumptool.h"
 #include "include/ieee80211.h"
 #include "include/pcapng.h"
@@ -2103,9 +2104,9 @@ static ieee80211_assoc_or_reassoc_resp_t *associationresponse;
 
 tshold = tsakt;
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
+if(memcmp(macfrx->addr1, &macclientrg, ETH_ALEN) == 0) return;
 associationresponse = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
 if(payloadlen < IEEE80211_ASSOCIATIONRESPONSE_SIZE) return;
-
 for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
@@ -2720,6 +2721,7 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
+
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
