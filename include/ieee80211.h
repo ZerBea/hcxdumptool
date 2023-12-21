@@ -155,9 +155,9 @@ typedef struct __attribute__((__packed__))
  u16	capability;
  u16	status;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-#define HCXTXAID	0x0xc001U
+#define HCXTXAID	0xc001U
 #elif __BYTE_ORDER == __BIG_ENDIAN
-#define HCXTXAID	0x0x01c0U
+#define HCXTXAID	0x01c0U
 #endif
  u16	aid;
  u8	ie[1];
