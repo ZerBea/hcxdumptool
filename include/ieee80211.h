@@ -109,6 +109,13 @@
 typedef struct __attribute__((packed))
 {
  u64	timestamp;
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define HCXTXBEACONINTERVAL	0x0400U
+#define HCXTXCAPABILITY		0x0431U
+#elif __BYTE_ORDER == __BIG_ENDIAN
+#define HCXTXBEACONINTERVAL	0x0004U
+#define HCXTXCAPABILITY		0x3104U
+#endif
  u16	beacon_interval;
  u16	capability;
  u8	ie[1];
@@ -344,6 +351,7 @@ typedef struct __attribute__((__packed__))
  unsigned	more_data : 1;
  unsigned	prot : 1;
  unsigned	ordered : 1;
+#define HCXTXDURATION	0x013aU
 #elif __BYTE_ORDER == __BIG_ENDIAN
  unsigned	subtype : 4;
  unsigned	type : 2;
@@ -357,6 +365,7 @@ typedef struct __attribute__((__packed__))
  unsigned	more_frag : 1;
  unsigned	from_ds : 1;
  unsigned	to_ds : 1;
+#define HCXTXDURATION	0x3a01U
 #endif
  u16		duration;
  u8		addr1[6];
