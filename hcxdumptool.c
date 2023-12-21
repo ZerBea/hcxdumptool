@@ -2024,7 +2024,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
 	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->aid = reassociationresponse->aid;
+	(clientlist +i)->aid = __hcx16le(reassociationresponse->aid);
 	return;
 	}
 memset((clientlist + i), 0, CLIENTLIST_SIZE);
