@@ -2103,14 +2103,14 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	{
 	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
 	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->aid = associationresponse->aid;
+	(clientlist +i)->aid = __hcx16le(associationresponse->aid);
 	return;
 	}
 memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist +i)->tsakt = tsakt;
 memcpy((clientlist +i)->macclient, macfrx->addr1, ETH_ALEN);
 memcpy((clientlist +i)->macap, macfrx->addr2, ETH_ALEN);
-(clientlist +i)->aid = associationresponse->aid;
+(clientlist +i)->aid = __hcx16le(associationresponse->aid);
 qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 return;
 }
@@ -2207,10 +2207,10 @@ static ieee80211_auth_t *auth;
 tshold = tsakt;
 auth = (ieee80211_auth_t*)payloadptr;
 if(payloadlen < IEEE80211_AUTH_SIZE) return;
-if(auth->algorithm == OPEN_SYSTEM)
+if(__hcx16le(auth->algorithm) == OPEN_SYSTEM)
 	{
-	if(auth->sequence == 1) process80211authentication_fmclient();
-	else if(auth->sequence == 2)
+	if(__hcx16le(auth->sequence) == 1) process80211authentication_fmclient();
+	else if(__hcx16le(auth->sequence) == 2)
 		{
 		if(memcmp(&macclientrg, macfrx->addr1, 3) == 0)
 			{
