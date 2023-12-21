@@ -391,7 +391,6 @@ static char timestring2[TIMESTRING_LEN];
 
 static char country[3];
 
-
 static authseqakt_t authseqakt = { 0 };
 
 static u8 nltxbuffer[NLTX_SIZE] = { 0 };
@@ -1252,7 +1251,7 @@ ii += MAC_SIZE_NORM;
 associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
 associationresponsetx->capability = 0x0431;
 associationresponsetx->status = 0;
-associationresponsetx->aid = 0xc001;
+associationresponsetx->aid = HCXTXAID;
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
 memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
 ii += ASSOCIATIONRESPONSEDATA_SIZE;
@@ -2062,7 +2061,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 		tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
 		if(((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0)
 			{
-			if(((clientlist +i)->aid & 0xc0) == 0) (clientlist +i)->aid = 0xc001;
+			if(((clientlist +i)->aid & 0xc0) == 0) (clientlist +i)->aid = HCXTXAID;
 			send_80211_reassociationresponse((clientlist +i)->aid);
 			send_80211_eapol_m1();
 			(clientlist +i)->count -= 1;
@@ -2078,7 +2077,7 @@ memset((clientlist + i), 0, CLIENTLIST_SIZE);
 (clientlist +i)->tsassoc = tsfirst;
 (clientlist +i)->tsreassoc = tsfirst;
 (clientlist +i)->count = attemptclientmax;
-(clientlist +i)->aid = 0xc001;
+(clientlist +i)->aid = HCXTXAID;
 memcpy((clientlist +i)->macclient, macfrx->addr2, ETH_ALEN);
 memcpy((clientlist +i)->macap, macfrx->addr1, ETH_ALEN);
 tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
