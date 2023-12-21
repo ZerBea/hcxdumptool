@@ -1847,7 +1847,7 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
 		{
-		if(authseqakt.replaycountm2 == (__builtin_bswap64(wpakey->replaycount) - 1))
+		if(authseqakt.replaycountm2 == (__hcx64be(wpakey->replaycount) - 1))
 			{
 			if(authseqakt.kdv2 == kdv)
 				{
@@ -1899,7 +1899,7 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void process80211eapol_m2(void)
 {
-authseqakt.replaycountm2 = __builtin_bswap64(wpakey->replaycount);
+authseqakt.replaycountm2 = __hcx64be(wpakey->replaycount);
 if(replaycountrg == authseqakt.replaycountm2)
 	{
 	process80211eapol_m2rg();
@@ -1936,10 +1936,10 @@ static size_t i;
 memset(&authseqakt, 0, AUTHSEQAKT_SIZE);
 memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
 authseqakt.kdv1 = kdv;
-authseqakt.replaycountm1 = __builtin_bswap64(wpakey->replaycount);
+authseqakt.replaycountm1 = __hcx64be(wpakey->replaycount);
 memcpy(&authseqakt.noncem1, &wpakey->nonce[28], 4);
 authseqakt.status = AP_EAPOL_M1;
-if(__builtin_bswap16(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
+if(__hcx16be(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
 	{
 	pmkid = (ieee80211_pmkid_t*)(eapolplptr + IEEE80211_WPAKEY_SIZE);
 	if(memcmp(&rsnsuiteoui, pmkid->oui, 3) == 0)
@@ -1976,8 +1976,8 @@ eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
 eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
 if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
 wpakey = (ieee80211_wpakey_t*)eapolplptr;
-if((kdv = __builtin_bswap16(wpakey->keyinfo) & WPA_KEY_INFO_TYPE_MASK) == 0) return;
-keyinfo = (get_keyinfo(__builtin_bswap16(wpakey->keyinfo)));
+if((kdv = __hcx16be(wpakey->keyinfo) & WPA_KEY_INFO_TYPE_MASK) == 0) return;
+keyinfo = (get_keyinfo(__hcx16be(wpakey->keyinfo)));
 switch(keyinfo)
 	{
 	case M1:
@@ -2005,7 +2005,7 @@ tshold = tsakt;
 eapauthplptr = payloadptr + IEEE80211_LLC_SIZE;
 eapauthpllen = payloadlen - IEEE80211_LLC_SIZE;
 eapauth = (ieee80211_eapauth_t*)eapauthplptr;
-eapauthlen = __builtin_bswap16(eapauth->len);
+eapauthlen = __hcx16be(eapauth->len);
 if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
 if(eapauth->type == EAPOL_KEY) process80211eapol();
 else if(eapauth->type == EAPOL_START) process80211eap_start();
@@ -2748,7 +2748,7 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		{
 		llcptr = payloadptr;
 		llc = (ieee80211_llc_t*)llcptr;
-		if((__builtin_bswap16(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
+		if((__hcx16be(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
 		}
 	if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC) process80211qosnull();
 	else if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) process80211null();
