@@ -1521,19 +1521,17 @@ static ieee80211_wpasuitecount_t *wpasuitecount;
 iewpa = (ieee80211_wpaie_t*)infostart;
 if(memcmp(&wpasuiteoui, iewpa->oui, 3) != 0) return;
 if(iewpa->type != 1) return;
-if(iewpa->version != 1) return;
-
+if(__hcx16le(iewpa->version) != 1) return;
 infostart += IEEE80211_WPAIE_SIZE;
 infolen -= IEEE80211_WPAIE_SIZE;
 wpasuite =(ieee80211_wpasuite_t*)infostart;
 if(memcmp(&wpasuiteoui, wpasuite->oui, 3) != 0) return;
-
 infostart += IEEE80211_WPASUITE_SIZE;
 infolen -= IEEE80211_WPASUITE_SIZE;
 wpasuitecount =(ieee80211_wpasuitecount_t*)infostart;
 infostart += IEEE80211_WPASUITECOUNT_SIZE;
 infolen -= IEEE80211_WPASUITECOUNT_SIZE;
-for(c = 0; c < wpasuitecount->count; c++)
+for(c = 0; c < __hcx16le(wpasuitecount->count); c++)
 	{
 	if(infolen <= 0) return;
 	wpasuite =(ieee80211_wpasuite_t*)infostart;
@@ -1543,7 +1541,7 @@ for(c = 0; c < wpasuitecount->count; c++)
 wpasuitecount =(ieee80211_wpasuitecount_t*)infostart;
 infostart += IEEE80211_WPASUITECOUNT_SIZE;
 infolen -= IEEE80211_WPASUITECOUNT_SIZE;
-for(c = 0; c < wpasuitecount->count; c++)
+for(c = 0; c < __hcx16le(wpasuitecount->count); c++)
 	{
 	if(infolen <= 0) return;
 	wpasuite =(ieee80211_wpasuite_t*)infostart;
@@ -1566,7 +1564,7 @@ static ieee80211_rsnsuitecount_t *rsnsuitecount;
 static ieee80211_rsncapability_t *rsncapability;
 
 iersn = (ieee80211_rsnie_t*)infostart;
-if(iersn->version != 1) return;
+if(__hcx16le(iersn->version) != 1) return;
 infostart += IEEE80211_RSNIE_SIZE;
 infolen -= IEEE80211_RSNIE_SIZE;
 rsnsuite =(ieee80211_rnsuite_t*)infostart;
@@ -1578,7 +1576,7 @@ infolen -= IEEE80211_RSNSUITE_SIZE;
 rsnsuitecount =(ieee80211_rsnsuitecount_t*)infostart;
 infostart += IEEE80211_RSNSUITECOUNT_SIZE;
 infolen -= IEEE80211_RSNSUITECOUNT_SIZE;
-for(c = 0; c < rsnsuitecount->count; c++)
+for(c = 0; c < __hcx16le(rsnsuitecount->count); c++)
 	{
 	if(infolen <= 0) return;
 	rsnsuite =(ieee80211_rnsuite_t*)infostart;
@@ -1593,7 +1591,7 @@ for(c = 0; c < rsnsuitecount->count; c++)
 rsnsuitecount =(ieee80211_rsnsuitecount_t*)infostart;
 infostart += IEEE80211_RSNSUITECOUNT_SIZE;
 infolen -= IEEE80211_RSNSUITECOUNT_SIZE;
-for(c = 0; c < rsnsuitecount->count; c++)
+for(c = 0; c < __hcx16le(rsnsuitecount->count); c++)
 	{
 	if(infolen <= 0) return;
 	rsnsuite =(ieee80211_rnsuite_t*)infostart;
@@ -1608,7 +1606,7 @@ for(c = 0; c < rsnsuitecount->count; c++)
 	}
 if(infolen < 2) return;
 rsncapability = (ieee80211_rsncapability_t*)infostart;
-if((rsncapability->capability & MFP_REQUIRED) == MFP_REQUIRED) infoelement->flags |= AP_MFP;
+if((__hcx16le(rsncapability->capability) & MFP_REQUIRED) == MFP_REQUIRED) infoelement->flags |= AP_MFP;
 return;
 }
 /*---------------------------------------------------------------------------*/
