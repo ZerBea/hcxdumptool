@@ -1,12 +1,6 @@
 #define _GNU_SOURCE
 #include <arpa/inet.h>
 #include <endian.h>
-#ifndef __BYTE_ORDER
-# error "Please fix ENDIANESS <endian.h>"
-#endif
-#if __BYTE_ORDER == __BIG_ENDIAN
-# error "BIG ENDIAN systems are not supported"
-#endif 
 #include <errno.h>
 #if defined (_POSIX_VERSION)
 #include <fcntl.h>
@@ -2650,14 +2644,14 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(rth->it_len > packetlen)
+if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if(__hcx16le(rth->it_len) > packetlen)
 	{
 	errorcount++;
 	return;
 	}
-ieee82011ptr = packetptr + rth->it_len;
-ieee82011len = packetlen - rth->it_len;
+ieee82011ptr = packetptr + __hcx16le(rth->it_len);
+ieee82011len = packetlen - __hcx16le(rth->it_len);
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -2690,18 +2684,18 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	}
 rth = (rth_t*)packetptr;
 #ifndef HCXDEBUGMODE
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
 #else
-if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
+if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
 else writeownflag = false;
 #endif
-if(rth->it_len > packetlen)
+if(__hcx16le(rth->it_len) > packetlen)
 	{
 	errorcount++;
 	return;
 	}
-ieee82011ptr = packetptr + rth->it_len;
-ieee82011len = packetlen - rth->it_len;
+ieee82011ptr = packetptr + __hcx16le(rth->it_len);
+ieee82011len = packetlen - __hcx16le(rth->it_len);
 if(ieee82011len <= MAC_SIZE_RTS) return;
 macfrx = (ieee80211_mac_t*)ieee82011ptr;
 if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
@@ -2721,7 +2715,6 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
-
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
