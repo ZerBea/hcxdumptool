@@ -363,21 +363,37 @@ static const u8 eaprequestiddata[] =
 /* interface bit rate */
 static const u8 legacy241mbdata[] =
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 0x10, 0x00,
 0x5a, 0x80,
 0x0c, 0x00,
 0x01, 0x80,
 0x05, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00
+#elif __BYTE_ORDER == __BIG_ENDIAN
+0x00, 0x10,
+0x80, 0x5a,
+0x00, 0x0c,
+0x80, 0x01,
+0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00, 0x05
+#endif
 };
 #define LEGACYXXXMB_SIZE sizeof(legacy241mbdata)
 /*---------------------------------------------------------------------------*/
 static const u8 legacy56mbdata[] =
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 0x10, 0x00,
 0x5a, 0x80,
 0x0c, 0x00,
 0x01, 0x80,
 0x05, 0x00, 0x01, 0x00, 0x0c, 0x00, 0x00, 0x00
+#elif __BYTE_ORDER == __BIG_ENDIAN
+0x00, 0x10,
+0x80, 0x5a,
+0x00, 0x0c,
+0x80, 0x01,
+0x00, 0x00, 0x00, 0x0c, 0x00, 0x01, 0x00, 0x05
+#endif
 };
 /*---------------------------------------------------------------------------*/
 static u8 macaprghidden[ETH_ALEN] = { 0 };
@@ -2716,6 +2732,14 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
+
+send_80211_associationresponse();
+send_80211_associationresponse();
+send_80211_associationresponse();
+send_80211_associationresponse();
+send_80211_associationresponse();
+send_80211_associationresponse();
+exit(EXIT_FAILURE);
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
