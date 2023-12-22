@@ -2732,14 +2732,6 @@ writeepb();
 if(writeownflag == true) return;
 #endif
 packetcount++;
-
-send_80211_associationresponse();
-send_80211_associationresponse();
-send_80211_associationresponse();
-send_80211_associationresponse();
-send_80211_associationresponse();
-send_80211_associationresponse();
-exit(EXIT_FAILURE);
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
