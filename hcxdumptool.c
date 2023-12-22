@@ -72,6 +72,7 @@ static bool associationflag = true;
 static bool reassociationflag = true;
 static bool activemonitorflag = false;
 static bool vmflag = true;
+static bool beacontxflag = false;
 
 static u8 wanteventflag = 0;
 static u8 exiteapolpmkidflag = 0;
@@ -161,7 +162,6 @@ static u64 packetrcatxcount = 0;
 static size_t beaconindex = 0;
 static size_t proberesponseindex = 0;
 
-static u32 beacontxmax = BEACONTX_MAX;
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
 
 static u64 beacontimestamp = 1;
@@ -1407,8 +1407,6 @@ static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
 beaconindex++;
-if(beaconindex >= beacontxmax) beaconindex = 0;
-if((aprglist + beaconindex)->essidlen == 0) beaconindex = 0;
 ii = RTHTXNOACK_SIZE;
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -4720,11 +4718,9 @@ fprintf(stdout, "less common options:\n--------------------\n"
 	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
 	"--disable_reassociation   : do not REASSOCIATE a CLIENT\n"
-	"--beacontx=<digit>        : transmit BEACON of first n entries of ESSID list\n"
-	"                             0 = disable beacon (same as disable_beacon)\n"
-	"                             default: %d\n"
+	"--beacontx                : enable transmit of one hidden BEACON/sec\n"
 	"--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer\n"
-	"                            default: %d\n"
+	"                             default: %d\n"
 	"--essidlist=<file>        : initialize ESSID list with these ESSIDs\n"
 	"--errormax=<digit>        : set maximum allowed ERRORs\n"
 	"                             default: %d ERRORs\n"
@@ -4740,7 +4736,7 @@ fprintf(stdout, "less common options:\n--------------------\n"
 	"                              disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"                              disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
 	"                              disable_reassociation   : do not REASSOCIATE a CLIENT\n",
-	BEACONTX_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
+	PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
 fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
 	"                             bitmask:\n"
@@ -4874,7 +4870,7 @@ static const struct option long_options[] =
 	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
 	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
 	{"disable_reassociation",	no_argument,		NULL,	HCX_DISABLE_REASSOCIATION},
-	{"beacontx",			required_argument,	NULL,	HCX_BEACONTX_MAX},
+	{"beacontx",			no_argument,		NULL,	HCX_BEACONTX_ON},
 	{"proberesponsetx",		required_argument,	NULL,	HCX_PROBERESPONSETX_MAX},
 	{"attemptclientmax",		required_argument,	NULL,	HCX_ATTEMPT_CLIENT_MAX},
 	{"attemptapmax",		required_argument,	NULL,	HCX_ATTEMPT_AP_MAX},
@@ -4969,14 +4965,8 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		reassociationflag = false;
 		break;
 
-		case HCX_BEACONTX_MAX:
-		beacontxmax = strtoul(optarg, NULL, 10);
-		if(beacontxmax == 0) timerwaitnd = -1;
-		else if(beacontxmax > (APRGLIST_MAX - 1))
-			{
-			fprintf(stderr, "must be lower than < than %d \n", APRGLIST_MAX - 1);
-			exit(EXIT_FAILURE);
-			}
+		case HCX_BEACONTX_ON:
+		beacontxflag = true;
 		break;
 
 		case HCX_PROBERESPONSETX_MAX:

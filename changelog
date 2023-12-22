@@ -1,3 +1,10 @@
+22.12.2023
+==========
+hcxdumptool: added BE support
+             changed options beacontx
+--beacontx                : enable transmit of one hidden BEACON/sec
+
+
 08.12.2023
 ==========
 Some drivers report incorrectly active monitor mode capability.
