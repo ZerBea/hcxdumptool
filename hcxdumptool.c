@@ -62,10 +62,6 @@ return;
 */
 /*===========================================================================*/
 /* global var */
-#ifdef HCXDEBUGMODE
-static bool writeownflag = false;
-#endif
-
 static bool deauthenticationflag = true;
 static bool proberequestflag = true;
 static bool associationflag = true;
@@ -2698,12 +2694,7 @@ if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
 	return;
 	}
 rth = (rth_t*)packetptr;
-#ifndef HCXDEBUGMODE
 if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-#else
-if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) writeownflag = true;
-else writeownflag = false;
-#endif
 if(__hcx16le(rth->it_len) > packetlen)
 	{
 	errorcount++;
@@ -2725,10 +2716,6 @@ else
 	}
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-#ifdef HCXDEBUGMODE
-writeepb();
-if(writeownflag == true) return;
-#endif
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
@@ -3990,9 +3977,7 @@ static size_t c = 10;
 static struct sockaddr_ll saddr;
 static struct packet_mreq mrq;
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
- #ifndef HCXDEBUGMODE
  static int enable = 1;
- #endif
 #endif
 static int socket_rx_flags;
 static int prioval;
@@ -4017,9 +4002,7 @@ priolen = sizeof(prioval);
 prioval = 20;
 if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
 #if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
- #ifndef HCXDEBUGMODE
- if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) fprintf(stderr, "PACKET_IGNORE_OUTGOING is not supported by kernel\nfalling back to validate radiotap header length\n");
- #endif
+if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) fprintf(stderr, "PACKET_IGNORE_OUTGOING is not supported by kernel\nfalling back to validate radiotap header length\n");
 #endif
 if(bpf.len > 0)
 	{
@@ -5348,9 +5331,6 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
-#ifdef HCXDEBUGMODE
-fprintf(stdout, "Running in DEBUG mode\n");
-#endif
 fprintf(stdout, "Initialize main scan loop...\033[?25l");
 nanosleep(&tspecifo, &tspeciforem);
 if(rcascanflag == NULL)

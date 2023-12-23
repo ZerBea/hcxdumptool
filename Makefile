@@ -20,16 +20,14 @@ CFLAGS		+= -std=gnu99
 # uncomment to enable DEBUG symbols
 #CFLAGS		+= -ggdb -fsanitize=address
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
-# uncomment to enable debug mode
-#DEFS		+= -DHCXDEBUGMODE
 # comment to disable STATUS display (headless operation)
 DEFS		+= -DHCXSTATUSOUT
 # comment to disable GPS support
 DEFS		+= -DHCXNMEAOUT
 LDFLAGS		+=
 # uncomment to enable BPF compiler
-#DEFS		+= -DHCXWANTLIBPCAP
-#LDFLAGS		+= -lpcap
+DEFS		+= -DHCXWANTLIBPCAP
+LDFLAGS		+= -lpcap
 
 INSTALL		?= install
 INSTFLAGS	=
