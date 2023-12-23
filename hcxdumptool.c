@@ -72,7 +72,7 @@ static bool associationflag = true;
 static bool reassociationflag = true;
 static bool activemonitorflag = false;
 static bool vmflag = true;
-static bool beacontxflag = false;
+static bool beaconoffflag = false;
 
 static u8 wanteventflag = 0;
 static u8 exiteapolpmkidflag = 0;
@@ -2864,7 +2864,7 @@ while(!wanteventflag)
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
-			send_80211_beacon();
+			if(beaconoffflag == false) send_80211_beacon();
 			}
 		#ifdef HCXNMEAOUT
 		else if(events[i].data.fd == fd_gps) process_nmea0183();
@@ -4718,7 +4718,8 @@ fprintf(stdout, "less common options:\n--------------------\n"
 	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
 	"--disable_reassociation   : do not REASSOCIATE a CLIENT\n"
-	"--beacontx                : enable transmit of one hidden BEACON/sec\n"
+	"--beacon_off              : disable internal BEACON\n"
+	"                             default: one BEACON/second to wildcard SSID\n"
 	"--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer\n"
 	"                             default: %d\n"
 	"--essidlist=<file>        : initialize ESSID list with these ESSIDs\n"
@@ -4870,7 +4871,7 @@ static const struct option long_options[] =
 	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
 	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
 	{"disable_reassociation",	no_argument,		NULL,	HCX_DISABLE_REASSOCIATION},
-	{"beacontx",			no_argument,		NULL,	HCX_BEACONTX_ON},
+	{"beacon_off",			no_argument,		NULL,	HCX_BEACON_OFF},
 	{"proberesponsetx",		required_argument,	NULL,	HCX_PROBERESPONSETX_MAX},
 	{"attemptclientmax",		required_argument,	NULL,	HCX_ATTEMPT_CLIENT_MAX},
 	{"attemptapmax",		required_argument,	NULL,	HCX_ATTEMPT_AP_MAX},
@@ -4965,8 +4966,8 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		reassociationflag = false;
 		break;
 
-		case HCX_BEACONTX_ON:
-		beacontxflag = true;
+		case HCX_BEACON_OFF:
+		beaconoffflag = true;
 		break;
 
 		case HCX_PROBERESPONSETX_MAX:

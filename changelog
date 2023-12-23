@@ -2,7 +2,7 @@
 ==========
 hcxdumptool: added BE support
              changed options beacontx
---beacontx                : enable transmit of one hidden BEACON/sec
+--beaconoff  : disable internal BEACON (one BEACON/second to wildcard SSID
 
 
 08.12.2023
