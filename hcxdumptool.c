@@ -2322,7 +2322,6 @@ if(attemptclientmax > 0)
 				return;
 				}
 			send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
-			printf("%zu %.*s\n", i, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
 			proberesponseindex++;
 			}
 		return;
@@ -2347,8 +2346,6 @@ memcpy((aprglist +i)->essid, essid.essid, essid.len);
 (aprglist +i)->macaprg[2] = ouiaprg & 0xff;
 (aprglist +i)->macaprg[1] = (ouiaprg >> 8) & 0xff;
 (aprglist +i)->macaprg[0] = (ouiaprg >> 16) & 0xff;
-printf("xx %.*s\n", (aprglist +i)->essidlen, (aprglist +i)->essid);
-
 nicaprg++;
 if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist +i)->macaprg, essid.len, essid.essid);
 qsort(aprglist, i + 1, APRGLIST_SIZE, sort_aprglist_by_tsakt);
