@@ -2310,12 +2310,9 @@ if(attemptclientmax > 0)
 		{
 		for(i = 0; i < proberesponsetxmax; i++)
 			{
-			if((aprglist + proberesponseindex)->essidlen == 0)
-				{
-				proberesponseindex = 0;
-				return;
-				}
-			send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+			if(proberesponseindex >= APRGLIST_MAX) proberesponseindex = 0;
+			if((aprglist + proberesponseindex)->essidlen == 0) proberesponseindex = 0;
+			if((aprglist + proberesponseindex)->essidlen != 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
 			proberesponseindex++;
 			}
 		}
