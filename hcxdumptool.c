@@ -2301,6 +2301,7 @@ static ieee80211_proberequest_t *proberequest;
 static u16 proberequestlen;
 static essid_t essid;
 
+
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
@@ -2310,14 +2311,24 @@ if(attemptclientmax > 0)
 		{
 		for(i = 0; i < proberesponsetxmax; i++)
 			{
-			if(proberesponseindex >= APRGLIST_MAX) proberesponseindex = 0;
-			if((aprglist + proberesponseindex)->essidlen == 0) proberesponseindex = 0;
-			if((aprglist + proberesponseindex)->essidlen != 0) send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+			if((aprglist + proberesponseindex)->essidlen == 0)
+				{
+				proberesponseindex = 0;
+				return;
+				}
+			if(proberesponseindex >= APRGLIST_MAX)
+				{
+				proberesponseindex = 0;
+				return;
+				}
+			send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
+			printf("%zu %.*s\n", i, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
 			proberesponseindex++;
 			}
+		return;
 		}
-	return;
 	}
+
 for(i = 0; i < APRGLIST_MAX - 1; i++)
 	{
 	if((aprglist +i)->essidlen != essid.len) continue;
@@ -2336,6 +2347,8 @@ memcpy((aprglist +i)->essid, essid.essid, essid.len);
 (aprglist +i)->macaprg[2] = ouiaprg & 0xff;
 (aprglist +i)->macaprg[1] = (ouiaprg >> 8) & 0xff;
 (aprglist +i)->macaprg[0] = (ouiaprg >> 16) & 0xff;
+printf("xx %.*s\n", (aprglist +i)->essidlen, (aprglist +i)->essid);
+
 nicaprg++;
 if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist +i)->macaprg, essid.len, essid.essid);
 qsort(aprglist, i + 1, APRGLIST_SIZE, sort_aprglist_by_tsakt);
