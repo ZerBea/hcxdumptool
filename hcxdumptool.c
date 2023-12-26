@@ -2301,7 +2301,6 @@ static ieee80211_proberequest_t *proberequest;
 static u16 proberequestlen;
 static essid_t essid;
 
-
 proberequest = (ieee80211_proberequest_t*)payloadptr;
 if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
 get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
@@ -2311,12 +2310,12 @@ if(attemptclientmax > 0)
 		{
 		for(i = 0; i < proberesponsetxmax; i++)
 			{
-			if((aprglist + proberesponseindex)->essidlen == 0)
+			if(proberesponseindex >= APRGLIST_MAX)
 				{
 				proberesponseindex = 0;
 				return;
 				}
-			if(proberesponseindex >= APRGLIST_MAX)
+			if((aprglist + proberesponseindex)->essidlen == 0)
 				{
 				proberesponseindex = 0;
 				return;
