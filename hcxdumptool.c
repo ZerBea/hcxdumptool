@@ -357,41 +357,6 @@ static const u8 eaprequestiddata[] =
 };
 #define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
 /*---------------------------------------------------------------------------*/
-/* interface bit rate */
-static const u8 legacy241mbdata[] =
-{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-0x10, 0x00,
-0x5a, 0x80,
-0x0c, 0x00,
-0x01, 0x80,
-0x05, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00
-#elif __BYTE_ORDER == __BIG_ENDIAN
-0x00, 0x10,
-0x80, 0x5a,
-0x00, 0x0c,
-0x80, 0x01,
-0x00, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00, 0x05
-#endif
-};
-#define LEGACYXXXMB_SIZE sizeof(legacy241mbdata)
-/*---------------------------------------------------------------------------*/
-static const u8 legacy56mbdata[] =
-{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-0x10, 0x00,
-0x5a, 0x80,
-0x0c, 0x00,
-0x01, 0x80,
-0x05, 0x00, 0x01, 0x00, 0x0c, 0x00, 0x00, 0x00
-#elif __BYTE_ORDER == __BIG_ENDIAN
-0x00, 0x10,
-0x80, 0x5a,
-0x00, 0x0c,
-0x80, 0x01,
-0x00, 0x00, 0x00, 0x0c, 0x00, 0x01, 0x00, 0x05
-#endif
-};
 /*---------------------------------------------------------------------------*/
 static u8 macaprghidden[ETH_ALEN] = { 0 };
 static u8 macaprg[ETH_ALEN] = { 0 };
@@ -3406,24 +3371,6 @@ nla->nla_len = 8;
 nla->nla_type = NL80211_ATTR_WIPHY_FREQ;
 *(u32*)nla_data(nla) = (scanlist + scanlistindex)->frequency;
 i += 8;
-nla = (struct nlattr*)(nltxbuffer + i);
-nla->nla_len = 8;
-nla->nla_type = NL80211_ATTR_CHANNEL_WIDTH;
-*(u32*)nla_data(nla) = NL80211_CHAN_WIDTH_20_NOHT;
-i += 8;
-nla = (struct nlattr*)(nltxbuffer + i);
-nla->nla_len = 8;
-nla->nla_type = NL80211_ATTR_WIPHY_CHANNEL_TYPE;
-*(u32*)nla_data(nla) = NL80211_CHAN_NO_HT;
-i += 8;
-nla = (struct nlattr*)(nltxbuffer + i);
-nla->nla_len = 8;
-nla->nla_type = NL80211_ATTR_CENTER_FREQ1;
-*(u32*)nla_data(nla) = (scanlist + scanlistindex)->frequency;
-i += 8;
-if(((scanlist + scanlistindex)->frequency) <= 2484) memcpy(&nltxbuffer[i], legacy241mbdata, LEGACYXXXMB_SIZE);
-else memcpy(&nltxbuffer[i], legacy56mbdata, LEGACYXXXMB_SIZE);
-i += LEGACYXXXMB_SIZE;
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
 while(1)
