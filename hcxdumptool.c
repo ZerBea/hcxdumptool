@@ -146,8 +146,10 @@ static u64 tottime = 0;
 static u64 timehold = TIMEHOLD;
 static int timerwaitnd = TIMER_EPWAITND;
 
-static u64 errorcountmax = ERROR_MAX;
-static u64 errorcount = 0;
+static u32 errorcountmax = ERROR_MAX;
+static u32 errorcount = 0;
+static u32 errortxcount = 0;
+
 static u32 watchdogcountmax = WATCHDOG_MAX;
 static u32 attemptapmax = ATTEMPTAP_MAX;
 static u32 attemptclientmax = ATTEMPTCLIENT_MAX;
@@ -155,7 +157,6 @@ static u32 attemptclientmax = ATTEMPTCLIENT_MAX;
 static u64 packetcount = 1;
 static u64 packetrcarxcount = 0;
 static u64 packetrcatxcount = 0;
-static size_t beaconindex = 0;
 static size_t proberesponseindex = 0;
 
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
@@ -1130,8 +1131,12 @@ else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxnoackbuffer[ii +0x
 if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxnoackbuffer[ii +0x1d] = RSN_CS_CCMP;
 else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxnoackbuffer[ii +0x1d] = RSN_CS_TKIP;
 ii += ASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1163,8 +1168,12 @@ else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] =
 if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
 else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
 ii += ASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1186,8 +1195,11 @@ macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eaprequestiddata, EAPREQUESTID_SIZE);
 ii += EAPREQUESTID_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
-errorcount++;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1209,8 +1221,11 @@ macftx->sequence = 0;
 ii += MAC_SIZE_NORM;
 memcpy(&wltxbuffer[ii], &eapolm1data, EAPOLM1DATA_SIZE);
 ii += EAPOLM1DATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
-errorcount++;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1238,8 +1253,12 @@ associationresponsetx->aid = aid;
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
 memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
 ii += ASSOCIATIONRESPONSEDATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
-errorcount++;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1267,8 +1286,12 @@ associationresponsetx->aid = HCXTXAID;
 ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
 memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
 ii += ASSOCIATIONRESPONSEDATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii) return;
-errorcount++;
+if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1285,8 +1308,12 @@ memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter3++ << 4);
 if(seqcounter1 > 4095) seqcounter3 = 1;
 memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1322,8 +1349,12 @@ else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxnoackbuffer[ii +0x
 if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxnoackbuffer[ii +0x1d] = RSN_CS_CCMP;
 else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxnoackbuffer[ii +0x1d] = RSN_CS_TKIP;
 ii += REASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1340,8 +1371,12 @@ memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter2++ << 4);
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1358,8 +1393,12 @@ memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter2++ << 4);
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1392,8 +1431,12 @@ ii += essidlenrsp;
 memcpy(&wltxnoackbuffer[ii], &proberesponsedata, PROBERESPONSEDATA_SIZE);
 wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
 ii += PROBERESPONSEDATA_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1402,7 +1445,6 @@ static inline void send_80211_beacon(void)
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
-beaconindex++;
 ii = RTHTXNOACK_SIZE;
 macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1423,8 +1465,12 @@ ii += IEEE80211_BEACON_SIZE;
 memcpy(&wltxnoackbuffer[ii], &beacondata, BEACONDATA_SIZE);
 wltxnoackbuffer[ii + 0x0e] = (u8)(scanlist + scanlistindex)->channel;
 ii += BEACONDATA_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1441,8 +1487,12 @@ memcpy(macftx->addr3, macbc, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter2++ << 4);
 if(seqcounter1 > 4095) seqcounter2 = 1;
 memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1460,8 +1510,11 @@ macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1479,8 +1532,12 @@ macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1498,8 +1555,12 @@ macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1517,8 +1578,12 @@ macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
 wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2) return;
-errorcount++;
+if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+	{
+	errortxcount = 0;
+	return;
+	}
+errortxcount++;
 return;
 }
 /*===========================================================================*/
@@ -2850,6 +2915,7 @@ while(!wanteventflag)
 						if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 						}
 					}
+				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((lifetime % watchdogcountmax) == 0)
@@ -4460,7 +4526,6 @@ while(i < (APRGLIST_MAX - 1))
 	}
 (aprglist +i)->essidlen = 0;
 fclose(fh_essidlist);
-beaconindex = 0;
 return;
 }
 /*===========================================================================*/
@@ -5002,7 +5067,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_WATCHDOG_MAX:
-		if((watchdogcountmax = strtoul(optarg, NULL, 10)) < 1)
+		if((watchdogcountmax = atoi(optarg)) < 1)
 			{
 			fprintf(stderr, "time out timer must be > 0\n");
 			exit(EXIT_FAILURE);
@@ -5010,7 +5075,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_ERROR_MAX:
-		if((errorcountmax = strtoul(optarg, NULL, 10)) < 1)
+		if((errorcountmax = atoi(optarg)) < 1)
 			{
 			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
@@ -5367,7 +5432,7 @@ close_lists();
 if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
-fprintf(stderr, "%" PRIu64 " ERROR(s) during runtime\n", errorcount);
+fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
