@@ -3953,7 +3953,7 @@ static bool open_socket_tx(void)
 {
 static struct sockaddr_ll saddr;
 static struct packet_mreq mrq;
-static int socket_rx_flags;
+static int socket_tx_flags;
 static int prioval;
 static socklen_t priolen;
 
@@ -3972,8 +3972,8 @@ saddr.sll_protocol = htons(ETH_P_ALL);
 saddr.sll_halen = ETH_ALEN;
 saddr.sll_pkttype = PACKET_OTHERHOST;
 if(bind(fd_socket_tx, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) return false;
-if((socket_rx_flags = fcntl(fd_socket_rx, F_GETFL, 0)) < 0) return false;
-if(fcntl(fd_socket_tx, F_SETFL, socket_rx_flags | O_NONBLOCK) < 0) return false;
+if((socket_tx_flags = fcntl(fd_socket_tx, F_GETFL, 0)) < 0) return false;
+if(fcntl(fd_socket_tx, F_SETFL, socket_tx_flags | O_NONBLOCK) < 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
