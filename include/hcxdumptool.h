@@ -99,7 +99,7 @@
 
 #define PROBERESPONSETX_MAX	10
 
-#define PCAPNG_SNAPLEN		0xffff
+#define PCAPNG_SNAPLEN		0x800
 #define RTD_LEN			9128
 
 #define TIMESTRING_LEN		128
