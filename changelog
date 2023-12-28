@@ -1,8 +1,14 @@
+28.12.2023
+==========
+hcxdumptool: do not spam channel with retries
+             changed SNAPLEN
+
+
 22.12.2023
 ==========
 hcxdumptool: added BE support
-             changed options beacontx
---beaconoff  : disable internal BEACON (one BEACON/second to wildcard SSID
+             removed option beacontx
+--beaconoff  : disable internal BEACON (one BEACON/second to wildcard SSID)
 
 
 08.12.2023

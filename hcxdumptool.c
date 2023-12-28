@@ -377,7 +377,6 @@ static u8 nlrxbuffer[NLRX_SIZE] = { 0 };
 static u8 epb[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 epbown[WLTXBUFFER] = { 0 };
 static u8 wltxbuffer[WLTXBUFFER] = { 0 };
-static u8 wltxnoackbuffer[WLTXBUFFER] = { 0 };
 
 #ifdef HCXNMEAOUT
 static char nmeabuffer[NMEA_SIZE] = { 0 };
@@ -1072,11 +1071,11 @@ static inline void send_80211_associationrequest_org(size_t i)
 {
 ssize_t ii;
 
-ii = RTHTXNOACK_SIZE;
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
-wltxnoackbuffer[ii + 1] = 0;
+wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
@@ -1084,19 +1083,19 @@ memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter2++ << 4);
 if(seqcounter1 > 4095) seqcounter2 = 1;
 ii += MAC_SIZE_NORM;
-memcpy(&wltxnoackbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
+memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
 ii += ASSOCIATIONREQUESTCAPA_SIZE;
-wltxnoackbuffer[ii ++] = 0;
-wltxnoackbuffer[ii ++] = (aplist +i)->ie.essidlen;
-memcpy(&wltxnoackbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = (aplist +i)->ie.essidlen;
+memcpy(&wltxbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
 ii += (aplist +i)->ie.essidlen;
-memcpy(&wltxnoackbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
-if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxnoackbuffer[ii +0x17] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxnoackbuffer[ii +0x17] = RSN_CS_TKIP;
-if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxnoackbuffer[ii +0x1d] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxnoackbuffer[ii +0x1d] = RSN_CS_TKIP;
+memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
+if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxbuffer[ii +0x17] = RSN_CS_CCMP;
+else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] = RSN_CS_TKIP;
+if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
+else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
 ii += ASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
@@ -1287,11 +1286,11 @@ static inline void send_80211_reassociationrequest(size_t i)
 static ssize_t ii;
 static ieee80211_reassoc_req_t *reassociationrequest;
 
-ii = RTHTXNOACK_SIZE;
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
-wltxnoackbuffer[ii + 1] = 0;
+wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, (aplist +i)->macap, ETH_ALEN);
 memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
@@ -1299,44 +1298,22 @@ memcpy(macftx->addr3, (aplist +i)->macap, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter3++ << 4);
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
-reassociationrequest = (ieee80211_reassoc_req_t*)&wltxnoackbuffer[ii];
+reassociationrequest = (ieee80211_reassoc_req_t*)&wltxbuffer[ii];
 reassociationrequest->capability = 0x0431;
 reassociationrequest->listen_interval = 0x14;
 memcpy(reassociationrequest->current_macap, (aplist +i)->macap, ETH_ALEN);
 ii += sizeof(ieee80211_reassoc_req_t) -1;
-wltxnoackbuffer[ii ++] = 0;
-wltxnoackbuffer[ii ++] = (aplist +i)->ie.essidlen;
-memcpy(&wltxnoackbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = (aplist +i)->ie.essidlen;
+memcpy(&wltxbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
 ii += (aplist +i)->ie.essidlen;
-memcpy(&wltxnoackbuffer[ii], &reassociationrequestdata, REASSOCIATIONREQUEST_SIZE);
-if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxnoackbuffer[ii +0x17] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxnoackbuffer[ii +0x17] = RSN_CS_TKIP;
-if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxnoackbuffer[ii +0x1d] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxnoackbuffer[ii +0x1d] = RSN_CS_TKIP;
+memcpy(&wltxbuffer[ii], &reassociationrequestdata, REASSOCIATIONREQUEST_SIZE);
+if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxbuffer[ii +0x17] = RSN_CS_CCMP;
+else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] = RSN_CS_TKIP;
+if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
+else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
 ii += REASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
-	{
-	errortxcount = 0;
-	return;
-	}
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline void send_80211_authenticationrequestnoack(void)
-{
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_AUTH;
-wltxnoackbuffer[RTHTX_SIZE + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, macclientrg, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter2++ << 4);
-if(seqcounter1 > 4095) seqcounter2 = 1;
-memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
@@ -1372,11 +1349,11 @@ static inline void send_80211_probereresponse(u8 *macclientrsp, u8 *macaprgrsp, 
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
-ii = RTHTXNOACK_SIZE;
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_RESP;
-wltxnoackbuffer[ii + 1] = 0;
+wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macclientrsp, ETH_ALEN);
 memcpy(macftx->addr2, macaprgrsp, ETH_ALEN);
@@ -1384,19 +1361,19 @@ memcpy(macftx->addr3, macaprgrsp, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter3++ << 4);
 if(seqcounter1 > 4095) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
-beacontx = (ieee80211_beacon_proberesponse_t*)&wltxnoackbuffer[ii];
+beacontx = (ieee80211_beacon_proberesponse_t*)&wltxbuffer[ii];
 beacontx->timestamp = __hcx64le(beacontimestamp++);
 beacontx->beacon_interval = HCXTXBEACONINTERVAL;
 beacontx->capability = HCXTXCAPABILITY;
 ii += IEEE80211_PROBERESPONSE_SIZE;
-wltxnoackbuffer[ii ++] = 0;
-wltxnoackbuffer[ii ++] = essidlenrsp;
-memcpy(&wltxnoackbuffer[ii], essidrsp, essidlenrsp);
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = essidlenrsp;
+memcpy(&wltxbuffer[ii], essidrsp, essidlenrsp);
 ii += essidlenrsp;
-memcpy(&wltxnoackbuffer[ii], &proberesponsedata, PROBERESPONSEDATA_SIZE);
-wltxnoackbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
+memcpy(&wltxbuffer[ii], &proberesponsedata, PROBERESPONSEDATA_SIZE);
+wltxbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
 ii += PROBERESPONSEDATA_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
@@ -1410,11 +1387,11 @@ static inline void send_80211_beacon(void)
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
-ii = RTHTXNOACK_SIZE;
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[ii];
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_BEACON;
-wltxnoackbuffer[ii + 1] = 0;
+wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
 memcpy(macftx->addr2, &macaprghidden, ETH_ALEN);
@@ -1422,15 +1399,15 @@ memcpy(macftx->addr3, &macaprghidden, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter4++ << 4);
 if(seqcounter1 > 4095) seqcounter4 = 1;
 ii += MAC_SIZE_NORM;
-beacontx = (ieee80211_beacon_proberesponse_t*)&wltxnoackbuffer[ii];
+beacontx = (ieee80211_beacon_proberesponse_t*)&wltxbuffer[ii];
 beacontx->timestamp = __hcx64le(beacontimestamp++);
 beacontx->beacon_interval = HCXTXBEACONINTERVAL;
 beacontx->capability = HCXTXCAPABILITY;
 ii += IEEE80211_BEACON_SIZE;
-memcpy(&wltxnoackbuffer[ii], &beacondata, BEACONDATA_SIZE);
-wltxnoackbuffer[ii + 0x0e] = (u8)(scanlist + scanlistindex)->channel;
+memcpy(&wltxbuffer[ii], &beacondata, BEACONDATA_SIZE);
+wltxbuffer[ii + 0x0e] = (u8)(scanlist + scanlistindex)->channel;
 ii += BEACONDATA_SIZE;
-if((write(fd_socket_tx, &wltxnoackbuffer, ii)) == ii)
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
@@ -1441,18 +1418,18 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_proberequest_undirected(void)
 {
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_REQ;
-wltxnoackbuffer[RTHTXNOACK_SIZE + 1] = 0;
+wltxbuffer[RTHTX_SIZE + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macbc, ETH_ALEN);
 memcpy(macftx->addr2, macclientrg, ETH_ALEN);
 memcpy(macftx->addr3, macbc, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter2++ << 4);
 if(seqcounter1 > 4095) seqcounter2 = 1;
-memcpy(&wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)
+memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)
 	{
 	errortxcount = 0;
 	return;
@@ -1463,19 +1440,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_disassociation_fm_ap(const u8* macclient, const u8* macap, u8 reason)
 {
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DISASSOC;
-wltxnoackbuffer[RTHTXNOACK_SIZE +1] = 0;
+wltxbuffer[RTHTX_SIZE +1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macclient, ETH_ALEN);
 memcpy(macftx->addr2, macap, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)	{
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)	{
 	errortxcount = 0;
 	return;
 	}
@@ -1485,19 +1462,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_disassociation_fm_client(const u8* macclient, const u8* macap, u8 reason)
 {
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DISASSOC;
-wltxnoackbuffer[RTHTXNOACK_SIZE +1] = 0;
+wltxbuffer[RTHTX_SIZE +1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macap, ETH_ALEN);
 memcpy(macftx->addr2, macclient, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
 	{
 	errortxcount = 0;
 	return;
@@ -1508,19 +1485,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_deauthentication_fm_ap(const u8* macclient, const u8* macap, u8 reason)
 {
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DEAUTH;
-wltxnoackbuffer[RTHTXNOACK_SIZE +1] = 0;
+wltxbuffer[RTHTX_SIZE +1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macclient, ETH_ALEN);
 memcpy(macftx->addr2, macap, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
 	{
 	errortxcount = 0;
 	return;
@@ -1531,19 +1508,19 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline void send_80211_deauthentication_fm_client(const u8* macclient, const u8* macap, u8 reason)
 {
-macftx = (ieee80211_mac_t*)&wltxnoackbuffer[RTHTXNOACK_SIZE];
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_DEAUTH;
-wltxnoackbuffer[RTHTXNOACK_SIZE +1] = 0;
+wltxbuffer[RTHTX_SIZE +1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macap, ETH_ALEN);
 memcpy(macftx->addr2, macclient, ETH_ALEN);
 memcpy(macftx->addr3, macap, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter1++ << 4);
 if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM] = reason;
-wltxnoackbuffer[RTHTXNOACK_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxnoackbuffer, RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)) == RTHTXNOACK_SIZE + MAC_SIZE_NORM +2)
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
 	{
 	errortxcount = 0;
 	return;
@@ -2470,7 +2447,7 @@ if(deauthenticationflag == true)
 	}
 if(associationflag == true)
 	{
-	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequestnoack();
+	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
 	}
 if(reassociationflag == true)
 	{
@@ -2617,7 +2594,7 @@ if(deauthenticationflag == true)
 	}
 if(associationflag == true)
 	{
-	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequestnoack();
+	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
 	}
 if(proberequestflag == true)
 	{
@@ -4283,7 +4260,6 @@ for(i = 0; i < 32; i++)
 	}
 packetptr = &epb[EPB_SIZE];
 memcpy(&wltxbuffer, &rthtxdata, RTHTX_SIZE);
-memcpy(&wltxnoackbuffer, &rthtxnoackdata, RTHTXNOACK_SIZE);
 memcpy(&epbown[EPB_SIZE], &rthtxdata, RTHTX_SIZE);
 #ifdef HCXNMEAOUT
 memcpy(&gpwpl, &gpwplid, NMEA_GPWPLID_SIZE);
@@ -4634,7 +4610,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-----------------------\n"
 	"tcpdump decimal numper format:\n"
 	" example: tcpdump high level compiler:\n"
-	"  $ tcpdump -s 65535 -y IEEE802_11_RADIO wlan addr3 112233445566 -ddd > filter.bpf\n"
+	"  $ tcpdump -s %d -y IEEE802_11_RADIO wlan addr3 112233445566 -ddd > filter.bpf\n"
 	"  see man pcap-filter\n"
 	" example: bpf_asm low level compiler\n"
 	"  $ bpf_asm filter.asm | tr ',' '\\n' > filter.bpf\n"
@@ -4644,7 +4620,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"  see man bpfc\n"
 	"tcpdump C style format:\n"
 	" example: tcpdump high level compiler:\n"
-	"  $ tcpdump -s 65535 -y IEEE802_11_RADIO wlan addr3 112233445566 -dd > filter.bpf\n"
+	"  $ tcpdump -s %d -y IEEE802_11_RADIO wlan addr3 112233445566 -dd > filter.bpf\n"
 	"  see man pcap-filter\n"
 	" example: bpfc low level compiler:\n"
 	"  $ bpfc -f C -i filter.asm > filter.bpf\n"
@@ -4659,7 +4635,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Do not use tools to change the virtual MAC (like macchanger)!\n"
 	"Do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, PCAPNG_SNAPLEN, PCAPNG_SNAPLEN);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
