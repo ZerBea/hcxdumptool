@@ -4427,7 +4427,7 @@ static char linein[ESSID_MAX];
 
 if((fh_essidlist = fopen(listname, "r")) == NULL)
 	{
-	fprintf(stderr, "failed to open beacon list %s\n", listname);
+	fprintf(stderr, "failed to open ESSID list %s\n", listname);
 	return;
 	}
 i = 0;
