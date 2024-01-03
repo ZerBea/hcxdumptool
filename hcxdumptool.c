@@ -4547,7 +4547,7 @@ if(uname(&utsbuffer) == 0) fprintf(stdout, "running on Linux kernel %s\n", utsbu
 #if defined (__GLIBC__)
 fprintf(stdout, "running GNU libc version %s\n", gnu_get_libc_version());
 #endif
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 fprintf(stdout, "compiled by gcc %d.%d.%d\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #elif defined(__clang__)
 fprintf(stdout, "compiled by clang %d.%d.%d\n", __clang_major__, __clang_minor__, __clang_patchlevel__);
