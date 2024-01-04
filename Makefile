@@ -24,10 +24,11 @@ DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 DEFS		+= -DHCXSTATUSOUT
 # comment to disable GPS support
 DEFS		+= -DHCXNMEAOUT
-LDFLAGS		+=
 # uncomment to enable BPF compiler
 #DEFS		+= -DHCXWANTLIBPCAP
 #LDFLAGS	+= -lpcap
+# uncomment to enable DEBUG log
+#DEFS		+= -DHCXDEBUG
 
 INSTALL		?= install
 INSTFLAGS	=

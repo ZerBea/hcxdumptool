@@ -48,19 +48,6 @@
 #include "include/radiotap.h"
 #include "include/raspberry.h"
 /*===========================================================================*/
-/*
-static void debugprint();
-{
-int x;
-
-for(int x = 0; x < 6; x++) printf("%02x", macfrx->addr2[x]);
-printf(" ");
-for(int x = 0; x < 6; x++) printf("%02x", macfrx->addr1[x]);
-printf(" sende eapol m1\n");
-return;
-}
-*/
-/*===========================================================================*/
 /* global var */
 static bool deauthenticationflag = true;
 static bool proberequestflag = true;
@@ -107,6 +94,9 @@ static long int wecbnmeacount = 0;
 static long int wgpwplcount = 0;
 #endif
 
+#ifdef HCXDEBUG
+static FILE *fh_debug = NULL;
+#endif
 static struct sock_fprog bpf = { 0 };
 
 static int ifaktindex = 0;
@@ -1100,6 +1090,9 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write associationrequest_orgfailed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1137,6 +1130,9 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write associationrequest failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1163,6 +1159,9 @@ if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_eap_request_id failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1189,6 +1188,9 @@ if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_eapol_m1 failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1222,6 +1224,9 @@ if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_reassociationresponse failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1255,6 +1260,9 @@ if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_associationresponse failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1277,6 +1285,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATION
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_authenticationresponse failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1318,6 +1329,9 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_reassociationreques failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1340,6 +1354,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATION
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_authenticationrequest failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1378,6 +1395,9 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_probereresponse failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1412,6 +1432,9 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_beacon failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1434,6 +1457,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_U
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_proberequest_undirected failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1456,6 +1482,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SI
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_disassociation_fm_ap failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1479,6 +1508,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SI
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_disassociation_fm_client failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1502,6 +1534,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SI
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_deauthentication_fm_ap failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -1525,6 +1560,9 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SI
 	errortxcount = 0;
 	return;
 	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "send_80211_deauthentication_fm_client failed: %s\n", strerror(errno));
+#endif
 errortxcount++;
 return;
 }
@@ -2814,7 +2852,13 @@ while(!wanteventflag)
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
-		if(errno != EINTR) errorcount++;
+		if(errno != EINTR)
+			{
+			#ifdef HCXDEBUG
+			fprintf(fh_debug, "epret: %s\n", strerror(errno));
+			#endif
+			errorcount++;
+			}
 		continue;
 		}
 	for(i = 0; i < epret; i++)
@@ -3349,7 +3393,13 @@ nla->nla_type = NL80211_ATTR_WIPHY_FREQ;
 *(u32*)nla_data(nla) = (scanlist + scanlistindex)->frequency;
 i += 8;
 nlh->nlmsg_len = i;
-if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
+if((write(fd_socket_nl, nltxbuffer, i)) != i)
+	{
+	#ifdef HCXDEBUG
+	fprintf(fh_debug, "nl_set_frequency failed: %s\n", strerror(errno));
+	#endif
+	return false;
+	}
 while(1)
 	{
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
@@ -3402,7 +3452,13 @@ nla->nla_type = NL80211_ATTR_PS_STATE;
 *(u32*)nla_data(nla) = NL80211_PS_DISABLED;
 i += 8;
 nlh->nlmsg_len = i;
-if((write(fd_socket_nl, nltxbuffer, i)) != i) return;
+if((write(fd_socket_nl, nltxbuffer, i)) != i)
+	{
+	#ifdef HCXDEBUG
+	fprintf(fh_debug, "nl_set_powersave_off failed: %s\n", strerror(errno));
+	#endif
+	return;
+	}
 while(1)
 	{
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
@@ -4579,6 +4635,9 @@ fprintf(stdout, "enabled BPF compiler\n");
 #else
 fprintf(stdout, "disabled BPF compiler\n");
 #endif
+#ifdef HCXDEBUG
+fprintf(stdout, "running in debug mode\n");
+#endif
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -5174,9 +5233,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		usageerror(basename(argv[0]));
 		}
 	}
-
 setbuf(stdout, NULL);
 hcxpid = getpid();
+#ifdef HCXDEBUG
+if((fh_debug = fopen("hcxdumptool.log", "a")) == NULL)
+	{
+	fprintf(stdout, "error opening fhcxdumptool.log: %s\n", strerror(errno));
+	exit(EXIT_FAILURE);
+	}
+#endif
 #ifdef HCXWANTLIBPCAP
 if(bpfstring != NULL)
 	{
@@ -5349,6 +5414,9 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
+#ifdef HCXDEBUG
+if(fh_debug != NULL) fclose(fh_debug);
+#endif
 if((monitormodeflag != true) && (interfacelistflag != true) && (interfaceinfoflag != true) && (interfacelistshortflag != true) && (rooterrorflag == false))
 	{
 	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
