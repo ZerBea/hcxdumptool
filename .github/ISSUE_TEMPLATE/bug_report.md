@@ -8,14 +8,15 @@ assignees: ''
 ---
 
 **GitHub is for bugs and features - not for support**
-Bug reports will only be accepted against the current tip of the master git branch. Anything else will be rejected. Questions must be posted in the discussion board https://github.com/ZerBea/hcxdumptool/discussions
+Questions must be posted in the discussion board https://github.com/ZerBea/hcxdumptool/discussions
 
 **Check the FAQ**
-Some items that might appear to be issues are not issues.
+Please review the discussions
 
 **Comment output of**
 1. $ sudo hcxdumptool -v
 2. $ sudo hcxdumptool -l
+Bug reports will only be accepted against the current tip of the master git branch. Anything else will be rejected.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
