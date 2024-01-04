@@ -3847,7 +3847,7 @@ for(i = 0; i < (FREQUENCYLIST_MAX -1); i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static bool set_interface(bool interfacefrequencyflag, char *userfrequencylistname, char *userchannellistname)
+static bool set_interface(bool interfacefrequencyflag, char *userfrequencylistname, char *userchannellistname, bool monitorflag)
 {
 static size_t i;
 static char *ufld = NULL;
@@ -3954,7 +3954,7 @@ else
 	}
 scanlistindex = 0;
 if(nl_set_frequency() == false) return false;
-show_interfacecapabilities2();
+if(monitorflag == false) show_interfacecapabilities2();
 return true;
 }
 /*===========================================================================*/
@@ -5332,6 +5332,12 @@ if(getuid() != 0)
 	rooterrorflag = true;
 	goto byebye;
 	}
+if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistname, monitormodeflag) == false)
+	{
+	errorcount++;
+	fprintf(stderr, "failed to arm interface\n");
+	goto byebye;
+	}
 if(monitormodeflag == true)
 	{
 	if(set_monitormode() == false)
@@ -5339,12 +5345,14 @@ if(monitormodeflag == true)
 		errorcount++;
 		fprintf(stderr, "failed to set monitor mode\n");
 		}
-	goto byebye;
-	}
-if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistname) == false)
-	{
-	errorcount++;
-	fprintf(stderr, "failed to arm interface\n");
+	if((userfrequencylistname != NULL) || (userchannellistname != 0))
+		{
+		if(nl_set_frequency() == false)
+			{
+			errorcount++;
+			fprintf(stderr, "failed to set frequency\n");
+			}
+		}
 	goto byebye;
 	}
 if(essidlistname != NULL) read_essidlist(essidlistname);
