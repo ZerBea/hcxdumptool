@@ -5362,7 +5362,7 @@ fprintf(stdout, "\n\033[?25h");
 fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
 if(errorcount > 0) fprintf(stderr, "Possible reasons:\n"
 			" driver is broken\n"
-			" driver is busy (misconfigurated system, other services access the INTERFACE)\n");
+			" driver is busy (misconfigured system, other services access the INTERFACE)\n");
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
