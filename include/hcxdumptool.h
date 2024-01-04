@@ -97,7 +97,7 @@
 
 #define RCAD_MAX		40
 
-#define PROBERESPONSETX_MAX	10
+#define PROBERESPONSETX_MAX	5
 
 #define PCAPNG_SNAPLEN		0x400
 #define RTD_LEN			9128
