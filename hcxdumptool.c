@@ -1057,7 +1057,7 @@ return true;
 /*===========================================================================*/
 /* TX 802.11 */
 /*===========================================================================*/
-static inline void send_80211_associationrequest_org(size_t i)
+static inline __attribute__((always_inline)) void send_80211_associationrequest_org(size_t i)
 {
 ssize_t ii;
 
@@ -1097,7 +1097,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_associationrequest(size_t i)
+static inline __attribute__((always_inline)) void send_80211_associationrequest(size_t i)
 {
 ssize_t ii;
 
@@ -1137,7 +1137,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_eap_request_id(void)
+static inline __attribute__((always_inline)) void send_80211_eap_request_id(void)
 {
 static ssize_t ii;
 
@@ -1166,7 +1166,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_eapol_m1(void)
+static inline __attribute__((always_inline)) void send_80211_eapol_m1(void)
 {
 static ssize_t ii;
 
@@ -1195,7 +1195,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_reassociationresponse(u16 aid)
+static inline __attribute__((always_inline)) void send_80211_reassociationresponse(u16 aid)
 {
 static ssize_t ii;
 static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
@@ -1231,7 +1231,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_associationresponse(void)
+static inline __attribute__((always_inline)) void send_80211_associationresponse(void)
 {
 static ssize_t ii;
 static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
@@ -1267,7 +1267,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_authenticationresponse(void)
+static inline __attribute__((always_inline)) void send_80211_authenticationresponse(void)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1292,7 +1292,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_reassociationrequest(size_t i)
+static inline __attribute__((always_inline)) void send_80211_reassociationrequest(size_t i)
 {
 static ssize_t ii;
 static ieee80211_reassoc_req_t *reassociationrequest;
@@ -1336,7 +1336,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_authenticationrequest(void)
+static inline __attribute__((always_inline)) void send_80211_authenticationrequest(void)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1361,7 +1361,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_probereresponse(u8 *macclientrsp, u8 *macaprgrsp, u8 essidlenrsp, u8 *essidrsp)
+static inline __attribute__((always_inline)) void send_80211_probereresponse(u8 *macclientrsp, u8 *macaprgrsp, u8 essidlenrsp, u8 *essidrsp)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
@@ -1402,7 +1402,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_beacon(void)
+static inline __attribute__((always_inline)) void send_80211_beacon(void)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
@@ -1439,7 +1439,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_proberequest_undirected(void)
+static inline __attribute__((always_inline)) void send_80211_proberequest_undirected(void)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1464,7 +1464,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_disassociation_fm_ap(const u8* macclient, const u8* macap, u8 reason)
+static inline __attribute__((always_inline)) void send_80211_disassociation_fm_ap(const u8* macclient, const u8* macap, u8 reason)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1489,7 +1489,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_disassociation_fm_client(const u8* macclient, const u8* macap, u8 reason)
+static inline __attribute__((always_inline)) void send_80211_disassociation_fm_client(const u8* macclient, const u8* macap, u8 reason)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1515,7 +1515,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_deauthentication_fm_ap(const u8* macclient, const u8* macap, u8 reason)
+static inline __attribute__((always_inline)) void send_80211_deauthentication_fm_ap(const u8* macclient, const u8* macap, u8 reason)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1541,7 +1541,7 @@ errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void send_80211_deauthentication_fm_client(const u8* macclient, const u8* macap, u8 reason)
+static inline __attribute__((always_inline)) void send_80211_deauthentication_fm_client(const u8* macclient, const u8* macap, u8 reason)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1704,8 +1704,7 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-static inline int get_keyinfo(u16 kyif)
+static inline __attribute__((always_inline)) int get_keyinfo(u16 kyif)
 {
 if(kyif & WPA_KEY_INFO_ACK)
 	{
@@ -1720,7 +1719,7 @@ else
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211pspoll(void)
+static inline __attribute__((always_inline)) void process80211pspoll(void)
 {
 static size_t i;
 
@@ -1737,7 +1736,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211action(void)
+static inline __attribute__((always_inline)) void process80211action(void)
 {
 static size_t i;
 static ieee80211_action_t *action;
@@ -1758,7 +1757,7 @@ if((action->category == RADIO_MEASUREMENT) && (action->code == NEIGHBOR_REPORT_R
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211qosdata(void)
+static inline __attribute__((always_inline)) void process80211qosdata(void)
 {
 static size_t i;
 
@@ -1778,7 +1777,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211qosnull(void)
+static inline __attribute__((always_inline)) void process80211qosnull(void)
 {
 static size_t i;
 
@@ -1798,7 +1797,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211null(void)
+static inline __attribute__((always_inline)) void process80211null(void)
 {
 static size_t i;
 
@@ -1818,7 +1817,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211blockack(void)
+static inline __attribute__((always_inline)) void process80211blockack(void)
 {
 static size_t i;
 
@@ -1835,7 +1834,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211blockackreq(void)
+static inline __attribute__((always_inline)) void process80211blockackreq(void)
 {
 static size_t i;
 
@@ -1852,7 +1851,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eap_start(void)
+static inline __attribute__((always_inline)) void process80211eap_start(void)
 {
 static size_t i;
 
@@ -1870,7 +1869,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol_m4(void)
+static inline __attribute__((always_inline)) void process80211eapol_m4(void)
 {
 static size_t i;
 
@@ -1895,7 +1894,7 @@ for(i = 0; i < APLIST_MAX -1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol_m3(void)
+static inline __attribute__((always_inline)) void process80211eapol_m3(void)
 {
 static size_t i;
 
@@ -1932,7 +1931,7 @@ authseqakt.status = 0;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol_m2rg(void)
+static inline __attribute__((always_inline)) void process80211eapol_m2rg(void)
 {
 size_t i;
 
@@ -1953,7 +1952,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol_m2(void)
+static inline __attribute__((always_inline)) void process80211eapol_m2(void)
 {
 authseqakt.replaycountm2 = __hcx64be(wpakey->replaycount);
 if(replaycountrg == authseqakt.replaycountm2)
@@ -1985,7 +1984,7 @@ authseqakt.status = 0;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol_m1(void)
+static inline __attribute__((always_inline)) void process80211eapol_m1(void)
 {
 static size_t i;
 
@@ -2026,7 +2025,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapol(void)
+static inline __attribute__((always_inline)) void process80211eapol(void)
 {
 eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
 eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
@@ -2055,7 +2054,7 @@ switch(keyinfo)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211eapauthentication(void)
+static inline __attribute__((always_inline)) void process80211eapauthentication(void)
 {
 tshold = tsakt;
 eapauthplptr = payloadptr + IEEE80211_LLC_SIZE;
@@ -2069,7 +2068,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211reassociationresponse(void)
+static inline __attribute__((always_inline)) void process80211reassociationresponse(void)
 {
 static size_t i;
 static ieee80211_assoc_or_reassoc_resp_t *reassociationresponse;
@@ -2094,7 +2093,7 @@ qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211reassociationrequest(void)
+static inline __attribute__((always_inline)) void process80211reassociationrequest(void)
 {
 static size_t i;
 static ieee80211_reassoc_req_t *reassociationrequest;
@@ -2147,7 +2146,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211associationresponse(void)
+static inline __attribute__((always_inline)) void process80211associationresponse(void)
 {
 static size_t i;
 static ieee80211_assoc_or_reassoc_resp_t *associationresponse;
@@ -2173,7 +2172,7 @@ qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211associationrequest(void)
+static inline __attribute__((always_inline)) void process80211associationrequest(void)
 {
 static size_t i;
 static ieee80211_assoc_req_t *associationrequest;
@@ -2224,7 +2223,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211authentication_fmclient(void)
+static inline __attribute__((always_inline)) void process80211authentication_fmclient(void)
 {
 size_t i;
 
@@ -2257,7 +2256,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211authentication(void)
+static inline __attribute__((always_inline)) void process80211authentication(void)
 {
 size_t i;
 static ieee80211_auth_t *auth;
@@ -2294,7 +2293,7 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static void get_tag(u8 ietag, essid_t *essid, int infolen, u8 *infostart)
+static inline __attribute__((always_inline)) void get_tag(u8 ietag, essid_t *essid, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
 
@@ -2314,7 +2313,7 @@ while(0 < infolen)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211proberequest_directed(void)
+static inline __attribute__((always_inline)) void process80211proberequest_directed(void)
 {
 static size_t i;
 static ieee80211_proberequest_t *proberequest;
@@ -2339,7 +2338,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211proberequest_undirected(void)
+static inline __attribute__((always_inline)) void process80211proberequest_undirected(void)
 {
 static size_t i;
 static ieee80211_proberequest_t *proberequest;
@@ -2398,7 +2397,7 @@ return;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-static inline void process80211proberesponse_rca(void)
+static inline __attribute__((always_inline)) void process80211proberesponse_rca(void)
 {
 static size_t i;
 static ieee80211_beacon_proberesponse_t *proberesponse;
@@ -2438,7 +2437,7 @@ qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline void process80211proberesponse(void)
+static inline __attribute__((always_inline)) void process80211proberesponse(void)
 {
 static size_t i;
 static ieee80211_beacon_proberesponse_t *proberesponse;
@@ -3360,7 +3359,7 @@ while(1)
 return false;
 }
 /*---------------------------------------------------------------------------*/
-static inline bool nl_set_frequency(void)
+static inline __attribute__((always_inline)) bool nl_set_frequency(void)
 {
 static ssize_t i;
 static ssize_t msglen;
