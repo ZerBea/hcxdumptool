@@ -1,3 +1,8 @@
+06.01.2024
+==========
+hcxdumptool: changed option --beacon_off to --disable_beacon
+
+
 04.12.2023
 ==========
 hcxdumptool: allow to set monitor mode (-m) in combination with channel (-c) or frequency (-f)

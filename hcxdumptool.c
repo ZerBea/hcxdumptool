@@ -4752,12 +4752,11 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 #endif
 fprintf(stdout, "less common options:\n--------------------\n"
 	"-m <INTERFACE>            : set monitor mode and terminate\n"
-	"--disable_beacon          : do not transmit BEACON frames\n"
 	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
 	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
 	"--disable_reassociation   : do not REASSOCIATE a CLIENT\n"
-	"--beacon_off              : disable internal BEACON\n"
+	"--disable_beacon          : disable internal BEACON\n"
 	"                             default: one BEACON/second to wildcard SSID\n"
 	"--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer\n"
 	"                             default: %d\n"
@@ -4910,7 +4909,7 @@ static const struct option long_options[] =
 	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
 	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
 	{"disable_reassociation",	no_argument,		NULL,	HCX_DISABLE_REASSOCIATION},
-	{"beacon_off",			no_argument,		NULL,	HCX_BEACON_OFF},
+	{"disable_beacon",		no_argument,		NULL,	HCX_DISABLE_BEACON},
 	{"proberesponsetx",		required_argument,	NULL,	HCX_PROBERESPONSETX_MAX},
 	{"attemptclientmax",		required_argument,	NULL,	HCX_ATTEMPT_CLIENT_MAX},
 	{"attemptapmax",		required_argument,	NULL,	HCX_ATTEMPT_AP_MAX},
@@ -5005,7 +5004,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		reassociationflag = false;
 		break;
 
-		case HCX_BEACON_OFF:
+		case HCX_DISABLE_BEACON:
 		beaconoffflag = true;
 		break;
 
