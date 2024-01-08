@@ -1,93 +1,103 @@
 hcxdumptool
-==============
+-------------
 
-Small tool to capture packets from wlan devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against WPA protocol.
+A tool to capture packets from WLAN devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against the WPA protocol.
 
+General Information
+--------------------
 
-Brief description
+An overview of Hashcat mode 22000 - (https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
+
+hcxtools - A solution for capturing WLAN traffic and conversion to hashcat formats. - (https://hashcat.net/forum/thread-6661.html)
+
+Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID (https://hashcat.net/forum/thread-7717.html)
+
+Hashcat mode 22000 write-up by **atom** of the Hashcat forums. (https://hashcat.net/forum/thread-10253.html)
+
+What Doesn't hcxdumptool Do?
 --------------
 
-Stand-alone binaries - designed to run on Arch Linux and Raspbian Lite, but other Linux distributions should work, too.
+* It does not crack WPA PSK related hashes. (Use Hashcat or JtR to recover the PSK.)
 
-Read this wiki: https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2
+* It does not crack WEP. (Use the aircrack-ng suite instead.)
 
-Read this post: hcxtools - solution for capturing wlan traffic and conversion to hashcat formats (https://hashcat.net/forum/thread-6661.html)
+* It does not crack WPS. (Use Reaver or Bully instead.)
 
-Read this post: New attack on WPA/WPA2 using PMKID (https://hashcat.net/forum/thread-7717.html)
+* It does not decrypt encrypted traffic. (Use tshark or Wireshark in parallel.)
 
-Read this post: Hash mode 22000 explained (https://hashcat.net/forum/thread-10253.html)
+* It does not record all traffic captured on the WLAN device. (Use tshark or Wireshark in parallel.)
 
+* It does not perform Evil Twin attacks.
 
-What doesn't hcxdumptool do
---------------
+* It is not a honey pot.
 
-it does not crack WPA PSK related hashes (use hashat or JtR to recover the PSK)
+**Unsupported:** Windows OS, macOS, Android, emulators or wrappers!
 
-it does not crack WEP (use aircrack-ng instead)
+Detailed Description
+---------------------
 
-it does not crack WPS (use reaver or bully instead)
+| Tool | Description |
+| -------------- | ------------------------------------------------------------------------------------------------------|
+| hcxdumptool | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable. |
+| hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats.|
+| hcxhashtool | Tool to filter hashes from HC22000 files based on user input. |
+| hcxpsktool | Tool to get weak PSK canidates from HC22000 files. |
+| hcxeiutool | Tool to calculate wordlists based off ESSIDs gathered. |
+| Hashcat/JtR | Third party tools used to infer PSK from HC22000 hash files. |
 
-it does not decrypt encrypted traffic (use tshark or Wireshark in parallel)
-
-it does not record entire traffic (use tshark or Wireshark in parallel)
-
-it does not perform Evil Twin attacks
-
-it is not a honey pot
-
-Unsupported: Big endian systems, Windows OS, macOS, Android, emulators or wrappers!
-
-
-Detailed description
---------------
-
-| Tool           | Description                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------ |
-| hcxdumptool    | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable      |
-
-
-Work flow
+Work Flow
 --------------
 
 hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -> hashcat or JtR
 
-hcxdumptool: attack and capture everything (depending on options)
-
-hcxpcapngtool: convert everything
-
-hcxhashtool: filter hashes
-
-hcxpsktool: get weak PSK candidates
-
-hcxeiutool: calculate wordlists from ESSID
- 
-hashcat or JtR: get PSK from hash
-
-
-Get source
+Requirements
 --------------
+
+* Knowledge of radio technology
+* Knowledge of electromagnetic-wave engineering
+* Detailed knowledge of 802.11 protocol
+* Detailed knowledge of key derivation functions
+* Detailed knowledge of Linux (strict)
+* Detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
+* Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
+* Recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
+* WLAN device chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
+* WLAN device driver must (mandatory) support monitor and full frame injection mode
+* gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+* libpcap and libpcap-dev (if internal BPF compiler has been enabled)
+* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
+* GPIO hardware mod recommended (push button and LED) on Raspberry Pi
+* To allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
+
+If you decide to compile latest git head, make sure that your distribution is updated to latest version.
+
+**Important Notice**: If you are running Debian on ARM, it is **mandatory** to add "iomem=relaxed" to cmdline.txt to allow IO memory mapping.
+
+Solve dependencies 
+------------------
+**As mentioned in Requirements chapter!**
+
+Install Guide
+----------------------------
+### Clone Repository
+-----------------
 ```
 git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
-Solve dependencies 
--------------- 
-as mentioned in Requirements chapter
-
-
-Compile & install
---------------
+### Compile & Install
+------------------
 ```
-make
+make -j $(nproc)
 ```
 
-install to `/usr/bin`:
+Install to `/usr/bin`:
 ```
 make install (as super user)
 ```
 
-or install to `/usr/local/bin`:
+Or install to `/usr/local/bin`:
 ```
 make install PREFIX=/usr/local (as super user)
 ```
@@ -96,7 +106,26 @@ On headless opearation remove -DSTATUSOUT from Makefile before compiling! The en
 
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
+Or Install Via Package Manager
+--------------
 
+### Arch Linux
+[Arch Linux](https://www.archlinux.org/) 
+`pacman -S hcxdumptool`
+
+### Arch Linux ARM
+[Arch Linux ARM ](https://archlinuxarm.org/) 
+`pacman -S hcxdumptool`
+
+### Black Arch
+[Black Arch](https://blackarch.org/)
+`pacman -S hcxdumptool`
+
+### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
+To install use the following:  
+```sudo apt-get update && sudo apt-get install make gcc```
+
+From here, install hcxdumptool using the clone, compile, and install method mentioned earlier.
 ### Android (example)
 Install [Android NDK](https://developer.android.com/ndk/downloads) on your system and add it to `PATH`:
 ```
@@ -127,57 +156,12 @@ $ ndk-build
 ```
 Copy it to your phone.
 
-
-Or install via package manager
---------------
-
-### Arch Linux
-[Arch Linux](https://www.archlinux.org/) 
-`pacman -S hcxdumptool`
-
-### Arch Linux ARM
-[Arch Linux ARM ](https://archlinuxarm.org/) 
-`pacman -S hcxdumptool`
-
-### Black Arch
-[Black Arch](https://blackarch.org/) is an Arch Linux-based penetration testing distribution for penetration testers and security researchers  
-`pacman -S hcxdumptool`
-
-### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
-To install use the following:  
-`apt-get install make gcc`
-
-
-Requirements
---------------
-
-* knowledge of radio technology
-* knowledge of electromagnetic-wave engineering
-* detailed knowledge of 802.11 protocol
-* detailed knowledge of key derivation functions
-* detailed knowledge of Linux (strict)
-* detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
-* operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
-* recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
-* chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
-* driver must (mandatory) support monitor and full frame injection mode
-* gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
-* libpcap and libpcap-dev (if internal BPF compiler has been enabled)
-* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
-* GPIO hardware mod recommended (push button and LED) on Raspberry Pi
-* to allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
-
-If you decide to compile latest git head, make sure that your distribution is updated to latest version.
-
-Important notice: running Debian on arm it is mandatory to add "iomem=relaxed" to cmdline.txt to allow io memory mapping
-
-
 Adapters
 --------------
+* Do not expect flawless drivers on brand new hardware!
+* Driver must support (mandatory) monitor mode and full packet injection!
 
-Driver must support (mandatory) monitor mode and full packet injection
-
-WIRELESS EXTENSIONS are deprecated and not longer supported
+* WIRELESS EXTENSIONS are deprecated and not longer supported!
 
 Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
 
@@ -193,7 +177,7 @@ No support for a third party driver which is not part of the official Linux kern
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
-No support for prism devices.
+* No support for prism devices!
 
 Recommended WiFi chipsets:
 
@@ -217,11 +201,8 @@ https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
 
 https://github.com/morrownr/USB-WiFi/issues/314
 
-Do not expect flawless drivers on brand new hardware.
-
-
 Antennas
---------------
+---------
 
 The best high frequency amplifier is a good antenna!
 
@@ -229,15 +210,15 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
-| LOGILINK WL0097        | grid parabolic  |
-| TP-LINK TL-ANT2414 A/B | panel           |
-| LevelOne WAN-1112      | panel           |
-| DELOCK 88806           | panel           |
-| TP-LINK TL-ANT2409 A   | panel           |
+| LOGILINK WL0097        | Grid Parabolic  |
+| TP-LINK TL-ANT2414 A/B | Panel           |
+| LevelOne WAN-1112      | Panel           |
+| DELOCK 88806           | Panel           |
+| TP-LINK TL-ANT2409 A   | Panel           |
 
 
 GPS devices (NMEA 0183 protocol)
---------------
+---------------------------------
 
 | VENDOR MODEL                | TYPE            |
 | --------------------------- | --------------- |
@@ -245,7 +226,7 @@ GPS devices (NMEA 0183 protocol)
 | JENTRO BT-GPS-8 activepilot | BLUETOOTH       |
 
 
-Useful scripts
+Useful Scripts
 --------------
 
 | Script       | Description                                              |
@@ -257,32 +238,19 @@ Useful scripts
 | startnm      | Example script to stop NetworkManager                    |
 
 
-Hardware mod - see docs gpiowait.odg (hcxdumptool)
---------------
+Hardware mod - See docs gpiowait.odg (hcxdumptool)
+---------------------------------------------------
 
-LED flashes every 10 seconds if everything is fine and signals are received
+The LED will flash every 10 seconds if everything is fine and signals are received correctly.
 
 Press push button at least > 10 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
 
 Raspberry Pi turned off and can be disconnected from power supply
 
-
-Hardware mod - see docs gpiowait.odg
---------------
-
 Press push button at least 10 seconds and Raspberry Pi turned off safely and can be disconnected from power supply
 
-
-Procedure
---------------
-
-first run hcxdumptool -L to get information about suitable interfaces
-
-run hcxdumptool [-i \<interface\>] [--rcascan=p] to retrieve information about access points
-
-
-pcapng option codes (Section Header Block)
---------------
+PCAPNG Option Codes (Section Header Block)
+-------------------------------------------
 
 ENTERPRISE NUMBER        0x2a, 0xce, 0x46, 0xa1
 
@@ -314,59 +282,53 @@ OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 Warning
 --------------
 
-You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbies.
-If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
-However, if you have that knowledge hcxdumptool/hcxtools can do magic.
+You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, hcxdumptool/hcxtools is NOT recommended to be used by inexperienced users or newbies.
+
+If you are not familiar with Linux in general or you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
+However, if you have that knowledge hcxdumptool/hcxtools can do magic for you.
 
 The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis toolkit. 
 
-It should only be used in a 100% controlled environment(!).
+**It should only be used in a 100% controlled environment!**
 
 If you can't control the environment it is absolutely mandatory to set the BPF.
 
-Everything is requested/stored by default and unwanted information must be filtered out by option/filter or later on (offline)! 
+Everything is requested/stored by default and unwanted information must be filtered out by option/filter or later on (offline).
 
 You must use hcxdumptool only on networks you have permission to do this and if you know what you are doing, because:
 
-* hcxdumptool is able to prevent complete wlan traffic
-  (depend on selected options)
+* hcxdumptool is able to prevent complete WLAN traffic transmission. (Depending on selected options.)
 
-* hcxdumptool is able to capture PMKIDs from access points (only one single PMKID from an access point required)
-  (use hcxpcapngtool to convert them to a format hashcat and/Or JtR understand)
+* hcxdumptool is able to capture PMKIDs from access points. (Only one single PMKID from an access point is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
 
-* hcxdumptool is able to capture handshakes from not connected clients (only one single M2 from the client is required)
-  (use hcxpcapngtool to convert them to a format hashcat and/Or JtR understand)
+* hcxdumptool is able to capture handshakes from non-connected clients. (Only one single M2 from the client is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
 
-* hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz (only one single M2 from the client is required)
-  (use hcxpcapngtool to to a format hashcat and/Or JtR understand)
+* hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz. (Only one single M2 from the client is required. Use hcxpcapngtool to to a format Hashcat or JtR understand)
 
-* hcxdumptool is able to capture passwords from the wlan traffic
-  (use hcxpcapngtool -R to save them to file, or together with networknames [-E])
+* hcxdumptool is able to capture passwords from the WLAN traffic. (Use hcxpcapngtool -R to save them to file, or together with networknames [-E].)
 
-* hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS)
-  (hcxpcapngtool will show you information about them)
+* hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS. hcxpcapngtool will show you information about them.)
 
-* hcxdumptool is able to capture identities from the wlan traffic
-  (for example: request IMSI numbers from mobile phones - use hcxpcapngtool -I to save them to file)
+* hcxdumptool is able to capture identities from the WLAN traffic. (Example: Request IMSI numbers from mobile phones - use hcxpcapngtool -I to save them to file.)
 
-* hcxdumptool is able to capture usernames from the wlan traffic
-  (for example: user name of a server authentication - use hcxpcapngtool -U to save them to file)
+* hcxdumptool is able to capture usernames from the WLAN traffic. (Example: User name of a server authentication - use hcxpcapngtool -U to save them to file.)
 
-* Do not use a logical interface and leave the physical interface in managed mode
+* Do not use a logical interface and leave the physical interface in managed mode!
 
-* Do not use hcxdumptool in combination with aircrack-ng, reaver, bully or other tools which take access to the interface
+* Do not use hcxdumptool in combination with the aircrack-ng suite, Reaver, Bully or other tools which take access to the interface!
 
-* Stop all services which take access to the physical interface (NetworkManager, wpa_supplicant,...)
+* Stop all services which take access to the physical interface! (NetworkManager, wpa_supplicant,...)
 
-* Do not use tools like macchanger, as they are useless, because hcxdumptool uses its own random mac address space
+* Do not use tools like macchanger as they are useless since hcxdumptool uses its own random MAC address space.
 
-* Do not merge (pcapng) dumpfiles because that destroys custom block hash assignments
+* Do not merge PCAPNG dumpfiles because that will destroy custom block hash assignments!
 
-* Capture format pcapng is compatible to Wireshark and tshark
-
+* Capture format PCAPNG is compatible with Wireshark and tshark.
 
 Useful Links
 --------------
+
+https://pcapng.com/
 
 https://www.kernel.org/doc/html/latest/
 
