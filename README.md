@@ -1,5 +1,5 @@
 hcxdumptool
--------------
+============
 
 A tool to capture packets from WLAN devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against the WPA protocol.
 
@@ -74,20 +74,20 @@ If you decide to compile latest git head, make sure that your distribution is up
 **Important Notice**: If you are running Debian on ARM, it is **mandatory** to add "iomem=relaxed" to cmdline.txt to allow IO memory mapping.
 
 Solve dependencies 
-------------------
+-------------------
 **As mentioned in Requirements chapter!**
 
 Install Guide
-----------------------------
+--------------
 ### Clone Repository
------------------
+---------------------
 ```
 git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
 ### Compile & Install
-------------------
+----------------------
 ```
 make -j $(nproc)
 ```
@@ -107,14 +107,14 @@ On headless opearation remove -DSTATUSOUT from Makefile before compiling! The en
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
 Or Install Via Package Manager
---------------
+-------------------------------
 
 ### Arch Linux
 [Arch Linux](https://www.archlinux.org/) 
 `pacman -S hcxdumptool`
 
 ### Arch Linux ARM
-[Arch Linux ARM ](https://archlinuxarm.org/) 
+[Arch Linux ARM](https://archlinuxarm.org/) 
 `pacman -S hcxdumptool`
 
 ### Black Arch
@@ -157,9 +157,12 @@ $ ndk-build
 Copy it to your phone.
 
 Adapters
---------------
+---------
 * Do not expect flawless drivers on brand new hardware!
+
 * Driver must support (mandatory) monitor mode and full packet injection!
+
+* No support for prism devices! 
 
 * WIRELESS EXTENSIONS are deprecated and not longer supported!
 
@@ -176,8 +179,6 @@ Always verify the actual chipset with 'lsusb' and/or 'lspci'!
 No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
-
-* No support for prism devices!
 
 Recommended WiFi chipsets:
 
@@ -227,7 +228,7 @@ GPS devices (NMEA 0183 protocol)
 
 
 Useful Scripts
---------------
+---------------
 
 | Script       | Description                                              |
 | ------------ | -------------------------------------------------------- |
@@ -280,7 +281,7 @@ OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 
 
 Warning
---------------
+--------
 
 You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, hcxdumptool/hcxtools is NOT recommended to be used by inexperienced users or newbies.
 
