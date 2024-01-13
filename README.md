@@ -15,7 +15,7 @@ Old but still applicable write-up by **atom** of the Hashcat forums covering a n
 Hashcat mode 22000 write-up by **atom** of the Hashcat forums. (https://hashcat.net/forum/thread-10253.html)
 
 What Doesn't hcxdumptool Do?
---------------
+-----------------------------
 
 * It does not crack WPA PSK related hashes. (Use Hashcat or JtR to recover the PSK.)
 
@@ -46,30 +46,30 @@ Detailed Description
 | Hashcat/JtR | Third party tools used to infer PSK from HC22000 hash files. |
 
 Work Flow
---------------
+----------
 
 hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -> hashcat or JtR
 
 Requirements
---------------
+-------------
 
-* Knowledge of radio technology
-* Knowledge of electromagnetic-wave engineering
-* Detailed knowledge of 802.11 protocol
-* Detailed knowledge of key derivation functions
-* Detailed knowledge of Linux (strict)
-* Detailed knowledge of filter procedures (Berkeley Packet Filter, capture filter, display filter)
+* Knowledge of radio technology.
+* Knowledge of electromagnetic-wave engineering.
+* Detailed knowledge of 802.11 protocol.
+* Detailed knowledge of key derivation functions.
+* Detailed knowledge of Linux.
+* Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
 * Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
-* Recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems 
-* WLAN device chipset must be able to run in monitor mode. Recommended: MediaTek chipsets (due to active monitor mode capabilities)
-* WLAN device driver must (mandatory) support monitor and full frame injection mode
+* Recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems .
+* WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
+* WLAN device driver must support monitor and full frame injection mode. **(MANDATORY!)**
 * gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
-* libpcap and libpcap-dev (if internal BPF compiler has been enabled)
-* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work, too.
+* libpcap and libpcap-dev (If internal BPF compiler has been enabled.)
+* Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work as well.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 * To allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
-If you decide to compile latest git head, make sure that your distribution is updated to latest version.
+**If you decide to compile latest git head, make sure that your distribution is updated to it's latest version!**
 
 **Important Notice**: If you are running Debian on ARM, it is **mandatory** to add "iomem=relaxed" to cmdline.txt to allow IO memory mapping.
 
@@ -160,23 +160,23 @@ Adapters
 ---------
 * Do not expect flawless drivers on brand new hardware!
 
-* Driver must support (mandatory) monitor mode and full packet injection!
+* Driver must support monitor mode and full packet injection!
 
 * No support for prism devices! 
 
 * WIRELESS EXTENSIONS are deprecated and not longer supported!
 
-Get information about VENDOR, model, chipset and driver here: https://wikidevi.wi-cat.ru/
+Get information about VENDOR, model, chipset, and driver here: https://wikidevi.wi-cat.ru/
 
 Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
 
-Preferred chipsets MediaTek due to active monitor mode feature (important notice: massive problems with MT76 USB3 devices if connected to some USB3 ports)
+Preferred chipsets come from MediaTek due to active monitor mode being very reliable. (Important notice: Massive problems with MT76 USB 3.0 devices if connected to some USB 3.0 ports!)
 
 Some device and driver tests are here: https://github.com/ZerBea/hcxdumptool/discussions/361
 
-Always verify the actual chipset with 'lsusb' and/or 'lspci'!
+**Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 
-No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver
+No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver.
 
 No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
 
@@ -304,7 +304,7 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 
 * hcxdumptool is able to capture handshakes from non-connected clients. (Only one single M2 from the client is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
 
-* hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz. (Only one single M2 from the client is required. Use hcxpcapngtool to to a format Hashcat or JtR understand)
+* hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz. (Only one single M2 from the client is required. Use hcxpcapngtool to to a format Hashcat or JtR understands.)
 
 * hcxdumptool is able to capture passwords from the WLAN traffic. (Use hcxpcapngtool -R to save them to file, or together with networknames [-E].)
 
