@@ -266,7 +266,7 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 
 **It should only be used in a 100% controlled environment!**
 
-If you can't control the environment it is absolutely mandatory to set the [BPF](https://github.com/ZerBea/hcxdumptool/blob/master/BPF.md)!
+If you can't control the environment it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
 Everything is requested/stored by default and unwanted information must be filtered out by option/filter actively or offline.
 
