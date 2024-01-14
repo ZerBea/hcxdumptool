@@ -8,11 +8,11 @@ General Information
 
 An overview of Hashcat mode 22000 - (https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
 
-hcxtools - A solution for capturing WLAN traffic and conversion to hashcat formats. - (https://hashcat.net/forum/thread-6661.html)
+[hcxtools](https://github.com/hcxtools/) - A solution for capturing WLAN traffic and conversion to hashcat formats. - (https://hashcat.net/forum/thread-6661.html)
 
-Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID (https://hashcat.net/forum/thread-7717.html)
+Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID. - (https://hashcat.net/forum/thread-7717.html)
 
-Hashcat mode 22000 write-up by **atom** of the Hashcat forums. (https://hashcat.net/forum/thread-10253.html)
+Hashcat mode 22000 write-up by **atom** of the Hashcat forums. - (https://hashcat.net/forum/thread-10253.html)
 
 What Doesn't hcxdumptool Do?
 -----------------------------
@@ -36,19 +36,19 @@ What Doesn't hcxdumptool Do?
 Detailed Description
 ---------------------
 
-| Tool | Description |
-| -------------- | ------------------------------------------------------------------------------------------------------|
-| hcxdumptool | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable. |
-| hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats.|
-| hcxhashtool | Tool to filter hashes from HC22000 files based on user input. |
-| hcxpsktool | Tool to get weak PSK canidates from HC22000 files. |
-| hcxeiutool | Tool to calculate wordlists based off ESSIDs gathered. |
-| Hashcat/JtR | Third party tools used to infer PSK from HC22000 hash files. |
+| Tool          | Description                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------|
+| hcxdumptool   | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable.    |
+| hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats.                                 |
+| hcxhashtool   | Tool to filter hashes from HC22000 files based on user input.                                         |
+| hcxpsktool    | Tool to get weak PSK canidates from HC22000 files.                                                    |
+| hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered.                                                |
+| Hashcat/JtR   | Third party tools used to infer PSK from HC22000 hash files.                                          |
 
 Work Flow
 ----------
 
-hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -> hashcat or JtR
+hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -> Hashcat or JtR
 
 Requirements
 -------------
@@ -62,8 +62,9 @@ Requirements
 * Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
 * Recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems .
 * WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
-* WLAN device driver must support monitor and full frame injection mode. **(MANDATORY!)**
+* WLAN device driver *must* support monitor and full frame injection mode.
 * gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+* make
 * libpcap and libpcap-dev (If internal BPF compiler has been enabled.)
 * Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work as well.
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
@@ -73,14 +74,23 @@ Requirements
 
 **Important Notice**: If you are running Debian on ARM, it is **mandatory** to add "iomem=relaxed" to cmdline.txt to allow IO memory mapping.
 
-Solve Dependencies 
--------------------
-**As mentioned in Requirements chapter!**
-
 Install Guide
 --------------
+
+### Solve Dependencies 
+-----------------------
+
+Using the package manager of your distribution's choice, issue the commands to update it's cache and install the required packages: `make gcc libpcap libpcap-dev`
+
+**Debian Based Distributions**
+
+```
+sudo apt update && sudo apt install make gcc libpcap libpcap-dev
+```
+
 ### Clone Repository
 ---------------------
+
 ```
 git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
@@ -88,6 +98,7 @@ cd hcxdumptool
 
 ### Compile & Install
 ----------------------
+
 ```
 make -j $(nproc)
 ```
@@ -106,58 +117,26 @@ On headless opearation remove -DSTATUSOUT from Makefile before compiling! The en
 
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
-Or Install Via Package Manager
--------------------------------
+### Install Via Package Manager
+--------------------------------
 
-### Arch Linux
-[Arch Linux](https://www.archlinux.org/) 
-`pacman -S hcxdumptool`
+Using the package manager of your distribution's choice, issue the commands to update it's cache and install the `hcxdumptool` package.
 
-### Arch Linux ARM
-[Arch Linux ARM](https://archlinuxarm.org/) 
-`pacman -S hcxdumptool`
+**Arch Linux Based Distributions**
 
-### Black Arch
-[Black Arch](https://blackarch.org/)
-`pacman -S hcxdumptool`
-
-### Raspbian (Debian, Kali, Ubuntu) release requirements >= bookworm (testing/Debian 12)  
-To install use the following:  
-```sudo apt-get update && sudo apt-get install make gcc```
-
-From here, install hcxdumptool using the clone, compile, and install method mentioned earlier.
-### Android (example)
-Install [Android NDK](https://developer.android.com/ndk/downloads) on your system and add it to `PATH`:
 ```
-$ ndk-build --version
-GNU Make 4.3
-Built for x86_64-pc-linux-gnu
-Copyright (C) 1988-2020 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
+sudo pacman -Syu && sudo pacman -S hcxdumptool
 ```
 
-Run `ndk-build` - built executables for some architectures will be created inside `libs` directory:
+**Debian Based Distributions**
+
 ```
-$ ndk-build
-[arm64-v8a] Compile        : hcxdumptool <= hcxdumptool.c
-[arm64-v8a] Executable     : hcxdumptool
-[arm64-v8a] Install        : hcxdumptool => libs/arm64-v8a/hcxdumptool
-[armeabi-v7a] Compile thumb  : hcxdumptool <= hcxdumptool.c
-[armeabi-v7a] Executable     : hcxdumptool
-[armeabi-v7a] Install        : hcxdumptool => libs/armeabi-v7a/hcxdumptool
-[x86] Compile        : hcxdumptool <= hcxdumptool.c
-[x86] Executable     : hcxdumptool
-[x86] Install        : hcxdumptool => libs/x86/hcxdumptool
-[x86_64] Compile        : hcxdumptool <= hcxdumptool.c
-[x86_64] Executable     : hcxdumptool
-[x86_64] Install        : hcxdumptool => libs/x86_64/hcxdumptool
+sudo apt update && sudo apt install hcxdumptool
 ```
-Copy it to your phone.
 
 Adapters
 ---------
+
 * Do not expect flawless drivers on brand new hardware!
 
 * Driver must support monitor mode and full packet injection!
@@ -176,9 +155,11 @@ Some device and driver tests are here: https://github.com/ZerBea/hcxdumptool/dis
 
 **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 
-No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/) <br /> Report related issues to the site, from which you downloaded the driver.
+No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/)
+Report related issues to the site, from which you downloaded the driver.
 
-No support for a driver which doesn't support monitor mode and full frame injection natively <br /> If you need these features, do a request on www.kernel.org
+No support for a driver which doesn't support monitor mode and full frame injection natively.
+If you need these features, do a request on www.kernel.org
 
 Recommended WiFi chipsets:
 
@@ -188,11 +169,11 @@ Recommended WiFi chipsets:
 
 Not recommended WiFi chipsets:
 
-* Broadcom (neither monitor mode nor frame injection by official Linux kernel)
+* Broadcom (Neither monitor mode nor frame injection by official Linux kernel.)
 
-* Qualcomm (no frame injection by official Linux kernel)
+* Qualcomm (No frame injection by official Linux kernel.)
 
-* Intel (monitor mode and frame injection problems)
+* Intel (Monitor mode and frame injection problems.)
 
 More information about possible issues or limitations:
 
@@ -207,7 +188,7 @@ Antennas
 
 The best high frequency amplifier is a good antenna!
 
-It is much better to achieve gain using a good antenna instead of increasing transmitter power.
+It is much better to achieve gain using a good antenna instead of increasing transmission power.
 
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
@@ -239,16 +220,16 @@ Useful Scripts
 | startnm      | Example script to stop NetworkManager                    |
 
 
-Hardware mod - See docs gpiowait.odg (hcxdumptool)
+Hardware Mod - See Docs gpiowait.odg (hcxdumptool)
 ---------------------------------------------------
 
-The LED will flash every 10 seconds if everything is fine and signals are received correctly.
+When using this hardware modification, the LED will flash every 10 seconds if everything is fine and signals are received correctly.
 
-Press push button at least > 10 seconds until LED turns on (also LED turns on if hcxdumptool terminates)
+To terminate manually, press the push button for at least 10 seconds until LED turns on. (The LED will also turn on if hcxdumptool terminates.)
 
-Raspberry Pi turned off and can be disconnected from power supply
+Afterwards, the Raspberry Pi can be turned off and disconnected from it's power supply.
 
-Press push button at least 10 seconds and Raspberry Pi turned off safely and can be disconnected from power supply
+To shut it all off, press the push button for at least 10 seconds. Then, the Raspberry Pi can be turned off safely and disconnected from power supply.
 
 PCAPNG Option Codes (Section Header Block)
 -------------------------------------------
@@ -279,7 +260,6 @@ OPTIONCODE_WEAKCANDIDATE 0xf2a0 (64 byte) == 63 characters + zero
 
 OPTIONCODE_GPS           0xf2a1 (max 128 byte)
 
-
 Warning
 --------
 
@@ -292,9 +272,9 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 
 **It should only be used in a 100% controlled environment!**
 
-If you can't control the environment it is absolutely mandatory to set the BPF.
+If you can't control the environment it is absolutely mandatory to set the [BPF](https://github.com/ZerBea/hcxdumptool/blob/master/BPF.md)!
 
-Everything is requested/stored by default and unwanted information must be filtered out by option/filter or later on (offline).
+Everything is requested/stored by default and unwanted information must be filtered out by option/filter actively or offline.
 
 You must use hcxdumptool only on networks you have permission to do this and if you know what you are doing, because:
 
@@ -327,7 +307,7 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 * Capture format PCAPNG is compatible with Wireshark and tshark.
 
 Useful Links
---------------
+-------------
 
 https://pcapng.com/
 
