@@ -14,8 +14,6 @@ Old but still applicable write-up by **atom** of the Hashcat forums covering a n
 
 Hashcat mode 22000 write-up by **atom** of the Hashcat forums. - (https://hashcat.net/forum/thread-10253.html)
 
-BPF filter creation guide. - (https://github.com/ZerBea/hcxdumptool/blob/master/BPF.md)
-
 What Doesn't hcxdumptool Do?
 -----------------------------
 
