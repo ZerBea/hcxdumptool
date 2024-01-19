@@ -168,6 +168,11 @@ typedef struct __attribute__((__packed__))
 typedef struct __attribute__((__packed__))
 {
  u16 capability;
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define HCXTXLISTENINTERVAL	0x0014U
+#elif __BYTE_ORDER == __BIG_ENDIAN
+#define HCXTXLISTENINTERVAL	0x1400U
+#endif
  u16 listen_interval;
  u8	ie[1];
 }ieee80211_assoc_req_t;
