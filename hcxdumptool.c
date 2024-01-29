@@ -3052,9 +3052,10 @@ while(nla_ok(nlan, nlanremlen))
 		{
 		(freql + ipl->i)->frequency = *((u32*)nla_data(nlan));
 		(freql + ipl->i)->channel = frequency_to_channel((freql + ipl->i)->frequency);
+		if((freql + ipl->i)->channel == 0) (freql + ipl->i)->frequency  = 0;
 		}
-	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_MAX_TX_POWER) (freql + ipl->i)->pwr = *((u32*)nla_data(nlan));
-	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_DISABLED) (freql + ipl->i)->status = IF_STAT_FREQ_DISABLED;
+	else if(nlan->nla_type == NL80211_FREQUENCY_ATTR_MAX_TX_POWER) (freql + ipl->i)->pwr = *((u32*)nla_data(nlan));
+	else if(nlan->nla_type == NL80211_FREQUENCY_ATTR_DISABLED) (freql + ipl->i)->status = IF_STAT_FREQ_DISABLED;
 	nlan = nla_next(nlan, &nlanremlen);
 	}
 if((freql + ipl->i)->frequency != 0) ipl->i++;
