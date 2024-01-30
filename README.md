@@ -220,7 +220,7 @@ Useful Scripts
 | startnm      | Example script to stop NetworkManager                    |
 
 
-Hardware Mod - See Docs gpiowait.odg (hcxdumptool)
+Hardware Mod - See Docs gpiowait.png (hcxdumptool)
 ---------------------------------------------------
 
 When using this hardware modification, the LED will flash every 10 seconds if everything is fine and signals are received correctly.
@@ -230,8 +230,6 @@ To terminate manually, press the push button for at least 10 seconds until LED t
 Afterwards, the Raspberry Pi can be turned off and disconnected from it's power supply.
 
 To shut it all off, press the push button for at least 10 seconds. Then, the Raspberry Pi can be turned off safely and disconnected from power supply.
-
-File format odg is the default file format of LibreOffice draw. If not installed by default, use MuPDF to show it or ImageMagick to convert it to pdf, png, jpg. 
 
 
 PCAPNG Option Codes (Section Header Block)
