@@ -231,6 +231,9 @@ Afterwards, the Raspberry Pi can be turned off and disconnected from it's power 
 
 To shut it all off, press the push button for at least 10 seconds. Then, the Raspberry Pi can be turned off safely and disconnected from power supply.
 
+File format odg is the default file format of LibreOffice draw. If not installed by default, use MuPDF to show it or ImageMagick to convert it to pdf, png, jpg. 
+
+
 PCAPNG Option Codes (Section Header Block)
 -------------------------------------------
 
