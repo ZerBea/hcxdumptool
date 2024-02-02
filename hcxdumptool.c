@@ -5398,7 +5398,10 @@ else
 tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
-		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n\n");
+		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
+		"Misuse of hcxdumptool within a network, without specific authorization,\n"
+		"may cause irreparable damage and result in significant consequences!\n"
+		"Not understanding what you were doing> is not going to work as an excuse!\n\n");
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
 fprintf(stdout, "Initialize main scan loop...\033[?25l");
