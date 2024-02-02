@@ -263,6 +263,8 @@ You might expect me to recommend that everyone should be using hcxdumptool/hcxto
 If you are not familiar with Linux in general or you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
 However, if you have that knowledge hcxdumptool/hcxtools can do magic for you.
 
+Misuse of hcxdumptool within a network, particularly without authorization, may cause irreparable damage and result in significant consequences. “Not understanding what you were doing” is not going to work as an excuse.
+
 The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis toolkit. 
 
 **It should only be used in a 100% controlled environment!**
