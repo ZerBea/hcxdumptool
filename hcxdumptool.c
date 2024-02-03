@@ -57,10 +57,11 @@ static bool activemonitorflag = false;
 static bool vmflag = true;
 static bool beaconoffflag = false;
 
-static u8 wanteventflag = 0;
-static u8 exiteapolpmkidflag = 0;
-static u8 exiteapolm2flag = 0;
-static u8 exiteapolm3flag = 0;
+static u16 wanteventflag = 0;
+static u16 exiteapolpmkidflag = 0;
+static u16 exiteapolm2flag = 0;
+static u16 exiteapolm3flag = 0;
+static u16 exiteapolm1flag = 0;
 
 static int gpiostatusled = 0;
 static int gpiobutton = 0;
@@ -1994,6 +1995,7 @@ authseqakt.kdv1 = kdv;
 authseqakt.replaycountm1 = __hcx64be(wpakey->replaycount);
 memcpy(&authseqakt.noncem1, &wpakey->nonce[28], 4);
 authseqakt.status = AP_EAPOL_M1;
+wanteventflag |= exiteapolm1flag;
 if(__hcx16be(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
 	{
 	pmkid = (ieee80211_pmkid_t*)(eapolplptr + IEEE80211_WPAKEY_SIZE);
@@ -4783,6 +4785,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                              1 = PMKID (from AP)\n"
 	"                              2 = EAPOL M1M2/M1M2ROGUE (not authorized)\n"
 	"                              4 = EAPOL M2M3 (authorized)\n"
+	"                              8 = EAPOL M1\n"
 	"                             target BPF filter is recommended\n"
 	"--onsigterm=<action>      : action when the program has been terminated (poweroff, reboot)\n"
 	"                             poweroff: power off system\n"
@@ -5072,6 +5075,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		exiteapolpmkidflag |= exiteapolflag & EXIT_ON_EAPOL_PMKID;
 		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
 		exiteapolm3flag |= exiteapolflag & EXIT_ON_EAPOL_M3;
+		exiteapolm1flag |= exiteapolflag & EXIT_ON_EAPOL_M1;
 		break;
 
 		case HCX_ON_SIGTERM:
@@ -5479,8 +5483,9 @@ fprintf(stdout, "\n");
 if(exiteapolflag != 0)
 	{
 	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "exit on PMKID\n");
-	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "exit on EAPOL M1M2\n");
 	if((wanteventflag & EXIT_ON_EAPOL_M3) == EXIT_ON_EAPOL_M3) fprintf(stdout, "exit on EAPOL M1M2M3\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "exit on EAPOL M1M2\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M1) == EXIT_ON_EAPOL_M1) fprintf(stdout, "exit on EAPOL M1\n");
 	}
 if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	{

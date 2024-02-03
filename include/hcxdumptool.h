@@ -44,14 +44,15 @@
 #define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
-#define EXIT_ON_SIGTERM		0x01
-#define EXIT_ON_GPIOBUTTON	0x02
-#define EXIT_ON_TOT		0x04
-#define EXIT_ON_WATCHDOG	0x08
-#define EXIT_ON_EAPOL_PMKID	0x10
-#define EXIT_ON_EAPOL_M2	0x20
-#define EXIT_ON_EAPOL_M3	0x40
-#define EXIT_ON_ERROR		0x80
+#define EXIT_ON_SIGTERM		0x0001
+#define EXIT_ON_GPIOBUTTON	0x0002
+#define EXIT_ON_TOT		0x0004
+#define EXIT_ON_WATCHDOG	0x0008
+#define EXIT_ON_EAPOL_PMKID	0x0010
+#define EXIT_ON_EAPOL_M2	0x0020
+#define EXIT_ON_EAPOL_M3	0x0040
+#define EXIT_ON_EAPOL_M1	0x0080
+#define EXIT_ON_ERROR		0x0100
 
 #define EXIT_ACTION_REBOOT	0x01
 #define EXIT_ACTION_POWEROFF	0x02
