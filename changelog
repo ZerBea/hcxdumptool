@@ -1,3 +1,14 @@
+04.02.2024
+==========
+hcxdumptool: changed bit mask order of exitoneapol
+--exitoneapol=<type>      : exit on first EAPOL occurrence:
+                             bitmask:
+                              1 = PMKID (from AP)
+                              2 = EAPOL M2M3 (authorized)
+                              4 = EAPOL M1M2/M1M2ROGUE (not authorized)
+                              8 = EAPOL M1
+
+
 06.01.2024
 ==========
 hcxdumptool: changed option --beacon_off to --disable_beacon
