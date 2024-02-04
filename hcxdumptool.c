@@ -3289,8 +3289,8 @@ static struct genlmsghdr *glh;
 static struct nlattr *nla;
 static struct nlmsgerr *nle;
 static char *drivername = NULL;
-static char driverfmt[128] = { 0 };
-static char driverlink[128] = { 0 };
+static char driverfmt[DRIVER_FORMAT] = { 0 };
+static char driverlink[DRIVER_LINK] = { 0 };
 
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily;
@@ -3336,9 +3336,9 @@ while(1)
 			if(nla->nla_type == NL80211_ATTR_WIPHY)
 				{
 				(ifpresentlist + ii)->wiphy = *((u32*)nla_data(nla));
-				snprintf(driverfmt, 64, "/sys/class/ieee80211/phy%d/device/driver", (ifpresentlist + ii)->wiphy);
-				memset(&driverlink, 0, 128);
-				if((dnlen = readlink(driverfmt, driverlink, 64)) > 0)
+				snprintf(driverfmt, DRIVER_FORMAT, "/sys/class/ieee80211/phy%d/device/driver", (ifpresentlist + ii)->wiphy);
+				memset(&driverlink, 0, DRIVER_LINK);
+				if((dnlen = readlink(driverfmt, driverlink, DRIVER_LINK)) > 0)
 					{
 					drivername = basename(driverlink);
 					if(drivername != NULL) strncpy((ifpresentlist + ii)->driver, drivername, DRIVERNAME_MAX -1);
