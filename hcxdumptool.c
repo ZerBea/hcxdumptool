@@ -3991,7 +3991,6 @@ for(i = 0; i < INTERFACELIST_MAX -1; i++)
 	ifpresentlistcounter++;
 	}
 if(rt_get_interfacelist() == false) return false;
-
 if(ifpresentlist->index == 0) return false;
 qsort(ifpresentlist, ifpresentlistcounter, INTERFACELIST_SIZE, sort_interfacelist_by_index);
 return true;
