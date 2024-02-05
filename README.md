@@ -39,10 +39,10 @@ Detailed Description
 | Tool          | Description                                                                                           |
 | ------------- | ------------------------------------------------------------------------------------------------------|
 | hcxdumptool   | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable.    |
-| hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats.                                 |
-| hcxhashtool   | Tool to filter hashes from HC22000 files based on user input.                                         |
-| hcxpsktool    | Tool to get weak PSK canidates from HC22000 files.                                                    |
-| hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered.                                                |
+| hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats. (hcxtools)                      |
+| hcxhashtool   | Tool to filter hashes from HC22000 files based on user input. (hcxtools)                              |
+| hcxpsktool    | Tool to get weak PSK canidates from HC22000 files. (hcxtools)                                         |
+| hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered. (hcxtools)                                     |
 | Hashcat/JtR   | Third party tools used to infer PSK from HC22000 hash files.                                          |
 
 Work Flow
@@ -60,7 +60,7 @@ Requirements
 * Detailed knowledge of Linux.
 * Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
 * Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
-* Recommended: Arch Linux on notebooks and desktop systems, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems .
+* Recommended: Arch Linux on notebooks and desktop systems, OpenWRT, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems.
 * WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
 * WLAN device driver *must* support monitor and full frame injection mode.
 * gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
@@ -128,6 +128,12 @@ Using the package manager of your distribution's choice, issue the commands to u
 sudo pacman -Syu && sudo pacman -S hcxdumptool
 ```
 
+**OpenWRT**
+
+```
+opkg install hcxdumptool
+```
+
 **Debian Based Distributions**
 
 ```
@@ -163,9 +169,12 @@ If you need these features, do a request on www.kernel.org
 
 Recommended WiFi chipsets:
 
-* Ralink
+* MediaTek (mt76)
 
-* MediaTek
+* Realtek (rtl8xxxu)
+
+* Ralink (rt2800usb)
+
 
 Not recommended WiFi chipsets:
 
