@@ -60,7 +60,7 @@ Requirements
 * Detailed knowledge of Linux.
 * Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
 * Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
-* Recommended: Arch Linux on notebooks and desktop systems, OpenWRT, Arch Linux Arm on Raspberry Pi >= ARMv7 systems, Raspbian OS Lite or Debian on Raspberry Pi ARMv6 systems.
+* Recommended: Arch Linux (notebooks and desktop systems), OpenWRT (small systems like Raspberry Pi, WiFi router)
 * WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
 * WLAN device driver *must* support monitor and full frame injection mode.
 * gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
