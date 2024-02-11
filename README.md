@@ -6,9 +6,9 @@ A tool to capture packets from WLAN devices and to discover potential weak point
 General Information
 --------------------
 
-An overview of Hashcat mode 22000 - (https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
+An overview of Hashcat mode 22000. - (https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
 
-[hcxtools](https://github.com/hcxtools/) - A solution for capturing WLAN traffic and conversion to hashcat formats. - (https://hashcat.net/forum/thread-6661.html)
+A set of tools by **ZerBea** intended for processing capture files. - [hcxtools](https://github.com/ZerBea/hcxtools)
 
 Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID. - (https://hashcat.net/forum/thread-7717.html)
 
@@ -41,7 +41,7 @@ Detailed Description
 | hcxdumptool   | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable.    |
 | hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats. (hcxtools)                      |
 | hcxhashtool   | Tool to filter hashes from HC22000 files based on user input. (hcxtools)                              |
-| hcxpsktool    | Tool to get weak PSK canidates from HC22000 files. (hcxtools)                                         |
+| hcxpsktool    | Tool to get weak PSK candidates from HC22000 files. (hcxtools)                                         |
 | hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered. (hcxtools)                                     |
 | Hashcat/JtR   | Third party tools used to infer PSK from HC22000 hash files.                                          |
 
@@ -113,7 +113,7 @@ Or install to `/usr/local/bin`:
 make install PREFIX=/usr/local (as super user)
 ```
 
-On headless opearation remove -DSTATUSOUT from Makefile before compiling! The entire status display will not be compiled. That saves CPU cycles and prevent ERRORs.
+On headless operation, remove -DSTATUSOUT from the Makefile before compiling! That way, the status display will not be compiled. This will save CPU cycles and prevent ERRORs from occurring.
 
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
