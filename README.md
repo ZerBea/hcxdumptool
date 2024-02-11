@@ -3,6 +3,8 @@ hcxdumptool
 
 A tool to capture packets from WLAN devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against the WPA protocol.
 
+Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
+
 General Information
 --------------------
 
@@ -28,6 +30,8 @@ What Doesn't hcxdumptool Do?
 * It does not record all traffic captured on the WLAN device. (Use tshark or Wireshark in parallel.)
 
 * It does not perform Evil Twin attacks.
+
+* It does not provide to prived a beutifil status display
 
 * It is not a honey pot.
 
