@@ -31,7 +31,7 @@ What Doesn't hcxdumptool Do?
 
 * It does not perform Evil Twin attacks.
 
-* It does not provide to prived a beutifil status display
+* It does not provide a beatiful status display
 
 * It is not a honey pot.
 
