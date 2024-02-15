@@ -63,7 +63,7 @@ Requirements
 * Detailed knowledge of key derivation functions.
 * Detailed knowledge of Linux.
 * Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
-* Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.10)
+* Operating system: Linux (recommended: kernel >= 6.4, mandatory: kernel >= 5.15)
 * Recommended: Arch Linux (notebooks and desktop systems), OpenWRT (small systems like Raspberry Pi, WiFi router)
 * WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
 * WLAN device driver *must* support monitor and full frame injection mode.
