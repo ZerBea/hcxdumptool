@@ -1881,7 +1881,7 @@ if((authseqakt.status & AP_EAPOL_M3) == AP_EAPOL_M3)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr1, ETH_ALEN) == 0)
 		{
-		if(authseqakt.replaycountm3 == authseqakt.replaycountm4)
+		if((authseqakt.replaycountm1 == (authseqakt.replaycountm4 -1)) && (authseqakt.replaycountm2 == (authseqakt.replaycountm4 -1)) && (authseqakt.replaycountm3 == authseqakt.replaycountm4))
 			{
 			authseqakt.kdv4 = kdv;
 			if(authseqakt.kdv3 == kdv)
@@ -1920,7 +1920,7 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
 		{
-		if(authseqakt.replaycountm2 == (__hcx64be(wpakey->replaycount) - 1))
+		if(authseqakt.replaycountm2 == (authseqakt.replaycountm3 - 1))
 			{
 			authseqakt.kdv3 = kdv;
 			if(authseqakt.kdv2 == kdv)
