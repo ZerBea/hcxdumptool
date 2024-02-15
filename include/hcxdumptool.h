@@ -95,6 +95,7 @@
 #define DRIVERNAME_MAX		32
 #define EAPOLM2TIMEOUT		20000000ULL
 #define EAPOLM3TIMEOUT		20000000ULL
+#define EAPOLM4TIMEOUT		20000000ULL
 
 
 #define DRIVER_FORMAT		128
@@ -133,7 +134,11 @@ typedef struct
  u8	noncem1[4];
  u8	kdv2;
  u64	replaycountm2;
-}authseqakt_t;
+ u8	kdv3;
+ u64	replaycountm3;
+ u8	kdv4;
+ u64	replaycountm4;
+ }authseqakt_t;
 #define AUTHSEQAKT_SIZE (sizeof(authseqakt_t))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
@@ -172,18 +177,19 @@ typedef struct __attribute__((__packed__))
  u32	frequency;
  u8	macap[6];
  u8	macclient[6];
- u8	status;
+ u16	status;
 #define AP_IN_RANGE_TOT		120000000000ULL
-#define AP_IN_RANGE		0x01
-#define AP_IN_RANGE_MASK	0xfe
-#define AP_ESSID		0x02
-#define AP_BEACON		0x04
-#define AP_PROBERESPONSE	0x08
-#define AP_EAPOL_M1		0x10
-#define AP_EAPOL_M2		0x20
-#define AP_EAPOL_M3		0x40
-#define AP_PMKID		0x80
-#define AP_PMKID_EAPOL		0xc0
+#define AP_IN_RANGE		0x0001
+#define AP_IN_RANGE_MASK	0xfffe
+#define AP_ESSID		0x0002
+#define AP_BEACON		0x0004
+#define AP_PROBERESPONSE	0x0008
+#define AP_EAPOL_M1		0x0010
+#define AP_EAPOL_M2		0x0020
+#define AP_EAPOL_M3		0x0040
+#define AP_EAPOL_M4		0x0080
+#define AP_PMKID		0x0100
+#define AP_PMKID_EAPOL		0x01c0
 
  infoelement_t	ie;
 }aplist_t;

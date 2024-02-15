@@ -59,8 +59,9 @@ static bool beaconoffflag = false;
 
 static u16 wanteventflag = 0;
 static u16 exiteapolpmkidflag = 0;
-static u16 exiteapolm2flag = 0;
+static u16 exiteapolm4flag = 0;
 static u16 exiteapolm3flag = 0;
+static u16 exiteapolm2flag = 0;
 static u16 exiteapolm1flag = 0;
 
 static int gpiostatusled = 0;
@@ -1874,24 +1875,39 @@ static inline __attribute__((always_inline)) void process80211eapol_m4(void)
 {
 static size_t i;
 
-for(i = 0; i < APLIST_MAX -1; i++)
+authseqakt.replaycountm4 = __hcx64be(wpakey->replaycount);
+if(memcmp(&zeroed, &wpakey->nonce, 32) != 0)
+if((authseqakt.status & AP_EAPOL_M3) == AP_EAPOL_M3)
 	{
-	if(memcmp((aplist +i)->macap, macfrx->addr3, ETH_ALEN) == 0)
+	if(memcmp(&authseqakt.macap, macfrx->addr1, ETH_ALEN) == 0)
 		{
-		if((aplist +i)->status >= AP_EAPOL_M3) return;
-		if(deauthenticationflag == true)
+		if(authseqakt.replaycountm3 == authseqakt.replaycountm4)
 			{
-			if(((aplist +i)->ie.flags & APAKM_MASK) == 0)
+			authseqakt.kdv4 = kdv;
+			if(authseqakt.kdv3 == kdv)
 				{
-				send_80211_disassociation_fm_ap((aplist +i)->macclient, (aplist +i)->macap, WLAN_REASON_DISASSOC_AP_BUSY);
-				send_80211_disassociation_fm_client(macfrx->addr2, (aplist +i)->macap, WLAN_REASON_DISASSOC_STA_HAS_LEFT);
+				if((tsakt - tshold) < EAPOLM4TIMEOUT)
+					{
+					if(memcmp(&zeroed, &wpakey->nonce, 32) != 0)
+						{
+						for(i = 0; i < APLIST_MAX -1; i++)
+							{
+							if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
+								{
+								(aplist +i)->tsakt = tsakt;
+								authseqakt.status = 0;
+								(aplist +i)->status |= AP_EAPOL_M4;
+								wanteventflag |= exiteapolm4flag;
+								return;
+								}
+							}
+						}
+					}
 				}
 			}
-		memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-		qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-		return;
 		}
 	}
+authseqakt.status = 0;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -1899,12 +1915,14 @@ static inline __attribute__((always_inline)) void process80211eapol_m3(void)
 {
 static size_t i;
 
+authseqakt.replaycountm3 = __hcx64be(wpakey->replaycount);
 if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 	{
 	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
 		{
 		if(authseqakt.replaycountm2 == (__hcx64be(wpakey->replaycount) - 1))
 			{
+			authseqakt.kdv3 = kdv;
 			if(authseqakt.kdv2 == kdv)
 				{
 				if((tsakt - tshold) < EAPOLM3TIMEOUT)
@@ -1916,7 +1934,6 @@ if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
 							if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
 								{
 								(aplist +i)->tsakt = tsakt;
-								authseqakt.status = 0;
 								(aplist +i)->status |= AP_EAPOL_M3;
 								wanteventflag |= exiteapolm3flag;
 								return;
@@ -4843,7 +4860,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 			"                              S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
 			"                              P = + AP display     : got PMKID hashcat / JtR can work on\n"
 			"                              1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
-			"                              3 = + AP display     : got EAPOL M1M2M3 (AUTHORIZATION) hashcat / JtR can work on\n"
+			"                              3 = + AP display     : got EAPOL M1M2M3 or EAPOL M1M2M3M4 (AUTHORIZATION) hashcat / JtR can work on\n"
 			"                              E = + CLIENT display : got EAP-START MESSAGE\n"
 			"                              2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
 
