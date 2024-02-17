@@ -127,7 +127,7 @@
 /*===========================================================================*/
 typedef struct
 {
- u8	status;
+ u16	status;
  u8	macap[6];
  u8	kdv1;
  u64	replaycountm1;
@@ -189,7 +189,7 @@ typedef struct __attribute__((__packed__))
 #define AP_EAPOL_M3		0x0040
 #define AP_EAPOL_M4		0x0080
 #define AP_PMKID		0x0100
-#define AP_PMKID_EAPOL		0x01c0
+#define AP_PMKID_EAPOL		0x01f0
 
  infoelement_t	ie;
 }aplist_t;

@@ -2035,7 +2035,6 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
 		{
-		if(((aplist +i)->status & AP_PMKID) == AP_PMKID) return;
 		(aplist +i)->status |= authseqakt.status;
 		(aplist +i)->tsakt = tsakt;
 		return;
