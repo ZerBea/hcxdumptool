@@ -4746,7 +4746,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	#endif
 	"                  to disable frequency management, set this option to a single frequency/channel\n"
 	"-f <digit>     : set frequency (2412,2417,5180,...)\n"
-	"-F             : use available frequencies from INTERFACE\n"
+	"-F             : use all available frequencies from INTERFACE\n"
 	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                  default %llu seconds\n"
 	"-A             : ACK incoming frames\n"
