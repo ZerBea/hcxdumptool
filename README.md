@@ -226,11 +226,9 @@ Useful Scripts
 
 | Script       | Description                                              |
 | ------------ | -------------------------------------------------------- |
-| bash_profile | Autostart for Raspberry Pi (copy to /root/.bash_profile) |
-| pireadcard   | Back up a Pi SD card                                     |
-| piwritecard  | Restore a Pi SD card                                     |
 | stopnm       | Example script to start NetworkManager                   |
 | startnm      | Example script to stop NetworkManager                    |
+| startnlmon   | Example script to activate NETLINK monitor               |
 
 Hardware Mod - See Docs gpiowait.png (hcxdumptool)
 ---------------------------------------------------
