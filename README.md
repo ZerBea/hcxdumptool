@@ -8,13 +8,15 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 General Information
 --------------------
 
-An overview of Hashcat mode 22000. - (https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
+* An overview of Hashcat mode 22000. - [Hashcat Wiki](https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
 
-A set of tools by **ZerBea** intended for processing capture files. - [hcxtools](https://github.com/ZerBea/hcxtools)
+* A set of tools by **ZerBea** intended for processing capture files. - [hcxtools Repository](https://github.com/ZerBea/hcxtools)
 
-Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID. - (https://hashcat.net/forum/thread-7717.html)
+* Old but still applicable write-up by **atom** of the Hashcat forums covering a new attack on WPA/WPA2 using PMKID. - [Hashcat Forum Thread](https://hashcat.net/forum/thread-7717.html)
 
-Hashcat mode 22000 write-up by **atom** of the Hashcat forums. - (https://hashcat.net/forum/thread-10253.html)
+* Hashcat mode 22000 write-up by **atom** of the Hashcat forums. - [Hashcat Forum Thread](https://hashcat.net/forum/thread-10253.html)
+
+* A write-up by **Ido Hoorvitch** from CyberArk covering the statistics of WPA/WPA2 password cracking. - [CyberArk Article](https://www.cyberark.com/resources/threat-research-blog/cracking-wifi-at-scale-with-one-simple-trick)
 
 What Doesn't hcxdumptool Do?
 -----------------------------
@@ -31,7 +33,7 @@ What Doesn't hcxdumptool Do?
 
 * It does not perform Evil Twin attacks.
 
-* It does not provide a beatiful status display
+* It does not provide a beautiful status display.
 
 * It is not a honey pot.
 
@@ -45,7 +47,7 @@ Detailed Description
 | hcxdumptool   | Tool to run several tests against WPA PSK to determine if ACCESS POINTs or CLIENTs are vulnerable.    |
 | hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats. (hcxtools)                      |
 | hcxhashtool   | Tool to filter hashes from HC22000 files based on user input. (hcxtools)                              |
-| hcxpsktool    | Tool to get weak PSK candidates from HC22000 files. (hcxtools)                                         |
+| hcxpsktool    | Tool to get weak PSK candidates from HC22000 files. (hcxtools)                                        |
 | hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered. (hcxtools)                                     |
 | Hashcat/JtR   | Third party tools used to infer PSK from HC22000 hash files.                                          |
 
@@ -84,12 +86,12 @@ Install Guide
 ### Solve Dependencies 
 -----------------------
 
-Using the package manager of your distribution's choice, issue the commands to update it's cache and install the required packages: `make gcc libpcap libpcap-dev`
+Using the package manager of your distribution's choice, issue the commands to update it's cache and install the required packages: `git make gcc libpcap libpcap-dev`
 
 **Debian Based Distributions**
 
 ```
-sudo apt update && sudo apt install make gcc libpcap libpcap-dev
+sudo apt update && sudo apt install git make gcc libpcap libpcap-dev
 ```
 
 ### Clone Repository
@@ -211,7 +213,6 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 | DELOCK 88806           | Panel           |
 | TP-LINK TL-ANT2409 A   | Panel           |
 
-
 GPS devices (NMEA 0183 protocol)
 ---------------------------------
 
@@ -219,7 +220,6 @@ GPS devices (NMEA 0183 protocol)
 | --------------------------- | --------------- |
 | NAVILOCK NL-701US           | USB             |
 | JENTRO BT-GPS-8 activepilot | BLUETOOTH       |
-
 
 Useful Scripts
 ---------------
@@ -232,7 +232,6 @@ Useful Scripts
 | stopnm       | Example script to start NetworkManager                   |
 | startnm      | Example script to stop NetworkManager                    |
 
-
 Hardware Mod - See Docs gpiowait.png (hcxdumptool)
 ---------------------------------------------------
 
@@ -241,9 +240,6 @@ When using this hardware modification, the LED will flash every 10 seconds if ev
 To terminate manually, press the push button for at least 10 seconds until LED turns on. (The LED will also turn on if hcxdumptool terminates.)
 
 Afterwards, the Raspberry Pi can be turned off and disconnected from it's power supply.
-
-To shut it all off, press the push button for at least 10 seconds. Then, the Raspberry Pi can be turned off safely and disconnected from power supply.
-
 
 PCAPNG Option Codes (Section Header Block)
 -------------------------------------------
@@ -319,16 +315,16 @@ You must use hcxdumptool only on networks you have permission to do this and if 
 Useful Links
 -------------
 
-https://pcapng.com/
+* PCAPNG Format Information - https://pcapng.com/
 
-https://www.kernel.org/doc/html/latest/
+* The Linux Kernel Documentation - https://www.kernel.org/doc/html/latest/
 
-https://www.kernel.org/doc/html/latest/bpf/index.html
+* BPF Documentation - https://www.kernel.org/doc/html/latest/bpf/index.html
 
-https://www.freecodecamp.org/news/the-linux-commands-handbook/
+* Linux Commands Handbook - https://www.freecodecamp.org/news/the-linux-commands-handbook/
 
-https://en.wikipedia.org/wiki/Wpa2
+* WPA2 Information - https://en.wikipedia.org/wiki/Wpa2
 
-https://en.wikipedia.org/wiki/802.11_Frame_Types
+* 802.11 Frame Types - https://en.wikipedia.org/wiki/802.11_Frame_Types
 
-https://en.wikipedia.org/wiki/IEEE_802.11i-2004
+* 802.11 Security Improvements - https://en.wikipedia.org/wiki/IEEE_802.11i-2004
