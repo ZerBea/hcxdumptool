@@ -1,4 +1,4 @@
-PRODUCTION		:= 0
+PRODUCTION		:= 1
 PRODUCTION_VERSION	:= 6.3.2
 PRODUCTION_YEAR		:= 2024
 
@@ -25,8 +25,8 @@ DEFS		+= -DHCXSTATUSOUT
 # comment to disable GPS support
 DEFS		+= -DHCXNMEAOUT
 # uncomment to enable BPF compiler
-#DEFS		+= -DHCXWANTLIBPCAP
-#LDFLAGS	+= -lpcap
+DEFS		+= -DHCXWANTLIBPCAP
+LDFLAGS	+= -lpcap
 # uncomment to enable DEBUG log
 #DEFS		+= -DHCXDEBUG
 
