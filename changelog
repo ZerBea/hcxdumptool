@@ -2,7 +2,8 @@
 ==========
 release v6.3.4
 release v6.3.3
-
+internal BPFC compiler enabled by default
+new dependency libpcap
 
 
 04.02.2024
