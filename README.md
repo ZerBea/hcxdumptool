@@ -86,13 +86,7 @@ Install Guide
 ### Solve Dependencies 
 -----------------------
 
-Using the package manager of your distribution's choice, issue the commands to update it's cache and install the required packages: `git make gcc libpcap libpcap-dev`
-
-**Debian Based Distributions**
-
-```
-sudo apt update && sudo apt install git make gcc libpcap libpcap-dev
-```
+Using the package manager of your distribution's choice, issue the commands to update it's cache and install the required packages
 
 ### Clone Repository
 ---------------------
@@ -123,28 +117,6 @@ On headless operation, remove -DSTATUSOUT from the Makefile before compiling! Th
 
 It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well, but feature requests will be rejected.
 
-### Install Via Package Manager
---------------------------------
-
-Using the package manager of your distribution's choice, issue the commands to update it's cache and install the `hcxdumptool` package.
-
-**Arch Linux Based Distributions**
-
-```
-sudo pacman -Syu && sudo pacman -S hcxdumptool
-```
-
-**OpenWRT**
-
-```
-opkg install hcxdumptool
-```
-
-**Debian Based Distributions**
-
-```
-sudo apt update && sudo apt install hcxdumptool
-```
 
 Adapters
 ---------
