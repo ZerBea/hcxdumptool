@@ -76,9 +76,9 @@ Requirements
 * GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 * To allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
-**If you decide to compile latest git head, make sure that your distribution is updated to it's latest version!**
+On most distributions hcxdumptool is available through the package manager.
 
-**Important Notice**: If you are running Debian on ARM, it is **mandatory** to add "iomem=relaxed" to cmdline.txt to allow IO memory mapping.
+If you decide to compile latest git head, make sure that your distribution is updated to it's latest version and make sure that all header files and dependencies have been installed!
 
 Install Guide
 --------------
