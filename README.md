@@ -18,6 +18,8 @@ General Information
 
 * A write-up by **Ido Hoorvitch** from CyberArk covering the statistics of WPA/WPA2 password cracking. - [CyberArk Article](https://www.cyberark.com/resources/threat-research-blog/cracking-wifi-at-scale-with-one-simple-trick)
 
+* A section of this README that covers hcxdumptool's abilities and the responsibilities of using it. - [Warning!](https://github.com/ZerBea/hcxdumptool#warning)
+
 What Doesn't hcxdumptool Do?
 -----------------------------
 
@@ -79,20 +81,20 @@ Requirements
 Install Guide
 --------------
 
-On most distributions hcxdumptool is available through the package manager.
+On most distributions, hcxdumptool and hcxtools are available through the package manager.
 
 If you decide to compile latest git head, make sure that your distribution is updated to it's latest version and make sure that all header files and dependencies have been installed!
 
-### Clone Repository
----------------------
+**Notice:** The packages mentioned in the "Requirements" section sometimes come under different names in a package manager! Make sure to install the correct packages!
+
+#### Clone Repository
 
 ```
 git clone https://github.com/ZerBea/hcxdumptool.git
 cd hcxdumptool
 ```
 
-### Compile & Install
-----------------------
+#### Compile & Install
 
 ```
 make -j $(nproc)
@@ -228,12 +230,12 @@ OPTIONCODE_WEAKCANDIDATE: 0xf2a0 (64 byte) == 63 characters + zero
 
 OPTIONCODE_GPS: 0xf2a1 (max 128 byte)
 
-Warning
---------
+Warning!
+---------
 
 You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, hcxdumptool/hcxtools is NOT recommended to be used by inexperienced users or newbies.
 
-If you are not familiar with Linux in general or you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
+If you are not familiar with Linux in general or you do not have at least a basic level of knowledge as mentioned in the "Requirements" section, hcxdumptool/hcxtools is probably not what you are looking for.
 However, if you have that knowledge hcxdumptool/hcxtools can do magic for you.
 
 Misuse of hcxdumptool within a network, particularly without authorization, may cause irreparable damage and result in significant consequences. “Not understanding what you were doing” is not going to work as an excuse.
