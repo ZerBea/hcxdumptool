@@ -248,11 +248,11 @@ If you can't control the environment it is absolutely mandatory to set the [BPF]
 
 By default options hcxdumptool is running three attack vectors:
 
-* connect to an ACCESS POINT to get a PMKID
+* connect to an ACCESS POINT to get a PMKID (turn off by --attemptapmax)
 
-* disconnect a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (if supported by the AP)
+* disconnect a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
 
-* allow a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID
+* allow a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax)
 
 They can be turned off using options. The BPF can be used to select a target (or multible targets) or to protect devices.
 
