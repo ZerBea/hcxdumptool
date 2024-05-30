@@ -246,6 +246,8 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 
 If you can't control the environment it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
+The BPF can be used to select a target (or multible targets) or to protect devices.
+
 By default options hcxdumptool is running three attack vectors:
 
 * connect to an ACCESS POINT to get a PMKID (turn off by --attemptapmax)
@@ -253,8 +255,6 @@ By default options hcxdumptool is running three attack vectors:
 * disconnect a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
 
 * allow a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax)
-
-They can be turned off using options. The BPF can be used to select a target (or multible targets) or to protect devices.
 
 You must use hcxdumptool only on networks you have permission to do this and if you know what you are doing, because:
 
