@@ -16,7 +16,9 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
 - [A write-up by **Ido Hoorvitch** from CyberArk covering the statistics of WPA/WPA2 password cracking.](https://www.cyberark.com/resources/threat-research-blog/cracking-wifi-at-scale-with-one-simple-trick)
 
-- [A section of this README that covers hcxdumptool's abilities and the responsibilities of using it.](https://github.com/ZerBea/hcxdumptool#warning)
+- [A section of this README that covers hcxdumptool's abilities and the responsibilities of using it.](https://github.com/ZerBea/hcxdumptool#caution)
+
+- hcxdumptool uses the modern [pcapng](https://pcapng.com/) format, allowing for use with wireshark or tshark.
 
 ### What Doesn't hcxdumptool Do?
 
@@ -39,6 +41,7 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 **Unsupported:** Windows OS, macOS, Android, emulators or wrappers!
 
 > [!NOTE]
+>
 > **hcxdumptool** does not perform conversion or cracking! It is designed to be used in conjunction with the following tools:
 >
 > | Tool          | Description                                                                                           |
@@ -48,6 +51,8 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 > | hcxpsktool    | Tool to get weak PSK candidates from HC22000 files. (hcxtools)                                        |
 > | hcxeiutool    | Tool to calculate wordlists based off ESSIDs gathered. (hcxtools)                                     |
 > | Hashcat/JtR   | Third party tools used to infer PSK from HC22000 hash files.                                          |
+>
+> **hcxtools** can be found [here](https://github.com/ZerBea/hcxtools). Hashcat can be found [here](https://github.com/hashcat/hashcat).
 
 ### Work Flow
 
@@ -75,6 +80,7 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 ### Install Guide
 
 > [!IMPORTANT]
+>
 > While hcxdumptool and hcxtools are available through the package manager on most distributions, these packages are usually very old and outdated, thus cloning and building is recommended. 
 >
 > Make sure that your distribution is updated to it's latest version and make sure that all header files and dependencies have been installed BEFORE attempting to compile!
@@ -90,21 +96,23 @@ cd hcxdumptool
 
 #### Compile & Install
 
+Compiling:
 ```
 make -j $(nproc)
 ```
 
-Install to `/usr/bin`:
+Installing to `/usr/bin`:
 ```
 make install (as super user)
 ```
 
-Or install to `/usr/local/bin`:
+Or installing to `/usr/local/bin`:
 ```
 make install PREFIX=/usr/local (as super user)
 ```
 
 > [!TIP]
+>
 > On headless operation, remove -DSTATUSOUT from the Makefile before compiling! That way, the status display will not be compiled. This will save CPU cycles and prevent ERRORs from occurring.
 >
 > It is theoretically possible to compile hcxdumptool for other systems (e.g. Android) and other distributions (e.g. KALI) and other operating systems (BSD) as well.
@@ -113,6 +121,7 @@ make install PREFIX=/usr/local (as super user)
 ### Adapters
 
 > [!WARNING]
+>
 > - Do not expect flawless drivers on brand new hardware!
 >
 > - Driver must support monitor mode and full packet injection!
@@ -153,13 +162,7 @@ Not recommended WiFi chipsets:
 
 * Intel (Monitor mode and frame injection problems.)
 
-More information about possible issues or limitations:
-
-https://bugzilla.kernel.org
-
-https://wireless.wiki.kernel.org/en/users/Drivers/ath10k
-
-https://github.com/morrownr/USB-WiFi/issues/314
+More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
 
 ### Antennas
 
@@ -181,6 +184,7 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 | --------------------------- | --------------- |
 | NAVILOCK NL-701US           | USB             |
 | JENTRO BT-GPS-8 activepilot | BLUETOOTH       |
+| HiLetgo VK172               | USB             |
 
 ### Useful Scripts
 
@@ -190,31 +194,9 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 | startnm      | Example script to stop NetworkManager                    |
 | startnlmon   | Example script to activate NETLINK monitor               |
 
-### PCAPNG Option Codes (Section Header Block)
+### Caution!
 
-ENTERPRISE NUMBER: 0x2a, 0xce, 0x46, 0xa1
-
-MAGIC NUMBER: 0x2a, 0xce, 0x46, 0xa1, 0x79, 0xa0, 0x72, 0x33, 0x83, 0x37, 0x27, 0xab, 0x59, 0x33, 0xb3, 0x62, 0x45, 0x37, 0x11, 0x47, 0xa7, 0xcf, 0x32, 0x7f, 0x8d, 0x69, 0x80, 0xc0, 0x89, 0x5e, 0x5e, 0x98
-
-OPTIONCODE_MACMYORIG: 0xf29a (6 byte)
-
-OPTIONCODE_MACMYAP: 0xf29b (6 byte)
-
-OPTIONCODE_RC: 0xf29c (8 byte)
-
-OPTIONCODE_ANONCE: 0xf29d (32 byte)
-
-OPTIONCODE_MACMYSTA: 0xf29e (6 byte)
-
-OPTIONCODE_SNONCE: 0xf29f (32 byte)
-
-OPTIONCODE_WEAKCANDIDATE: 0xf2a0 (64 byte) == 63 characters + zero
-
-OPTIONCODE_GPS: 0xf2a1 (max 128 byte)
-
-### Warning!
-
-You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, hcxdumptool/hcxtools is NOT recommended to be used by inexperienced users or newbies.
+You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, hcxdumptool/hcxtools is _NOT_ recommended to be used by inexperienced users or newbies.
 
 If you are not familiar with Linux in general or you do not have at least a basic level of knowledge as mentioned in the "Requirements" section, hcxdumptool/hcxtools is probably not what you are looking for.
 However, if you have that knowledge hcxdumptool/hcxtools can do magic for you.
@@ -223,62 +205,70 @@ Misuse of hcxdumptool within a network, particularly without authorization, may 
 
 The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis toolkit. 
 
-**It should only be used in a 100% controlled environment!**
+**hcxdumptool should only be used in a 100% controlled environment!**
 
-If you can't control the environment it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
+If you can't control the environment, it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
 The BPF can be used to select a target (or multible targets) or to protect devices.
 
-By default options hcxdumptool is running three attack vectors:
+By default, hcxdumptool is utilizing three attack vectors:
 
-- connect to an ACCESS POINT to get a PMKID (turn off by --attemptapmax)
+- Connecting to an ACCESS POINT to get a PMKID (turn off by --attemptapmax)
 
-- disconnect a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
+- Disconnecting a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
 
-- allow a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax)
+- Allowing a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax)
 
-You must use hcxdumptool only on networks you have permission to do this and if you know what you are doing, because:
-
-- hcxdumptool is able to prevent complete WLAN traffic transmission. (Depending on selected options.)
-
-- hcxdumptool is able to capture PMKIDs from access points. (Only one single PMKID from an access point is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
-
-- hcxdumptool is able to capture handshakes from non-connected clients. (Only one single M2 from the client is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
-
-- hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz. (Only one single M2 from the client is required. Use hcxpcapngtool to to a format Hashcat or JtR understands.)
-
-- hcxdumptool is able to capture passwords from the WLAN traffic. (Use hcxpcapngtool -R to save them to file, or together with networknames [-E].)
-
-- hcxdumptool is able to request and capture extended EAPOL (RADIUS, GSM-SIM, WPS. hcxpcapngtool will show you information about them.)
-
-- hcxdumptool is able to capture identities from the WLAN traffic. (Example: Request IMSI numbers from mobile phones - use hcxpcapngtool -I to save them to file.)
-
-- hcxdumptool is able to capture usernames from the WLAN traffic. (Example: User name of a server authentication - use hcxpcapngtool -U to save them to file.)
-
-- Do not use a logical interface and leave the physical interface in managed mode!
-
-- Do not use hcxdumptool in combination with the aircrack-ng suite, Reaver, Bully or other tools which take access to the interface!
-
-- Stop all services which take access to the physical interface! (NetworkManager, wpa_supplicant,...)
-
-- Do not use tools like macchanger as they are useless since hcxdumptool uses its own random MAC address space.
-
-- Do not merge PCAPNG dumpfiles because that will destroy custom block hash assignments!
-
-- Capture format PCAPNG is compatible with Wireshark and tshark.
+> [!WARNING]
+>
+> **You may only use hcxdumptool on networks that you have permission to attack, because:**
+>
+> - hcxdumptool is able to prevent complete WLAN traffic transmission. (Depending on selected options.)
+>
+> - hcxdumptool is able to capture PMKIDs from access points. (Only one single PMKID from an access point is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
+>
+> - hcxdumptool is able to capture handshakes from non-connected clients. (Only one single M2 from the client is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
+>
+> - hcxdumptool is able to capture handshakes from 5/6GHz clients on 2.4GHz. (Only one single M2 from the client is required. Use hcxpcapngtool to convert to a format Hashcat or JtR understands.)
+>
+> - hcxdumptool is able to capture passwords from the WLAN traffic. (Use hcxpcapngtool -R to save them to file, or together with networknames [-E].)
+>
+> - hcxdumptool is able to request and capture extended EAPOL. (RADIUS, GSM-SIM, WPS. hcxpcapngtool will show you information about them.)
+>
+> - hcxdumptool is able to capture identities from the WLAN traffic. (Example: Request IMSI numbers from mobile phones - use hcxpcapngtool -I to save them to file.)
+>
+> - hcxdumptool is able to capture usernames from the WLAN traffic. (Example: User name of a server authentication - use hcxpcapngtool -U to save them to file.)
+>
+> **Do Not:**
+>
+> - Use a logical interface and leave the physical interface in managed mode!
+>
+> - Use hcxdumptool in combination with the aircrack-ng suite, Reaver, Bully, or any other tools that take access to the interface!
+>
+> - Use tools like macchanger as they are useless since hcxdumptool uses its own random MAC address space.
+>
+> - Merge PCAPNG dumpfiles because doing so will destroy custom block hash assignments!
 
 ### Useful Links
 
-- PCAPNG Format Information - https://pcapng.com/
+- [PCAPNG Format Information](https://pcapng.com/)
 
-- The Linux Kernel Documentation - https://www.kernel.org/doc/html/latest/
+- [The Linux Kernel Documentation](https://www.kernel.org/doc/html/latest/)
 
-- BPF Documentation - https://www.kernel.org/doc/html/latest/bpf/index.html
+- [BPF Documentation](https://www.kernel.org/doc/html/latest/bpf/index.html)
 
-- Linux Commands Handbook - https://www.freecodecamp.org/news/the-linux-commands-handbook/
+- [Linux Commands Handbook](https://www.freecodecamp.org/news/the-linux-commands-handbook/)
 
-- WPA2 Information - https://en.wikipedia.org/wiki/Wpa2
+- [WPA2 Information](https://en.wikipedia.org/wiki/Wpa2)
 
-- 802.11 Frame Types - https://en.wikipedia.org/wiki/802.11_Frame_Types
+- [802.11 Frame Types](https://en.wikipedia.org/wiki/802.11_Frame_Types)
 
-- 802.11 Security Improvements - https://en.wikipedia.org/wiki/IEEE_802.11i-2004
+- [802.11 Security Improvements](https://en.wikipedia.org/wiki/IEEE_802.11i-2004)
+
+- [Kernel Bugzilla](https://bugzilla.kernel.org)
+
+- [About ath10k](https://wireless.wiki.kernel.org/en/users/Drivers/ath10k)
+
+- [Status of Realtek out-of-kernel Drivers](https://github.com/morrownr/USB-WiFi/issues/314)
+
+- [PCAPNG Status Options](https://github.com/ZerBea/hcxdumptool/blob/master/docs/option-codes.md)
