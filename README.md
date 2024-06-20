@@ -20,6 +20,8 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
 - hcxdumptool uses the modern [pcapng](https://pcapng.com/) format, allowing for use with wireshark or tshark.
 
+- [A document showcasing an example attack using hcxdumptool and hcxtools.](https://github.com/ZerBea/hcxdumptool/blob/master/docs/example.md)
+
 ### What Doesn't hcxdumptool Do?
 
 - It does not crack WPA PSK related hashes. (Use Hashcat or JtR to recover the PSK.)
