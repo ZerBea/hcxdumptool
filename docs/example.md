@@ -29,13 +29,13 @@ The creation of a [BPF](https://wiki.wireshark.org/CaptureFilters) is **mandator
 The full command to create a BPF to _attack_ 00c0cab035be would be as follows:
 
 ```
-hcxdumptool --bpfc="wlan addr 1 00c0cab035be or wlan addr 2 00c0cab035be or wlan addr 3 00c0cab035be" >> attack.bpf
+hcxdumptool --bpfc="wlan addr1 00c0cab035be or wlan addr2 00c0cab035be or wlan addr3 00c0cab035be" >> attack.bpf
 ```
 
 The full command to create a BPF to _protect_ 00c0cab035be would be as follows:
 
 ```
-hcxdumptool --bpfc="not wlan addr 3 00c0cab035be" >> protect.bpf
+hcxdumptool --bpfc="not wlan addr3 00c0cab035be" >> protect.bpf
 ```
 
 Since we are going to attack 00c0cab035be, we will use the **attack.bpf** filter.
