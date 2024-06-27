@@ -73,10 +73,10 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 - Recommended: Arch Linux (notebooks and desktop systems), OpenWRT (small systems like Raspberry Pi, WiFi router)
 - WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
 - WLAN device driver *must* support monitor and full frame injection mode.
-- gcc >= 13 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+- gcc >= 14 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 - make
 - libpcap and libpcap-dev (If internal BPF compiler has been enabled.)
-- Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero (WH) or A+, because of a very low power consumption), but notebooks and desktops will work as well.
+- Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero or A+, because of a very low power consumption), but notebooks and desktops will work as well.
 - GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 - To allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
 
