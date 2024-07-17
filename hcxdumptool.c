@@ -5460,6 +5460,7 @@ close_lists();
 if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
+errorcount += errortxcount;
 fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
 if(errorcount > 0) fprintf(stderr, "Possible reasons:\n"
 			" driver is broken\n"
