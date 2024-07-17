@@ -5461,8 +5461,8 @@ if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
 errorcount += errortxcount;
-fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
-fprintf(stderr, "%u TX ERROR(s) during runtime\n", errortxcount);
+if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
+if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime\n", errortxcount);
 if(errorcount > 0) fprintf(stderr, "Possible reasons:\n"
 			" driver is broken\n"
 			" driver is busy (misconfigured system, other services access the INTERFACE)\n");
