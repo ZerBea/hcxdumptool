@@ -155,6 +155,8 @@ Recommended WiFi chipsets:
 
 * Ralink (rt2800usb)
 
+* Atheros (ath9k_htc)
+
 Not recommended WiFi chipsets:
 
 * Realtek (Monitor mode and frame injection problems.)
