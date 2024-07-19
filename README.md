@@ -153,17 +153,17 @@ Recommended WiFi chipsets:
 
 * MediaTek (mt76)
 
-* Realtek (rtl8xxxu)
-
 * Ralink (rt2800usb)
 
 Not recommended WiFi chipsets:
 
+* Realtek (Monitor mode and frame injection problems.)
+
+* Intel (Monitor mode and frame injection problems.)
+
 * Broadcom (Neither monitor mode nor frame injection by official Linux kernel.)
 
 * Qualcomm (No frame injection by official Linux kernel.)
-
-* Intel (Monitor mode and frame injection problems.)
 
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
 
