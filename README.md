@@ -79,6 +79,7 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 - Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero or A+, because of a very low power consumption), but notebooks and desktops will work as well.
 - GPIO hardware mod recommended (push button and LED) on Raspberry Pi
 - To allow 5/6/7GHz packet injection, it is mandatory to uncomment a regulatory domain that support this: /etc/conf.d/wireless-regdom 
+- Make sure that the version of hcxdumptool always fits to the version of hcxpcapngtool 
 
 ### Install Guide
 
