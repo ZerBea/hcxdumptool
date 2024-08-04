@@ -152,7 +152,7 @@ make install PREFIX=/usr/local (as super user)
 
 Recommended WiFi chipsets:
 
-* MediaTek (mt76) depending on the Linux Kernel expect massive driver issues
+* MediaTek (mt76) depending on the version of the Linux Kernel expect massive driver issues
 
 * Ralink (rt2800usb) old chipset
 
