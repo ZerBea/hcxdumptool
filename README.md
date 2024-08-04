@@ -152,11 +152,11 @@ make install PREFIX=/usr/local (as super user)
 
 Recommended WiFi chipsets:
 
-* MediaTek (mt76)
+* MediaTek (mt76) depending on the Linux Kernel expect massive driver issues
 
-* Ralink (rt2800usb)
+* Ralink (rt2800usb) old chipset
 
-* Atheros (ath9k_htc)
+* Atheros (ath9k_htc) old chipset
 
 Not recommended WiFi chipsets:
 
