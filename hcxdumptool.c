@@ -5470,9 +5470,9 @@ fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
 if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
 			"Possible reasons:\n"
+			" driver is broken (most likely)\n"
 			" no transmitter in range\n"
-			" frames are filtered out by BPF\n"
-			" driver is broken\n");
+			" frames are filtered out by BPF\n");
 #ifdef HCXSTATUSOUT
 if(rcascanflag == NULL)
 	{
