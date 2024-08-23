@@ -149,18 +149,19 @@ make install PREFIX=/usr/local (as super user)
 > If you need these features, do a request on www.kernel.org
 >
 > Some device and driver tests can be found [here](https://github.com/ZerBea/hcxdumptool/discussions/361).
+> Dependent on the version of the Linux kernel, expect massive driver issues.
 
-Recommended WiFi chipsets:
-
-* MediaTek (mt76) depending on the version of the Linux Kernel expect massive driver issues
-
-* Ralink (rt2800usb) old chipset
+Known as working WiFi chipsets:
 
 * Atheros (ath9k_htc) old chipset
 
-Not recommended WiFi chipsets:
+* Ralink (rt2800usb) old chipset
 
-* Realtek (Monitor mode and frame injection problems.)
+* MediaTek (mt76) depending on the version of the Linux Kernel expect massive driver issues
+
+* Realtek (rtl8xxxu) depending on the version of the Linux Kernel expect massive driver issues
+
+Not recommended WiFi chipsets:
 
 * Intel (Monitor mode and frame injection problems.)
 
