@@ -157,9 +157,9 @@ Known as working WiFi chipsets:
 
 * Ralink (rt2800usb) old chipset
 
-* MediaTek (mt76) depending on the version of the Linux Kernel expect massive driver issues
+* MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
-* Realtek (rtl8xxxu) depending on the version of the Linux Kernel expect massive driver issues
+* Realtek (rtl8xxxu) depending on chpset and the version of the Linux Kernel expect massive driver issues
 
 Not recommended WiFi chipsets:
 
