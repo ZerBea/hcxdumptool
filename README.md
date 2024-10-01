@@ -171,6 +171,8 @@ Not recommended WiFi chipsets:
 
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
 
+As long as a manufacturer or a company does not consider it necessary to supply drivers to the Linux kernel avoid to buy this products! 
+
 ### Antennas
 
 The best high frequency amplifier is a good antenna!
