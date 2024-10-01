@@ -137,8 +137,7 @@ make install PREFIX=/usr/local (as super user)
 > [!NOTE]
 >
 > Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
->
-> Preferred chipsets come from MediaTek due to active monitor mode being very reliable. (Important notice: Massive problems with MT76 USB 3.0 devices if connected to some USB 3.0 ports!)
+> As long as a manufacturer or a company does not consider it necessary to supply drivers to the Linux kernel avoid to buy this products! 
 >
 > **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 >
@@ -170,8 +169,6 @@ Not recommended WiFi chipsets:
 * Qualcomm (No frame injection by official Linux kernel.)
 
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
-
-As long as a manufacturer or a company does not consider it necessary to supply drivers to the Linux kernel avoid to buy this products! 
 
 ### Antennas
 
