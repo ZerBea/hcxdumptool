@@ -137,7 +137,7 @@ make install PREFIX=/usr/local (as super user)
 > [!NOTE]
 >
 > Manufacturers do change chipsets without changing model numbers. Sometimes they add (v)ersion or (rev)vision.
-> As long as a manufacturer or a company does not consider it necessary to supply drivers to the Linux kernel avoid to buy this products! 
+> As long as a manufacturer or a company does not consider it necessary to supply drivers to the Linux kernel avoid to buy this products!
 >
 > **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 >
