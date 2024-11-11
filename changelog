@@ -1,3 +1,10 @@
+11.11.2024
+==========
+release v6.3.5
+better compatibility with OpenWRT
+several fixes
+
+
 04.03.2024
 ==========
 README.md: removed entire instructions how to compile hcxdumptool on different distributions
