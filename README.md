@@ -196,8 +196,8 @@ It is much better to achieve gain using a good antenna instead of increasing tra
 
 | Script       | Description                                              |
 | ------------ | -------------------------------------------------------- |
-| stopnm       | Example script to start NetworkManager                   |
-| startnm      | Example script to stop NetworkManager                    |
+| stopnm       | Example script to stop NetworkManager                    |
+| startnm      | Example script to start NetworkManager                   |
 | startnlmon   | Example script to activate NETLINK monitor               |
 
 ### Caution!
