@@ -5571,3 +5571,5 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
+$ ./hcxdumptool -o test.pcapng -i wlp39s0f3u4u5 –enable_status
+$ ./hcxpcaptool -z test.16800 test.pcapng
