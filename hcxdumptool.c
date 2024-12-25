@@ -1093,7 +1093,7 @@ if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "write associationrequest_orgfailed: %s\n", strerror(errno));
+fprintf(fh_debug, "write associationrequest_org failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
@@ -4076,7 +4076,11 @@ if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(
 #endif
 if(bpf.len > 0)
 	{
-	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0) return false;
+	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0)
+	#ifdef HCXDEBUG
+	fprintf(fh_debug, "SO_ATTACH_FILTER failed: %s\n", strerror(errno));
+	#endif
+	return false;
 	}
 memset(&saddr, 0, sizeof(saddr));
 saddr.sll_family = PF_PACKET;
