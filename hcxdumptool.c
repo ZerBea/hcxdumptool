@@ -4077,11 +4077,13 @@ if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(
 if(bpf.len > 0)
 	{
 	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0)
-	fprintf(stderr, "failed to attach BPF (SO_ATTACH_FILTER): %s\n", strerror(errno));
-	#ifdef HCXDEBUG
-	fprintf(fh_debug, "SO_ATTACH_FILTER failed: %s\n", strerror(errno));
-	#endif
-	return false;
+		{
+		fprintf(stderr, "failed to attach BPF (SO_ATTACH_FILTER): %s\n", strerror(errno));
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "SO_ATTACH_FILTER failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		}
 	}
 memset(&saddr, 0, sizeof(saddr));
 saddr.sll_family = PF_PACKET;
