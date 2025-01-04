@@ -25,6 +25,7 @@ jobs:
 
     - name: Install packages
       run: |
+           sudo apt update
            sudo apt install -y libpcap-dev
 
     - name: Make
