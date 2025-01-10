@@ -69,8 +69,8 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 - Detailed knowledge of Linux.
 - Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
 - Detailed knowledge of Bolean Operators.
-- Operating system: Linux (recommended: kernel >= 6.6, mandatory: kernel >= 5.15)
-- Recommendation: Arch Linux (notebooks and desktop systems), OpenWRT (small systems like Raspberry Pi, WiFi router)
+- Operating system: Linux (latest [kernel](https://www.kernel.org) mandatory >= 5.15)
+- Recommended distribution: [Arch Linux](https://archlinux.org/) (notebooks and desktop systems), [OpenWRT](https://openwrt.org/) (small systems like Raspberry Pi, WiFi router)
 - WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
 - WLAN device driver *must* support monitor and full frame injection mode.
 - gcc >= 14 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
