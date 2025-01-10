@@ -4854,6 +4854,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--rcascan=<character>     : do (R)adio (C)hannel (A)ssignment scan only\n"
 	"                             default = passive scan\n"
 	"                             a = active scan\n"
+	"                                 no PROBERESPONSE, AP is out of RANGE, packet injection is broken\n"
 	"                             p = passive scan\n"
 	"                            packets are not stored to dump file\n"
 	"                            not in combination with attack modes\n");
