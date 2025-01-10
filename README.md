@@ -231,7 +231,7 @@ By default, hcxdumptool is utilizing three attack vectors:
 >
 > - hcxdumptool is able to prevent complete WLAN traffic transmission. (Depending on selected options.)
 >
-> - hcxdumptool is able to capture PMKIDs from access points. (Only one single PMKID from an access point is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
+> - hcxdumptool is able to capture PMKIDs from access points if the accesspoint supports PMKID caching. (Only one single PMKID from an access point is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
 >
 > - hcxdumptool is able to capture handshakes from non-connected clients. (Only one single M2 from the client is required. Use hcxpcapngtool to convert them to a format Hashcat or JtR understands.)
 >
