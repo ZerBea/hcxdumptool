@@ -141,13 +141,13 @@ make install PREFIX=/usr/local (as super user)
 >
 > **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 >
-> No support for a third party driver which is not part of the [official Linux kernel](https://www.kernel.org/)
+> No support for a third party driver which is not part of the [official Linux kernel](https://www.kernel.org/).
 > Report related issues to the site, from which you downloaded the driver.
 >
 > No support for a driver which doesn't support monitor mode and full frame injection natively.
 > If you need these features, do a request on www.kernel.org
 >
-> Some device and driver tests can be found [here](https://github.com/ZerBea/hcxdumptool/discussions/361).
+> Several device and driver tests can be found [here](https://github.com/ZerBea/hcxdumptool/discussions/361).
 > Dependent on the version of the Linux kernel, expect massive driver issues.
 
 Known as working WiFi chipsets:
