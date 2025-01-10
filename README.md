@@ -71,7 +71,7 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 - Detailed knowledge of Bolean Operators.
 - Operating system: Linux (latest longterm or stable [kernel](https://www.kernel.org), mandatory >= 5.15)
 - Recommended distribution: [Arch Linux](https://archlinux.org/) (notebooks and desktop systems), [OpenWRT](https://openwrt.org/) (small systems like Raspberry Pi, WiFi router)
-- WLAN device chipset must be able to run in monitor mode. MediaTek chipsets are preferred due to active monitor mode capabilities.
+- WLAN device chipset must be able to run in monitor mode.
 - WLAN device driver *must* support monitor and full frame injection mode.
 - gcc >= 14 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 - make
@@ -141,7 +141,7 @@ make install PREFIX=/usr/local (as super user)
 >
 > **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 >
-> No support for a third party driver which is not part of the official Linux kernel (https://www.kernel.org/)
+> No support for a third party driver which is not part of the [official Linux kernel](https://www.kernel.org/)
 > Report related issues to the site, from which you downloaded the driver.
 >
 > No support for a driver which doesn't support monitor mode and full frame injection natively.
