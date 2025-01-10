@@ -261,6 +261,8 @@ By default, hcxdumptool is utilizing three attack vectors:
 
 - [The Linux Kernel Documentation](https://www.kernel.org/doc/html/latest/)
 
+- [Existing Linux Wireless drivers](https://wireless.docs.kernel.org/en/latest/en/users/drivers.html)
+
 - [BPF Documentation](https://www.kernel.org/doc/html/latest/bpf/index.html)
 
 - [Linux Commands Handbook](https://www.freecodecamp.org/news/the-linux-commands-handbook/)
