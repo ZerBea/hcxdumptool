@@ -168,6 +168,11 @@ Not recommended WiFi chipsets:
 
 * Qualcomm (No frame injection by official Linux kernel.)
 
+Absolutely not recommended:
+
+* All kinds of WiFi PCIe cards, due to massive interfernece.
+https://duckduckgo.com/?t=ffab&q=Static+Interference+from+PCIe+wifi&ia=web
+
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
 
 ### Antennas
