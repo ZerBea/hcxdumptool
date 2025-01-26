@@ -1049,7 +1049,7 @@ if(pcapngoutname == NULL)
 	}
 else pcapngfilename = pcapngoutname;
 umask(0);
-if((fd_pcapng = open(pcapngfilename, O_WRONLY | O_TRUNC | O_CREAT, 0777)) < 0) return false;
+if((fd_pcapng = open(pcapngfilename, O_WRONLY | O_TRUNC | O_CREAT, 0644)) < 0) return false;
 if(writeshb() == false) return false;
 if(writeidb() == false) return false;
 if(writecb() == false) return false;
@@ -4124,7 +4124,7 @@ if(hcxposoutname == NULL)
 	hcxposfilename = hcxposname;
 	}
 else hcxposfilename = hcxposoutname;
-if((fd_hcxpos = open(hcxposfilename, O_WRONLY | O_CREAT, 0777)) < 0) return false;
+if((fd_hcxpos = open(hcxposfilename, O_WRONLY | O_CREAT, 0644)) < 0) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
