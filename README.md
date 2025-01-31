@@ -70,6 +70,7 @@ However, if you have that knowledge this tools can do magic.
 - Knowledge of electromagnetic-wave engineering.
 - Detailed knowledge of 802.11 protocol.
 - Detailed knowledge of key derivation functions.
+- Detailed knwoldege of NMEA 0183 protocol.
 - Detailed knowledge of Linux.
 - Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
 - Detailed knowledge of Bolean Operators.
