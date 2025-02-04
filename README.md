@@ -175,7 +175,7 @@ Not recommended WiFi chipsets:
 
 Absolutely not recommended:
 
-* All kinds of WiFi PCIe cards, due to massive interfernece.
+* All kinds of WiFi PCIe cards, due to massive interference.
 https://duckduckgo.com/?t=ffab&q=Static+Interference+from+PCIe+wifi&ia=web
 
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
