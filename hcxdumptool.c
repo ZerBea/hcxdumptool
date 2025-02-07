@@ -2678,7 +2678,7 @@ static const char *gpggaid = "$GPGGA,";
 
 if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
 	{
-	if(packetlen == - 1) errorcount++;
+	if(nmealen == - 1) errorcount++;
 	return;
 	}
 nmeapacketcount++;
