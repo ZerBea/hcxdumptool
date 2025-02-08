@@ -37,8 +37,8 @@ ifeq ($(HOSTOS), Linux)
 INSTFLAGS += -D
 endif
 
-
 TOOLS=hcxdumptool
+TOOLS+=hcxnmealog
 
 .PHONY: all build install clean uninstall
 
