@@ -23,7 +23,8 @@
 
 static int fd_gps = 0;
 static int fd_timer = 0;
-static u64 errorcount = 0;
+static u32 errorcount = 0;
+static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u16 wanteventflag = 0;
@@ -136,8 +137,8 @@ fflush(fh_nmea);
 return;
 }
 /*===========================================================================*/
-/* GPS LOOP */
-static bool gps_loop(void)
+/* GPS LOOPs */
+static bool gps_loop(char *nmeaoutname, char *basename)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -158,9 +159,10 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_gps, &ev) < 0) return false;
 epi++;
 
+if(nmeaoutname != NULL) fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
 while(!wanteventflag)
 	{
-//	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
@@ -334,12 +336,7 @@ if(set_timer() == false)
 	goto byebye;
 	}
 
-if(nmeaoutname != NULL)
-	{
-	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename(argv[0]), VERSION_TAG, nmeaoutname);
-	}
-
-if(gps_loop() == false)
+if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to initialize main scan loop\n");
