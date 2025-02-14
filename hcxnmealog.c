@@ -138,7 +138,7 @@ return;
 }
 /*===========================================================================*/
 /* GPS LOOPs */
-static bool gps_loop(char *nmeaoutname, char *basename)
+static bool gps_loop(char *basename, char *nmeaoutname)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -201,7 +201,6 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"\n"
 	"options:\n"
 	"-o <file>   : output nmea 0183 track\n"
-	"               track to stdout: stdout\n"
 	"               track append to file: filename\n"
 	"              use gpsbabel to convert to other formats:\n"
 	"               gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
@@ -345,7 +344,12 @@ if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 byebye:
 if(fd_timer != 0) close(fd_timer);
 if(fd_gps != 0) close(fd_gps);
-if(fh_nmea != NULL) fclose(fh_nmea);
+if(fh_nmea != NULL)
+	{
+	fprintf(stdout, "\nNMEA 0183 sentences.......: %ld\n", nmeapacketcount);
+	fclose(fh_nmea);
+	}
+
 
 return EXIT_SUCCESS;
 }
