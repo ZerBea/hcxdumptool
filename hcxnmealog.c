@@ -344,13 +344,11 @@ if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 byebye:
 if(fd_timer != 0) close(fd_timer);
 if(fd_gps != 0) close(fd_gps);
-if(fh_nmea != NULL)
+if(fh_nmea != NULL)fclose(fh_nmea);
+if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "\nNMEA 0183 sentences.......: %ld\n", nmeapacketcount);
-	fclose(fh_nmea);
 	}
-
-
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/
