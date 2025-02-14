@@ -23,14 +23,19 @@
 
 static int fd_gps = 0;
 static int fd_timer = 0;
+static int timerwaitnd = TIMER_EPWAITND;
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u16 wanteventflag = 0;
+static struct timespec tspecnmea = { 0 };
 static ssize_t nmealen = 0;
 static FILE *fh_nmea = NULL;
-static int timerwaitnd = TIMER_EPWAITND;
+static char latitude[NMEA_POS_SIZE] = { 0 };
+static char ns[1] = { 0 };
+static char longitude[NMEA_POS_SIZE] = { 0 };
+static char ew[1] = { 0 };
 static char nmeabuffer[NMEA_SIZE] = { 0 };
 /*===========================================================================*/
 static bool open_socket_gpsd(void)
@@ -124,6 +129,7 @@ if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
 	if(nmealen == - 1) errorcount++;
 	return;
 	}
+clock_gettime(CLOCK_REALTIME, &tspecnmea);
 nmeapacketcount++;
 nmeabuffer[nmealen] = 0;
 nres = nmeabuffer;

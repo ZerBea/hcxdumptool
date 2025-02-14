@@ -7,8 +7,9 @@
 
 #define ERROR_MAX			100
 
-#define NMEA_SIZE			2048
 #define NMEA_MIN			10
+#define NMEA_SIZE			2048
+#define NMEA_POS_SIZE			20
 
 #define EXIT_ON_SIGTERM		0x0001
 #define EXIT_ON_ERROR		0x0100
