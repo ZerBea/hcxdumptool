@@ -144,7 +144,7 @@ static ssize_t i;
 static int fd_epoll = 0;
 static int epi = 0;
 static int epret = 0;
-static u64 timer1count;
+static u64 timercount;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
@@ -159,7 +159,12 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_gps, &ev) < 0) return false;
 epi++;
 
-if(nmeaoutname != NULL) fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
+fprintf(stdout, "\033[?25l");
+if(nmeaoutname != NULL)
+	{
+	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
+	fprintf(stdout, "NMEA 0183 sentences logged: %ld", nmeapacketcount);
+	}
 while(!wanteventflag)
 	{
 	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
@@ -177,11 +182,19 @@ while(!wanteventflag)
 		if(events[i].data.fd == fd_gps) process_nmea0183();
 		else if(events[i].data.fd == fd_timer)
 			{
-			if(read(fd_timer, &timer1count, sizeof(u64)) == -1) errorcount++;
+			if(read(fd_timer, &timercount, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
+			if((lifetime %10) == 0)
+				{
+				if(nmeaoutname != NULL)
+					{
+					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld", nmeapacketcount);
+					}
+				}
 			}
 		}
 	}
+fprintf(stdout, "\n\033[?25h");
 return true;
 }
 /*===========================================================================*/
@@ -284,13 +297,12 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		break;
 		}
 	}
-
 if(argc < 2)
 	{
 	fprintf(stderr, "no option selected\n");
 	return EXIT_SUCCESS;
 	}
-
+setbuf(stdout, NULL);
 if(strncmp(gpsdname, gpsdevice, 4) == 0)
 	{
 	if(open_socket_gpsd() == false)
@@ -347,7 +359,7 @@ if(fd_gps != 0) close(fd_gps);
 if(fh_nmea != NULL)fclose(fh_nmea);
 if(nmeaoutname != NULL)
 	{
-	fprintf(stdout, "\nNMEA 0183 sentences.......: %ld\n", nmeapacketcount);
+	fprintf(stdout, "\nNMEA 0183 sentences logged: %ld\n", nmeapacketcount);
 	}
 return EXIT_SUCCESS;
 }
