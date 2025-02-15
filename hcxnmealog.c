@@ -151,7 +151,24 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 					i++;
 					}
 				}
-		}	}
+			}
+		}
+	else if(nsen[3] == 'G')
+		{
+		if(nsen[4] == 'G')
+			{
+			if(nsen[5] == 'A')
+				{
+				i = 0;
+				nresf = nsen;
+				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX))
+					{
+//					printf("%d %s\n", i, nsenf[i]);
+					i++;
+					}
+				}
+			}
+		}
 	}
 fflush(fh_nmea);
 return;
