@@ -32,10 +32,6 @@ static u16 wanteventflag = 0;
 static struct timespec tspecnmea = { 0 };
 static ssize_t nmealen = 0;
 static FILE *fh_nmea = NULL;
-static char latitude[NMEA_POS_SIZE] = { 0 };
-static char ns[1] = { 0 };
-static char longitude[NMEA_POS_SIZE] = { 0 };
-static char ew[1] = { 0 };
 static char nmeabuffer[NMEA_SIZE] = { 0 };
 /*===========================================================================*/
 static bool open_socket_gpsd(void)
@@ -120,8 +116,11 @@ return true;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
+static int i;
 static char *nsen;
 static char *nres;
+static char *nsenf[NMEA_FIELD_MAX];
+static char *nresf;
 
 nmeabuffer[nmealen] = 0;
 if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
@@ -138,6 +137,21 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 	if(strlen(nsen) < 6) continue;
 	if(nsen[0] != '$') continue;
 	fprintf(fh_nmea, "%s\n", nsen);
+	if(nsen[3] == 'R')
+		{
+		if(nsen[4] == 'M')
+			{
+			if(nsen[5] == 'C')
+				{
+				i = 0;
+				nresf = nsen;
+				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX))
+					{
+//					printf("%d %s\n", i, nsenf[i]);
+					i++;
+					}
+				}
+		}	}
 	}
 fflush(fh_nmea);
 return;
