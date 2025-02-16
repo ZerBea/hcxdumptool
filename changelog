@@ -1,18 +1,25 @@
-08.02.2025
+16.02.2025
 ==========
 hcxnmealog: New tool to log NMEA 0183 tracks
--o <file>   : output nmea 0183 track
-               track to stdout: stdout
-               track append to file: filename
-              use gpsbabel to convert to other formats:
-               gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
-               gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
--d <device> : GPS source
-               use gpsd: gpsd
-               use device: /dev/ttyACM0, /dev/tty/USBx, ...
-              get more information: https://en.wikipedia.org/wiki/NMEA_0183
--b <digit>  : baudrate of GPS device
-               default: 9600
+-o <file>      : output nmea 0183 track
+                  track append to file: filename
+                  use gpsbabel to convert to other formats:
+                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
+                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
+-d <device>    : GPS source
+                  use gpsd: gpsd
+                  use device: /dev/ttyACM0, /dev/tty/USBx, ...
+                  get more information: https://en.wikipedia.org/wiki/NMEA_0183
+-b <digit>     : baudrate of GPS device
+                  default: 9600
+-i <INTERFACE> : name of INTERFACE to be used
+-h             : show this help
+-v             : show version
+
+--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum 4096 instructions) in tcpdump decimal numbers format
+                  see --help for more information
+--help         : show this help
+--version      : show version
 
 The aim is to retrieve GPS information in NMEA 0183 standard format either from
 USB GPS devices or external a GPS tracker (e.g. Garmin eTrex 30) and to feed this
