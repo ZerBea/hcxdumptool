@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <libgen.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -27,7 +28,6 @@ static int timerwaitnd = TIMER_EPWAITND;
 static float latitude = 0;
 static float longitude = 0;
 static float altitude = 0;
-
 
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
@@ -217,7 +217,7 @@ fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
+	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
 	}
 while(!wanteventflag)
 	{
@@ -242,7 +242,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
+					fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
 					}
 				}
 			}
@@ -413,7 +413,7 @@ if(fd_gps != 0) close(fd_gps);
 if(fh_nmea != NULL)fclose(fh_nmea);
 if(nmeaoutname != NULL)
 	{
-	fprintf(stdout, "\nNMEA 0183 sentences logged: %ld\n", nmeapacketcount);
+	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 "\n", nmeapacketcount);
 	}
 return EXIT_SUCCESS;
 }
