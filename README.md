@@ -4,6 +4,12 @@ A tool to capture packets from WLAN devices and to discover potential weak point
 
 Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
+# hcxnmealog
+
+A tool to handle NMEA 0183 sentences from GPS devices.
+
+Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
+
 ### General Information
 
 - [An overview of Hashcat mode 22000.](https://hashcat.net/wiki/doku.php?id=cracking_wpawpa2)
@@ -48,6 +54,7 @@ Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
 >
 > | Tool          | Description                                                                                           |
 > | ------------- | ------------------------------------------------------------------------------------------------------|
+> | hcxnmealog    | Tool to handle NMEA 0183 sentences                                                                    |
 > | hcxpcapngtool | Tool to convert raw PCAPNG files to Hashcat and JtR readable formats. (hcxtools)                      |
 > | hcxhashtool   | Tool to filter hashes from HC22000 files based on user input. (hcxtools)                              |
 > | hcxpsktool    | Tool to get weak PSK candidates from HC22000 files. (hcxtools)                                        |
