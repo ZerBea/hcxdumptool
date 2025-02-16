@@ -24,8 +24,8 @@
 static int fd_gps = 0;
 static int fd_timer = 0;
 static int timerwaitnd = TIMER_EPWAITND;
-static float latitude;
-static float longitude;
+static float latitude = 0;
+static float longitude = 0;
 
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
