@@ -6,6 +6,15 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
+#include <linux/filter.h>
+#include <linux/genetlink.h>
+#include <linux/if_packet.h>
+#include <linux/limits.h>
+#include <linux/nl80211.h>
+#include <linux/rtnetlink.h>
+#include <linux/version.h>
+#include <net/ethernet.h>
+#include <net/if.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -22,23 +31,166 @@
 /*===========================================================================*/
 /* global variable */
 
+static int fd_socket_rx = 0;
 static int fd_gps = 0;
 static int fd_timer = 0;
+static int ifaktindex = 0;
 static int timerwaitnd = TIMER_EPWAITND;
 static float latitude = 0;
 static float longitude = 0;
 static float altitude = 0;
-
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u16 wanteventflag = 0;
+static struct sock_fprog bpf = { 0 };
 static struct timespec tspecnmea = { 0 };
 static ssize_t nmealen = 0;
+static ssize_t packetlen = 0;
 static FILE *fh_nmea = NULL;
 static char nmeabuffer[NMEA_SIZE] = { 0 };
+static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 /*===========================================================================*/
+static size_t chop(char *buffer, size_t len)
+{
+char *ptr = NULL;
+
+ptr = buffer +len - 1;
+while(len)
+	{
+	if(*ptr != '\n') break;
+	*ptr-- = 0;
+	len--;
+	}
+while(len)
+	{
+	if(*ptr != '\r') break;
+	*ptr-- = 0;
+	len--;
+	}
+return len;
+}
+/*---------------------------------------------------------------------------*/
+static int fgetline(FILE *inputstream, size_t size, char *buffer)
+{
+size_t len = 0;
+char *buffptr = NULL;
+
+if(feof(inputstream)) return -1;
+buffptr = fgets(buffer, size, inputstream);
+if(buffptr == NULL) return -1;
+len = strlen(buffptr);
+len = chop(buffptr, len);
+return len;
+}
+/*===========================================================================*/
+static bool read_bpf(char *bpfname)
+{
+static int len;
+static struct sock_filter *bpfptr;
+static FILE *fh_filter;
+static char linein[128];
+
+if((fh_filter = fopen(bpfname, "r")) == NULL) return false;
+bpf.filter = (struct sock_filter*)calloc(BPF_MAXINSNS, sizeof(struct sock_filter));
+bpf.len = 0;
+bpfptr = bpf.filter;
+while(bpf.len < BPF_MAXINSNS +1)
+	{
+	if((len = fgetline(fh_filter, 128, linein)) == -1) break;
+	if(bpf.len == BPF_MAXINSNS)
+		{
+		bpf.len = 0;
+		break;
+		}
+	if(len < 7) continue;
+	if(linein[0] != '{')
+		{
+		if(sscanf(linein, "%" SCNu16 "%" SCNu8 "%" SCNu8 "%" SCNu32, &bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
+			{
+			bpf.len = 0;
+			break;
+			}
+		}
+	else
+		{
+		if(sscanf(linein, "{ %" SCNx16 ", %"  SCNu8 ", %" SCNu8 ", %" SCNx32 " },",&bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
+			{
+			bpf.len = 0;
+			break;
+			}
+		}
+	bpfptr++;
+	bpf.len++;
+	}
+fclose(fh_filter);
+if(bpf.len == 0) return false;
+return true;
+}
+/*===========================================================================*/
+static bool open_socket_rx(char *bpfname)
+{
+static size_t c = 10;
+static struct sockaddr_ll saddr;
+static struct packet_mreq mrq;
+#if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
+ static int enable = 1;
+#endif
+static int socket_rx_flags;
+static int prioval;
+static socklen_t priolen;
+
+bpf.len = 0;
+if(bpfname != NULL)
+	{
+	if(read_bpf(bpfname) == false)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to read BPF\n");
+		return false;
+		}
+	}
+if((fd_socket_rx = socket(PF_PACKET, SOCK_RAW | SOCK_CLOEXEC, htons(ETH_P_ALL))) < 0) return false;
+memset(&mrq, 0, sizeof(mrq));
+mrq.mr_ifindex = ifaktindex;
+mrq.mr_type = PACKET_MR_PROMISC;
+if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mrq, sizeof(mrq)) < 0) return false;
+priolen = sizeof(prioval);
+prioval = 20;
+if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
+#if(LINUX_VERSION_CODE >= KERNEL_VERSION(4, 20, 0))
+if(setsockopt(fd_socket_rx, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int)) < 0) fprintf(stderr, "PACKET_IGNORE_OUTGOING is not supported by kernel\nfalling back to validate radiotap header length\n");
+#endif
+if(bpf.len > 0)
+	{
+	if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf)) < 0)
+		{
+		fprintf(stderr, "failed to attach BPF (SO_ATTACH_FILTER): %s\n", strerror(errno));
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "SO_ATTACH_FILTER failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		}
+	}
+memset(&saddr, 0, sizeof(saddr));
+saddr.sll_family = PF_PACKET;
+saddr.sll_ifindex = ifaktindex;
+saddr.sll_protocol = htons(ETH_P_ALL);
+saddr.sll_halen = ETH_ALEN;
+saddr.sll_pkttype = PACKET_OTHERHOST;
+if(bind(fd_socket_rx, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) return false;
+if((socket_rx_flags = fcntl(fd_socket_rx, F_GETFL, 0)) < 0) return false;
+if(fcntl(fd_socket_rx, F_SETFL, socket_rx_flags | O_NONBLOCK) < 0) return false;
+while((!wanteventflag) || (c != 0))
+	{
+	packetlen = read(fd_socket_rx, rx, PCAPNG_SNAPLEN);
+	if(packetlen == -1) break;
+	c--;
+	}
+return true;
+}
+/*---------------------------------------------------------------------------*/
 static bool open_socket_gpsd(void)
 {
 static int socket_gps_flags;
