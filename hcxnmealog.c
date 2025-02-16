@@ -24,6 +24,9 @@
 static int fd_gps = 0;
 static int fd_timer = 0;
 static int timerwaitnd = TIMER_EPWAITND;
+static float latitude;
+static float longitude;
+
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
@@ -117,6 +120,13 @@ return true;
 static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
 static int i;
+static int h;
+static int m;
+static float s;
+static float lat, lon;
+static char v;
+static char ns;
+static char ew;
 static char *nsen;
 static char *nres;
 static char *nsenf[NMEA_FIELD_MAX];
@@ -143,9 +153,20 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 			{
 			if(nsen[5] == 'C')
 				{
-				i = 0;
-				nresf = nsen;
-				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX))
+				latitude = 0;
+				longitude = 0;
+				ns = 0;
+				ew = 0;
+				sscanf(&nsen[7],"%02d%02d%f,%c,%f,%c,%f,%c", &h, &m, &s, &v, &lat, &ew, &lon, &ns);
+				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
+				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
+//				sscanf(&nmeasentence[p],"%f,%c,%f,%c,%d,%d,%f,%f,%c", &latitude, &ew, &longitude, &ns, &fix, &satcount, &hdop, &altitude, &altunit);
+//				if(latitude != 0) latm = ((int)latitude) /100 + (((int)latitude) %100 +latitude -(int)latitude)/60;
+//				if(longitude != 0) lonm = ((int)longitude) /100 + (((int)longitude) %100 +longitude -(int)longitude)/60;
+//				if(ew == 'W') latm =-latm;
+//				if(ns == 'S') lonm =-lonm;
+
+				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX)) 
 					{
 //					printf("%d %s\n", i, nsenf[i]);
 					i++;
@@ -225,7 +246,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld", nmeapacketcount);
+					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f)", nmeapacketcount, latitude, longitude);
 					}
 				}
 			}
