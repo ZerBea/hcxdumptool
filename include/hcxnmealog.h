@@ -1,6 +1,8 @@
 #define HCX_OUTPUT_NMEA			'o'
 #define HCX_GPS_DEVICE			'd'
 #define HCX_GPS_BAUDRATE		'b'
+#define HCX_IFNAME			'i'
+#define HCX_BPF				1
 
 #define HCX_HELP			'h'
 #define HCX_VERSION			'v'

@@ -39,6 +39,10 @@ static int timerwaitnd = TIMER_EPWAITND;
 static float latitude = 0;
 static float longitude = 0;
 static float altitude = 0;
+static float lat = 0;
+static float lon = 0;
+static char ns = 0;
+static char ew = 0;
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
@@ -278,11 +282,8 @@ static int m;
 static int fix;
 static int satcount;
 static float s;
-static float lat, lon;
 static float hdop;
 static char v;
-static char ns;
-static char ew;
 static char *nsen;
 static char *nres;
 
@@ -419,23 +420,26 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"%s <options>\n"
 	"\n"
 	"options:\n"
-	"-o <file>   : output nmea 0183 track\n"
-	"               track append to file: filename\n"
-	"              use gpsbabel to convert to other formats:\n"
-	"               gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
-	"               gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
-	"-d <device> : GPS source\n"
-	"               use gpsd: gpsd\n"
-	"               use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
-	"              get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
-	"-b <digit>  : baudrate of GPS device\n"
-	"               default: 9600\n"
-	"-h          : show this help\n"
-	"-v          : show version\n"
+	"-o <file>      : output nmea 0183 track\n"
+	"                  track append to file: filename\n"
+	"                  use gpsbabel to convert to other formats:\n"
+	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
+	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
+	"-d <device>    : GPS source\n"
+	"                  use gpsd: gpsd\n"
+	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
+	"                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
+	"-b <digit>     : baudrate of GPS device\n"
+	"                  default: 9600\n"
+	"-i <INTERFACE> : name of INTERFACE to be used\n"
+	"-h             : show this help\n"
+	"-v             : show version\n"
 	"\n"
-	"--help           : show this help\n"
-	"--version        : show version\n"
-	"\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
+	"                  see --help for more information\n"
+	"--help         : show this help\n"
+	"--version      : show version\n"
+	"\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname, BPF_MAXINSNS);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -454,13 +458,15 @@ static int index;
 static int baudrate;
 static char *gpsdevice;
 static char *nmeaoutname;
+static char *bpfname;
 
 static char *gpsdname = "gpsd";
 static char *devicename = "/dev";
 
-static const char *short_options = "o:d:b:hv";
+static const char *short_options = "o:d:b:i:hv";
 static const struct option long_options[] =
 {
+	{"bpf",				required_argument,	NULL,	HCX_BPF},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP},
 	{NULL,				0,			NULL,	0}
@@ -473,11 +479,24 @@ optopt = 0;
 baudrate = 9600;
 gpsdevice = NULL;
 nmeaoutname = NULL;
+bpfname = NULL;
 
 while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) != -1)
 	{
 	switch (auswahl)
 		{
+		case HCX_IFNAME:
+		if((ifaktindex = if_nametoindex(optarg)) == 0)
+			{
+			perror("failed to get interface index");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCX_BPF:
+		bpfname = optarg;
+		break;
+
 		case HCX_GPS_DEVICE:
 		gpsdevice = optarg;
 		break;
@@ -509,6 +528,22 @@ if(argc < 2)
 	return EXIT_SUCCESS;
 	}
 setbuf(stdout, NULL);
+
+if(ifaktindex != 0)
+	{
+	if(getuid() != 0)
+		{
+		errorcount++;
+		fprintf(stderr, "%s must be run as root\n", basename(argv[0]));
+		goto byebye;
+		}
+	if(open_socket_rx(bpfname) == false)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to open raw packet socket\n");
+		goto byebye;
+		}
+	}
 if(strncmp(gpsdname, gpsdevice, 4) == 0)
 	{
 	if(open_socket_gpsd() == false)
@@ -563,6 +598,7 @@ byebye:
 if(fd_timer != 0) close(fd_timer);
 if(fd_gps != 0) close(fd_gps);
 if(fh_nmea != NULL)fclose(fh_nmea);
+if(fd_socket_rx != 0) close(fd_socket_rx);
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 "\n", nmeapacketcount);
