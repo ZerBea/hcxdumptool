@@ -26,6 +26,8 @@ static int fd_timer = 0;
 static int timerwaitnd = TIMER_EPWAITND;
 static float latitude = 0;
 static float longitude = 0;
+static float altitude = 0;
+
 
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
@@ -119,18 +121,18 @@ return true;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
-static int i;
 static int h;
 static int m;
+static int fix;
+static int satcount;
 static float s;
 static float lat, lon;
+static float hdop;
 static char v;
 static char ns;
 static char ew;
 static char *nsen;
 static char *nres;
-static char *nsenf[NMEA_FIELD_MAX];
-static char *nresf;
 
 nmeabuffer[nmealen] = 0;
 if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
@@ -160,17 +162,8 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				sscanf(&nsen[7],"%02d%02d%f,%c,%f,%c,%f,%c", &h, &m, &s, &v, &lat, &ew, &lon, &ns);
 				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
 				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
-//				sscanf(&nmeasentence[p],"%f,%c,%f,%c,%d,%d,%f,%f,%c", &latitude, &ew, &longitude, &ns, &fix, &satcount, &hdop, &altitude, &altunit);
-//				if(latitude != 0) latm = ((int)latitude) /100 + (((int)latitude) %100 +latitude -(int)latitude)/60;
-//				if(longitude != 0) lonm = ((int)longitude) /100 + (((int)longitude) %100 +longitude -(int)longitude)/60;
-//				if(ew == 'W') latm =-latm;
-//				if(ns == 'S') lonm =-lonm;
-
-				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX)) 
-					{
-//					printf("%d %s\n", i, nsenf[i]);
-					i++;
-					}
+				if(ew == 'W') latitude =-latitude;
+				if(ns == 'S') longitude =-longitude;
 				}
 			}
 		}
@@ -180,13 +173,16 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 			{
 			if(nsen[5] == 'A')
 				{
-				i = 0;
-				nresf = nsen;
-				while(((nsenf[i] = strsep(&nresf, ",*")) != NULL) && (i < NMEA_FIELD_MAX))
-					{
-//					printf("%d %s\n", i, nsenf[i]);
-					i++;
-					}
+				latitude = 0;
+				longitude = 0;
+				altitude = 0;
+				ns = 0;
+				ew = 0;
+				sscanf(&nsen[7],"%02d%02d%f,%f,%c,%f,%c,%d,%d,%f,%f", &h, &m, &s, &lat, &ew, &lon, &ns, &fix, &satcount, &hdop, &altitude);
+				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
+				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
+				if(ew == 'W') latitude =-latitude;
+				if(ns == 'S') longitude =-longitude;
 				}
 			}
 		}
@@ -221,7 +217,7 @@ fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "NMEA 0183 sentences logged: %ld", nmeapacketcount);
+	fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
 	}
 while(!wanteventflag)
 	{
@@ -246,7 +242,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f)", nmeapacketcount, latitude, longitude);
+					fprintf(stdout, "\rNMEA 0183 sentences logged: %ld (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
 					}
 				}
 			}
