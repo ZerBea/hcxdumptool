@@ -46,6 +46,7 @@ static float lat = 0;
 static float lon = 0;
 static char ns = 0;
 static char ew = 0;
+static char rssi = 0;
 static FILE *fh_nmea = NULL;
 static ssize_t packetlen = 0;
 static ssize_t nmealen = 0;
@@ -369,6 +370,54 @@ static inline __attribute__((always_inline)) void process80211beacon(void)
 return;
 }
 /*---------------------------------------------------------------------------*/
+static u8 getradiotapfield(uint16_t rthlen)
+{
+static int i;
+static uint16_t pf;
+static rth_t *rth;
+static uint32_t *pp;
+
+rth = (rth_t*)packetptr;
+pf = RTHRX_SIZE;
+if((rth->it_present & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
+	{
+	pp = (uint32_t*)packetptr;
+	for(i = 2; i < rthlen /4; i++)
+		{
+		#ifdef BIG_ENDIAN_HOST
+		pp[i] = byte_swap_32(pp[i]);
+		#endif
+		pf += 4;
+		if((pp[i] & IEEE80211_RADIOTAP_EXT) != IEEE80211_RADIOTAP_EXT) break;
+		}
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_TSFT) == IEEE80211_RADIOTAP_TSFT)
+	{
+	if(pf > rthlen) return 0;
+	if((pf %8) != 0) pf += 4;
+	pf += 8;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
+	{
+	if(pf > rthlen) return 0;
+	pf += 1;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
+if((rth->it_present & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL)
+	{
+	if(pf > rthlen) return 0;
+	if((pf %2) != 0) pf += 1;
+	pf += 4;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
+		{
+		if((pf %2) != 0) pf += 1;
+		pf += 2;
+		}
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL) return packetptr[pf];
+return 0;
+}
+/*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process_packet(void)
 {
 if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
@@ -397,10 +446,11 @@ else
 	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
 	payloadlen = ieee82011len -MAC_SIZE_NORM;
 	}
-clock_gettime(CLOCK_REALTIME, &tspecakt);
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
+	clock_gettime(CLOCK_REALTIME, &tspecakt);
+	rssi = getradiotapfield(__hcx16le(rth->it_len));
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse();
 	}
@@ -670,7 +720,7 @@ if(fh_nmea != NULL)fclose(fh_nmea);
 if(fd_socket_rx != 0) close(fd_socket_rx);
 if(nmeaoutname != NULL)
 	{
-	fprintf(stdout, "\n\ntotal NMEA 0183 sentences logged: %" PRIu64 " | total 802.11 packets received: %" PRIu64 "\n", nmeapacketcount, packetcount);
+	fprintf(stdout, "\nlogging terminated\ntotal NMEA 0183 sentences logged: %" PRIu64 " | total 802.11 packets received: %" PRIu64 "\n", nmeapacketcount, packetcount);
 	}
 return EXIT_SUCCESS;
 }
