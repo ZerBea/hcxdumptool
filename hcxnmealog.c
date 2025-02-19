@@ -355,7 +355,6 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 			}
 		}
 	}
-//fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%012X*02X\n",lat,ew,lon,ns, macap,cs);
 fflush(fh_nmea);
 return;
 }
@@ -416,6 +415,8 @@ if(tspecakt.tv_sec != tspecnmea.tv_sec) return;
 if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
+
+
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -430,7 +431,7 @@ if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
 
-fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X*%02X\n",lat,ew,lon,ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],cs);
+//fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X*%02X\n",lat,ew,lon,ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],cs);
 
 return;
 }
