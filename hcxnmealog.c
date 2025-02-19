@@ -49,7 +49,7 @@ static char ew = 0;
 static FILE *fh_nmea = NULL;
 static ssize_t packetlen = 0;
 static ssize_t nmealen = 0;
-static u64 packetcount = 1;
+static u64 packetcount = 0;
 static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u32 errorcount = 0;
@@ -438,7 +438,7 @@ fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
+	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets received: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 	}
 while(!wanteventflag)
 	{
@@ -464,7 +464,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f)", nmeapacketcount, latitude, longitude, altitude);
+					fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets received: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 					}
 				}
 			}
@@ -670,7 +670,7 @@ if(fh_nmea != NULL)fclose(fh_nmea);
 if(fd_socket_rx != 0) close(fd_socket_rx);
 if(nmeaoutname != NULL)
 	{
-	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 "\n", nmeapacketcount);
+	fprintf(stdout, "\n\ntotal NMEA 0183 sentences logged: %" PRIu64 " | total 802.11 packets received: %" PRIu64 "\n", nmeapacketcount, packetcount);
 	}
 return EXIT_SUCCESS;
 }
