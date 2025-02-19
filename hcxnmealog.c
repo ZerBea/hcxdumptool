@@ -67,7 +67,8 @@ static socklen_t lStatsLength = sizeof(lStats);
 static struct sock_fprog bpf = { 0 };
 static struct timespec tspecnmea = { 0 };
 static struct timespec tspecakt = { 0 };
-static char nmeabuffer[NMEA_SIZE] = { 0 };
+static char nmearxbuffer[NMEA_SIZE] = { 0 };
+static char nmeaoutbuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
 /*===========================================================================*/
@@ -404,16 +405,16 @@ static char v;
 static char *nsen;
 static char *nres;
 
-nmeabuffer[nmealen] = 0;
-if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
+nmearxbuffer[nmealen] = 0;
+if((nmealen = read(fd_gps, nmearxbuffer, NMEA_SIZE)) < NMEA_MIN)
 	{
 	if(nmealen == - 1) errorcount++;
 	return;
 	}
 clock_gettime(CLOCK_REALTIME, &tspecnmea);
 nmeapacketcount++;
-nmeabuffer[nmealen] = 0;
-nres = nmeabuffer;
+nmearxbuffer[nmealen] = 0;
+nres = nmearxbuffer;
 while((nsen = strsep(&nres, "\n\r")) != NULL)
 	{
 	if(strlen(nsen) < 6) continue;
@@ -524,7 +525,9 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211beacon(void)
 {
-//static int cs = 0;
+static int cs;
+static size_t nl;
+static size_t cp;
 
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 rssi = getradiotapfield(__hcx16le(rth->it_len));
@@ -533,8 +536,15 @@ if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
 
-//fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X*%02X\n",lat,ew,lon,ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],cs);
 
+if(fh_nmea != NULL)
+	{
+	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
+	nl = strnlen(nmeaoutbuffer, NMEA_SIZE);
+	cs = 0;
+	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
+	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
+	}
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -600,7 +610,6 @@ ev.data.fd = fd_timer;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer, &ev) < 0) return false;
 epi++;
-
 
 fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
