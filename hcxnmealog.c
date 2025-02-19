@@ -28,6 +28,9 @@
 
 #include "include/hcxnmealog.h"
 #include "include/types.h"
+#include "include/byteorder.h"
+#include "include/ieee80211.h"
+#include "include/radiotap.h"
 /*===========================================================================*/
 /* global variable */
 
@@ -43,6 +46,15 @@ static float lat = 0;
 static float lon = 0;
 static char ns = 0;
 static char ew = 0;
+static u64 packetcount = 1;
+static rth_t *rth = NULL;
+static ssize_t packetlen = 0;
+static u8 *packetptr = NULL;
+static u16 ieee82011len = 0;
+static u8 *ieee82011ptr = NULL;
+static u16 payloadlen = 0;
+static u8 *payloadptr = NULL;
+static ieee80211_mac_t *macfrx = NULL;
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
 static u64 nmeapacketcount = 0;
@@ -50,11 +62,12 @@ static u64 lifetime = 0;
 static u16 wanteventflag = 0;
 static struct sock_fprog bpf = { 0 };
 static struct timespec tspecnmea = { 0 };
+static struct timespec tspecakt = { 0 };
 static ssize_t nmealen = 0;
-static ssize_t packetlen = 0;
 static FILE *fh_nmea = NULL;
 static char nmeabuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
+static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
 /*===========================================================================*/
 static size_t chop(char *buffer, size_t len)
 {
@@ -192,6 +205,7 @@ while((!wanteventflag) || (c != 0))
 	if(packetlen == -1) break;
 	c--;
 	}
+packetptr = &rxbuffer[PCAPNG_SNAPLEN * 2];
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -340,7 +354,56 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 			}
 		}
 	}
+//fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%012X*02X\n",lat,ew,lon,ns, macap,cs);
 fflush(fh_nmea);
+return;
+}
+/*===========================================================================*/
+static inline __attribute__((always_inline)) void process80211proberesponse(void)
+{
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211beacon(void)
+{
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process_packet(void)
+{
+if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
+	{
+	if(packetlen == -1) errorcount++;
+	return;
+	}
+rth = (rth_t*)packetptr;
+if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if(__hcx16le(rth->it_len) > packetlen)
+	{
+	errorcount++;
+	return;
+	}
+ieee82011ptr = packetptr + __hcx16le(rth->it_len);
+ieee82011len = packetlen - __hcx16le(rth->it_len);
+if(ieee82011len <= MAC_SIZE_RTS) return;
+macfrx = (ieee80211_mac_t*)ieee82011ptr;
+if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_LONG;
+	payloadlen = ieee82011len -MAC_SIZE_LONG;
+	}
+else
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
+	payloadlen = ieee82011len -MAC_SIZE_NORM;
+	}
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+packetcount++;
+if(macfrx->type == IEEE80211_FTYPE_MGMT)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse();
+	}
 return;
 }
 /*===========================================================================*/
@@ -355,16 +418,21 @@ static u64 timercount;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
+ev.data.fd = fd_gps;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_gps, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_socket_rx;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_socket_rx, &ev) < 0) return false;
+epi++;
 
 ev.data.fd = fd_timer;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer, &ev) < 0) return false;
 epi++;
 
-ev.data.fd = fd_gps;
-ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_gps, &ev) < 0) return false;
-epi++;
 
 fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
@@ -387,6 +455,7 @@ while(!wanteventflag)
 	for(i = 0; i < epret; i++)
 		{
 		if(events[i].data.fd == fd_gps) process_nmea0183();
+		else if(events[i].data.fd == fd_socket_rx) process_packet();
 		else if(events[i].data.fd == fd_timer)
 			{
 			if(read(fd_timer, &timercount, sizeof(u64)) == -1) errorcount++;
