@@ -422,7 +422,7 @@ return;
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211beacon(void)
 {
-static int cs = 0;
+//static int cs = 0;
 
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 rssi = getradiotapfield(__hcx16le(rth->it_len));
@@ -594,9 +594,10 @@ static int baudrate;
 static char *gpsdevice;
 static char *nmeaoutname;
 static char *bpfname;
-
 static char *gpsdname = "gpsd";
 static char *devicename = "/dev";
+static struct tpacket_stats lStats = { 0 };
+static socklen_t lStatsLength = sizeof(lStats);
 
 static const char *short_options = "o:d:b:i:hv";
 static const struct option long_options[] =
@@ -733,10 +734,19 @@ byebye:
 if(fd_timer != 0) close(fd_timer);
 if(fd_gps != 0) close(fd_gps);
 if(fh_nmea != NULL)fclose(fh_nmea);
-if(fd_socket_rx != 0) close(fd_socket_rx);
+if(fd_socket_rx != 0)
+	{
+	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
+	close(fd_socket_rx);
+	}
 if(nmeaoutname != NULL)
 	{
-	fprintf(stdout, "\nlogging terminated\ntotal NMEA 0183 sentences logged: %" PRIu64 " | total 802.11 packets received: %" PRIu64 "\n", nmeapacketcount, packetcount);
+	fprintf(stdout, "\nSummary:\n"
+			"-------\n"
+			"NMEA 0183 sentences logged.......: %" PRIu64 
+			"802.11 packets received by kernel: %d"
+			"802.11 packets dropped by kernel.: %d"
+			"\n", nmeapacketcount, lStats.tp_packets, lStats.tp_drops);
 	}
 return EXIT_SUCCESS;
 }
