@@ -360,16 +360,6 @@ fflush(fh_nmea);
 return;
 }
 /*===========================================================================*/
-static inline __attribute__((always_inline)) void process80211proberesponse(void)
-{
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211beacon(void)
-{
-return;
-}
-/*---------------------------------------------------------------------------*/
 static u8 getradiotapfield(uint16_t rthlen)
 {
 static int i;
@@ -418,6 +408,33 @@ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DB
 return 0;
 }
 /*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211proberesponse(void)
+{
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+rssi = getradiotapfield(__hcx16le(rth->it_len));
+if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
+if(rssi == 0) return;
+if(lon == 0) return;
+if(lat == 0) return;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211beacon(void)
+{
+static int cs = 0;
+
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+rssi = getradiotapfield(__hcx16le(rth->it_len));
+if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
+if(rssi == 0) return;
+if(lon == 0) return;
+if(lat == 0) return;
+
+fprintf(stdout, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X*%02X\n",lat,ew,lon,ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],cs);
+
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process_packet(void)
 {
 if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
@@ -449,8 +466,6 @@ else
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
-	clock_gettime(CLOCK_REALTIME, &tspecakt);
-	rssi = getradiotapfield(__hcx16le(rth->it_len));
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse();
 	}
