@@ -488,7 +488,7 @@ fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets received: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+	fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 	}
 while(!wanteventflag)
 	{
@@ -514,7 +514,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences logged: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets received: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+					fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 					}
 				}
 			}
