@@ -37,7 +37,6 @@
 static int fd_socket_rx = 0;
 static int fd_gps = 0;
 static int fd_timer = 0;
-static int ifaktindex = 0;
 static int timerwaitnd = TIMER_EPWAITND;
 static float latitude = 0;
 static float longitude = 0;
@@ -63,12 +62,25 @@ static u8 *ieee82011ptr = NULL;
 static u8 *payloadptr = NULL;
 static ieee80211_mac_t *macfrx = NULL;
 static rth_t *rth = NULL;
+static struct tpacket_stats lStats = { 0 };
+static socklen_t lStatsLength = sizeof(lStats);
 static struct sock_fprog bpf = { 0 };
 static struct timespec tspecnmea = { 0 };
 static struct timespec tspecakt = { 0 };
 static char nmeabuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
+/*===========================================================================*/
+static void close_devices()
+{
+if(fd_gps != 0) close(fd_gps);
+if(fd_socket_rx != 0)
+	{
+	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
+	close(fd_socket_rx);
+	}
+return;
+}
 /*===========================================================================*/
 static size_t chop(char *buffer, size_t len)
 {
@@ -147,7 +159,25 @@ if(bpf.len == 0) return false;
 return true;
 }
 /*===========================================================================*/
-static bool open_socket_rx(char *bpfname)
+static void close_files(void)
+{
+if(fh_nmea != NULL)fclose(fh_nmea);
+return;
+}
+/*---------------------------------------------------------------------------*/
+static bool open_files(char *nmeaoutname)
+{
+if(nmeaoutname == NULL) fh_nmea = stdout;
+else if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
+	{
+	errorcount++;
+	fprintf(stderr, "failed to open nmea file\n");
+	return false;
+	}
+return true;
+}
+/*===========================================================================*/
+static bool open_socket_rx(int ifaktindex, char *bpfname)
 {
 static size_t c = 10;
 static struct sockaddr_ll saddr;
@@ -206,7 +236,6 @@ while((!wanteventflag) || (c != 0))
 	if(packetlen == -1) break;
 	c--;
 	}
-packetptr = &rxbuffer[PCAPNG_SNAPLEN * 2];
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -255,6 +284,53 @@ cfsetspeed(&tty, (speed_t)baudrate);
 if (tcsetattr(fd_gps, TCSANOW, &tty) < 0) return false;
 return true;
 }
+/*---------------------------------------------------------------------------*/
+static bool open_devices(char *hcxnmealogname, int ifaktindex, char *bpfname, char *gpsdevice, int baudrate)
+{
+static char *gpsdname = "gpsd";
+static char *devicename = "/dev";
+
+if(ifaktindex != 0)
+	{
+	if(getuid() != 0)
+		{
+		errorcount++;
+		fprintf(stderr, "%s must be run as root\n", hcxnmealogname);
+		return false;
+		}
+	if(open_socket_rx(ifaktindex, bpfname) == false)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to open raw packet socket\n");
+		return false;
+		}
+	}
+if(strncmp(gpsdname, gpsdevice, 4) == 0)
+	{
+	if(open_socket_gpsd() == false)
+		{
+		fprintf(stderr, "failed to connect to GPSD\n");
+		return EXIT_SUCCESS;
+		}
+	}
+else if(strncmp(devicename, gpsdevice, 4) == 0)
+	{
+	if(open_device_gps(gpsdevice, baudrate) == false)
+		{
+		fprintf(stderr, "failed to open GPS device\n");
+		return EXIT_SUCCESS;
+		}
+	}
+else
+	{
+	fprintf(stderr, "no GPS device selected\n");
+	return EXIT_SUCCESS;
+	}
+
+
+
+return true;
+}
 /*===========================================================================*/
 /* SIGNALHANDLER */
 static void signal_handler(int signum)
@@ -287,6 +363,32 @@ tval.it_value.tv_nsec = TIMER_VALUE_NSEC;
 tval.it_interval.tv_sec = TIMER_INTERVAL_SEC;
 tval.it_interval.tv_nsec = TIMER_INTERVAL_NSEC;
 if(timerfd_settime(fd_timer, 0, &tval, NULL) == -1) return false;
+return true;
+}
+/*===========================================================================*/
+static void global_deinit()
+{
+if(fd_timer != 0) close(fd_timer);
+return;
+}
+/*---------------------------------------------------------------------------*/
+static bool global_init(void)
+{
+packetptr = &rxbuffer[PCAPNG_SNAPLEN * 2];
+if(set_signal_handler() == false)
+	{
+	errorcount++;
+	fprintf(stderr, "failed to initialize signal handler\n");
+	return false;
+	}
+
+if(set_timer() == false)
+	{
+	errorcount++;
+	fprintf(stderr, "failed to initialize timer\n");
+	return false;
+	}
+
 return true;
 }
 /*===========================================================================*/
@@ -504,7 +606,7 @@ fprintf(stdout, "\033[?25l");
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+	fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%.1f lon:%.1f alt:%.1f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 	}
 while(!wanteventflag)
 	{
@@ -530,7 +632,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+					fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%.1f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
 					}
 				}
 			}
@@ -590,14 +692,11 @@ int main(int argc, char *argv[])
 {
 static int auswahl;
 static int index;
+static int ifaktindex;
 static int baudrate;
 static char *gpsdevice;
 static char *nmeaoutname;
 static char *bpfname;
-static char *gpsdname = "gpsd";
-static char *devicename = "/dev";
-static struct tpacket_stats lStats = { 0 };
-static socklen_t lStatsLength = sizeof(lStats);
 
 static const char *short_options = "o:d:b:i:hv";
 static const struct option long_options[] =
@@ -613,6 +712,7 @@ index = 0;
 optind = 1;
 optopt = 0;
 baudrate = 9600;
+ifaktindex = 0;
 gpsdevice = NULL;
 nmeaoutname = NULL;
 bpfname = NULL;
@@ -665,64 +765,9 @@ if(argc < 2)
 	}
 setbuf(stdout, NULL);
 
-if(ifaktindex != 0)
-	{
-	if(getuid() != 0)
-		{
-		errorcount++;
-		fprintf(stderr, "%s must be run as root\n", basename(argv[0]));
-		goto byebye;
-		}
-	if(open_socket_rx(bpfname) == false)
-		{
-		errorcount++;
-		fprintf(stderr, "failed to open raw packet socket\n");
-		goto byebye;
-		}
-	}
-if(strncmp(gpsdname, gpsdevice, 4) == 0)
-	{
-	if(open_socket_gpsd() == false)
-		{
-		fprintf(stderr, "failed to connect to GPSD\n");
-		return EXIT_SUCCESS;
-		}
-	}
-else if(strncmp(devicename, gpsdevice, 4) == 0)
-	{
-	if(open_device_gps(gpsdevice, baudrate) == false)
-		{
-		fprintf(stderr, "failed to open GPS device\n");
-		return EXIT_SUCCESS;
-		}
-	}
-else
-	{
-	fprintf(stderr, "no GPS device selected\n");
-	return EXIT_SUCCESS;
-	}
-
-if(nmeaoutname == NULL) fh_nmea = stdout;
-else if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
-	{
-	errorcount++;
-	fprintf(stderr, "failed to open nmea file\n");
-	goto byebye;
-	}
-
-if(set_signal_handler() == false)
-	{
-	errorcount++;
-	fprintf(stderr, "failed to initialize signal handler\n");
-	goto byebye;
-	}
-
-if(set_timer() == false)
-	{
-	errorcount++;
-	fprintf(stderr, "failed to initialize timer\n");
-	goto byebye;
-	}
+if(open_devices(basename(argv[0]), ifaktindex, bpfname, gpsdevice, baudrate) == false) goto byebye;
+if(open_files(nmeaoutname) == false) goto byebye;
+if(global_init() == false) goto byebye;
 
 if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 	{
@@ -731,14 +776,9 @@ if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 	}
 
 byebye:
-if(fd_timer != 0) close(fd_timer);
-if(fd_gps != 0) close(fd_gps);
-if(fh_nmea != NULL)fclose(fh_nmea);
-if(fd_socket_rx != 0)
-	{
-	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
-	close(fd_socket_rx);
-	}
+close_devices();
+close_files();
+global_deinit();
 if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "\nSummary:\n"
