@@ -539,7 +539,7 @@ if(lat == 0) return;
 
 if(fh_nmea != NULL)
 	{
-	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%07.2f,%c,%08.2f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
+	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
 	nl = strnlen(nmeaoutbuffer, NMEA_SIZE);
 	cs = 0;
 	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
