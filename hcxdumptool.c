@@ -502,9 +502,9 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
 	}
 fprintf(stdout, "\n"
-		"* active monitor mode available (reported by driver - do not trust it)\n"
-		"+ monitor mode available (reported by driver)\n"
-		"- no monitor mode available\n");
+		"* active promiscuous mode available (reported by driver - do not trust it)\n"
+		"+ promiscuous mode available (reported by driver)\n"
+		"- no promiscuous mode available\n");
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -4676,7 +4676,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"stop all services that have access to the interface, e.g.:\n"
 	" $ sudo systemctl stop NetworkManager.service\n"
 	" $ sudo systemctl stop wpa_supplicant.service\n"
-	"run %s - it will set an appropriate monitor mode\n"
+	"run %s - it will set an appropriate promiscuous mode\n"
 	" scan for ACCESS POINTS in range (packets are not stored to dump file, not in combination with attack modes)\n"
 	"  $ %s -i INTERFACENAME -F --rcascan=active\n"
 	" attack target(s) (not in combination with rcascan)\n"
@@ -4760,7 +4760,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                  default %llu seconds\n"
 	"-A             : ACK incoming frames\n"
-	"                  INTERFACE must support active monitor mode\n"
+	"                  INTERFACE must support active promiscuous mode\n"
 	"-L             : show INTERFACE list and terminate\n"
 	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
 	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
@@ -4780,7 +4780,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD / 1000000000ULL, BPF_MAXINSNS);
 #endif
 fprintf(stdout, "less common options:\n--------------------\n"
-	"-m <INTERFACE>            : set monitor mode and terminate\n"
+	"-m <INTERFACE>            : set promiscuous mode and terminate\n"
 	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
 	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
 	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
@@ -5373,7 +5373,7 @@ if(monitormodeflag == true)
 	if(set_monitormode() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to set monitor mode\n");
+		fprintf(stderr, "failed to set promiscuous mode\n");
 		}
 	if((userfrequencylistname != NULL) || (userchannellistname != 0))
 		{
@@ -5476,7 +5476,7 @@ if(errorcount > 0) fprintf(stderr, "Possible reasons:\n"
 			" driver is busy (misconfigured system, other services access the INTERFACE)\n");
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
-if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
+if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (promiscuous mode may not work as expected)\n"
 			"Possible reasons:\n"
 			" driver is broken (most likely)\n"
 			" no transmitter in range\n"
