@@ -465,6 +465,25 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				}
 			}
 		}
+	else if(nsen[3] == 'G')
+		{
+		if(nsen[4] == 'L')
+			{
+			if(nsen[5] == 'L')
+				{
+				latitude = 0;
+				longitude = 0;
+				altitude = 0;
+				ns = 0;
+				ew = 0;
+				sscanf(&nsen[7],"%f,%c,%f,%c,%02d%02d%f", &lat, &ew, &lon, &ns, &h, &m, &s);
+				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
+				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
+				if(ew == 'W') latitude =-latitude;
+				if(ns == 'S') longitude =-longitude;
+				}
+			}
+		}
 	}
 fflush(fh_nmea);
 return;

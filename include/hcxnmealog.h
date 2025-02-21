@@ -31,6 +31,10 @@
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
+ float	lat;
+ float	lon;
+ char	ns;
+ char	ew;
  u8	rssi;
  u8	essid[ESSID_MAX];
  u8	essidlen;
