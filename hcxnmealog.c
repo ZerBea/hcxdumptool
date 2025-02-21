@@ -792,9 +792,9 @@ if(nmeaoutname != NULL)
 	{
 	fprintf(stdout, "\nSummary:\n"
 			"-------\n"
-			"NMEA 0183 sentences logged.......: %" PRIu64 
-			"802.11 packets received by kernel: %d"
-			"802.11 packets dropped by kernel.: %d"
+			"NMEA 0183 sentences logged.......: %" PRIu64 "\n"
+			"802.11 packets received by kernel: %d\n"
+			"802.11 packets dropped by kernel.: %d\n"
 			"\n", nmeapacketcount, lStats.tp_packets, lStats.tp_drops);
 	}
 return EXIT_SUCCESS;
