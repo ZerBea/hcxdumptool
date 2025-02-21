@@ -17,6 +17,7 @@
 #include <net/if.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +47,7 @@ static float lon = 0;
 static char ns = 0;
 static char ew = 0;
 static char rssi = 0;
+
 static FILE *fh_nmea = NULL;
 static FILE *fh_csv = NULL;
 static ssize_t packetlen = 0;
@@ -55,6 +57,7 @@ static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
+static u16 frequency = 0;
 static u16 ieee82011len = 0;
 static u16 payloadlen = 0;
 static u16 wanteventflag = 0;
@@ -527,6 +530,7 @@ if((rth->it_present & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL)
 	{
 	if(pf > rthlen) return 0;
 	if((pf %2) != 0) pf += 1;
+	frequency = (packetptr[pf +1] << 8) + packetptr[pf];
 	pf += 4;
 	}
 if((rth->it_present & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
@@ -536,6 +540,22 @@ if((rth->it_present & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
 		}
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL) return packetptr[pf];
 return 0;
+}
+
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) ieee80211_ietag_t* get_tag(u8 ietag, int infolen, u8 *infostart)
+{
+static ieee80211_ietag_t *infoptr;
+
+while(0 < infolen)
+	{
+	infoptr = (ieee80211_ietag_t*)infostart;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return NULL;
+	if(infoptr->id == ietag) return infoptr;
+	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
+	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
+	}
+return NULL;
 }
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211proberesponse(void)
@@ -556,13 +576,20 @@ static inline __attribute__((always_inline)) void process80211beacon(void)
 static int cs;
 static size_t nl;
 static size_t cp;
+//static size_t i;
+//static ieee80211_beacon_proberesponse_t *beacon;
+static u16 beaconlen;
 
+//beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
+if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 rssi = getradiotapfield(__hcx16le(rth->it_len));
 if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
 if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
+
+
 
 if(fh_nmea != NULL)
 	{
@@ -575,7 +602,7 @@ if(fh_nmea != NULL)
 if(fh_csv != NULL)
 	{
 	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H:%M:%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%d%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, rssi, frequency);
 	}
 return;
 }
@@ -708,6 +735,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  DATE TIME (local system time\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
+	"                  RSSI (dBm)\n"
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
