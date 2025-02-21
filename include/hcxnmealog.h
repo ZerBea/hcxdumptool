@@ -24,3 +24,23 @@
 #define TIMER_INTERVAL_SEC	1L
 #define TIMER_INTERVAL_NSEC	0L
 #define PCAPNG_SNAPLEN		0x400
+
+#define ESSID_MAX		32
+
+/*---------------------------------------------------------------------------*/
+typedef struct __attribute__((__packed__))
+{
+ u8	rssi;
+ u8	essid[ESSID_MAX];
+ u8	essidlen;
+ }apdata_t;
+#define APDATA_SIZE (sizeof(apdata_t))
+/*---------------------------------------------------------------------------*/
+typedef struct __attribute__((__packed__))
+{
+ time_t		tv_sec;
+ u8		maca[ETH_ALEN];
+ apdata_t	*apdata;
+}aplist_t;
+#define APLIST_SIZE (sizeof(aplist_t))
+/*---------------------------------------------------------------------------*/
