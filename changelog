@@ -1,11 +1,17 @@
-16.02.2025
+23.02.2025
 ==========
 hcxnmealog: New tool to log NMEA 0183 tracks
--o <file>      : output nmea 0183 track
+-n <file>      : output nmea 0183 track
                   track append to file: filename
                   use gpsbabel to convert to other formats:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
                    gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
+                  time = UTC (in accordance with the NMEA 0183 standard)
+-c <file>      : output separated by tabulator
+                  BSSID (MAC ACCESS POINT)
+                  DATE TIME (local system time
+                  lATITUDE (decimal degrees)
+                  LONGIITUDE (decimal degrees)
 -d <device>    : GPS source
                   use gpsd: gpsd
                   use device: /dev/ttyACM0, /dev/tty/USBx, ...
