@@ -72,6 +72,7 @@ static char nmearxbuffer[NMEA_SIZE] = { 0 };
 static char nmeaoutbuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
+static char timestring[TIMESTRING_LEN];
 /*===========================================================================*/
 static void close_devices()
 {
@@ -563,7 +564,6 @@ if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
 
-
 if(fh_nmea != NULL)
 	{
 	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
@@ -571,6 +571,11 @@ if(fh_nmea != NULL)
 	cs = 0;
 	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
 	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
+	}
+if(fh_csv != NULL)
+	{
+	strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tspecakt.tv_sec));
+	fprintf(fh_csv, "%s\t%02X%02X%02X%02X%02X%02X\n", timestring, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
 	}
 return;
 }

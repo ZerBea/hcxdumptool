@@ -26,6 +26,7 @@
 #define TIMER_INTERVAL_NSEC	0L
 #define PCAPNG_SNAPLEN		0x400
 
+#define TIMESTRING_LEN		128
 #define ESSID_MAX		32
 
 /*---------------------------------------------------------------------------*/
