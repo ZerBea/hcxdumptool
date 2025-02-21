@@ -26,11 +26,11 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "include/hcxnmealog.h"
 #include "include/types.h"
 #include "include/byteorder.h"
 #include "include/ieee80211.h"
 #include "include/radiotap.h"
+#include "include/hcxnmealog.h"
 /*===========================================================================*/
 /* global variable */
 
@@ -47,6 +47,7 @@ static char ns = 0;
 static char ew = 0;
 static char rssi = 0;
 static FILE *fh_nmea = NULL;
+static FILE *fh_csv = NULL;
 static ssize_t packetlen = 0;
 static ssize_t nmealen = 0;
 static u64 packetcount = 0;
@@ -163,16 +164,23 @@ return true;
 static void close_files(void)
 {
 if(fh_nmea != NULL)fclose(fh_nmea);
+if(fh_csv != NULL)fclose(fh_csv);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static bool open_files(char *nmeaoutname)
+static bool open_files(char *nmeaoutname, char *csvoutname)
 {
 if(nmeaoutname == NULL) fh_nmea = stdout;
 else if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
 	{
 	errorcount++;
-	fprintf(stderr, "failed to open nmea file\n");
+	fprintf(stderr, "failed to open NMEA file\n");
+	return false;
+	}
+if((fh_csv = fopen(csvoutname, "a")) == NULL)
+	{
+	errorcount++;
+	fprintf(stderr, "failed to open CSV file\n");
 	return false;
 	}
 return true;
@@ -671,6 +679,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  use gpsbabel to convert to other formats:\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
+	"-c <file>      : output separated by tabulator\n"
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
@@ -705,9 +714,10 @@ static int ifaktindex;
 static int baudrate;
 static char *gpsdevice;
 static char *nmeaoutname;
+static char *csvoutname;
 static char *bpfname;
 
-static const char *short_options = "o:d:b:i:hv";
+static const char *short_options = "o:c:d:b:i:hv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -724,6 +734,7 @@ baudrate = 9600;
 ifaktindex = 0;
 gpsdevice = NULL;
 nmeaoutname = NULL;
+csvoutname = NULL;
 bpfname = NULL;
 
 while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) != -1)
@@ -754,6 +765,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		nmeaoutname = optarg;
 		break;
 
+		case HCX_OUTPUT_CSV:
+		csvoutname = optarg;
+		break;
+
 		case HCX_HELP:
 		usage(basename(argv[0]));
 		break;
@@ -775,7 +790,7 @@ if(argc < 2)
 setbuf(stdout, NULL);
 
 if(open_devices(basename(argv[0]), ifaktindex, bpfname, gpsdevice, baudrate) == false) goto byebye;
-if(open_files(nmeaoutname) == false) goto byebye;
+if(open_files(nmeaoutname, csvoutname) == false) goto byebye;
 if(global_init() == false) goto byebye;
 
 if(gps_loop(basename(argv[0]), nmeaoutname) == false)
