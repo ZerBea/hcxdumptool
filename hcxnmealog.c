@@ -575,7 +575,7 @@ if(fh_nmea != NULL)
 if(fh_csv != NULL)
 	{
 	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H:%M:%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude);
 	}
 return;
 }
@@ -705,7 +705,10 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
 	"-c <file>      : output separated by tabulator\n"
-	"                  time = local system time\n"
+	"                  BSSID (MAC ACCESS POINT)\n"
+	"                  DATE TIME (local system time\n"
+	"                  lATITUDE (decimal degrees)\n" 
+	"                  LONGIITUDE (decimal degrees)\n" 
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
