@@ -1,4 +1,4 @@
-#define HCX_OUTPUT_NMEA			'o'
+#define HCX_OUTPUT_NMEA			'n'
 #define HCX_OUTPUT_CSV			'c'
 #define HCX_GPS_DEVICE			'd'
 #define HCX_GPS_BAUDRATE		'b'

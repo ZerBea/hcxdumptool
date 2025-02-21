@@ -575,7 +575,7 @@ if(fh_nmea != NULL)
 if(fh_csv != NULL)
 	{
 	strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%s\t%02X%02X%02X%02X%02X%02X\n", timestring, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring);
 	}
 return;
 }
@@ -698,12 +698,14 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"%s <options>\n"
 	"\n"
 	"options:\n"
-	"-o <file>      : output nmea 0183 track\n"
+	"-n <file>      : output nmea 0183 track\n"
 	"                  track append to file: filename\n"
 	"                  use gpsbabel to convert to other formats:\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
+	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
 	"-c <file>      : output separated by tabulator\n"
+	"                  time = local system time\n"
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
@@ -741,7 +743,7 @@ static char *nmeaoutname;
 static char *csvoutname;
 static char *bpfname;
 
-static const char *short_options = "o:c:d:b:i:hv";
+static const char *short_options = "n:c:d:b:i:hv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
