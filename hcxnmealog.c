@@ -644,11 +644,7 @@ if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer, &ev) < 0) return false;
 epi++;
 
 fprintf(stdout, "\033[?25l");
-if(nmeaoutname != NULL)
-	{
-	fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
-	fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%.1f lon:%.1f alt:%.1f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
-	}
+if(nmeaoutname != NULL) fprintf(stdout, "%s %s logging NMEA 0183 track to %s\n", basename, VERSION_TAG, nmeaoutname);
 while(!wanteventflag)
 	{
 	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
@@ -674,7 +670,10 @@ while(!wanteventflag)
 				if(nmeaoutname != NULL)
 					{
 					fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%.1f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+					fflush(stdout);
 					}
+				if(fh_nmea != NULL) fflush(fh_nmea);
+				if(fh_csv != NULL) fflush(fh_csv);
 				}
 			}
 		}
@@ -816,8 +815,6 @@ if(argc < 2)
 	fprintf(stderr, "no option selected\n");
 	return EXIT_SUCCESS;
 	}
-setbuf(stdout, NULL);
-
 if(open_devices(basename(argv[0]), ifaktindex, bpfname, gpsdevice, baudrate) == false) goto byebye;
 if(open_files(nmeaoutname, csvoutname) == false) goto byebye;
 if(global_init() == false) goto byebye;
