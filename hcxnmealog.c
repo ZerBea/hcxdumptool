@@ -601,8 +601,8 @@ if(fh_nmea != NULL)
 	}
 if(fh_csv != NULL)
 	{
-	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H:%M:%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%d%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, rssi, frequency);
+	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H%M%S", localtime(&tspecakt.tv_sec));
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, rssi, frequency);
 	}
 return;
 }
@@ -736,6 +736,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
 	"                  RSSI (dBm)\n"
+	"                  FREQUENCY\n"
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
