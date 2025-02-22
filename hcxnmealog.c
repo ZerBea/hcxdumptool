@@ -44,6 +44,9 @@ static float longitude = 0;
 static float altitude = 0;
 static float lat = 0;
 static float lon = 0;
+static float pdop = 0;
+static float hdop = 0;
+static float vdop = 0;
 static char ns = 0;
 static char ew = 0;
 static char rssi = 0;
@@ -412,11 +415,13 @@ static int m;
 static int fix;
 static int satcount;
 static float s;
-static float hdop;
+static float hdop1;
 static char v;
 static char *nsen;
 static char *nres;
 static size_t nl;
+static size_t np;
+static size_t cp;
 
 nmearxbuffer[nmealen] = 0;
 if((nmealen = read(fd_gps, nmearxbuffer, NMEA_SIZE)) < NMEA_MIN)
@@ -464,23 +469,19 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				altitude = 0;
 				ns = 0;
 				ew = 0;
-				sscanf(&nsen[7],"%02d%02d%f,%f,%c,%f,%c,%d,%d,%f,%f", &h, &m, &s, &lat, &ew, &lon, &ns, &fix, &satcount, &hdop, &altitude);
+				sscanf(&nsen[7],"%02d%02d%f,%f,%c,%f,%c,%d,%d,%f,%f", &h, &m, &s, &lat, &ns, &lon, &ew, &fix, &satcount, &hdop1, &altitude);
 				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
 				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
-				if(ew == 'W') latitude =-latitude;
-				if(ns == 'S') longitude =-longitude;
+				if(ew == 'S') latitude =-latitude;
+				if(ns == 'w') longitude =-longitude;
 				}
 			}
-		}
-	else if(nsen[3] == 'G')
-		{
-		if(nsen[4] == 'L')
+		else if(nsen[4] == 'L')
 			{
 			if(nsen[5] == 'L')
 				{
 				latitude = 0;
 				longitude = 0;
-				altitude = 0;
 				ns = 0;
 				ew = 0;
 				sscanf(&nsen[7],"%f,%c,%f,%c,%02d%02d%f", &lat, &ew, &lon, &ns, &h, &m, &s);
@@ -490,15 +491,22 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				if(ns == 'S') longitude =-longitude;
 				}
 			}
-		}
-//	$GNGSA,A,3,21,5,29,25,12,10,26,2,,,,,1.2,0.7,1.0*27
-	else if(nsen[3] == 'G')
-		{
-		if(nsen[4] == 'S')
+		else if(nsen[4] == 'S')
 			{
 			if(nsen[5] == 'A')
 				{
-				
+				pdop = 0;
+				vdop = 0;
+				hdop = 0;
+				cp = 0;
+				for(np = nl; np > 0; np--)
+					{
+					if(nsen[np] == ',') cp++;
+					if(cp == 3)
+						{
+						sscanf(&nsen[np +1],"%f,%f,%f*", &pdop, &hdop, &vdop);
+						}
+					}
 				}
 			}
 		}
@@ -603,8 +611,6 @@ if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
 
-
-
 if(fh_nmea != NULL)
 	{
 	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
@@ -617,7 +623,7 @@ if(fh_nmea != NULL)
 if(fh_csv != NULL)
 	{
 	strftime(timestring, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, altitude, rssi, frequency);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
 	}
 return;
 }
@@ -750,6 +756,9 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  DATE TIME (local system time: yyymmddhhmmss)\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
+	"                  PDOP\n"
+	"                  HDOP\n"
+	"                  VDOP\n"
 	"                  RSSI (dBm)\n"
 	"                  FREQUENCY\n"
 	"-d <device>    : GPS source\n"
