@@ -488,6 +488,17 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				}
 			}
 		}
+//	$GNGSA,A,3,21,5,29,25,12,10,26,2,,,,,1.2,0.7,1.0*27
+	else if(nsen[3] == 'G')
+		{
+		if(nsen[4] == 'S')
+			{
+			if(nsen[5] == 'A')
+				{
+				
+				}
+			}
+		}
 	}
 fflush(fh_nmea);
 return;
@@ -736,6 +747,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  DATE TIME (local system time\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
+	"                  HDOP\n"
 	"                  RSSI (dBm)\n"
 	"                  FREQUENCY\n"
 	"-d <device>    : GPS source\n"
