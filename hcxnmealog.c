@@ -78,7 +78,6 @@ static char nmearxbuffer[NMEA_SIZE] = { 0 };
 static char nmeaoutbuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
-static char timestring[TIMESTRING_LEN];
 /*===========================================================================*/
 static void close_devices()
 {
@@ -622,8 +621,7 @@ if(fh_nmea != NULL)
 
 if(fh_csv != NULL)
 	{
-	strftime(timestring, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
 	}
 return;
 }
@@ -753,7 +751,8 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
 	"-c <file>      : output separated by tabulator\n"
 	"                  BSSID (MAC ACCESS POINT)\n"
-	"                  DATE TIME (local system time: yyymmddhhmmss)\n"
+	"                  LINUX EPOCH (seconds that have passed since the date January 1st, 1970)\n"
+	"                   use date -d @epoch_value to convert to human readable time\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
 	"                  PDOP\n"
