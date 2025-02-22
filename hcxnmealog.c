@@ -599,10 +599,11 @@ if(fh_nmea != NULL)
 	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
 	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
 	}
+
 if(fh_csv != NULL)
 	{
 	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H%M%S", localtime(&tspecakt.tv_sec));
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, rssi, frequency);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, altitude, rssi, frequency);
 	}
 return;
 }
