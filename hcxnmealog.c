@@ -416,6 +416,7 @@ static float hdop;
 static char v;
 static char *nsen;
 static char *nres;
+static size_t nl;
 
 nmearxbuffer[nmealen] = 0;
 if((nmealen = read(fd_gps, nmearxbuffer, NMEA_SIZE)) < NMEA_MIN)
@@ -429,8 +430,10 @@ nmearxbuffer[nmealen] = 0;
 nres = nmearxbuffer;
 while((nsen = strsep(&nres, "\n\r")) != NULL)
 	{
-	if(strlen(nsen) < 6) continue;
+	nl = strlen(nsen);
+	if(nl < 6) continue;
 	if(nsen[0] != '$') continue;
+	if(nsen[nl -3] != '*') continue;
 	fprintf(fh_nmea, "%s\n", nsen);
 	if(nsen[3] == 'R')
 		{
@@ -613,7 +616,7 @@ if(fh_nmea != NULL)
 
 if(fh_csv != NULL)
 	{
-	strftime(timestring, TIMESTRING_LEN, "%Y%m%d-%H%M%S", localtime(&tspecakt.tv_sec));
+	strftime(timestring, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
 	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%s\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], timestring, latitude, longitude, altitude, rssi, frequency);
 	}
 return;
@@ -744,10 +747,9 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
 	"-c <file>      : output separated by tabulator\n"
 	"                  BSSID (MAC ACCESS POINT)\n"
-	"                  DATE TIME (local system time\n"
+	"                  DATE TIME (local system time: yyymmddhhmmss)\n"
 	"                  lATITUDE (decimal degrees)\n" 
 	"                  LONGIITUDE (decimal degrees)\n" 
-	"                  HDOP\n"
 	"                  RSSI (dBm)\n"
 	"                  FREQUENCY\n"
 	"-d <device>    : GPS source\n"
