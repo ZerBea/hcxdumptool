@@ -167,6 +167,29 @@ if(bpf.len == 0) return false;
 return true;
 }
 /*===========================================================================*/
+static u8 cstou8(char *fptr)
+{
+static u8 idx0;
+static u8 idx1;
+static const u8 hashmap[] =
+{
+0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
+0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
+0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // HIJKLMNO
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // PQRSTUVW
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // XYZ[\]^_
+0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // `abcdefg
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // hijklmno
+};
+
+if(!isxdigit((unsigned char)fptr[0])) return 0;
+if(!isxdigit((unsigned char)fptr[1])) return 0;
+idx0 = ((u8)fptr[0] &0x1F) ^0x10;
+idx1 = ((u8)fptr[1] &0x1F) ^0x10;
+return (u8)(hashmap[idx0] <<4) | hashmap[idx1];
+}
+/*===========================================================================*/
 static void close_files(void)
 {
 if(fh_nmea != NULL)fclose(fh_nmea);
@@ -413,6 +436,8 @@ static int h;
 static int m;
 static int fix;
 static int satcount;
+static u8 csc;
+static u8 csl;
 static float s;
 static float hdop1;
 static char v;
@@ -438,6 +463,10 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 	if(nl < 6) continue;
 	if(nsen[0] != '$') continue;
 	if(nsen[nl -3] != '*') continue;
+	csc = 0;
+	for(cp = 1; cp < nl -3; cp ++) csc = csc ^ nsen[cp];
+	csl = cstou8(&nsen[nl -2]);
+	if(csc != csl) continue;
 	fprintf(fh_nmea, "%s\n", nsen);
 	if(nsen[3] == 'R')
 		{
