@@ -1,6 +1,6 @@
-23.02.2025
+22.02.2025
 ==========
-hcxnmealog: New tool to log NMEA 0183 tracks
+hcxnmealog: New passive tool to log NMEA 0183 tracks
 -n <file>      : output nmea 0183 track
                   track append to file: filename
                   use gpsbabel to convert to other formats:
@@ -9,9 +9,15 @@ hcxnmealog: New tool to log NMEA 0183 tracks
                   time = UTC (in accordance with the NMEA 0183 standard)
 -c <file>      : output separated by tabulator
                   BSSID (MAC ACCESS POINT)
-                  DATE TIME (local system time
+                  LINUX EPOCH (seconds that have passed since the date January 1st, 1970)
+                   use date -d @epoch_value to convert to human readable time
                   lATITUDE (decimal degrees)
                   LONGIITUDE (decimal degrees)
+                  PDOP (position -3D- dilution of precision)
+                  HDOP (horizontal dilution of precision)
+                  VDOP (vertical dilution of precision)
+                  RSSI (signal strength in dBm)
+                  FREQUENCY (interface frequency in MHz)
 -d <device>    : GPS source
                   use gpsd: gpsd
                   use device: /dev/ttyACM0, /dev/tty/USBx, ...
@@ -27,9 +33,7 @@ hcxnmealog: New tool to log NMEA 0183 tracks
 --help         : show this help
 --version      : show version
 
-The aim is to retrieve GPS information in NMEA 0183 standard format either from
-USB GPS devices or external a GPS tracker (e.g. Garmin eTrex 30) and to feed this
-data to hcxpcapngtool.
+The aim is to log GPS information and AP information either to NMEA 0183 (for use with GPSBABELD and VIKING) or to universal CSV format.
 
 
 11.11.2024
