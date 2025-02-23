@@ -696,8 +696,16 @@ if(fh_nmea != NULL)
 	}
 if(fh_csv != NULL)
 	{
-	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\t%.*s\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency, (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
-	else fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\t<HIDDEN SSID>\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
+	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+		(long long)tspecakt.tv_sec,
+		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
+		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, frequency, rssi,
+		latitude, longitude, altitude, pdop, hdop, vdop);
+	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN SSID>\t%u\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+		(long long)tspecakt.tv_sec,
+		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
+		frequency, rssi,
+		latitude, longitude, altitude, pdop, hdop, vdop);
 	}
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
@@ -944,9 +952,9 @@ if(argc < 2)
 	fprintf(stderr, "no option selected\n");
 	return EXIT_SUCCESS;
 	}
+if(global_init() == false) goto byebye;
 if(open_devices(basename(argv[0]), ifaktindex, bpfname, gpsdevice, baudrate) == false) goto byebye;
 if(open_files(nmeaoutname, csvoutname) == false) goto byebye;
-if(global_init() == false) goto byebye;
 
 if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 	{
