@@ -39,6 +39,8 @@ static int fd_socket_rx = 0;
 static int fd_gps = 0;
 static int fd_timer = 0;
 static int timerwaitnd = TIMER_EPWAITND;
+static unsigned int nmeapacketcount = 0;
+static unsigned int packetcount = 0;
 static float latitude = 0;
 static float longitude = 0;
 static float altitude = 0;
@@ -49,14 +51,11 @@ static float hdop = 0;
 static float vdop = 0;
 static char ns = 0;
 static char ew = 0;
-static char rssi = 0;
 static aplist_t *aplist = NULL;
 static FILE *fh_nmea = NULL;
 static FILE *fh_csv = NULL;
 static ssize_t packetlen = 0;
 static ssize_t nmealen = 0;
-static u64 packetcount = 0;
-static u64 nmeapacketcount = 0;
 static u64 lifetime = 0;
 static u32 errorcount = 0;
 static u32 errorcountmax = ERROR_MAX;
@@ -64,6 +63,7 @@ static u16 frequency = 0;
 static u16 ieee82011len = 0;
 static u16 payloadlen = 0;
 static u16 wanteventflag = 0;
+static u8 rssi = 0;
 static u8 *packetptr = NULL;
 static u8 *ieee82011ptr = NULL;
 static u8 *payloadptr = NULL;
@@ -167,29 +167,6 @@ if(bpf.len == 0) return false;
 return true;
 }
 /*===========================================================================*/
-static u8 cstou8(char *fptr)
-{
-static u8 idx0;
-static u8 idx1;
-static const u8 hashmap[] =
-{
-0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
-0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
-0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // HIJKLMNO
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // PQRSTUVW
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // XYZ[\]^_
-0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // `abcdefg
-0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // hijklmno
-};
-
-if(!isxdigit((unsigned char)fptr[0])) return 0;
-if(!isxdigit((unsigned char)fptr[1])) return 0;
-idx0 = ((u8)fptr[0] &0x1F) ^0x10;
-idx1 = ((u8)fptr[1] &0x1F) ^0x10;
-return (u8)(hashmap[idx0] <<4) | hashmap[idx1];
-}
-/*===========================================================================*/
 static void close_files(void)
 {
 if(fh_nmea != NULL)fclose(fh_nmea);
@@ -199,18 +176,23 @@ return;
 /*---------------------------------------------------------------------------*/
 static bool open_files(char *nmeaoutname, char *csvoutname)
 {
-if(nmeaoutname == NULL) fh_nmea = stdout;
-else if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
+if(nmeaoutname != NULL)
 	{
-	errorcount++;
-	fprintf(stderr, "failed to open NMEA file\n");
-	return false;
+	if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to open NMEA file\n");
+		return false;
+		}
 	}
-if((fh_csv = fopen(csvoutname, "a")) == NULL)
+if(csvoutname != NULL)
 	{
-	errorcount++;
-	fprintf(stderr, "failed to open CSV file\n");
-	return false;
+	if((fh_csv = fopen(csvoutname, "a")) == NULL)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to open CSV file\n");
+		return false;
+		}
 	}
 return true;
 }
@@ -443,6 +425,41 @@ for(i = 0; i < APLIST_MAX; i++)
 
 return true;
 }
+static u8 cstou8(char *fptr)
+{
+static u8 idx0;
+static u8 idx1;
+static const u8 hashmap[] =
+{
+0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
+0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
+0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // HIJKLMNO
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // PQRSTUVW
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // XYZ[\]^_
+0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // `abcdefg
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // hijklmno
+};
+
+if(!isxdigit((unsigned char)fptr[0])) return 0;
+if(!isxdigit((unsigned char)fptr[1])) return 0;
+idx0 = ((u8)fptr[0] &0x1F) ^0x10;
+idx1 = ((u8)fptr[1] &0x1F) ^0x10;
+return (u8)(hashmap[idx0] <<4) | hashmap[idx1];
+}
+/*===========================================================================*/
+static int freq_to_channel(u32 freq)
+{
+if (freq == 2484) return 14;
+else if (freq < 2484) return (freq - 2407) / 5;
+else if (freq >= 4910 && freq <= 4980) return (freq - 4000) / 5;
+else if (freq < 5925) return (freq - 5000) / 5;
+else if (freq == 5935) return 2;
+else if (freq <= 45000) return (freq - 5950) / 5;
+else if (freq >= 58320 && freq <= 70200) return (freq - 56160) / 2160;
+return 0;
+}
+
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
@@ -468,7 +485,6 @@ if((nmealen = read(fd_gps, nmearxbuffer, NMEA_SIZE)) < NMEA_MIN)
 	return;
 	}
 clock_gettime(CLOCK_REALTIME, &tspecnmea);
-nmeapacketcount++;
 nmearxbuffer[nmealen] = 0;
 nres = nmearxbuffer;
 while((nsen = strsep(&nres, "\n\r")) != NULL)
@@ -481,7 +497,8 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 	for(cp = 1; cp < nl -3; cp ++) csc = csc ^ nsen[cp];
 	csl = cstou8(&nsen[nl -2]);
 	if(csc != csl) continue;
-	fprintf(fh_nmea, "%s\n", nsen);
+	nmeapacketcount++;
+	if(fh_nmea != NULL) fprintf(fh_nmea, "%s\n", nsen);
 	if(nsen[3] == 'R')
 		{
 		if(nsen[4] == 'M')
@@ -553,7 +570,8 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 			}
 		}
 	}
-fflush(fh_nmea);
+if(fh_nmea != NULL) fflush(fh_nmea);
+if(fh_csv != NULL) fflush(fh_csv);
 return;
 }
 /*===========================================================================*/
@@ -677,8 +695,13 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 (aplist + i)->tsakt = tspecakt.tv_sec;
 memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->frequency = frequency;
+(aplist + i)->apdata->channel = freq_to_channel(frequency);
 (aplist + i)->apdata->lat = lat;
 (aplist + i)->apdata->lon = lon;
+(aplist + i)->apdata->latitude = latitude;
+(aplist + i)->apdata->longitude = longitude;
+(aplist + i)->apdata->altitude = altitude;
 (aplist + i)->apdata->ns = ns;
 (aplist + i)->apdata->ew = ew;
 (aplist + i)->apdata->pdop = pdop;
@@ -696,16 +719,16 @@ if(fh_nmea != NULL)
 	}
 if(fh_csv != NULL)
 	{
-	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
 		(long long)tspecakt.tv_sec,
 		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, frequency, rssi,
-		latitude, longitude, altitude, pdop, hdop, vdop);
-	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN SSID>\t%u\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(char)(aplist + i)->apdata->rssi,
+		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
+	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN SSID>\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
 		(long long)tspecakt.tv_sec,
 		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		frequency, rssi,
-		latitude, longitude, altitude, pdop, hdop, vdop);
+		(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (char)(aplist + i)->apdata->rssi,
+		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 	}
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
@@ -800,7 +823,7 @@ while(!wanteventflag)
 				{
 				if(nmeaoutname != NULL)
 					{
-					fprintf(stdout, "\rNMEA 0183 sentences: %" PRIu64 " (lat:%f lon:%f alt:%.1f) | 802.11 packets: %" PRIu64, nmeapacketcount, latitude, longitude, altitude, packetcount);
+					fprintf(stdout, "\rNMEA 0183 sentences: %u (lat:%f lon:%f alt:%.1f) | 802.11 packets: %u", nmeapacketcount, latitude, longitude, altitude, packetcount);
 					fflush(stdout);
 					}
 				if(fh_nmea != NULL) fflush(fh_nmea);
@@ -828,28 +851,32 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"%s <options>\n"
 	"\n"
 	"options:\n"
-	"-n <file>      : output nmea 0183 track\n"
+	"-n <file>      : output nmea 0183 track to file\n"
 	"                  track append to file: filename\n"
 	"                  use gpsbabel to convert to other formats:\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
 	"-c <file>      : output separated by tabulator\n"
-	"                  LINUX EPOCH (seconds that have passed since the date January 1st, 1970)\n"
-	"                   use date -d @epoch_value to convert to human readable time\n"
-	"                  BSSID (MAC ACCESS POINT)\n"
-	"                  ESSID (network name)\n" 
-	"                  FREQUENCY (interface frequency in MHz)\n"
-	"                  RSSI (signal strength in dBm)\n"
-	"                  lATITUDE (decimal degrees)\n" 
-	"                  LONGIITUDE (decimal degrees)\n" 
-	"                  PDOP (position -3D- dilution of precision)\n"
-	"                  HDOP (horizontal dilution of precision)\n"
-	"                  VDOP (vertical dilution of precision)\n"
+	"                  clolumns:\n"
+	"                   LINUX EPOCH (seconds that have passed since the date January 1st, 1970)\n"
+	"                    use date -d @epoch_value to convert to human readable time\n"
+	"                   BSSID (MAC ACCESS POINT)\n"
+	"                   ESSID (network name)\n" 
+	"                   FREQUENCY (interface frequency in MHz)\n"
+	"                   CHANNEL\n"
+	"                   RSSI (signal strength in dBm)\n"
+	"                   lATITUDE (decimal degrees)\n" 
+	"                   LONGIITUDE (decimal degrees)\n" 
+	"                   PDOP (position -3D- dilution of precision)\n"
+	"                   HDOP (horizontal dilution of precision)\n"
+	"                   VDOP (vertical dilution of precision)\n"
+	"                   VDOP (vertical dilution of precision)\n"
 	"-d <device>    : GPS source\n"
 	"                  use gpsd: gpsd\n"
 	"                  use device: /dev/ttyACM0, /dev/tty/USBx, ...\n"
 	"                  get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
+	"                  depending on the device it can take a while to get a fix\n"
 	"-b <digit>     : baudrate of GPS device\n"
 	"                  default: 9600\n"
 	"-i <INTERFACE> : name of INTERFACE to be used\n"
@@ -967,15 +994,13 @@ byebye:
 close_devices();
 close_files();
 global_deinit();
-if(nmeaoutname != NULL)
-	{
-	fprintf(stdout, "\nSummary:\n"
-			"-------\n"
-			"NMEA 0183 sentences logged.......: %" PRIu64 "\n"
-			"802.11 packets received by kernel: %d\n"
-			"802.11 packets dropped by kernel.: %d\n"
-			"\n", nmeapacketcount, lStats.tp_packets, lStats.tp_drops);
-	}
+
+fprintf(stdout, "\nSummary:\n"
+		"-------\n"
+		"NMEA 0183 sentences received.....: %u\n"
+		"802.11 packets received by kernel: %u\n"
+		"802.11 packets dropped by kernel.: %u\n"
+		"\n", nmeapacketcount, lStats.tp_packets, lStats.tp_drops);
 return EXIT_SUCCESS;
 }
 /*===========================================================================*/

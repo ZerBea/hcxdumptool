@@ -36,12 +36,17 @@ typedef struct __attribute__((__packed__))
 {
  float	lat;
  float	lon;
- char	ns;
- char	ew;
+ float	latitude;
+ float	longitude;
+ float	altitude;
  float	pdop;
  float	hdop;
  float	vdop;
-  u8	rssi;
+ int	channel;
+ u16	frequency;
+ u8	rssi;
+ char	ns;
+ char	ew;
  u8	essid[ESSID_MAX];
  u8	essidlen;
  }apdata_t;
