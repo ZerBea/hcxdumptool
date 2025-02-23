@@ -29,6 +29,8 @@
 #define TIMESTRING_LEN		128
 #define ESSID_MAX		32
 
+#define APLIST_MAX		1024
+
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {

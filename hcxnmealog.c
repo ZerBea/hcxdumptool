@@ -50,7 +50,7 @@ static float vdop = 0;
 static char ns = 0;
 static char ew = 0;
 static char rssi = 0;
-
+static aplist_t *aplist = NULL;
 static FILE *fh_nmea = NULL;
 static FILE *fh_csv = NULL;
 static ssize_t packetlen = 0;
@@ -406,12 +406,21 @@ return true;
 /*===========================================================================*/
 static void global_deinit()
 {
+static size_t i;
+
 if(fd_timer != 0) close(fd_timer);
+for(i = 0; i < APLIST_MAX; i++)
+	{
+	if((aplist + i)->apdata != NULL) free((aplist + i)->apdata);
+	}
+if(aplist != NULL) free(aplist);
 return;
 }
 /*---------------------------------------------------------------------------*/
 static bool global_init(void)
 {
+static size_t i;
+
 packetptr = &rxbuffer[PCAPNG_SNAPLEN * 2];
 if(set_signal_handler() == false)
 	{
@@ -419,12 +428,17 @@ if(set_signal_handler() == false)
 	fprintf(stderr, "failed to initialize signal handler\n");
 	return false;
 	}
-
 if(set_timer() == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to initialize timer\n");
 	return false;
+	}
+
+if((aplist = (aplist_t*)calloc(APLIST_MAX, APLIST_SIZE)) == NULL) return false;
+for(i = 0; i < APLIST_MAX; i++)
+	{
+	if(((aplist + i)->apdata = (apdata_t*)calloc(1, APDATA_SIZE)) == NULL) return false;
 	}
 
 return true;
@@ -634,6 +648,9 @@ static u16 beaconlen;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 rssi = getradiotapfield(__hcx16le(rth->it_len));
+
+
+
 if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
 if(rssi == 0) return;
 if(lon == 0) return;
