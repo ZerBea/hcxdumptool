@@ -650,7 +650,7 @@ if(fh_nmea != NULL)
 
 if(fh_csv != NULL)
 	{
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%" PRIu16 "\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
+	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
 	}
 return;
 }
