@@ -38,7 +38,10 @@ typedef struct __attribute__((__packed__))
  float	lon;
  char	ns;
  char	ew;
- u8	rssi;
+ float	pdop;
+ float	hdop;
+ float	vdop;
+  u8	rssi;
  u8	essid[ESSID_MAX];
  u8	essidlen;
  }apdata_t;
@@ -46,9 +49,19 @@ typedef struct __attribute__((__packed__))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
- time_t		tv_sec;
+ time_t		tsakt;
  u8		maca[ETH_ALEN];
  apdata_t	*apdata;
 }aplist_t;
 #define APLIST_SIZE (sizeof(aplist_t))
+/*---------------------------------------------------------------------------*/
+static int sort_aplist_by_tsakt(const void *a, const void *b)
+{
+const aplist_t *ai = (const aplist_t *)a;
+const aplist_t *bi = (const aplist_t *)b;
+
+if(ai->tsakt < bi->tsakt) return 1;
+else if(ai->tsakt > bi->tsakt) return -1;
+return 0;
+}
 /*---------------------------------------------------------------------------*/

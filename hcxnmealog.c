@@ -607,19 +607,33 @@ return 0;
 }
 
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) ieee80211_ietag_t* get_tag(u8 ietag, int infolen, u8 *infostart)
+static inline __attribute__((always_inline)) void get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
+
 
 while(0 < infolen)
 	{
 	infoptr = (ieee80211_ietag_t*)infostart;
-	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return NULL;
-	if(infoptr->id == ietag) return infoptr;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return;
+	if(infoptr->id == TAG_SSID)
+		{
+		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+			{
+			if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+				{
+				if(infoptr->ie[0] != 0)
+					{
+					apdata->essidlen = infoptr->len;
+					memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
+					}
+				}
+			}
+		}
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
 	}
-return NULL;
+return;
 }
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211proberesponse(void)
@@ -640,22 +654,38 @@ static inline __attribute__((always_inline)) void process80211beacon(void)
 static int cs;
 static size_t nl;
 static size_t cp;
-//static size_t i;
-//static ieee80211_beacon_proberesponse_t *beacon;
+static size_t i;
+static ieee80211_beacon_proberesponse_t *beacon;
 static u16 beaconlen;
-
-//beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
-if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-rssi = getradiotapfield(__hcx16le(rth->it_len));
-
-
 
 if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
 if(rssi == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
 
+beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
+if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
+
+	return;
+	}
+
+(aplist + i)->tsakt = tspecakt.tv_sec;
+memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->lat = lat;
+(aplist + i)->apdata->lon = lon;
+(aplist + i)->apdata->ns = ns;
+(aplist + i)->apdata->ew = ew;
+(aplist + i)->apdata->pdop = pdop;
+(aplist + i)->apdata->hdop = hdop;
+(aplist + i)->apdata->vdop = vdop;
+(aplist + i)->apdata->rssi = getradiotapfield(__hcx16le(rth->it_len));
+get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(fh_nmea != NULL)
 	{
 	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
@@ -664,11 +694,12 @@ if(fh_nmea != NULL)
 	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
 	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
 	}
-
 if(fh_csv != NULL)
 	{
-	fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
+	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\t%.*s\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency, (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+	else fprintf(fh_csv, "%02x%02x%02x%02x%02x%02x\t%lld\t%f\t%f\t%f\t%f\t%f\t%f\t%d\t%u\t<HIDDEN SSID>\n", macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (long long)tspecakt.tv_sec, latitude, longitude, altitude, pdop, hdop, vdop, rssi, frequency);
 	}
+qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
