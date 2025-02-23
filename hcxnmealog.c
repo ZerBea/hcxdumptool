@@ -421,7 +421,7 @@ static bool global_init(void)
 {
 static size_t i;
 
-packetptr = &rxbuffer[PCAPNG_SNAPLEN * 2];
+packetptr = rxbuffer;
 if(set_signal_handler() == false)
 	{
 	errorcount++;
