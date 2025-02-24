@@ -31,6 +31,10 @@
 
 #define APLIST_MAX		1024
 
+#define TWSTATUS_ERR		0x0001
+#define TWSTATUS_ESSID		0x0002
+#define TWSTATUS_FREQ		0x0003
+#define TWSTATUS_RSSI		0x0008
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -39,6 +43,7 @@ typedef struct __attribute__((__packed__))
  float	latitude;
  float	longitude;
  float	altitude;
+ float	speed;
  float	pdop;
  float	hdop;
  float	vdop;

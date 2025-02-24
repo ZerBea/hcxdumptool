@@ -39,6 +39,7 @@ static int fd_socket_rx = 0;
 static int fd_gps = 0;
 static int fd_timer = 0;
 static int timerwaitnd = TIMER_EPWAITND;
+static int fix;
 static unsigned int nmeapacketcount = 0;
 static unsigned int packetcount = 0;
 static float latitude = 0;
@@ -46,6 +47,7 @@ static float longitude = 0;
 static float altitude = 0;
 static float lat = 0;
 static float lon = 0;
+static float speed = 0;
 static float pdop = 0;
 static float hdop = 0;
 static float vdop = 0;
@@ -465,7 +467,6 @@ static inline __attribute__((always_inline)) void process_nmea0183(void)
 {
 static int h;
 static int m;
-static int fix;
 static int satcount;
 static u8 csc;
 static u8 csl;
@@ -509,7 +510,7 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				longitude = 0;
 				ns = 0;
 				ew = 0;
-				sscanf(&nsen[7],"%02d%02d%f,%c,%f,%c,%f,%c", &h, &m, &s, &v, &lat, &ew, &lon, &ns);
+				sscanf(&nsen[7],"%02d%02d%f,%c,%f,%c,%f,%c,%f", &h, &m, &s, &v, &lat, &ew, &lon, &ns, &speed);
 				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
 				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
 				if(ew == 'W') latitude =-latitude;
@@ -575,6 +576,35 @@ if(fh_csv != NULL) fflush(fh_csv);
 return;
 }
 /*===========================================================================*/
+static inline __attribute__((always_inline)) void write_csv(int i)
+{
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	(long long)(aplist + i)->tsakt,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
+	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
+	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	(long long)(aplist + i)->tsakt,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
+	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
+	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void write_nmea(void)
+{
+static int cs;
+static size_t nl;
+static size_t cp;
+
+snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
+nl = strnlen(nmeaoutbuffer, NMEA_SIZE);
+cs = 0;
+for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
+fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
+return;
+}
+/*---------------------------------------------------------------------------*/
 static u8 getradiotapfield(uint16_t rthlen)
 {
 static int i;
@@ -625,16 +655,16 @@ return 0;
 }
 
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void get_tags(apdata_t *apdata, int infolen, u8 *infostart)
+static inline __attribute__((always_inline)) u16 get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
-//static u8 twstatus;
+static u16 twstatus;
 
-//twstatus = 0;
+twstatus = 0;
 while(0 < infolen)
 	{
 	infoptr = (ieee80211_ietag_t*)infostart;
-	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return twstatus;
 	if(infoptr->id == TAG_SSID)
 		{
 		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
@@ -642,6 +672,15 @@ while(0 < infolen)
 			if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
 				{
 				if(infoptr->ie[0] != 0)
+					{
+					if((infoptr->len != apdata->essidlen) || (memcmp(infoptr->ie, apdata->essid, infoptr->len) != 0))
+						{
+						twstatus |= TWSTATUS_ESSID;
+						apdata->essidlen = infoptr->len;
+						memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
+						}
+					}
+				else
 					{
 					apdata->essidlen = infoptr->len;
 					memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
@@ -652,34 +691,51 @@ while(0 < infolen)
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
 	}
-return;
+return twstatus;
 }
+
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211proberesponse(void)
 {
-static int cs;
-static size_t nl;
-static size_t cp;
-static size_t i;
+static int i;
 static ieee80211_beacon_proberesponse_t *beacon;
 static u16 beaconlen;
+static u16 twret;
 
-if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
-if(rssi == 0) return;
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+rssi = getradiotapfield(__hcx16le(rth->it_len));
+if(tspecakt.tv_sec != tspecnmea.tv_sec) return;
+if(fix == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
-
+if(rssi == 0) return;
+twret = 0;
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-for(i = 0; i < APLIST_MAX - 1; i++)
+for(i = 0; i < APLIST_MAX -1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
 	if(memcmp((aplist + i)->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
-
+	if((aplist + i)->tsakt == tspecakt.tv_sec) return;
+	(aplist + i)->tsakt = tspecakt.tv_sec;
+	twret |= get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	if((aplist + i)->apdata->frequency != frequency)
+		{
+		(aplist + i)->apdata->frequency = frequency;
+		twret |= TWSTATUS_FREQ;
+		}
+	if((aplist + i)->apdata->rssi < rssi)
+		{
+		(aplist + i)->apdata->rssi = rssi;
+		twret |= TWSTATUS_RSSI;
+		}
+	if(twret > TWSTATUS_ERR)
+		{
+		if(fh_nmea != NULL) write_nmea();
+		if(fh_csv != NULL) write_csv(i);
+		}
 	return;
 	}
-
 (aplist + i)->tsakt = tspecakt.tv_sec;
 memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
@@ -690,63 +746,61 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->latitude = latitude;
 (aplist + i)->apdata->longitude = longitude;
 (aplist + i)->apdata->altitude = altitude;
+(aplist + i)->apdata->speed = speed;
 (aplist + i)->apdata->ns = ns;
 (aplist + i)->apdata->ew = ew;
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
-(aplist + i)->apdata->rssi = getradiotapfield(__hcx16le(rth->it_len));
-get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
-if(fh_nmea != NULL)
-	{
-	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
-	nl = strnlen(nmeaoutbuffer, NMEA_SIZE);
-	cs = 0;
-	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
-	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
-	}
-if(fh_csv != NULL)
-	{
-	if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
-		(long long)tspecakt.tv_sec,
-		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
-		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
-		(long long)tspecakt.tv_sec,
-		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
-		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-	}
+(aplist + i)->apdata->rssi = rssi;
+twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+if(fh_nmea != NULL) write_nmea();
+if(fh_csv != NULL) write_csv(i);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process80211beacon(void)
 {
-static int cs;
-static size_t nl;
-static size_t cp;
-static size_t i;
+static int i;
 static ieee80211_beacon_proberesponse_t *beacon;
 static u16 beaconlen;
+static u16 twret;
 
-if(tspecakt.tv_sec != tspecnmea.tv_sec) return; 
-if(rssi == 0) return;
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+rssi = getradiotapfield(__hcx16le(rth->it_len));
+if(tspecakt.tv_sec != tspecnmea.tv_sec) return;
+if(fix == 0) return;
 if(lon == 0) return;
 if(lat == 0) return;
-
+if(rssi == 0) return;
+twret = 0;
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-for(i = 0; i < APLIST_MAX - 1; i++)
+for(i = 0; i < APLIST_MAX -1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
 	if(memcmp((aplist + i)->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
-
+	if((aplist + i)->tsakt == tspecakt.tv_sec) return;
+	(aplist + i)->tsakt = tspecakt.tv_sec;
+	twret |= get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	if((aplist + i)->apdata->frequency != frequency)
+		{
+		(aplist + i)->apdata->frequency = frequency;
+		twret |= TWSTATUS_FREQ;
+		}
+	if((aplist + i)->apdata->rssi < rssi)
+		{
+		(aplist + i)->apdata->rssi = rssi;
+		twret |= TWSTATUS_RSSI;
+		}
+	if(twret > TWSTATUS_ERR)
+		{
+		if(fh_nmea != NULL) write_nmea();
+		if(fh_csv != NULL) write_csv(i);
+		}
 	return;
 	}
-
 (aplist + i)->tsakt = tspecakt.tv_sec;
 memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
@@ -757,34 +811,16 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->latitude = latitude;
 (aplist + i)->apdata->longitude = longitude;
 (aplist + i)->apdata->altitude = altitude;
+(aplist + i)->apdata->speed = speed;
 (aplist + i)->apdata->ns = ns;
 (aplist + i)->apdata->ew = ew;
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
-(aplist + i)->apdata->rssi = getradiotapfield(__hcx16le(rth->it_len));
-get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
-if(fh_nmea != NULL)
-	{
-	snprintf(nmeaoutbuffer, NMEA_SIZE, "$GPWPL,%10.5f,%c,%011.5f,%c,%02X%02X%02X%02X%02X%02X",lat, ew, lon, ns, macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5]);
-	nl = strnlen(nmeaoutbuffer, NMEA_SIZE);
-	cs = 0;
-	for(cp = 1; cp < nl; cp++) cs = cs ^ nmeaoutbuffer[cp];
-	fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
-	}
-if(fh_csv != NULL)
-	{
-	if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
-		(long long)tspecakt.tv_sec,
-		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
-		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
-		(long long)tspecakt.tv_sec,
-		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
-		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-	}
+(aplist + i)->apdata->rssi = rssi;
+twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+if(fh_nmea != NULL) write_nmea();
+if(fh_csv != NULL) write_csv(i);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
