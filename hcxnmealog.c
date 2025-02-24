@@ -628,8 +628,9 @@ return 0;
 static inline __attribute__((always_inline)) void get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
+//static u8 twstatus;
 
-
+//twstatus = 0;
 while(0 < infolen)
 	{
 	infoptr = (ieee80211_ietag_t*)infostart;
@@ -719,15 +720,15 @@ if(fh_nmea != NULL)
 	}
 if(fh_csv != NULL)
 	{
-	if((aplist + i)->apdata->essidlen != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
 		(long long)tspecakt.tv_sec,
 		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
 		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN SSID>\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
 		(long long)tspecakt.tv_sec,
 		macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-		(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
+		(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
 		(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 	}
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
