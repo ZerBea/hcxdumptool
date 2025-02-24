@@ -53,6 +53,7 @@ static float hdop = 0;
 static float vdop = 0;
 static char ns = 0;
 static char ew = 0;
+static char altitudeunit = 0;
 static aplist_t *aplist = NULL;
 static FILE *fh_nmea = NULL;
 static FILE *fh_csv = NULL;
@@ -529,7 +530,8 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 				altitude = 0;
 				ns = 0;
 				ew = 0;
-				sscanf(&nsen[7],"%02d%02d%f,%f,%c,%f,%c,%d,%d,%f,%f", &h, &m, &s, &lat, &ns, &lon, &ew, &fix, &satcount, &hdop1, &altitude);
+				altitudeunit = 0;
+				sscanf(&nsen[7],"%02d%02d%f,%f,%c,%f,%c,%d,%d,%f,%f,%c", &h, &m, &s, &lat, &ns, &lon, &ew, &fix, &satcount, &hdop1, &altitude, &altitudeunit);
 				if(lat != 0) latitude = ((int)lat) /100 + (((int)lat) %100 +lat -(int)lat)/60;
 				if(lon != 0) longitude = ((int)lon) /100 + (((int)lon) %100 +lon -(int)lon)/60;
 				if(ew == 'S') latitude =-latitude;
@@ -578,16 +580,16 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_csv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
 	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
-	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
 	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
-	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
+	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -749,6 +751,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->speed = speed;
 (aplist + i)->apdata->ns = ns;
 (aplist + i)->apdata->ew = ew;
+(aplist + i)->apdata->altitudeunit = altitudeunit;
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
@@ -814,6 +817,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->speed = speed;
 (aplist + i)->apdata->ns = ns;
 (aplist + i)->apdata->ew = ew;
+(aplist + i)->apdata->altitudeunit = altitudeunit;
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
@@ -958,7 +962,9 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"
 	"                   lATITUDE (decimal degrees)\n" 
-	"                   LONGIITUDE (decimal degrees)\n" 
+	"                   LONGITUDE (decimal degrees)\n" 
+	"                   ALTITUDE (decimal degrees)\n" 
+	"                   SPEED (knots)\n" 
 	"                   PDOP (position -3D- dilution of precision)\n"
 	"                   HDOP (horizontal dilution of precision)\n"
 	"                   VDOP (vertical dilution of precision)\n"
