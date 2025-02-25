@@ -62,6 +62,7 @@ static u16 exiteapolpmkidflag = 0;
 static u16 exiteapolm4flag = 0;
 static u16 exiteapolm3flag = 0;
 static u16 exiteapolm2flag = 0;
+static u16 exiteapolm2rgflag = 0;
 static u16 exiteapolm1flag = 0;
 
 static int gpiostatusled = 0;
@@ -1964,6 +1965,7 @@ for(i = 0; i < CLIENTLIST_MAX - 1; i++)
 	if((clientlist +i)->count == 0) return;
 	if(memcmp((clientlist +i)->mic, &wpakey->keymic[0], 4) == 0) send_80211_disassociation_fm_ap(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
 	memcpy((clientlist +i)->mic, &wpakey->keymic[0], 4);
+	wanteventflag |= exiteapolm2rgflag;
 	(clientlist +i)->count -= 1;
 	return;
 	}
@@ -4808,10 +4810,11 @@ fprintf(stdout, "less common options:\n--------------------\n"
 fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
 	"                             bitmask:\n"
-	"                              1 = PMKID (from AP)\n"
-	"                              2 = EAPOL M2M3 (authorized)\n"
-	"                              4 = EAPOL M1M2/M1M2ROGUE (not authorized)\n"
-	"                              8 = EAPOL M1\n"
+	"                               1 = PMKID (from AP)\n"
+	"                               2 = EAPOL M2M3 (authorized)\n"
+	"                               4 = EAPOL M1M2 (not authorized)\n"
+	"                               8 = EAPOL M1M2ROGUE (not authorized)\n"
+	"                              16 = EAPOL M1\n"
 	"                             target BPF filter is recommended\n"
 	"--onsigterm=<action>      : action when the program has been terminated (poweroff, reboot)\n"
 	"                             poweroff: power off system\n"
@@ -5100,8 +5103,9 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		case HCX_EXIT_ON_EAPOL:
 		exiteapolflag = (atoi(optarg) & 0x0f) << 4;
 		exiteapolpmkidflag |= exiteapolflag & EXIT_ON_EAPOL_PMKID;
-		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
 		exiteapolm3flag |= exiteapolflag & EXIT_ON_EAPOL_M3;
+		exiteapolm2rgflag |= exiteapolflag & EXIT_ON_EAPOL_M2RG;
+		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
 		exiteapolm1flag |= exiteapolflag & EXIT_ON_EAPOL_M1;
 		break;
 
@@ -5514,6 +5518,7 @@ if(exiteapolflag != 0)
 	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "exit on PMKID\n");
 	if((wanteventflag & EXIT_ON_EAPOL_M3) == EXIT_ON_EAPOL_M3) fprintf(stdout, "exit on EAPOL M1M2M3\n");
 	if((wanteventflag & EXIT_ON_EAPOL_M2) == EXIT_ON_EAPOL_M2) fprintf(stdout, "exit on EAPOL M1M2\n");
+	if((wanteventflag & EXIT_ON_EAPOL_M2RG) == EXIT_ON_EAPOL_M2RG) fprintf(stdout, "exit on EAPOL M1M2ROGUE\n");
 	if((wanteventflag & EXIT_ON_EAPOL_M1) == EXIT_ON_EAPOL_M1) fprintf(stdout, "exit on EAPOL M1\n");
 	}
 if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
