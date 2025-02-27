@@ -181,7 +181,7 @@ static bool open_files(char *nmeaoutname, char *csvoutname)
 {
 if(nmeaoutname != NULL)
 	{
-	if((fh_nmea = fopen(nmeaoutname, "a")) == NULL)
+	if((fh_nmea = fopen(nmeaoutname, "a+")) == NULL)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to open NMEA file\n");
@@ -190,7 +190,7 @@ if(nmeaoutname != NULL)
 	}
 if(csvoutname != NULL)
 	{
-	if((fh_csv = fopen(csvoutname, "a")) == NULL)
+	if((fh_csv = fopen(csvoutname, "a+")) == NULL)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to open CSV file\n");
@@ -580,15 +580,15 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_csv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<HIDDEN_SSID LEN >\t%d\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5],
-	(aplist + i)->apdata->essidlen, (aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 return;
 }
@@ -671,7 +671,7 @@ while(0 < infolen)
 		{
 		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
 			{
-			if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+			if(infoptr->len > 0)
 				{
 				if(infoptr->ie[0] != 0)
 					{
@@ -682,11 +682,23 @@ while(0 < infolen)
 						memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
 						}
 					}
-				else
+				else if(apdata->essid[0] == 0) 
 					{
+					twstatus |= TWSTATUS_ESSID;
 					apdata->essidlen = infoptr->len;
 					memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
 					}
+				}
+			}
+		}
+	else if(infoptr->id == TAG_COUNTRY)
+		{
+		if(infoptr->len >= 6)
+			{
+			if((infoptr->ie[0] >= 'A') && (infoptr->ie[0] <= 'Z') && (infoptr->ie[1] >= 'A') && (infoptr->ie[1] <= 'Z'))
+				{
+				(apdata->country[0] = infoptr->ie[0]);
+				(apdata->country[1] = infoptr->ie[1]);
 				}
 			}
 		}
@@ -743,6 +755,9 @@ memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->frequency = frequency;
 (aplist + i)->apdata->channel = freq_to_channel(frequency);
+(aplist + i)->apdata->country[0] = '0';
+(aplist + i)->apdata->country[1] = '0';
+(aplist + i)->apdata->rssi = rssi;
 (aplist + i)->apdata->lat = lat;
 (aplist + i)->apdata->lon = lon;
 (aplist + i)->apdata->latitude = latitude;
@@ -755,7 +770,6 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
-(aplist + i)->apdata->rssi = rssi;
 twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(fh_nmea != NULL) write_nmea();
 if(fh_csv != NULL) write_csv(i);
@@ -809,6 +823,9 @@ memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->frequency = frequency;
 (aplist + i)->apdata->channel = freq_to_channel(frequency);
+(aplist + i)->apdata->country[0] = '0';
+(aplist + i)->apdata->country[1] = '0';
+(aplist + i)->apdata->rssi = rssi;
 (aplist + i)->apdata->lat = lat;
 (aplist + i)->apdata->lon = lon;
 (aplist + i)->apdata->latitude = latitude;
@@ -821,7 +838,6 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
-(aplist + i)->apdata->rssi = rssi;
 twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(fh_nmea != NULL) write_nmea();
 if(fh_csv != NULL) write_csv(i);
@@ -958,6 +974,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                    use date -d @epoch_value to convert to human readable time\n"
 	"                   BSSID (MAC ACCESS POINT)\n"
 	"                   ESSID (network name)\n" 
+	"                   COUNTRY CODE (network name)\n" 
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"

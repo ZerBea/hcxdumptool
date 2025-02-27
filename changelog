@@ -1,27 +1,35 @@
-22.02.2025
+27.02.2025
 ==========
 hcxnmealog: New passive tool to log NMEA 0183 tracks
--n <file>      : output nmea 0183 track
+-n <file>      : output nmea 0183 track to file
                   track append to file: filename
                   use gpsbabel to convert to other formats:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
                    gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
                   time = UTC (in accordance with the NMEA 0183 standard)
 -c <file>      : output separated by tabulator
-                  BSSID (MAC ACCESS POINT)
-                  LINUX EPOCH (seconds that have passed since the date January 1st, 1970)
-                   use date -d @epoch_value to convert to human readable time
-                  lATITUDE (decimal degrees)
-                  LONGIITUDE (decimal degrees)
-                  PDOP (position -3D- dilution of precision)
-                  HDOP (horizontal dilution of precision)
-                  VDOP (vertical dilution of precision)
-                  RSSI (signal strength in dBm)
-                  FREQUENCY (interface frequency in MHz)
+                  clolumns:
+                   LINUX EPOCH (seconds that have passed since the date January 1st, 1970)
+                    use date -d @epoch_value to convert to human readable time
+                   BSSID (MAC ACCESS POINT)
+                   ESSID (network name)
+                   COUNTRY CODE (network name)
+                   FREQUENCY (interface frequency in MHz)
+                   CHANNEL
+                   RSSI (signal strength in dBm)
+                   lATITUDE (decimal degrees)
+                   LONGITUDE (decimal degrees)
+                   ALTITUDE (decimal degrees)
+                   SPEED (knots)
+                   PDOP (position -3D- dilution of precision)
+                   HDOP (horizontal dilution of precision)
+                   VDOP (vertical dilution of precision)
+                   VDOP (vertical dilution of precision)
 -d <device>    : GPS source
                   use gpsd: gpsd
                   use device: /dev/ttyACM0, /dev/tty/USBx, ...
                   get more information: https://en.wikipedia.org/wiki/NMEA_0183
+                  depending on the device it can take a while to get a fix
 -b <digit>     : baudrate of GPS device
                   default: 9600
 -i <INTERFACE> : name of INTERFACE to be used
