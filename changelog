@@ -1,7 +1,6 @@
-27.02.2025
+01.03.2025
 ==========
 hcxnmealog: New passive tool to log NMEA 0183 tracks
--n <file>      : output nmea 0183 track to file
                   track append to file: filename
                   use gpsbabel to convert to other formats:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
@@ -13,7 +12,8 @@ hcxnmealog: New passive tool to log NMEA 0183 tracks
                     use date -d @epoch_value to convert to human readable time
                    BSSID (MAC ACCESS POINT)
                    ESSID (network name)
-                   COUNTRY CODE (network name)
+                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)
+                   ENCRYPTION (encrypted / open)
                    FREQUENCY (interface frequency in MHz)
                    CHANNEL
                    RSSI (signal strength in dBm)
