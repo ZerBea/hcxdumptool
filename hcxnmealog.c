@@ -584,14 +584,16 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_csv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%4u\t%4u\t%4u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1], (aplist + i)->apdata->encmode,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%4u\t%4u\t%4u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1], (aplist + i)->apdata->encmode,
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 return;
@@ -706,6 +708,18 @@ while(0 < infolen)
 				}
 			}
 		}
+	else if(infoptr->id == TAG_RSN)
+		{
+		apdata->rsnie = RSNIE_PRESENT;
+		}
+	else if(infoptr->id == TAG_VENDOR)
+		{
+
+
+
+		}
+
+
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
 	}
@@ -914,6 +928,15 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   ESSID (network name)\n" 
 	"                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)\n" 
 	"                   ENCRYPTION (encrypted / open)\n" 
+	"                   RSN INFORMATION ELEMENT\n"
+	"                    bitmask:\n"
+	"                     00000001 RSN-IE present\n"
+	"                   WPA INFORMATION ELEMENT\n"
+	"                    bitmask:\n"
+	"                     00000001 WPA-IE present\n"
+	"                   WPS INFORMATION ELEMENT\n"
+	"                    bitmask:\n"
+	"                     00000001 WPS-IE present\n"
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"

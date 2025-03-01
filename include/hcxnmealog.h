@@ -38,25 +38,31 @@
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
- float	lat;
- float	lon;
- float	latitude;
- float	longitude;
- float	altitude;
- float	speed;
- float	pdop;
- float	hdop;
- float	vdop;
- int	channel;
- u16	frequency;
- u8	rssi;
- char	ns;
- char	ew;
- char	altitudeunit;
- char	*encmode;
- char	country[2];
- u8	essid[ESSID_MAX];
- u8	essidlen;
+ float		lat;
+ float		lon;
+ float		latitude;
+ float		longitude;
+ float		altitude;
+ float		speed;
+ float		pdop;
+ float		hdop;
+ float		vdop;
+ char		ns;
+ char		ew;
+ char		altitudeunit;
+ int		channel;
+#define		RSNIE_PRESENT	0x0001;
+ u32		rsnie;
+#define		WPAIE_PRESENT	0x0001;
+ u32		wpaie;
+#define		WPSIE_PRESENT	0x0001;
+ u32		wpsie;
+ u16		frequency;
+ u8		rssi;
+ char		*encmode;
+ char		country[2];
+ u8		essidlen;
+ u8		essid[ESSID_MAX];
  }apdata_t;
 #define APDATA_SIZE (sizeof(apdata_t))
 /*---------------------------------------------------------------------------*/
