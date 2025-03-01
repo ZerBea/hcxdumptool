@@ -53,6 +53,7 @@ typedef struct __attribute__((__packed__))
  char	ns;
  char	ew;
  char	altitudeunit;
+ char	*encmode;
  char	country[2];
  u8	essid[ESSID_MAX];
  u8	essidlen;

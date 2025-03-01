@@ -117,6 +117,7 @@ typedef struct __attribute__((packed))
 #define HCXTXCAPABILITY		0x3104U
 #endif
  u16	beacon_interval;
+#define WLAN_CAPABILITY_PRIVACY		(1<<4)
  u16	capability;
  u8	ie[1];
 }ieee80211_beacon_proberesponse_t;

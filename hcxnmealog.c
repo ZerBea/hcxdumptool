@@ -72,6 +72,10 @@ static u8 *ieee82011ptr = NULL;
 static u8 *payloadptr = NULL;
 static ieee80211_mac_t *macfrx = NULL;
 static rth_t *rth = NULL;
+
+static char *encryptedstr = "encrypted";
+static char *openstr = "open";
+
 static struct tpacket_stats lStats = { 0 };
 static socklen_t lStatsLength = sizeof(lStats);
 static struct sock_fprog bpf = { 0 };
@@ -580,14 +584,14 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_csv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1], (aplist + i)->apdata->encmode,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
-	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
+	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1], (aplist + i)->apdata->encmode,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 return;
@@ -707,9 +711,8 @@ while(0 < infolen)
 	}
 return twstatus;
 }
-
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211proberesponse(void)
+static inline __attribute__((always_inline)) void process80211beacon_proberesponse(void)
 {
 static int i;
 static ieee80211_beacon_proberesponse_t *beacon;
@@ -732,6 +735,8 @@ for(i = 0; i < APLIST_MAX -1; i++)
 	if(memcmp((aplist + i)->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
 	if((aplist + i)->tsakt == tspecakt.tv_sec) return;
 	(aplist + i)->tsakt = tspecakt.tv_sec;
+	if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->encmode = encryptedstr;
+	else (aplist + i)->apdata->encmode = openstr;
 	twret |= get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 	if((aplist + i)->apdata->frequency != frequency)
 		{
@@ -770,74 +775,8 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->pdop = pdop;
 (aplist + i)->apdata->hdop = hdop;
 (aplist + i)->apdata->vdop = vdop;
-twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
-if(fh_nmea != NULL) write_nmea();
-if(fh_csv != NULL) write_csv(i);
-qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211beacon(void)
-{
-static int i;
-static ieee80211_beacon_proberesponse_t *beacon;
-static u16 beaconlen;
-static u16 twret;
-
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-rssi = getradiotapfield(__hcx16le(rth->it_len));
-if(tspecakt.tv_sec != tspecnmea.tv_sec) return;
-if(fix == 0) return;
-if(lon == 0) return;
-if(lat == 0) return;
-if(rssi == 0) return;
-twret = 0;
-beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
-if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-for(i = 0; i < APLIST_MAX -1; i++)
-	{
-	if((aplist + i)->tsakt == 0) break;
-	if(memcmp((aplist + i)->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
-	if((aplist + i)->tsakt == tspecakt.tv_sec) return;
-	(aplist + i)->tsakt = tspecakt.tv_sec;
-	twret |= get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
-	if((aplist + i)->apdata->frequency != frequency)
-		{
-		(aplist + i)->apdata->frequency = frequency;
-		twret |= TWSTATUS_FREQ;
-		}
-	if((aplist + i)->apdata->rssi < rssi)
-		{
-		(aplist + i)->apdata->rssi = rssi;
-		twret |= TWSTATUS_RSSI;
-		}
-	if(twret > TWSTATUS_ERR)
-		{
-		if(fh_nmea != NULL) write_nmea();
-		if(fh_csv != NULL) write_csv(i);
-		}
-	return;
-	}
-(aplist + i)->tsakt = tspecakt.tv_sec;
-memcpy((aplist + i)->maca, macfrx->addr3, ETH_ALEN);
-memset((aplist + i)->apdata, 0, APDATA_SIZE);
-(aplist + i)->apdata->frequency = frequency;
-(aplist + i)->apdata->channel = freq_to_channel(frequency);
-(aplist + i)->apdata->country[0] = '0';
-(aplist + i)->apdata->country[1] = '0';
-(aplist + i)->apdata->rssi = rssi;
-(aplist + i)->apdata->lat = lat;
-(aplist + i)->apdata->lon = lon;
-(aplist + i)->apdata->latitude = latitude;
-(aplist + i)->apdata->longitude = longitude;
-(aplist + i)->apdata->altitude = altitude;
-(aplist + i)->apdata->speed = speed;
-(aplist + i)->apdata->ns = ns;
-(aplist + i)->apdata->ew = ew;
-(aplist + i)->apdata->altitudeunit = altitudeunit;
-(aplist + i)->apdata->pdop = pdop;
-(aplist + i)->apdata->hdop = hdop;
-(aplist + i)->apdata->vdop = vdop;
+if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->encmode = encryptedstr;
+else (aplist + i)->apdata->encmode = openstr;
 twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(fh_nmea != NULL) write_nmea();
 if(fh_csv != NULL) write_csv(i);
@@ -876,8 +815,7 @@ else
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
-	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
-	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse();
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_proberesponse();
 	}
 return;
 }
@@ -975,6 +913,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   BSSID (MAC ACCESS POINT)\n"
 	"                   ESSID (network name)\n" 
 	"                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)\n" 
+	"                   ENCRYPTION (encrypted / open)\n" 
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"
