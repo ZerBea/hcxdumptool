@@ -584,13 +584,13 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_csv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%4u\t%4u\t%4u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%08x\t%08x\t%8u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
 	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%4u\t%4u\t%4u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%8u\t%08x\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
 	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
@@ -661,7 +661,6 @@ if((rth->it_present & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
 if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL) return packetptr[pf];
 return 0;
 }
-
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) u16 get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
@@ -710,13 +709,9 @@ while(0 < infolen)
 		}
 	else if(infoptr->id == TAG_RSN)
 		{
-		apdata->rsnie = RSNIE_PRESENT;
 		}
 	else if(infoptr->id == TAG_VENDOR)
 		{
-
-
-
 		}
 
 
@@ -829,7 +824,8 @@ else
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
-	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_proberesponse();
+	if((macfrx->subtype == IEEE80211_STYPE_BEACON) && (memcmp(macbc, macfrx->addr3, 6) == 0)) process80211beacon_proberesponse();
+	else if (macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211beacon_proberesponse();
 	}
 return;
 }
@@ -912,35 +908,35 @@ static inline void usage_additional(char *eigenname)
 fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Additional information:\n"
 	"Cipher Suites (bitmask)\n"
-	" 0x0001 802.1X\n"
-	" 0x0002 PSK\n"
-	" 0x0004 FT + 802.1X\n"
-	" 0x0008 FT + PSK\n"
-	" 0x0010 802.1X SHA-256\n"
-	" 0x0020 PSK SHA-256\n"
-	" 0x0040 TDLS\n"
-	" 0x0080 SAE SHA-256\n"
-	" 0x0100 FT + SAE SHA-256\n"
-	" 0x0200 AP Peer Key Authentication\n"
-	" 0x0400 802.1X Suite B EAP SH-256\n"
-	" 0x0800 802.1X Suite B EAP SH-384\n"
-	" 0x1000 FT + 802.1X SHA-384\n"
-	" 0x2000 unknown\n\n"
+	" 0x00000001 802.1X\n"
+	" 0x00000002 PSK\n"
+	" 0x00000004 FT + 802.1X\n"
+	" 0x00000008 FT + PSK\n"
+	" 0x00000010 802.1X SHA-256\n"
+	" 0x00000020 PSK SHA-256\n"
+	" 0x00000040 TDLS\n"
+	" 0x00000080 SAE SHA-256\n"
+	" 0x00000100 FT + SAE SHA-256\n"
+	" 0x00000200 AP Peer Key Authentication\n"
+	" 0x00000400 802.1X Suite B EAP SH-256\n"
+	" 0x00000800 802.1X Suite B EAP SH-384\n"
+	" 0x00001000 FT + 802.1X SHA-384\n"
+	" 0x00008000 unknown\n\n"
 	"Authentication Management Suites (bitmask)\n"
-	" 0x0001 WEP\n"
-	" 0x0002 TKIP\n"
-	" 0x0004 RESERVED\n"
-	" 0x0008 CCMP-128\n"
-	" 0x0010  WEP-104\n"
-	" 0x0020 BIP-CMAC-128\n"
-	" 0x0040 NOT ALLOWED\n"
-	" 0x0080 GCMP-128\n"
-	" 0x0100 GCMP-256\n"
-	" 010200 CCMP-256\n"
-	" 0x0400 BIP-GMAC-128\n"
-	" 0x0800 BIP-GMAC256\n"
-	" 0x1000 BIP-CMAC-256\n"
-	" 0x2000 unknown\n"
+	" 0x00010000 WEP\n"
+	" 0x00020000 TKIP\n"
+	" 0x00040000 RESERVED\n"
+	" 0x00080000 CCMP-128\n"
+	" 0x00100000 WEP-104\n"
+	" 0x00200000 BIP-CMAC-128\n"
+	" 0x00400000 NOT ALLOWED\n"
+	" 0x00800000 GCMP-128\n"
+	" 0x01000000 GCMP-256\n"
+	" 0102000000 CCMP-256\n"
+	" 0x04000000 BIP-GMAC-128\n"
+	" 0x08000000 BIP-GMAC256\n"
+	" 0x10000000 BIP-CMAC-256\n"
+	" 0x80000000 unknown\n"
 	"\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
