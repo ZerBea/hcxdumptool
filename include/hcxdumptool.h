@@ -2,33 +2,28 @@
 #define HCX_BPF				1
 #ifdef HCXWANTLIBPCAP
 #define HCX_BPFC			2
+#define HCX_BPFD			3
 #endif
-#define HCX_DISABLE_DEAUTHENTICATION	3
-#define HCX_DISABLE_PROBEREQUEST	4
-#define HCX_DISABLE_ASSOCIATION		5
-#define HCX_DISABLE_REASSOCIATION	6
-#define HCX_DISABLE_BEACON		7
-#define HCX_PROBERESPONSETX_MAX		8
-#define HCX_GPIO_BUTTON			9
-#define HCX_GPIO_STATUSLED		10
-#define HCX_TOT				11
-#define HCX_ERROR_MAX			12
-#define HCX_WATCHDOG_MAX		13
-#define HCX_ATTEMPT_CLIENT_MAX		14
-#define HCX_ATTEMPT_AP_MAX		15
-#define HCX_ON_SIGTERM			16
-#define HCX_ON_TOT			17
-#define HCX_ON_GPIOBUTTON		18
-#define HCX_ON_WATCHDOG			19
-#define HCX_EXIT_ON_EAPOL		20
-#define HCX_ON_ERROR			21
-#define HCX_ESSIDLIST			22
-#define HCX_NMEA0183			23
-#define HCX_GPSD			24
-#define HCX_NMEA0183_OUT		25
-#define HCX_NMEA0183_PCAPNG		26
-#define HCX_RCASCAN			27
-#define HCX_RD_SORT			28
+#define HCX_FTC				4
+#define HCX_TX_MAX			5
+#define HCX_GPIO_BUTTON			6
+#define HCX_GPIO_STATUSLED		7
+#define HCX_TOT				8
+#define HCX_ERROR_MAX			9
+#define HCX_DISABLE_DISASSOCIATION	10
+#define HCX_WATCHDOG_MAX		11
+#define HCX_M1M2ROGUE_MAX		12
+#define HCX_APCOUNT_MAX			13
+#define HCX_PRTX_MAX			14
+#define HCX_ON_SIGTERM			15
+#define HCX_ON_TOT			16
+#define HCX_ON_GPIOBUTTON		17
+#define HCX_ON_WATCHDOG			18
+#define HCX_EXIT_ON_EAPOL		19
+#define HCX_ON_ERROR			20
+#define HCX_ESSIDLIST			21
+#define HCX_RDS				22
+#define HCX_RCASCAN			23
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'
@@ -44,6 +39,7 @@
 #define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
+#define HCX_DONE		1
 #define EXIT_ON_SIGTERM		0x0001
 #define EXIT_ON_GPIOBUTTON	0x0002
 #define EXIT_ON_TOT		0x0004
@@ -60,12 +56,22 @@
 
 #define ERROR_MAX		100
 #define WATCHDOG_MAX		600
-#define ATTEMPTCLIENT_MAX	10
-#define ATTEMPTAP_MAX		32
+#define CLIENTCOUNT_MAX		4
+#define APCOUNT_MAX		100
 
 #define IFTYPENL		0x01
 #define IFTYPEMON		0x02
 #define IFTYPEMONACT		0x04
+
+#define BPFD_HCX		0
+#define BPFD_TCPDUMP		1
+#define BPFD_C			2
+#define BPFD_ASM		3
+#define BPFD_DBG		4
+
+#define RCASCAN_ACTIVE		0x01
+#define RCASCAN_PASSIVE		0x02
+
 #define ETHTOOL_STD_LEN		32
 
 #define TIMER_EPWAITND		100
@@ -73,126 +79,148 @@
 #define TIMER1_VALUE_NSEC	0L
 #define TIMER1_INTERVAL_SEC	1L
 #define TIMER1_INTERVAL_NSEC	0L
-
-#define TIMER_RCA_VALUE_SEC	0L
-#define TIMER_RCA_VALUE_NSEC	200000000L
-#define TIMER_RCA_INTERVAL_SEC	0L
-#define TIMER_RCA_INTERVAL_NSEC	200000000L
-
-#define TIMEHOLD		1000000000ULL
-#define TIMEBEACONNEW		3600000000000ULL
-#define	TIMEAUTHWAIT		200000000ULL
-#define	TIMEASSOCWAIT		200000000ULL
-#define	TIMEREASSOCWAIT		200000000ULL
 #define EPOLL_EVENTS_MAX	5
 
+#define TIMEHOLD		7
+#define TSWAITEAPOLA		10000000UL
+#define TSSECOND1		1000000000ULL
+#define TSEAPOL1		50000000ULL
+#define TSEAPOL2		150000000ULL
+
+#define TSSECOND05		500000000ULL
+#define TSSECOND1		1000000000ULL
+#define TSSECOND2		2000000000ULL
+#define TSSECOND3		3000000000ULL
+#define TSSECOND4		4000000000ULL
+#define TSSECOND5		5000000000ULL
+#define TSSECOND6		6000000000ULL
+#define TSMINUTE1		60000000000ULL
+#define TSHOUR1			3600000000000ULL
+
 #define APLIST_MAX		250
-#define APRGLIST_MAX		500
-#define CLIENTLIST_MAX		500
+#define APLIST_HALF		125
+#define APDATA_MAX		100
+#define APRGLIST_MAX		1024
+#define APRGLIST_HALF		512
+#define CALIST_MAX		250
+#define CALIST_HALF		125
+
+#define OFFSETCHANNEL		0x0c
+#define OFFSETGCS		0x17
+#define OFFSETPCS		0x1d
+#define OFFSETAKM		0x23
+
+#define	BCD_MAX			4095
+
 #define MACLIST_MAX		250
 #define ESSID_MAX		32
-#define PMKID_MAX		16
 #define PSK_MAX			64
 #define DRIVERNAME_MAX		32
-#define EAPOLM2TIMEOUT		20000000ULL
-#define EAPOLM3TIMEOUT		20000000ULL
-#define EAPOLM4TIMEOUT		20000000ULL
-
 
 #define DRIVER_FORMAT		128
 #define DRIVER_LINK		128
 
-#define RCAD_MAX		40
-
-#define PROBERESPONSETX_MAX	5
+#define PROBERESPONSETX_MAX	(APRGLIST_MAX - 1)
 
 #define PCAPNG_SNAPLEN		0x400
-#define RTD_LEN			9128
 
 #define TIMESTRING_LEN		128
 
 #define WLTXBUFFER		256
 
-#define NMEA_SIZE		9128
-#define NMEA_MSG_MAX		128
-#define NMEA_MIN		10
-#define NMEA_GPRMC_MIN		56
-#define NMEA_CS_CR_LF_SIZE	5
-#define NMEA_GPWPLID_SIZE	6
-#define NMEA_GPTXTID_SIZE	6 +1
-
 #define NLTX_SIZE		0xfff
 #define NLRX_SIZE		0xffff
 
 #define WEAKCANDIDATEDEF	"12345678"
+
 /*===========================================================================*/
-typedef struct
-{
- u16	status;
- u8	macap[6];
- u8	kdv1;
- u64	replaycountm1;
- u8	noncem1[4];
- u8	kdv2;
- u64	replaycountm2;
- u8	kdv3;
- u64	replaycountm3;
- u8	kdv4;
- u64	replaycountm4;
- }authseqakt_t;
-#define AUTHSEQAKT_SIZE (sizeof(authseqakt_t))
-/*---------------------------------------------------------------------------*/
+/*===========================================================================*/
 typedef struct __attribute__((__packed__))
 {
- u8 	len;
- u8	*essid;
-}essid_t;
-#define ESSID_SIZE (sizeof(essid_t))
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
-#define	APIE_ESSID	0x0001
-#define APGS_CCMP	0x0002
-#define APGS_TKIP	0x0004
-#define APCS_CCMP	0x0008
-#define APCS_TKIP	0x0010
-#define APRSNAKM_PSK	0x0020
-#define APRSNAKM_PSK256	0x0040
-#define APRSNAKM_PSKFT	0x0080
-#define APWPAAKM_PSK	0x0100
-#define APAKM_MASK	0x01e0
-#define AP_MFP		0x0200
- u8	flags;
- u8	essidlen;
- u8	essid[ESSID_MAX];
+ u64	tsauth;
+ u64	tsassoc;
+ u64	tsreassoc;
+ u64	tsnull;
+ u8	macc[ETH_ALEN];
+ u8	maca[ETH_ALEN];
+ int	clientcount;
  u16	channel;
-}infoelement_t;
-#define INFOELEMENT_SIZE (sizeof(infoelement_t))
+ u8	mic[16];
+ u8	essid[ESSID_MAX];
+ u8	essidlen;
+ u8	akm;
+ char	m2;
+ }cadata_t;
+#define CADATA_SIZE (sizeof(cadata_t))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
  u64	tsakt;
- u64	tshold1;
- u64	tsauth;
- u32	count;
- u32	frequency;
- u8	macap[6];
- u8	macclient[6];
- u16	status;
-#define AP_IN_RANGE_TOT		120000000000ULL
-#define AP_IN_RANGE		0x0001
-#define AP_IN_RANGE_MASK	0xfffe
-#define AP_ESSID		0x0002
-#define AP_BEACON		0x0004
-#define AP_PROBERESPONSE	0x0008
-#define AP_EAPOL_M1		0x0010
-#define AP_EAPOL_M2		0x0020
-#define AP_EAPOL_M3		0x0040
-#define AP_EAPOL_M4		0x0080
-#define AP_PMKID		0x0100
-#define AP_PMKID_EAPOL		0x01f0
+ cadata_t	*cadata;
+}calist_t;
+#define CALIST_SIZE (sizeof(calist_t))
+/*---------------------------------------------------------------------------*/
+static int sort_calist_by_tsakt(const void *a, const void *b)
+{
+const calist_t *ai = (const calist_t *)a;
+const calist_t *bi = (const calist_t *)b;
 
- infoelement_t	ie;
+if(ai->tsakt < bi->tsakt) return 1;
+else if(ai->tsakt > bi->tsakt) return -1;
+return 0;
+}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+typedef struct __attribute__((__packed__))
+{
+ u64	tsrequest;
+ u64	tsauthresponse;
+ u64	tsassocresponse;
+ u64	tsreassocresponse;
+ u64	tsmacc;
+ u64	tsm1;
+ u64	tsm2;
+ u64	tsm3;
+ u64	tsresponse;
+ u64	replaycount1;
+ u64	replaycount2;
+ u64	replaycount3;
+ int	apcount;
+ u16	channel;
+ u16	aid;
+ u16	rtfrequency;
+ u8	rtrssi;
+ u8	nonce[4];
+ u8	rsnpmkid[PMKID_MAX];
+ u8	maca[ETH_ALEN];
+ u8	macc[ETH_ALEN];
+ u8	essid[ESSID_MAX];
+ u8	essidlen;
+ u8	opensystem;
+ u8	gcs;
+ u8	pcs;
+ u8	akm;
+ u8	mcs;
+ u8	ucs;
+ u8	akm1;
+ u8	mfp;
+ u8	akmstat;
+ char	privacy;
+ char	pmkid;
+ char	m1;
+ char	m1m2;
+ char	m1m2m3;
+ bool	beacon;
+ bool	proberesponse;
+ bool	suthentication;
+ bool	associationresponse;
+ bool	reassociationresponse;
+ }apdata_t;
+#define APDATA_SIZE (sizeof(apdata_t))
+/*---------------------------------------------------------------------------*/
+typedef struct __attribute__((__packed__))
+{
+ u64	tsakt;
+ apdata_t	*apdata;
 }aplist_t;
 #define APLIST_SIZE (sizeof(aplist_t))
 /*---------------------------------------------------------------------------*/
@@ -206,108 +234,26 @@ else if(ai->tsakt > bi->tsakt) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-static int sort_aplist_by_count(const void *a, const void *b)
+static int sort_aplist_by_tsresponse(const void *a, const void *b)
 {
 const aplist_t *ai = (const aplist_t *)a;
 const aplist_t *bi = (const aplist_t *)b;
 
-if(ai->count < bi->count) return 1;
-else if(ai->count > bi->count) return -1;
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
+if(ai->apdata->tsresponse < bi->apdata->tsresponse) return 1;
+else if(ai->apdata->tsresponse > bi->apdata->tsresponse) return -1;
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef HCXSTATUSOUT
-static int sort_aplist_by_status(const void *a, const void *b)
+static int sort_aplist_by_rtrssi(const void *a, const void *b)
 {
 const aplist_t *ai = (const aplist_t *)a;
 const aplist_t *bi = (const aplist_t *)b;
 
-if(ai->status < bi->status) return 1;
-else if(ai->status > bi->status) return -1;
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
+if(ai->apdata->rtrssi < bi->apdata->rtrssi) return 1;
+else if(ai->apdata->rtrssi > bi->apdata->rtrssi) return -1;
 return 0;
 }
-#endif
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u64	tsakt;
- u8	macaprg[6];
- u8	essidlen;
- u8	essid[ESSID_MAX];
-}aprglist_t;
-#define APRGLIST_SIZE (sizeof(aprglist_t))
-static int sort_aprglist_by_tsakt(const void *a, const void *b)
-{
-const aprglist_t *ai = (const aprglist_t *)a;
-const aprglist_t *bi = (const aprglist_t *)b;
-
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
-return 0;
-}
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u64	tsakt;
- u64	tsauth;
- u64	tsassoc;
- u64	tsreassoc;
- u16	aid;
- u8	macclient[6];
- u8	macap[6];
- u8	mic[4];
-#define CLIENT_EAP_START	0x01
-#define CLIENT_EAPOL_M2		0x02
- u8	status;
- u32	count;
- infoelement_t	ie;
-}clientlist_t;
-#define CLIENTLIST_SIZE (sizeof(clientlist_t))
-/*---------------------------------------------------------------------------*/
-static int sort_clientlist_by_tsakt(const void *a, const void *b)
-{
-const clientlist_t *ai = (const clientlist_t *)a;
-const clientlist_t *bi = (const clientlist_t *)b;
-
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
-return 0;
-}
-/*---------------------------------------------------------------------------*/
-#ifdef HCXSTATUSOUT
-static int sort_clientlist_by_status(const void *a, const void *b)
-{
-const clientlist_t *ai = (const clientlist_t *)a;
-const clientlist_t *bi = (const clientlist_t *)b;
-
-if(ai->status < bi->status) return 1;
-else if(ai->status > bi->status) return -1;
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
-return 0;
-}
-#endif
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u64	tsakt;
- u8	mac[6];
-}maclist_t;
-#define MACLIST_SIZE (sizeof(maclist_t))
-
-static int sort_maclist_by_tsakt(const void *a, const void *b)
-{
-const maclist_t *ai = (const maclist_t *)a;
-const maclist_t *bi = (const maclist_t *)b;
-
-if(ai->tsakt < bi->tsakt) return 1;
-else if(ai->tsakt > bi->tsakt) return -1;
-return 0;
-}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*---------------------------------------------------------------------------*/
 #define SCANLIST_MAX		512
 #define FREQUENCYLIST_MAX	256
@@ -325,12 +271,14 @@ typedef struct __attribute__((__packed__))
 typedef struct __attribute__((__packed__))
 {
  int	index;
- u32	wiphy;
+ int	wiphy;
+ u64	wdev;
 #define IF_HAS_NETLINK		0x01
 #define IF_HAS_MONITOR		0x02
 #define IF_HAS_MONITOR_ACTIVE	0x04
 #define IF_HAS_NLMON		0x03
 #define IF_HAS_NLMON_ACTIVE	0x07
+#define IF_IS_SHARED		0x08
  u8	type;
 #define IF_STAT_MONITOR		0x01
 #define IF_STAT_UP		0x02
@@ -338,20 +286,20 @@ typedef struct __attribute__((__packed__))
  u8	status;
  u8	hwmac[6];
  u8	vimac[6];
- char	name[IFNAMSIZ];
+ char	name[IFNAMSIZ +1];
  char	driver[DRIVERNAME_MAX];
  size_t	i;
  frequencylist_t *frequencylist;
 }interface_t;
 #define INTERFACELIST_SIZE (sizeof(interface_t))
 
-static int sort_interfacelist_by_index(const void *a, const void *b)
+static int sort_interfacelist_by_wiphy(const void *a, const void *b)
 {
 const interface_t *ia = (const interface_t *)a;
 const interface_t *ib = (const interface_t *)b;
 
-if(ia->index > ib->index) return 1;
-else if(ia->index < ib->index) return -1;
+if(ia->wiphy > ib->wiphy) return 1;
+else if(ia->wiphy < ib->wiphy) return -1;
 return 0;
 }
 /*===========================================================================*/
