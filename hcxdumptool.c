@@ -20,6 +20,7 @@
 #include <linux/version.h>
 #include <net/ethernet.h>
 #include <net/if.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -29,6 +30,7 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <sys/file.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <sys/timerfd.h>
@@ -42,24 +44,23 @@
 #endif
 #include "include/types.h"
 #include "include/byteorder.h"
-#include "include/hcxdumptool.h"
 #include "include/ieee80211.h"
 #include "include/pcapng.h"
 #include "include/radiotap.h"
 #include "include/raspberry.h"
+#include "include/hcxlabtool.h"
 /*===========================================================================*/
 /* global var */
-static bool deauthenticationflag = true;
-static bool proberequestflag = true;
-static bool associationflag = true;
-static bool reassociationflag = true;
 static bool activemonitorflag = false;
 static bool vmflag = true;
-static bool beaconoffflag = false;
+static bool disassociationflag = true;
+static bool ftcflag = false;
+
+static uid_t uid = 1000;
+static struct passwd *pwd = NULL;
 
 static u16 wanteventflag = 0;
 static u16 exiteapolpmkidflag = 0;
-static u16 exiteapolm4flag = 0;
 static u16 exiteapolm3flag = 0;
 static u16 exiteapolm2flag = 0;
 static u16 exiteapolm2rgflag = 0;
@@ -79,35 +80,29 @@ static int fd_socket_rx = 0;
 static int fd_socket_tx = 0;
 static int fd_timer1 = 0;
 static int fd_pcapng = 0;
-
-static u8 rdsort = 0;
-#ifdef HCXSTATUSOUT
-static long int wecbcount = 0;
-static long int wepbcount = 0;
-static long int widbcount = 0;
-static long int wshbcount = 0;
-#endif
-
-#ifdef HCXNMEAOUT
-static int fd_gps = 0;
-static int fd_hcxpos = 0;
-static bool nmea2pcapflag = false;
-static long int nmeapacketcount = 0;
-static long int wecbnmeacount = 0;
-static long int wgpwplcount = 0;
-#endif
+static int fd_fakeclock = 0;
 
 #ifdef HCXDEBUG
 static FILE *fh_debug = NULL;
+static clock_t debugtms;
+static double debugtmstaken;
 #endif
+
 static struct sock_fprog bpf = { 0 };
 
 static int ifaktindex = 0;
+static int ifaktwiphy = 0;
 static u8 ifaktstatus = 0;
 static u8 ifakttype = 0;
+static u8 rds = 0;
+static u8 rcascanmode = 0;
+
+static aplist_t *aplist = NULL;
+static aplist_t *aprglist = NULL;
+static calist_t *calist = NULL;
 
 static frequencylist_t *ifaktfrequencylist = NULL;
-static char ifaktname[IF_NAMESIZE] = { 0 };
+static char ifaktname[IF_NAMESIZE +1] = { 0 };
 static u8 ifakthwmac[ETH_ALEN] = { 0 };
 
 static u16 nlfamily = 0;
@@ -118,12 +113,8 @@ static size_t ifpresentlistcounter = 0;
 static size_t scanlistindex = 0;
 static frequencylist_t *scanlist = NULL;
 
-static interface_t *ifpresentlist;
+static interface_t *ifpresentlist = NULL;
 
-static aplist_t* aplist = NULL;
-static aprglist_t* aprglist = NULL;
-static clientlist_t* clientlist = NULL;
-static maclist_t* maclist = NULL;
 static u64 lifetime = 0;
 static u32 ouiaprg = 0;
 static u32 nicaprg = 0;
@@ -132,9 +123,9 @@ static u32 nicclientrg = 0;
 static u64 replaycountrg = 0;
 
 static struct timespec tspecakt = { 0 };
+static struct timespec tsremain, tsreq = {0, TSWAITEAPOLA};
+
 static u64 tsakt = 0;
-static u64 tsfirst = 0;
-static u64 tshold = 0;
 static u64 tottime = 0;
 static u64 timehold = TIMEHOLD;
 static int timerwaitnd = TIMER_EPWAITND;
@@ -143,15 +134,12 @@ static u32 errorcountmax = ERROR_MAX;
 static u32 errorcount = 0;
 static u32 errortxcount = 0;
 
-static u32 watchdogcountmax = WATCHDOG_MAX;
-static u32 attemptapmax = ATTEMPTAP_MAX;
-static u32 attemptclientmax = ATTEMPTCLIENT_MAX;
+static u32 timewatchdog = WATCHDOG_MAX;
+static int apcountmax = APCOUNT_MAX;
+static int clientcountmax = CLIENTCOUNT_MAX;
 
 static u64 packetcount = 1;
-static u64 packetrcarxcount = 0;
-static u64 packetrcatxcount = 0;
-static size_t proberesponseindex = 0;
-
+static size_t proberesponsetxindex = 0;
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
 
 static u64 beacontimestamp = 1;
@@ -173,21 +161,18 @@ static u8 *eapauthplptr = NULL;
 static u16 eapolpllen = 0;
 static u8 *eapolplptr = NULL;
 static ieee80211_wpakey_t *wpakey;
-static ieee80211_pmkid_t *pmkid;
 static u16 keyinfo = 0;
 static u8 kdv = 0;
+static u16 rtfrequency = 0;
+static u8 rtrssi = 0;
 
 static enhanced_packet_block_t *epbhdr = NULL;
-#ifdef HCXNMEAOUT
-static ssize_t nmealen = 0;
-static ssize_t gprmclen = 0;
-static ssize_t gpggalen = 0;
-#endif
+
 static ieee80211_mac_t *macftx = NULL;
-static u16 seqcounter1 = 1; /* deauthentication / disassociation */
-static u16 seqcounter2 = 1; /* proberequest authentication association */
-static u16 seqcounter3 = 1; /* probereresponse authentication response 3 */
-static u16 seqcounter4 = 1; /* beacon */
+static u16 seqcounter1 = 1; /* authentication / association */
+static u16 seqcounter2 = 1; /*  */
+static u16 seqcounter3 = 1; /*  */
+static u16 seqcounter4 = 1; /*  */
 /*---------------------------------------------------------------------------*/
 #ifdef HCXNMEAOUT
 static const char gpwplid[] = "$GPWPL";
@@ -195,39 +180,23 @@ static const char gptxtid[] = "$GPTXT,";
 static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
 #endif
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-static const u8 beacondata[] =
-{
-/* Tag SSID: WILDCARD */
-0x00, 0x00,
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
-/* Tag: DS Parameter set: Current Channel: 1 */
-0x03, 0x01, 0x01,
-/* Tag: TIM Information */
-0x05, 0x04, 0x00, 0x01, 0x00, 0x00,
-/* Tag: Extended Supported Rates 24(B), 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
-/* Tag: RSN Information CCM CCM PSK */
-0x30, 0x14, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04,
-0x01, 0x00,
-0x00, 0x0f, 0xac, 0x02,
-0x00, 0x00,
-};
-#define BEACONDATA_SIZE sizeof(beacondata)
-
-/*---------------------------------------------------------------------------*/
 static const u8 proberesponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+//0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+
+/* Tag: Supported Rates 1, 2, 5.5, 11, 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24,
+
 /* Tag: DS Parameter set: Current Channel: 1 */
 0x03, 0x01, 0x01,
+
 /* Tag: Extended Supported Rates 24(B), 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+//0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+
 /* Tag: RSN Information CCM CCM PSK */
 0x30, 0x14, 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x04,
@@ -235,7 +204,7 @@ static const u8 proberesponsedata[] =
 0x00, 0x0f, 0xac, 0x04,
 0x01, 0x00,
 0x00, 0x0f, 0xac, 0x02,
-0x00, 0x00,
+0x80, 0x00,
 };
 #define PROBERESPONSEDATA_SIZE sizeof(proberesponsedata)
 /*---------------------------------------------------------------------------*/
@@ -255,33 +224,6 @@ static const u8 authenticationrequestdata[] =
 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
 };
 #define AUTHENTICATIONREQUEST_SIZE sizeof(authenticationrequestdata)
-/*---------------------------------------------------------------------------*/
-static const u8 authenticationresponsedata[] =
-{
-0x00, 0x00, 0x02, 0x00, 0x00, 0x00
-};
-#define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
-/*---------------------------------------------------------------------------*/
-static const u8 reassociationrequestdata[] =
-{
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
-/* Tag: Extended Supported Rates 24(B), 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
-/* RSN information AES PSK (WPA2) */
-0x30, 0x14, 0x01, 0x00,
-0x00, 0x0f, 0xac, 0x04, /* group cipher */
-0x01, 0x00, /* count */
-0x00, 0x0f, 0xac, 0x04, /* pairwise cipher */
-0x01, 0x00, /* count */
-0x00, 0x0f, 0xac, 0x02, /* AKM */
-0x80, 0x00,
-/* RM Enabled Capabilities */
-0x46, 0x05, 0x7b, 0x00, 0x02, 0x00, 0x00,
-/* Supported Operating Classes */
-0x3b, 0x04, 0x51, 0x51, 0x53, 0x54
-};
-#define REASSOCIATIONREQUEST_SIZE sizeof(reassociationrequestdata)
 /*---------------------------------------------------------------------------*/
 static const u8 associationrequestcapa[] =
 {
@@ -310,18 +252,36 @@ static const u8 associationrequestdata[] =
 };
 #define ASSOCIATIONREQUEST_SIZE sizeof(associationrequestdata)
 /*---------------------------------------------------------------------------*/
-static const u8 associationresponsedata[] =
+static const u8 eaprequestiddata[] =
 {
-/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
-0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
-/* Tag: Extended Supported Rates 24(B), 36, 48, 54, [Mbit/sec] */
-0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
-/* Tag: Extended Capabilities (8 octets) */
-//0x7f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+0x01, 0x00, 0x00, 0x05, 0x01, 0x01, 0x00, 0x05, 0x01
 };
-#define ASSOCIATIONRESPONSEDATA_SIZE sizeof(associationresponsedata)
+#define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
 /*---------------------------------------------------------------------------*/
-static u8 eapolm1data[] =
+static u8 eapolm1wpa1data[] =
+{
+/* LLC */
+0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
+/* M1 WPA2 */
+0x01,
+0x03,
+0x00, 0x5f,
+0xfe,
+0x00, 0x89,
+0x00, 0x20,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00, 0x00
+};
+#define EAPOLM1WPA1DATA_SIZE sizeof(eapolm1wpa1data)
+/*---------------------------------------------------------------------------*/
+static u8 eapolm1wpa2data[] =
 {
 /* LLC */
 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
@@ -341,14 +301,29 @@ static u8 eapolm1data[] =
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 0x00, 0x00
 };
-#define EAPOLM1DATA_SIZE sizeof(eapolm1data)
+#define EAPOLM1WPA2DATA_SIZE sizeof(eapolm1wpa2data)
 /*---------------------------------------------------------------------------*/
-static const u8 eaprequestiddata[] =
+static const u8 associationresponsedata[] =
 {
-0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00, 0x88, 0x8e,
-0x01, 0x00, 0x00, 0x05, 0x01, 0x01, 0x00, 0x05, 0x01
+/* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
+//0x01, 0x08, 0x82, 0x84, 0x8b, 0x96, 0x8c, 0x12, 0x98, 0x24,
+/* Tag: Extended Supported Rates 24(B), 36, 48, 54, [Mbit/sec] */
+//0x32, 0x04, 0xb0, 0x48, 0x60, 0x6c,
+
+/* Tag: Supported Rates 1, 2, 5.5, 11, 6, 9, 12, 18, [Mbit/sec] */
+0x01, 0x08, 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24,
+/* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
+0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
+
+
 };
-#define EAPREQUESTID_SIZE sizeof(eaprequestiddata)
+#define ASSOCIATIONRESPONSEDATA_SIZE sizeof(associationresponsedata)
+/*---------------------------------------------------------------------------*/
+static const u8 authenticationresponsedata[] =
+{
+0x00, 0x00, 0x02, 0x00, 0x00, 0x00
+};
+#define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static u8 macaprghidden[ETH_ALEN] = { 0 };
@@ -357,12 +332,10 @@ static u8 macclientrg[ETH_ALEN +2] = { 0 };
 static u8 anoncerg[32] = { 0 };
 static u8 snoncerg[32] = { 0 };
 static char weakcandidate[PSK_MAX];
-static char timestring1[TIMESTRING_LEN];
-static char timestring2[TIMESTRING_LEN];
+static char timestring[TIMESTRING_LEN];
+static char timestringresponse[TIMESTRING_LEN];
 
 static char country[3];
-
-static authseqakt_t authseqakt = { 0 };
 
 static u8 nltxbuffer[NLTX_SIZE] = { 0 };
 static u8 nlrxbuffer[NLRX_SIZE] = { 0 };
@@ -370,63 +343,9 @@ static u8 nlrxbuffer[NLRX_SIZE] = { 0 };
 static u8 epb[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 epbown[WLTXBUFFER] = { 0 };
 static u8 wltxbuffer[WLTXBUFFER] = { 0 };
-
-#ifdef HCXNMEAOUT
-static char nmeabuffer[NMEA_SIZE] = { 0 };
-static char gpwpl[NMEA_MSG_MAX] = { 0 };
-static char gprmc[NMEA_MSG_MAX] = { 0 };
-static char gpgga[NMEA_MSG_MAX] = { 0 };
-static char gptxt[NMEA_MSG_MAX] = { 0 };
-#endif
-
-static char rtb[RTD_LEN] = { 0 };
 /*===========================================================================*/
 /*===========================================================================*/
 /* status print */
-static void show_interfacecapabilities2(void)
-{
-static size_t i;
-static size_t ifl;
-static const char *po = "N/A";
-static const char *mode = "-";
-static frequencylist_t *iffreql;
-
-for(i = 0; i < ifpresentlistcounter; i++)
-	{
-	if((ifpresentlist +i)->index != ifaktindex) continue;
-	fprintf(stdout, "interface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
-			"---------------------------------------------------------------------------------------------\n");
-	if(((ifpresentlist +i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	if(((ifpresentlist +i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
-	else if(((ifpresentlist +i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
-	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist +i)->wiphy, (ifpresentlist +i)->index,
-		(ifpresentlist +i)->hwmac[0], (ifpresentlist +i)->hwmac[1], (ifpresentlist +i)->hwmac[2], (ifpresentlist +i)->hwmac[3], (ifpresentlist +i)->hwmac[4], (ifpresentlist +i)->hwmac[5],
-		(ifpresentlist +i)->vimac[0], (ifpresentlist +i)->vimac[1], (ifpresentlist +i)->vimac[2], (ifpresentlist +i)->vimac[3], (ifpresentlist +i)->vimac[4], (ifpresentlist +i)->vimac[5],
-		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
-	iffreql = (ifpresentlist +i)->frequencylist;
-	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
-	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
-		{
-		if((iffreql + ifl)->frequency == 0) break;
-		if(ifl % 4 == 0) fprintf(stdout, "\n");
-		else  fprintf(stdout, "\t");
-		if((iffreql + ifl)->status == 0) fprintf(stdout, "%6d [%3d] %.1f dBm", (iffreql + ifl)->frequency, (iffreql + ifl)->channel, 0.01 *(iffreql + ifl)->pwr);
-		else fprintf(stdout, "%6d [%3d] disabled", (iffreql + ifl)->frequency, (iffreql + ifl)->channel);
-		}
-	fprintf(stdout, "\n");
-	fprintf(stdout, "\n\nscan frequencies: frequency [channel] of Regulatory Domain: %s\n", country);
-	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
-		{
-		if((scanlist + ifl)->frequency == 0) break;
-		if(ifl % 5 == 0) fprintf(stdout, "\n");
-		else  fprintf(stdout, "\t");
-		fprintf(stdout, "%6d [%3d]", (scanlist + ifl)->frequency, (scanlist + ifl)->channel);
-		}
-	fprintf(stdout, "\n");
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static void show_interfacecapabilities(void)
 {
@@ -439,17 +358,25 @@ static frequencylist_t *iffreql;
 
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
-	if((ifpresentlist +i)->index != ifaktindex) continue;
+	if((ifpresentlist + i)->index != ifaktindex) continue;
 	fprintf(stdout, "interface information:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 			"---------------------------------------------------------------------------------------------\n");
-	if(((ifpresentlist +i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	if(((ifpresentlist +i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
-	else if(((ifpresentlist +i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
-	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist +i)->wiphy, (ifpresentlist +i)->index,
-		(ifpresentlist +i)->hwmac[0], (ifpresentlist +i)->hwmac[1], (ifpresentlist +i)->hwmac[2], (ifpresentlist +i)->hwmac[3], (ifpresentlist +i)->hwmac[4], (ifpresentlist +i)->hwmac[5],
-		(ifpresentlist +i)->vimac[0], (ifpresentlist +i)->vimac[1], (ifpresentlist +i)->vimac[2], (ifpresentlist +i)->vimac[3], (ifpresentlist +i)->vimac[4], (ifpresentlist +i)->vimac[5],
-		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
-	iffreql = (ifpresentlist +i)->frequencylist;
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
+	if(((ifpresentlist + i)->type & IF_IS_SHARED) != IF_IS_SHARED)
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
+		}
+	else
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "S";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "s";
+		}
+	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
+	iffreql = (ifpresentlist + i)->frequencylist;
 	fprintf(stdout, "\n\navailable frequencies: frequency [channel] tx-power of Regulatory Domain: %s\n", country);
 	for(ifl = 0; ifl < FREQUENCYLIST_MAX; ifl++)
 		{
@@ -470,16 +397,29 @@ static void show_interfacelist_short(void)
 static size_t i;
 static const char *po = "N/A";
 static const char *mode = "-";
+static const char *unassigned = "unassigned";
 
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
-	if(((ifpresentlist +i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	if(((ifpresentlist +i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
-	else if(((ifpresentlist +i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
-	fprintf(stdout, "%3d\t%3d\t%02x%02x%02x%02x%02x%02x\t%02x%02x%02x%02x%02x%02x\t%s\t%-*s\t%s\t%s\n", (ifpresentlist +i)->wiphy, (ifpresentlist +i)->index,
-		(ifpresentlist +i)->hwmac[0], (ifpresentlist +i)->hwmac[1], (ifpresentlist +i)->hwmac[2], (ifpresentlist +i)->hwmac[3], (ifpresentlist +i)->hwmac[4], (ifpresentlist +i)->hwmac[5],
-		(ifpresentlist +i)->vimac[0], (ifpresentlist +i)->vimac[1], (ifpresentlist +i)->vimac[2], (ifpresentlist +i)->vimac[3], (ifpresentlist +i)->vimac[4], (ifpresentlist +i)->vimac[5],
-		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
+	if(((ifpresentlist + i)->type & IF_IS_SHARED) != IF_IS_SHARED)
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
+		}
+	else
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "S";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "s";
+		}
+	if((ifpresentlist + i)->name[0] != 0) fprintf(stdout, "%3d\t%3d\t%02x%02x%02x%02x%02x%02x\t%02x%02x%02x%02x%02x%02x\t%s\t%-*s\t%s\t%s\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
+	else fprintf(stdout, "%3d\t%3d\t%02x%02x%02x%02x%02x%02x\t%02x%02x%02x%02x%02x%02x\t%s\t%-*s\t%s\t%s\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, unassigned, (ifpresentlist + i)->driver, po);
 	}
 return;
 }
@@ -489,164 +429,283 @@ static void show_interfacelist(void)
 static size_t i;
 static const char *po = "N/A";
 static const char *mode = "-";
+static const char *unassigned = "unassigned";
 
-fprintf(stdout, "available wlan devices:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
+fprintf(stdout, "available physical wlan devices:\n\nphy idx hw-mac       virtual-mac  m ifname           driver (protocol)\n"
 		"---------------------------------------------------------------------------------------------\n");
 for(i = 0; i < ifpresentlistcounter; i++)
 	{
-	if(((ifpresentlist +i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
-	if(((ifpresentlist +i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
-	else if(((ifpresentlist +i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
-	fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist +i)->wiphy, (ifpresentlist +i)->index,
-		(ifpresentlist +i)->hwmac[0], (ifpresentlist +i)->hwmac[1], (ifpresentlist +i)->hwmac[2], (ifpresentlist +i)->hwmac[3], (ifpresentlist +i)->hwmac[4], (ifpresentlist +i)->hwmac[5],
-		(ifpresentlist +i)->vimac[0], (ifpresentlist +i)->vimac[1], (ifpresentlist +i)->vimac[2], (ifpresentlist +i)->vimac[3], (ifpresentlist +i)->vimac[4], (ifpresentlist +i)->vimac[5],
-		mode, IF_NAMESIZE, (ifpresentlist +i)->name, (ifpresentlist +i)->driver, po);
+	if(((ifpresentlist + i)->type & IF_HAS_NETLINK) == IF_HAS_NETLINK) po = "NETLINK";
+	if(((ifpresentlist + i)->type & IF_IS_SHARED) != IF_IS_SHARED)
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "*";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "+";
+		}
+	else
+		{
+		if(((ifpresentlist + i)->type & IFTYPEMONACT) == IFTYPEMONACT) mode = "S";
+		else if(((ifpresentlist + i)->type & IFTYPEMON) == IFTYPEMON) mode = "s";
+		}
+	if((ifpresentlist + i)->name[0] != 0) fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, (ifpresentlist + i)->name, (ifpresentlist + i)->driver, po);
+	else fprintf(stdout, "%3d %3d %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %s %-*s %s (%s)\n", (ifpresentlist + i)->wiphy, (ifpresentlist + i)->index,
+		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
+		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
+		mode, IF_NAMESIZE, unassigned, (ifpresentlist + i)->driver, po);
+	
 	}
-fprintf(stdout, "\n"
-		"* active monitor mode available (reported by driver - do not trust it)\n"
-		"+ monitor mode available (reported by driver)\n"
-		"- no monitor mode available\n");
+fprintf(stdout, "\nmodes reported by the driver:\n"
+		"* active monitor mode available (do not trust it)\n"
+		"S active monitor mode available on shared interface (do not trust it)\n"
+		"+ monitor mode available\n"
+		"s monitor mode available on shared interface\n"
+		"- no monitor available\n");
 return;
 }
 /*---------------------------------------------------------------------------*/
 static inline void show_realtime_rca(void)
 {
 static size_t i;
-static size_t p;
-static time_t tvlastb;
-static time_t tvlastp;
-static char *ak;
-static char *pmdef = " ";
-static char *pmok = "+";
-static char *notime = "        ";
+static time_t tvlast;
+struct winsize w;
 
 if(system("clear") != 0) errorcount++;
-if(rdsort == 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-else qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_count);
-sprintf(&rtb[0], " CHA  FREQ  BEACON  RESPONSE S    MAC-AP    ESSID  SCAN-FREQUENCY: %6u\n"
-	"--------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
-p = strlen(rtb);
-i = 0;
-for(i = 0; i < RCAD_MAX ; i++)
+w.ws_row = 12;
+if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
+if(w.ws_row > 10) w.ws_row -= 4;
+fprintf(stdout, "CHA  BEACON  RESPONSE RSSI    MAC-AP    ESSID                  SCAN:%6u/%u\n"
+		"------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
+if(rds == 0)
 	{
-	if((aplist +i)->tsakt == 0) break;
-	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
-	else ak = pmdef;
-	tvlastb = (aplist +i)->tsakt / 1000000000ULL;
-	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastb));
-	if(((aplist +i)->status & AP_PROBERESPONSE) == AP_PROBERESPONSE)
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+	for(i = 0; i < APLIST_MAX - 1; i++)
 		{
-		tvlastp = (aplist +i)->tsauth / 1000000000ULL;
-		strftime(timestring2, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlastp));
+		if((aplist + i)->tsakt == 0) break;
+		if((scanlist + scanlistindex)->channel == (aplist + i)->apdata->channel)
+			{
+			tvlast = (aplist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			if((aplist + i)->apdata->tsresponse > 0)
+				{
+				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
+				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			else
+				{
+				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			}
 		}
-	else strncpy(timestring2, notime, TIMESTRING_LEN);
-	sprintf(&rtb[p], " %3d %5d %s %s %s %02x%02x%02x%02x%02x%02x %.*s [%u]\n",
-			(aplist +i)->ie.channel, (aplist +i)->frequency, timestring1, timestring2, ak,
-			(aplist +i)->macap[0], (aplist +i)->macap[1], (aplist +i)->macap[2], (aplist +i)->macap[3], (aplist +i)->macap[4], (aplist +i)->macap[5],
-			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid, (aplist +i)->count);
-	p = strlen(rtb);
 	}
-rtb[p] = 0;
-fprintf(stdout, "%s", rtb);
-if(rdsort > 0) qsort(aplist, RCAD_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+if(rds == 1)
+	{
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsresponse);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if((scanlist + scanlistindex)->channel == (aplist + i)->apdata->channel)
+			{
+			tvlast = (aplist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			if((aplist + i)->apdata->tsresponse > 0)
+				{
+				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
+				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			else
+				{
+				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			}
+		}
+	}
+if(rds == 2)
+	{
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_rtrssi);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if((scanlist + scanlistindex)->channel == (aplist + i)->apdata->channel)
+			{
+			tvlast = (aplist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			if((aplist + i)->apdata->tsresponse > 0)
+				{
+				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
+				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			else
+				{
+				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+				}
+			}
+		}
+	}
 return;
 }
 /*---------------------------------------------------------------------------*/
-#ifdef HCXSTATUSOUT
 static inline void show_realtime(void)
 {
-static size_t i;
-static size_t p;
-static size_t pa;
+static size_t i, ii;
 static time_t tvlast;
-static char *pmdef = " ";
-static char *pmok = "+";
-static char *ps;
-static char *mc;
-static char *ma;
-static char *me;
-static char *ak;
-static char *ar;
+struct winsize w;
 
 if(system("clear") != 0) errorcount++;
-if(rdsort == 0)
+w.ws_row = 12;
+if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
+if(w.ws_row > 10) w.ws_row -= 4;
+ii = 0;
+qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
+qsort(calist, CALIST_MAX, CALIST_SIZE, sort_calist_by_tsakt);
+fprintf(stdout, "CHA   LAST   EA123P    MAC-CL       MAC-AP    ESSID            SCAN:%6u/%u\n"
+		"------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
+if(rds == 1)
 	{
-	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	sprintf(&rtb[0], " CHA   LAST   R 1 3 P S    MAC-AP    ESSID (last seen on top)     SCAN-FREQUENCY: %6u\n"
-			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if((scanlist + scanlistindex)->channel == (aplist + i)->apdata->channel)
+			{
+			tvlast = (aplist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+			(aplist + i)->apdata->privacy,
+			(aplist + i)->apdata->akmstat,
+			(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
+			(aplist + i)->apdata->macc[00], (aplist + i)->apdata->macc[01], (aplist + i)->apdata->macc[02],
+			(aplist + i)->apdata->macc[03],	(aplist + i)->apdata->macc[04], (aplist + i)->apdata->macc[05],
+			(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+			(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+			(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+			if((ii += 1) > w.ws_row) break;
+			}
+		}
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if((scanlist + scanlistindex)->channel == (calist + i)->cadata->channel)
+
+		if((calist +i)->cadata->m2 == '+') 
+			{
+			tvlast = (calist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				(calist + i)->cadata->m2,
+				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
+				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
+				(calist + i)->cadata->maca[00], (calist + i)->cadata->maca[01], (calist + i)->cadata->maca[02],
+				(calist + i)->cadata->maca[03],	(calist + i)->cadata->maca[04], (calist + i)->cadata->maca[05],
+				(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
+			if((ii += 1) > w.ws_row) break;
+			}
+		}
 	}
-else
+else if(rds == 2)
 	{
-	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_status);
-	sprintf(&rtb[0], " CHA   LAST   R 1 3 P S    MAC-AP    ESSID (last EAPOL on top)    SCAN-FREQUENCY: %6u\n"
-			 "-----------------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if(((aplist +i)->apdata->m1m2 == '+') || ((aplist +i)->apdata->m1m2m3 == '+') || ((aplist +i)->apdata->pmkid == '+'))
+			{
+			tvlast = (aplist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+				(aplist + i)->apdata->privacy,
+				(aplist + i)->apdata->akmstat,
+				(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
+				(aplist + i)->apdata->macc[00], (aplist + i)->apdata->macc[01], (aplist + i)->apdata->macc[02],
+				(aplist + i)->apdata->macc[03],	(aplist + i)->apdata->macc[04], (aplist + i)->apdata->macc[05],
+				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+			if((ii += 1) > w.ws_row) break;
+			}
+		}
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if((calist +i)->cadata->m2 == '+') 
+			{
+			tvlast = (calist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				(calist + i)->cadata->m2,
+				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
+				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
+				(calist + i)->cadata->maca[00], (calist + i)->cadata->maca[01], (calist + i)->cadata->maca[02],
+				(calist + i)->cadata->maca[03],	(calist + i)->cadata->maca[04], (calist + i)->cadata->maca[05],
+				(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
+			if((ii += 1) > w.ws_row) break;
+			}
+		}
 	}
-p = strlen(rtb);
-i = 0;
-pa = 0;
-for(i = 0; i < 20 ; i++)
+else if(rds == 3)
 	{
-	if((aplist +i)->tsakt == 0) break;
-	if(((aplist +i)->status & AP_EAPOL_M1) == AP_EAPOL_M1) mc = pmok;
-	else mc = pmdef;
-	if(((aplist +i)->status & AP_EAPOL_M3) == AP_EAPOL_M3) ma = pmok;
-	else ma = pmdef;
-	if(((aplist +i)->status & AP_PMKID) == AP_PMKID) ps = pmok;
-	else ps = pmdef;
-	if(((aplist +i)->ie.flags & APAKM_MASK) != 0) ak = pmok;
-	else ak = pmdef;
-	if(((aplist +i)->status & AP_IN_RANGE) == AP_IN_RANGE) ar = pmok;
-	else ar = pmdef;
-	tvlast = (aplist +i)->tsakt / 1000000000ULL;
-	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " %3d %s %s %s %s %s %s %02x%02x%02x%02x%02x%02x %.*s\n",
-			(aplist +i)->ie.channel, timestring1, ar, mc, ma, ps, ak,
-			(aplist +i)->macap[0], (aplist +i)->macap[1], (aplist +i)->macap[2], (aplist +i)->macap[3], (aplist +i)->macap[4], (aplist +i)->macap[5],
-			(aplist +i)->ie.essidlen, (aplist +i)->ie.essid);
-	if(tsakt - (aplist +i)->tsakt > AP_IN_RANGE_TOT) (aplist +i)->status = ((aplist +i)->status & AP_IN_RANGE_MASK);
-	p = strlen(rtb);
-	pa++;
-	}
-for(i = 0; i < (22 - pa); i++) rtb[p++] = '\n';
-if(rdsort == 0)
-	{
-	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-	sprintf(&rtb[p], "   LAST   E 2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last seen on top)\n"
-			 "-----------------------------------------------------------------------------------------\n");
-	}
-else
-	{
-	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_status);
-	sprintf(&rtb[p], "   LAST   E 2 MAC-AP-ROGUE   MAC-CLIENT   ESSID (last M2ROGUE on top)\n"
-			 "-----------------------------------------------------------------------------------------\n");
-	}
-p = strlen(rtb);
-for(i = 0; i < 20; i++)
-	{
-	if((clientlist +i)->tsakt == 0) break;
-	if(((clientlist +i)->status & CLIENT_EAP_START) == CLIENT_EAP_START) me = pmok;
-	else me = pmdef;
-	if(((clientlist +i)->status & CLIENT_EAPOL_M2) == CLIENT_EAPOL_M2) mc = pmok;
-	else mc = pmdef;
-	tvlast = (clientlist +i)->tsakt / 1000000000ULL;
-	strftime(timestring1, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-	sprintf(&rtb[p], " %s %s %s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n",
-			timestring1, me, mc,
-			(clientlist +i)->macap[0], (clientlist +i)->macap[1], (clientlist +i)->macap[2], (clientlist +i)->macap[3], (clientlist +i)->macap[4], (clientlist +i)->macap[5],
-			(clientlist +i)->macclient[0], (clientlist +i)->macclient[1], (clientlist +i)->macclient[2], (clientlist +i)->macclient[3], (clientlist +i)->macclient[4], (clientlist +i)->macclient[5],
-			(clientlist +i)->ie.essidlen, (clientlist +i)->ie.essid);
-	p = strlen(rtb);
-	}
-rtb[p] = 0;
-fprintf(stdout, "%s", rtb);
-if(rdsort > 0)
-	{
-	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
-	qsort(clientlist, CLIENTLIST_MAX, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		tvlast = (aplist +i)->tsakt / 1000000000ULL;
+		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+			(aplist + i)->apdata->privacy,
+			(aplist + i)->apdata->akmstat,
+			(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
+			(aplist + i)->apdata->macc[00], (aplist + i)->apdata->macc[01], (aplist + i)->apdata->macc[02],
+			(aplist + i)->apdata->macc[03],	(aplist + i)->apdata->macc[04], (aplist + i)->apdata->macc[05],
+			(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+			(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+			(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+		if((ii += 1) > w.ws_row) break;
+		}
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if((calist +i)->cadata->m2 == '+') 
+			{
+			tvlast = (calist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				(calist + i)->cadata->m2,
+				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
+				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
+				(calist + i)->cadata->maca[00], (calist + i)->cadata->maca[01], (calist + i)->cadata->maca[02],
+				(calist + i)->cadata->maca[03],	(calist + i)->cadata->maca[04], (calist + i)->cadata->maca[05],
+				(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
+			if((ii += 1) > w.ws_row) break;
+			}
+		}
 	}
 return;
 }
-#endif
 /*===========================================================================*/
 /* frequency handling */
 /*---------------------------------------------------------------------------*/
@@ -693,70 +752,6 @@ else if(frequency <= 45000) return (frequency - 5950) / 5;
 else if(frequency >= 58320 && frequency <= 70200) return (frequency - 56160) / 2160;
 else return 0;
 }
-/*===========================================================================*/
-#ifdef HCXNMEAOUT
-static void writegpwpl(size_t i)
-{
-static ssize_t p1;
-static ssize_t p2;
-static size_t c;
-static u8 cs;
-
-if(gprmclen == 0) return;
-if(write(fd_hcxpos, gprmc, gprmclen) != gprmclen) errorcount++;
-if(gpggalen != 0)
-	{
-	if(write(fd_hcxpos, gpgga, gpggalen) != gpggalen) errorcount++;
-	}
-p1 = 0;
-p2 = 6;
-c = 0;
-cs = 0x5c;
-while((p1 < gprmclen) && (c < 7))
-	{
-	if(gprmc[p1] == ',') c++;
-	if(c > 2)
-		{
-		gpwpl[p2] = gprmc[p1];
-		cs ^= gpwpl[p2++];
-		}
-	p1++;
-	}
-for (p1 = 0; p1 < ETH_ALEN; ++p1)
-	{
-	gpwpl[p2] = lookuptable[((aplist +i)->macap[p1] & 0xf0) >> 4];
-	cs ^= gpwpl[p2++];
-	gpwpl[p2] = lookuptable[(aplist +i)->macap[p1] & 0xf];
-	cs ^= gpwpl[p2++];
-	}
-gpwpl[p2++] = '*';
-gpwpl[p2++] = lookuptable[(cs & 0xf0) >> 4];
-gpwpl[p2++] = lookuptable[cs & 0x0f];
-gpwpl[p2++] = '\r';
-gpwpl[p2++] = '\n';
-if(write(fd_hcxpos, gpwpl, p2) != p2) errorcount++;
-gpwpl[p2++] = '\0';
-if(((aplist +i)->ie.essidlen == 0) || ((aplist +i)->ie.essidlen > ESSID_MAX)) return;
-p2 = 7;
-cs = 0x63;
-for(p1 = 0; p1 < (aplist +i)->ie.essidlen; p1 ++)
-	{
-	gptxt[p2] = lookuptable[((aplist +i)->ie.essid[p1] & 0xf0) >> 4];
-	cs ^= gptxt[p2++];
-	gptxt[p2] = lookuptable[(aplist +i)->ie.essid[p1] & 0xf];
-	cs ^= gptxt[p2++];
-	}
-gptxt[p2++] = '*';
-gptxt[p2++] = lookuptable[(cs & 0xf0) >> 4];
-gptxt[p2++] = lookuptable[cs & 0x0f];
-gptxt[p2++] = '\r';
-gptxt[p2++] = '\n';
-if(write(fd_hcxpos, gptxt, p2) != p2) errorcount++;
-gptxt[p2++] = '\0';
-wgpwplcount++;
-return;
-}
-#endif
 /*===========================================================================*/
 static u16 addoption(u8 *posopt, u16 optioncode, u16 optionlen, char *option)
 {
@@ -817,7 +812,7 @@ optionhdr->option_length = colen -OH_SIZE;
 return colen;
 }
 /*===========================================================================*/
-static inline void writeepbm1(void)
+static inline void writeepbm1wpa1(void)
 {
 static ssize_t epblen;
 static ssize_t ii;
@@ -835,10 +830,10 @@ memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
-memcpy(&epbown[ii], &eapolm1data, EAPOLM1DATA_SIZE);
-ii += EAPOLM1DATA_SIZE;
+memcpy(epbown + ii, eapolm1wpa1data, EAPOLM1WPA1DATA_SIZE);
+ii += EAPOLM1WPA2DATA_SIZE;
 epbhdr = (enhanced_packet_block_t*)epbown;
 epblen = EPB_SIZE;
 epbhdr->block_type = EPBID;
@@ -850,17 +845,58 @@ epbhdr->timestamp_high = tsm1 >> 32;
 epbhdr->timestamp_low = (u32)tsm1 & 0xffffffff;
 padding = (4 -(epbhdr->cap_len % 4)) % 4;
 epblen += ii;
-memset(&epbown[epblen], 0, padding);
+memset(epbown + epblen, 0, padding);
 epblen += padding;
 epblen += addoption(epbown +epblen, SHB_EOC, 0, NULL);
 totallength = (total_length_t*)(epbown +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
-if(write(fd_pcapng, &epbown, epblen) != epblen) errorcount++;
-#ifdef HCXSTATUSOUT
-wepbcount++;
-#endif
+if(write(fd_pcapng, epbown, epblen) != epblen) errorcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline void writeepbm1wpa2(void)
+{
+static ssize_t epblen;
+static ssize_t ii;
+static u64 tsm1;
+static u16 padding;
+static total_length_t *totallength;
+
+ii = RTHTX_SIZE + EPB_SIZE;
+macftx = (ieee80211_mac_t*)&epbown[ii];
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_DATA;
+macftx->from_ds = 1;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter3++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
+ii += MAC_SIZE_NORM;
+memcpy(epbown + ii, eapolm1wpa2data, EAPOLM1WPA2DATA_SIZE);
+ii += EAPOLM1WPA2DATA_SIZE;
+epbhdr = (enhanced_packet_block_t*)epbown;
+epblen = EPB_SIZE;
+epbhdr->block_type = EPBID;
+epbhdr->interface_id = 0;
+epbhdr->cap_len = ii;
+epbhdr->org_len = ii;
+tsm1 = tsakt - 1;
+epbhdr->timestamp_high = tsm1 >> 32;
+epbhdr->timestamp_low = (u32)tsm1 & 0xffffffff;
+padding = (4 -(epbhdr->cap_len % 4)) % 4;
+epblen += ii;
+memset(epbown + epblen, 0, padding);
+epblen += padding;
+epblen += addoption(epbown +epblen, SHB_EOC, 0, NULL);
+totallength = (total_length_t*)(epbown +epblen);
+epblen += TOTAL_SIZE;
+epbhdr->total_length = epblen;
+totallength->total_length = epblen;
+if(write(fd_pcapng, epbown, epblen) != epblen) errorcount++;
 return;
 }
 /*===========================================================================*/
@@ -880,17 +916,14 @@ epbhdr->timestamp_high = tsakt >> 32;
 epbhdr->timestamp_low = (u32)tsakt & 0xffffffff;
 padding = (4 -(epbhdr->cap_len % 4)) % 4;
 epblen += packetlen;
-memset(&epb[epblen], 0, padding);
+memset(epb +  epblen, 0, padding);
 epblen += padding;
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallength = (total_length_t*)(epb +epblen);
 epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
-if(write(fd_pcapng, &epb, epblen) != epblen) errorcount++;
-#ifdef HCXSTATUSOUT
-wepbcount++;
-#endif
+if(write(fd_pcapng, epb, epblen) != epblen) errorcount++;
 return;	
 }
 /*---------------------------------------------------------------------------*/
@@ -903,7 +936,7 @@ static struct utsname unameData;
 static char sysinfo[SHB_SYSINFO_LEN];
 static u8 shb[PCAPNG_BLOCK_SIZE];
 
-memset(&shb, 0, PCAPNG_BLOCK_SIZE);
+memset(shb, 0, PCAPNG_BLOCK_SIZE);
 shblen = SHB_SIZE;
 shbhdr = (section_header_block_t*)shb;
 shbhdr->block_type = PCAPNGBLOCKTYPE;
@@ -925,10 +958,7 @@ totallength = (total_length_t*)(shb +shblen);
 shblen += TOTAL_SIZE;
 shbhdr->total_length = shblen;
 totallength->total_length = shblen;
-if(write(fd_pcapng, &shb, shblen) != shblen) return false;
-#ifdef HCXSTATUSOUT
-wshbcount++;
-#endif
+if(write(fd_pcapng, shb, shblen) != shblen) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -940,26 +970,23 @@ static total_length_t *totallength;
 static char tr[1];
 static u8 idb[PCAPNG_BLOCK_SIZE];
 
-memset(&idb, 0, PCAPNG_BLOCK_SIZE);
+memset(idb, 0, PCAPNG_BLOCK_SIZE);
 idblen = IDB_SIZE;
 idbhdr = (interface_description_block_t*)idb;
 idbhdr->block_type = IDBID;
 idbhdr->linktype = DLT_IEEE802_11_RADIO;
 idbhdr->reserved = 0;
 idbhdr->snaplen = PCAPNG_SNAPLEN;
-idblen += addoption(idb +idblen, IF_NAME, strnlen(ifaktname, IF_NAMESIZE), ifaktname);
-idblen += addoption(idb +idblen, IF_MACADDR, 6, (char*)ifakthwmac);
+idblen += addoption(idb + idblen, IF_NAME, strnlen(ifaktname, IF_NAMESIZE), ifaktname);
+idblen += addoption(idb + idblen, IF_MACADDR, 6, (char*)ifakthwmac);
 tr[0] = TSRESOL_NSEC;
-idblen += addoption(idb +idblen, IF_TSRESOL, 1, tr);
-idblen += addoption(idb +idblen, SHB_EOC, 0, NULL);
-totallength = (total_length_t*)(idb +idblen);
+idblen += addoption(idb + idblen, IF_TSRESOL, 1, tr);
+idblen += addoption(idb + idblen, SHB_EOC, 0, NULL);
+totallength = (total_length_t*)(idb + idblen);
 idblen += TOTAL_SIZE;
 idbhdr->total_length = idblen;
 totallength->total_length = idblen;
-if(write(fd_pcapng, &idb, idblen) != idblen) return false;
-#ifdef HCXSTATUSOUT
-widbcount++;
-#endif
+if(write(fd_pcapng, idb, idblen) != idblen) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
@@ -971,13 +998,13 @@ static optionfield64_t *of;
 static total_length_t *totallength;
 static u8 cb[PCAPNG_BLOCK_SIZE];
 
-memset(&cb, 0, PCAPNG_BLOCK_SIZE);
+memset(cb, 0, PCAPNG_BLOCK_SIZE);
 cbhdr = (custom_block_t*)cb;
 cblen = CB_SIZE;
 cbhdr->block_type = CBID;
 cbhdr->total_length = CB_SIZE;
-memcpy(cbhdr->pen, &hcxmagic, 4);
-memcpy(cbhdr->hcxm, &hcxmagic, 32);
+memcpy(cbhdr->pen, hcxmagic, 4);
+memcpy(cbhdr->hcxm, hcxmagic, 32);
 cblen += addoption(cb +cblen, OPTIONCODE_MACAP, 6, (char*)macaprg);
 of = (optionfield64_t*)(cb +cblen);
 of->option_code = OPTIONCODE_RC;
@@ -993,42 +1020,9 @@ totallength = (total_length_t*)(cb +cblen);
 cblen += TOTAL_SIZE;
 cbhdr->total_length = cblen;
 totallength->total_length = cblen;
-if(write(fd_pcapng, &cb, cblen) != cblen) return false;
-#ifdef HCXSTATUSOUT
-wecbcount++;
-#endif
+if(write(fd_pcapng, cb, cblen) != cblen) return false;
 return true;
 }
-/*---------------------------------------------------------------------------*/
-#ifdef HCXNMEAOUT
-static bool writecbnmea(void)
-{
-static ssize_t cblen;
-static custom_block_t *cbhdr;
-static total_length_t *totallength;
-static u8 cb[PCAPNG_BLOCK_SIZE];
-
-memset(&cb, 0, PCAPNG_BLOCK_SIZE);
-cbhdr = (custom_block_t*)cb;
-cblen = CB_SIZE;
-cbhdr->block_type = CBID;
-cbhdr->total_length = CB_SIZE;
-memcpy(cbhdr->pen, &hcxmagic, 4);
-memcpy(cbhdr->hcxm, &hcxmagic, 32);
-if(gprmclen > 2) cblen += addoption(cb +cblen, OPTIONCODE_NMEA, gprmclen - 2, gprmc);
-if(gpggalen > 2) cblen += addoption(cb +cblen, OPTIONCODE_NMEA, gpggalen - 2, gpgga);
-cblen += addoption(cb +cblen, 0, 0, NULL);
-totallength = (total_length_t*)(cb +cblen);
-cblen += TOTAL_SIZE;
-cbhdr->total_length = cblen;
-totallength->total_length = cblen;
-if(write(fd_pcapng, &cb, cblen) != cblen) return false;
-#ifdef HCXNMEAOUT
-wecbnmeacount++;
-#endif
-return true;
-}
-#endif
 /*---------------------------------------------------------------------------*/
 static bool open_pcapng(char *pcapngoutname)
 {
@@ -1040,15 +1034,25 @@ static char pcapngname[PATH_MAX];
 if(pcapngoutname == NULL)
 	{
 	c = 0;
-	snprintf(pcapngname, PATH_MAX, "%s-%s.pcapng", timestring1, ifaktname);
+	snprintf(pcapngname, PATH_MAX, "%s-%s.pcapng", timestring, ifaktname);
 	while(stat(pcapngname, &statinfo) == 0)
 		{
-		snprintf(pcapngname, PATH_MAX, "%s-%s-%02d.pcapng", timestring1, ifaktname, c);
+		snprintf(pcapngname, PATH_MAX, "%s-%s.pcapng-%02d", timestring, ifaktname, c);
 		c++;
 		}
 	pcapngfilename = pcapngname;
 	}
-else pcapngfilename = pcapngoutname;
+else
+	{
+	c = 0;
+	snprintf(pcapngname, PATH_MAX -4, "%s", pcapngoutname);
+	while(stat(pcapngname, &statinfo) == 0)
+		{
+		snprintf(pcapngname, PATH_MAX -4, "%s-%02d", pcapngoutname, c);
+		c++;
+		}
+	pcapngfilename = pcapngname;
+	}
 umask(0);
 if((fd_pcapng = open(pcapngfilename, O_WRONLY | O_TRUNC | O_CREAT, 0644)) < 0) return false;
 if(writeshb() == false) return false;
@@ -1059,85 +1063,25 @@ return true;
 /*===========================================================================*/
 /*===========================================================================*/
 /* TX 802.11 */
+
+
 /*===========================================================================*/
-static inline __attribute__((always_inline)) void send_80211_associationrequest_org(size_t i)
+/*===========================================================================*/
+/* RX 802.11 */
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline __attribute__((always_inline)) int get_keyinfo(u16 kyif)
 {
-ssize_t ii;
-
-ii = RTHTX_SIZE;
-macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
-wltxbuffer[ii + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter2++ << 4);
-if(seqcounter1 > 4095) seqcounter2 = 1;
-ii += MAC_SIZE_NORM;
-memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
-ii += ASSOCIATIONREQUESTCAPA_SIZE;
-wltxbuffer[ii ++] = 0;
-wltxbuffer[ii ++] = (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
-ii += (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
-if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxbuffer[ii +0x17] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] = RSN_CS_TKIP;
-if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
-ii += ASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+if(kyif & WPA_KEY_INFO_ACK)
 	{
-	errortxcount = 0;
-	return;
+	if(kyif & WPA_KEY_INFO_INSTALL) return 3; /* handshake 3 */
+	else return 1; /* handshake 1 */
 	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "write associationrequest_org failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_associationrequest(size_t i)
-{
-ssize_t ii;
-
-ii = RTHTX_SIZE;
-macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
-wltxbuffer[ii + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, macclientrg, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter2++ << 4);
-if(seqcounter1 > 4095) seqcounter2 = 1;
-ii += MAC_SIZE_NORM;
-memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
-ii += ASSOCIATIONREQUESTCAPA_SIZE;
-wltxbuffer[ii ++] = 0;
-wltxbuffer[ii ++] = (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
-ii += (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
-if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxbuffer[ii +0x17] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] = RSN_CS_TKIP;
-if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
-ii += ASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+else
 	{
-	errortxcount = 0;
-	return;
+	if(kyif & WPA_KEY_INFO_SECURE) return 4; /* handshake 4 */
+	else return 2; /* handshake 2 */
 	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "write associationrequest failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
+return 0;
 }
 /*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void send_80211_eap_request_id(void)
@@ -1163,114 +1107,359 @@ if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_eap_request_id failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_eap_request_id failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_eapol_m1(void)
+static inline __attribute__((always_inline)) void process80211eap_start(void)
 {
-static ssize_t ii;
 
-ii = RTHTX_SIZE;
-macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+if(macfrx->retry == 0) send_80211_eap_request_id();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapol_m4(void)
+{
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapol_m3(void)
+{
+size_t i;
+
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->tsm3 = tsakt;
+	if(memcmp((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN) != 0) break;
+	if(memcmp((aplist + i)->apdata->nonce, &wpakey->nonce[28], 4) != 0) break;
+	(aplist + i)->apdata->replaycount3 = __hcx64be(wpakey->replaycount);
+	if(((aplist + i)->apdata->replaycount1 +1) != (aplist + i)->apdata->replaycount3) break;
+	if(((aplist + i)->apdata->replaycount2 +1) != (aplist + i)->apdata->replaycount3) break;
+	if(((aplist + i)->apdata->tsm3 - (aplist + i)->apdata->tsm2) > TSEAPOL1) break;
+	if(((aplist + i)->apdata->tsm3 - (aplist + i)->apdata->tsm1) > TSEAPOL2) break;
+	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
+	wanteventflag |= exiteapolm3flag;
+	(aplist + i)->apdata->m1m2m3 = '+';
+	writeepb();
+	return;
+	}
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapol_m2(void)
+{
+static size_t i;
+static u64 replaycount;
+
+replaycount = __hcx64be(wpakey->replaycount);
+if(replaycountrg == replaycount)
+	{
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) return;
+		if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+		if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+		(calist + i)->tsakt = tsakt;
+			{
+			if(memcmp((calist + i)->cadata->mic, wpakey->keymic, KEYMIC_MAX) == 0) return;
+			memcpy((calist + i)->cadata->mic, wpakey->keymic, KEYMIC_MAX);
+			(calist + i)->cadata->clientcount -= 1;
+			(calist + i)->cadata->m2 = '+';
+			(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+			wanteventflag |= exiteapolm2rgflag;
+			if((calist + i)->cadata->akm == RSNPSK) writeepbm1wpa2();
+			else if((calist + i)->cadata->akm == WPAPSK) writeepbm1wpa1();
+			writeepb();
+			}
+		if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+		return;
+		}
+	return;
+	}
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->tsm2 = tsakt;
+	if(memcmp((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN) != 0) break;
+	(aplist + i)->apdata->replaycount2 = __hcx64be(wpakey->replaycount);
+	if(((aplist + i)->apdata->replaycount1) != (aplist + i)->apdata->replaycount2) break;
+	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
+	(aplist + i)->apdata->m1m2 = '+';
+	wanteventflag |= exiteapolm2flag;
+	writeepb();
+	return;
+	}
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapol_m1(void)
+{
+static size_t i;
+static ieee80211_pmkid_t *pmkid;
+
+if(memcmp(macbc, macfrx->addr1, ETH_ALEN) == 0)
+	{
+	writeepb();
+	return;
+	}
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->tsm1 = tsakt;
+	(aplist + i)->apdata->m1 = '+';
+	wanteventflag |= exiteapolm1flag;
+	if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+	memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+	(aplist + i)->apdata->replaycount1 = __hcx64be(wpakey->replaycount);
+	memcpy((aplist + i)->apdata->nonce, &wpakey->nonce[28], 4);
+	if(wpakey->wpadatalen >= IEEE80211_PMKID_SIZE)
+		{
+		pmkid = (ieee80211_pmkid_t*)wpakey->data;
+		if(pmkid->tag == TAG_VENDOR)
+			{
+			if(pmkid->len != IEEE80211_PMKID_SIZE)
+				{
+				if(memcmp(rsnpmkid, pmkid->pmkoui, SUITE_SIZE) == 0)
+					{
+					if(memcmp(zeroed, pmkid->pmkid, PMKID_MAX) != 0)
+						{
+						if((aplist + i)->apdata->essidlen != 0) (aplist + i)->apdata->pmkid = '+';
+						memcpy((aplist + i)->apdata->rsnpmkid, pmkid->pmkid, PMKID_MAX);
+						wanteventflag |= exiteapolpmkidflag;
+						}
+					}
+				}
+			}
+		}
+	writeepb();
+	return;
+	}
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapol(void)
+{
+eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
+eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
+if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
+wpakey = (ieee80211_wpakey_t*)eapolplptr;
+if((kdv = __hcx16be(wpakey->keyinfo) & WPA_KEY_INFO_TYPE_MASK) == 0)
+	{
+	writeepb();
+	return;
+	}
+keyinfo = (get_keyinfo(__hcx16be(wpakey->keyinfo)));
+switch(keyinfo)
+	{
+	case M1:
+	process80211eapol_m1();
+	break;
+
+	case M2:
+	process80211eapol_m2();
+	break;
+
+	case M3:
+	process80211eapol_m3();
+	break;
+
+	case M4:
+	process80211eapol_m4();
+	break;
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211eapauthentication(void)
+{
+eapauthplptr = payloadptr + IEEE80211_LLC_SIZE;
+eapauthpllen = payloadlen - IEEE80211_LLC_SIZE;
+eapauth = (ieee80211_eapauth_t*)eapauthplptr;
+eapauthlen = __hcx16be(eapauth->len);
+if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
+if(eapauth->type == EAPOL_KEY) process80211eapol();
+else if(eapauth->type == EAPOL_START) process80211eap_start();
+else if(eapauth->type == EAP_PACKET) writeepb();
+else if(eapauth->type > EAPOL_KEY) writeepb();
+return;
+}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline void send_80211_ack(void)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_CTL;
+macftx->subtype = IEEE80211_STYPE_ACK;
+macftx->duration = 0;
+wltxbuffer[RTHTX_SIZE + 1] = 0;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_ACK)) == RTHTX_SIZE + MAC_SIZE_ACK)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_ack failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_null(void)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_DATA;
-macftx->subtype = IEEE80211_STYPE_DATA;
-wltxbuffer[ii + 1] = 0;
-macftx->from_ds = 1;
+macftx->subtype = IEEE80211_STYPE_NULLFUNC;
+wltxbuffer[RTHTX_SIZE +1] = 0;
+macftx->to_ds = 1;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
 memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = 0;
-ii += MAC_SIZE_NORM;
-memcpy(&wltxbuffer[ii], &eapolm1data, EAPOLM1DATA_SIZE);
-ii += EAPOLM1DATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii)	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_eapol_m1 failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_reassociationresponse(u16 aid)
-{
-static ssize_t ii;
-static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
-
-ii = RTHTX_SIZE;
-macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_REASSOC_RESP;
-wltxbuffer[ii + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
-ii += MAC_SIZE_NORM;
-associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
-associationresponsetx->capability = HCXTXCAPABILITY;
-associationresponsetx->status = 0;
-associationresponsetx->aid = aid;
-ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
-memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
-ii += ASSOCIATIONRESPONSEDATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
+memcpy(macftx->addr3, macfrx->addr2, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter1++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter1 = 1;
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
 	{
 	errortxcount = 0;
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_reassociationresponse failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_null failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_associationresponse(void)
+static inline __attribute__((always_inline)) void send_80211_associationrequest2bc(apdata_t *apdata)
 {
-static ssize_t ii;
-static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
+ssize_t ii;
 
 ii = RTHTX_SIZE;
 macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_ASSOC_RESP;
+macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
 wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
-memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
+memcpy(macftx->addr1, apdata->maca, ETH_ALEN);
+memcpy(macftx->addr2, macbc, ETH_ALEN);
+memcpy(macftx->addr3, apdata->maca, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > 4095) seqcounter2 = 1;
 ii += MAC_SIZE_NORM;
-associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
-associationresponsetx->capability = HCXTXCAPABILITY;
-associationresponsetx->status = 0;
-associationresponsetx->aid = HCXTXAID;
-ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
-memcpy(&wltxbuffer[ii], &associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
-ii += ASSOCIATIONRESPONSEDATA_SIZE;
-if(write(fd_socket_tx, &wltxbuffer, ii) == ii)
+memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
+ii += ASSOCIATIONREQUESTCAPA_SIZE;
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = apdata->essidlen;
+memcpy(&wltxbuffer[ii], apdata->essid, apdata->essidlen);
+ii += apdata->essidlen;
+memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
+wltxbuffer[ii +OFFSETGCS] = apdata->gcs;
+wltxbuffer[ii +OFFSETPCS] = apdata->pcs;
+wltxbuffer[ii +OFFSETAKM] = apdata->akm;
+ii += ASSOCIATIONREQUEST_SIZE;
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_associationresponse failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write associationrequest failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_authenticationresponse(void)
+static inline __attribute__((always_inline)) void send_80211_associationrequest2rg(apdata_t *apdata)
+{
+ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
+wltxbuffer[ii + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, apdata->maca, ETH_ALEN);
+memcpy(macftx->addr2, macclientrg, ETH_ALEN);
+memcpy(macftx->addr3, apdata->maca, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > 4095) seqcounter2 = 1;
+ii += MAC_SIZE_NORM;
+memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
+ii += ASSOCIATIONREQUESTCAPA_SIZE;
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = apdata->essidlen;
+memcpy(&wltxbuffer[ii], apdata->essid, apdata->essidlen);
+ii += apdata->essidlen;
+memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
+wltxbuffer[ii +OFFSETGCS] = apdata->gcs;
+wltxbuffer[ii +OFFSETPCS] = apdata->pcs;
+wltxbuffer[ii +OFFSETAKM] = apdata->akm;
+ii += ASSOCIATIONREQUEST_SIZE;
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write associationrequest failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_associationrequest2(apdata_t *apdata)
+{
+ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_ASSOC_REQ;
+wltxbuffer[ii + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, apdata->maca, ETH_ALEN);
+memcpy(macftx->addr2, apdata->macc, ETH_ALEN);
+memcpy(macftx->addr3, apdata->maca, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > 4095) seqcounter2 = 1;
+ii += MAC_SIZE_NORM;
+memcpy(&wltxbuffer[ii], &associationrequestcapa, ASSOCIATIONREQUESTCAPA_SIZE);
+ii += ASSOCIATIONREQUESTCAPA_SIZE;
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = apdata->essidlen;
+memcpy(&wltxbuffer[ii], apdata->essid, apdata->essidlen);
+ii += apdata->essidlen;
+memcpy(&wltxbuffer[ii], &associationrequestdata, ASSOCIATIONREQUEST_SIZE);
+wltxbuffer[ii +OFFSETGCS] = apdata->gcs;
+wltxbuffer[ii +OFFSETPCS] = apdata->pcs;
+wltxbuffer[ii +OFFSETAKM] = apdata->akm;
+ii += ASSOCIATIONREQUEST_SIZE;
+if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write associationrequest failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_authenticationrequest(apdata_t *apdata)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1278,68 +1467,24 @@ macftx->subtype = IEEE80211_STYPE_AUTH;
 wltxbuffer[RTHTX_SIZE + 1] = 0;
 macftx->duration = HCXTXDURATION;
 memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
-memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr2, apdata->macc, ETH_ALEN);
 memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
-memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > 4095) seqcounter2 = 1;
+memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)
 	{
 	errortxcount = 0;
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_authenticationresponse failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_authenticationrequest failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_reassociationrequest(size_t i)
-{
-static ssize_t ii;
-static ieee80211_reassoc_req_t *reassociationrequest;
-
-ii = RTHTX_SIZE;
-macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_REASSOC_REQ;
-wltxbuffer[ii + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, (aplist +i)->macap, ETH_ALEN);
-memcpy(macftx->addr2, (aplist +i)->macclient, ETH_ALEN);
-memcpy(macftx->addr3, (aplist +i)->macap, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
-ii += MAC_SIZE_NORM;
-reassociationrequest = (ieee80211_reassoc_req_t*)&wltxbuffer[ii];
-reassociationrequest->capability = HCXTXCAPABILITY;
-reassociationrequest->listen_interval = HCXTXLISTENINTERVAL;
-memcpy(reassociationrequest->current_macap, (aplist +i)->macap, ETH_ALEN);
-ii += sizeof(ieee80211_reassoc_req_t) -1;
-wltxbuffer[ii ++] = 0;
-wltxbuffer[ii ++] = (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], (aplist +i)->ie.essid, (aplist +i)->ie.essidlen);
-ii += (aplist +i)->ie.essidlen;
-memcpy(&wltxbuffer[ii], &reassociationrequestdata, REASSOCIATIONREQUEST_SIZE);
-if(((aplist +i)->ie.flags & APGS_CCMP) == APGS_CCMP) wltxbuffer[ii +0x17] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APGS_TKIP) == APGS_TKIP) wltxbuffer[ii +0x17] = RSN_CS_TKIP;
-if(((aplist +i)->ie.flags & APCS_CCMP) == APCS_CCMP) wltxbuffer[ii +0x1d] = RSN_CS_CCMP;
-else if(((aplist +i)->ie.flags & APCS_TKIP) == APCS_TKIP) wltxbuffer[ii +0x1d] = RSN_CS_TKIP;
-ii += REASSOCIATIONREQUEST_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
-	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_reassociationreques failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_authenticationrequest(void)
+static inline __attribute__((always_inline)) void send_80211_authenticationrequestrg(void)
 {
 macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -1358,13 +1503,931 @@ if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATION
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_authenticationrequest failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_authenticationrequest failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_probereresponse(u8 *macclientrsp, u8 *macaprgrsp, u8 essidlenrsp, u8 *essidrsp)
+static inline __attribute__((always_inline)) void send_80211_disassociationaca(u8 *fmcl, u8 *toap)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_DISASSOC;
+wltxbuffer[RTHTX_SIZE +1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, toap, ETH_ALEN);
+memcpy(macftx->addr2, fmcl, ETH_ALEN);
+memcpy(macftx->addr3, toap, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter1++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter1 = 1;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = WLAN_REASON_DISASSOC_STA_HAS_LEFT;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_disassociation121 failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_disassociationcaa(u8 *tocl, u8 *fmap)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_DISASSOC;
+wltxbuffer[RTHTX_SIZE +1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, tocl, ETH_ALEN);
+memcpy(macftx->addr2, fmap, ETH_ALEN);
+memcpy(macftx->addr3, fmap, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter1++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter1 = 1;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = WLAN_REASON_DISASSOC_STA_HAS_LEFT;
+wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_disassociation211 failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+/*
+static inline __attribute__((always_inline)) void send_80211_authenticationrequestaca(u8 *fmcl, u8 *toap)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_AUTH;
+wltxbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, toap, ETH_ALEN);
+memcpy(macftx->addr2, fmcl, ETH_ALEN);
+memcpy(macftx->addr3, toap, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter2 = 1;
+memcpy(wltxbuffer + RTHTX_SIZE + MAC_SIZE_NORM, authenticationrequestdata, AUTHENTICATIONREQUEST_SIZE);
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONREQUEST_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_authenticationrequest212 failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+*/
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline __attribute__((always_inline)) void send_80211_eapol_m1_wpa1(void)
+{
+static ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_DATA;
+wltxbuffer[ii + 1] = 0;
+macftx->from_ds = 1;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr1, ETH_ALEN);
+macftx->sequence = 0;
+ii += MAC_SIZE_NORM;
+memcpy(wltxbuffer + ii, eapolm1wpa1data, EAPOLM1WPA1DATA_SIZE);
+ii += EAPOLM1WPA1DATA_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_eapol_m1_wpa1 failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_eapol_m1_wpa2(void)
+{
+static ssize_t ii;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_DATA;
+macftx->subtype = IEEE80211_STYPE_DATA;
+wltxbuffer[ii + 1] = 0;
+macftx->from_ds = 1;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr1, ETH_ALEN);
+macftx->sequence = 0;
+ii += MAC_SIZE_NORM;
+memcpy(wltxbuffer + ii, eapolm1wpa2data, EAPOLM1WPA2DATA_SIZE);
+ii += EAPOLM1WPA2DATA_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_eapol_m1_wpa2 failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline __attribute__((always_inline)) void process80211rata(void)
+{
+size_t i;
+
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr1, ETH_ALEN) == 0)
+		{
+		(aplist + i)->apdata->tsmacc = tsakt;
+		if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+		memcpy((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN);
+		return;
+		}
+	}
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) return;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) == 0)
+		{
+		(aplist + i)->tsakt = tsakt;
+		if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+		memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+		return;
+		}
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211reassociationresponse(void)
+{
+static size_t i;
+static ieee80211_assoc_or_reassoc_resp_t *capa;
+
+if(memcmp(macbc, macfrx->addr1, ETH_ALEN) == 0)
+	{
+	writeepb();
+	return;
+	}
+capa = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
+if(payloadlen < IEEE80211_REASSOCIATIONRESPONSE_SIZE) return;
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->aid = __hcx16le(capa->aid);
+	if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+	memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+	if((aplist + i)->apdata->apcount <= 0) return;
+	if((aplist + i)->apdata->essidlen == 0) return;
+	if(((aplist + i)->apdata->akm != AKMPSK) && ((aplist + i)->apdata->akm != AKMPSK256)) return;
+	if((aplist + i)->apdata->m1 == '+') return;
+	if((tsakt - (aplist + i)->apdata->tsreassocresponse) < TSSECOND05) return;
+	send_80211_ack();
+	send_80211_null();
+	(aplist + i)->apdata->tsreassocresponse = tsakt;
+	(aplist + i)->apdata->apcount -= 1;
+	if((aplist + i)->apdata->reassociationresponse == false)
+		{
+		(aplist + i)->apdata->reassociationresponse = true;
+		writeepb();
+		}
+	return;
+	}
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->channel = (scanlist + scanlistindex)->channel;
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->m1 = ' ';
+(aplist + i)->apdata->m1m2 = ' ';
+(aplist + i)->apdata->m1m2m3 = ' ';
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->akmstat = ' ';
+(aplist + i)->apdata->apcount = apcountmax;
+(aplist + i)->apdata->reassociationresponse = true;
+(aplist + i)->apdata->aid = __hcx16le(capa->aid);
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+writeepb();
+
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211associationresponse(void)
+{
+static size_t i;
+static ieee80211_assoc_or_reassoc_resp_t *capa;
+
+if(memcmp(macbc, macfrx->addr1, ETH_ALEN) == 0)
+	{
+	writeepb();
+	return;
+	}
+capa = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
+if(payloadlen < IEEE80211_ASSOCIATIONRESPONSE_SIZE) return;
+for(i = 0; i < APLIST_MAX - 1; i++)
+	{
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->aid = __hcx16le(capa->aid);
+	if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+	memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+	if((aplist + i)->apdata->apcount <= 0) return;
+	if((aplist + i)->apdata->essidlen == 0) return;
+	if(((aplist + i)->apdata->akm != AKMPSK) && ((aplist + i)->apdata->akm != AKMPSK256)) return;
+	if((aplist + i)->apdata->m1 == '+') return;
+	if((tsakt - (aplist + i)->apdata->tsassocresponse) < TSSECOND05) return;
+	send_80211_ack();
+	send_80211_null();
+	(aplist + i)->apdata->tsassocresponse = tsakt;
+	(aplist + i)->apdata->apcount -= 1;
+	if((aplist + i)->apdata->associationresponse == false)
+		{
+		(aplist + i)->apdata->associationresponse = true;
+		writeepb();
+		}
+	return;
+	}
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->channel = (scanlist + scanlistindex)->channel;
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->m1 = ' ';
+(aplist + i)->apdata->m1m2 = ' ';
+(aplist + i)->apdata->m1m2m3 = ' ';
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->akmstat = ' ';
+(aplist + i)->apdata->apcount = apcountmax;
+(aplist + i)->apdata->associationresponse = true;
+(aplist + i)->apdata->aid = __hcx16le(capa->aid);
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211qosnull(void)
+{
+size_t i;
+
+if((macfrx->to_ds == 1) && (macfrx->power == 0))
+	{
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+		if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+		if((calist + i)->cadata->clientcount <= 0) return;
+		(calist + i)->tsakt = tsakt;
+		if(macfrx->retry == 0)
+			{
+			if((tsakt - (calist + i)->cadata->tsassoc) > TSSECOND2) break;
+			(calist + i)->cadata->tsnull = tsakt;
+			(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+			if((calist + i)->cadata->akm == RSNPSK)
+				{
+				send_80211_ack();
+				send_80211_eapol_m1_wpa2();
+				}
+			else if((calist + i)->cadata->akm == WPAPSK)
+				{
+				send_80211_ack();
+				send_80211_eapol_m1_wpa1();
+				}
+			}
+		if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+		}
+	}
+if(macfrx->from_ds == 1)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+			{
+			if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) == 0)
+				{
+				(aplist + i)->tsakt = tsakt;
+				if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+				memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+				return;
+				}
+			}
+		}
+	}
+if(macfrx->from_ds == 1)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+			{
+			if(memcmp((aplist + i)->apdata->maca, macfrx->addr1, ETH_ALEN) == 0)
+				{
+				(aplist + i)->apdata->tsmacc = tsakt;
+				memcpy((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN);
+				return;
+				}
+			}
+		}
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211null(void)
+{
+size_t i;
+
+if((macfrx->to_ds == 1) && (macfrx->power == 0))
+	{
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+		if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+		(calist + i)->tsakt = tsakt;
+		(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+		if((calist + i)->cadata->clientcount <= 0) return;
+		if((tsakt - (calist + i)->cadata->tsnull) <= TSSECOND1) return;
+		if((tsakt - (calist + i)->cadata->tsnull) > TSSECOND2) break;
+		if((calist + i)->cadata->akm == RSNPSK)
+			{
+			send_80211_ack();
+			send_80211_eapol_m1_wpa2();
+			(calist + i)->cadata->tsnull = tsakt;
+			}
+		else if((calist + i)->cadata->akm == WPAPSK)
+			{
+			send_80211_ack();
+			send_80211_eapol_m1_wpa1();
+			(calist + i)->cadata->tsnull = tsakt;
+			}
+		if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+		}
+	}
+if(macfrx->from_ds == 1)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+			{
+			if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) == 0)
+				{
+				(aplist + i)->tsakt = tsakt;
+				if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+				memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+				return;
+				}
+			}
+		}
+	}
+if(macfrx->to_ds == 1)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+			{
+			if(memcmp((aplist + i)->apdata->maca, macfrx->addr1, ETH_ALEN) == 0)
+				{
+				(aplist + i)->apdata->tsmacc = tsakt;
+				memcpy((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN);
+				return;
+				}
+			}
+		}
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_reassociationresponse(void)
+{
+static ssize_t ii;
+static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_REASSOC_RESP;
+wltxbuffer[ii + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter3++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
+ii += MAC_SIZE_NORM;
+associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
+associationresponsetx->capability = HCXTXCAPABILITY;
+associationresponsetx->status = 0;
+associationresponsetx->aid = HCXTXAID;
+ii += IEEE80211_REASSOCIATIONRESPONSE_SIZE;
+memcpy(wltxbuffer + ii, associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
+ii += ASSOCIATIONRESPONSEDATA_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_reassociationresponse failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) u8 get_akm(cadata_t *cadata, int infolen, u8 *infostart)
+{
+static ieee80211_ietag_t *infoptr;
+static ieee80211_suite_t *rsn;
+static ieee80211_suite_t *wpa;
+while(0 < infolen)
+	{
+	infoptr = (ieee80211_ietag_t*)infostart;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return 0;
+	if(infoptr->id == TAG_SSID)
+		{
+		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+			{
+			cadata->essidlen = infoptr->len;
+			memcpy(cadata->essid, infoptr->ie, cadata->essidlen);
+			}
+		}
+	if(infoptr->id == TAG_RSN)
+		{
+		if(infoptr->len >= RSNLEN_MIN)
+			{
+			rsn = (ieee80211_suite_t*)infoptr->ie;
+			if(__hcx16le(rsn->count) == 1) rsn += 1;
+			if(__hcx16le(rsn->count) == 1) rsn += 1;
+			if(memcmp(rsnpsk, rsn->suite, SUITE_SIZE) == 0) return RSNPSK;
+			else if(memcmp(rsnpskft, rsn->suite, SUITE_SIZE) == 0) return RSNPSKFT;
+			else if(memcmp(rsnpsk256, rsn->suite, SUITE_SIZE) == 0) return RSNPSK256;
+			return 0;
+			}
+		}
+	if(infoptr->id == TAG_VENDOR)
+		{
+		if(infoptr->len >= WPALEN_MIN)
+			{
+			if(memcmp(wpatype, infoptr->ie, SUITE_SIZE) == 0)
+				{
+				wpa = (ieee80211_suite_t*)(infoptr->ie +4);
+				if(__hcx16le(wpa->count) == 1) wpa += 1;
+				if(__hcx16le(wpa->count) == 1) wpa += 1;
+				if(memcmp(wpapsk, wpa->suite, SUITE_SIZE) == 0) return WPAPSK;
+				return 0;
+				}
+			}
+		}
+	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
+	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
+	}
+return 0;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) ieee80211_ietag_t* get_tag(u8 ietag, int infolen, u8 *infostart)
+{
+static ieee80211_ietag_t *infoptr;
+
+while(0 < infolen)
+	{
+	infoptr = (ieee80211_ietag_t*)infostart;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return NULL;
+	if(infoptr->id == ietag) return infoptr;
+	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
+	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
+	}
+return NULL;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_tag_channel(apdata_t *apdata, int infolen, u8 *infostart)
+{
+static ieee80211_ietag_t *infoptr;
+
+apdata->channel = (scanlist + scanlistindex)->channel;
+while(0 < infolen)
+	{
+	infoptr = (ieee80211_ietag_t*)infostart;
+	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return;
+	if(infoptr->id == TAG_CHAN)
+		{
+		if(infoptr->len == 1) apdata->channel = (u8)infoptr->ie[0];
+		return;
+		}
+	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
+	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211reassociationrequest(void)
+{
+static size_t i;
+static ieee80211_reassoc_req_t *reassociationrequest;
+static u16 reassociationrequestlen;
+
+reassociationrequest = (ieee80211_reassoc_req_t*)payloadptr;
+if((reassociationrequestlen = payloadlen - IEEE80211_REASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
+for(i = 0; i < CALIST_MAX - 1; i++)
+	{
+	if((calist + i)->tsakt == 0) break;
+	if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+	if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(calist + i)->tsakt = tsakt;
+	(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+	if((calist + i)->cadata->clientcount <= 0) return;
+	if((tsakt - (calist + i)->cadata->tsreassoc) < TSSECOND1) return;
+	(calist + i)->cadata->akm = get_akm((calist + i)->cadata, reassociationrequestlen, reassociationrequest->ie);
+	if((calist + i)->cadata->akm == RSNPSK)
+		{
+		send_80211_ack();
+		send_80211_reassociationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa2();
+		(calist + i)->cadata->tsreassoc = tsakt;
+		}
+	else if((calist + i)->cadata->akm == WPAPSK)
+		{
+		send_80211_ack();
+		send_80211_reassociationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa1();
+		(calist + i)->cadata->tsreassoc = tsakt;
+		}
+	if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+	writeepb();
+	return;
+	}
+(calist + i)->tsakt = tsakt;
+memset((calist + i)->cadata, 0, CADATA_SIZE);
+(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+(calist + i)->cadata->m2 = ' ';
+(calist + i)->cadata->clientcount = clientcountmax;
+memcpy((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN);
+memcpy((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN);
+if(clientcountmax > 0)
+	{
+	(calist + i)->cadata->akm = get_akm((calist + i)->cadata, reassociationrequestlen, reassociationrequest->ie);
+	if((calist + i)->cadata->akm == RSNPSK)
+		{
+		send_80211_ack();
+		send_80211_reassociationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa2();
+		(calist + i)->cadata->tsreassoc = tsakt;
+		}
+	else if((calist + i)->cadata->akm == WPAPSK)
+		{
+		send_80211_ack();
+		send_80211_reassociationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa1();
+		(calist + i)->cadata->tsreassoc = tsakt;
+		}
+	}
+qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+writeepb();
+return;
+}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline __attribute__((always_inline)) void send_80211_associationresponse(void)
+{
+static ssize_t ii;
+static ieee80211_assoc_or_reassoc_resp_t *associationresponsetx;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_ASSOC_RESP;
+wltxbuffer[ii + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter1++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter1 = 1;
+ii += MAC_SIZE_NORM;
+associationresponsetx = (ieee80211_assoc_or_reassoc_resp_t*)&wltxbuffer[ii];
+associationresponsetx->capability = HCXTXCAPABILITY;
+associationresponsetx->status = 0;
+associationresponsetx->aid = HCXTXAID;
+ii += IEEE80211_ASSOCIATIONRESPONSE_SIZE;
+memcpy(wltxbuffer + ii, associationresponsedata, ASSOCIATIONRESPONSEDATA_SIZE);
+ii += ASSOCIATIONRESPONSEDATA_SIZE;
+if(write(fd_socket_tx, wltxbuffer, ii) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_associationresponse failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211associationrequest(void)
+{
+static size_t i;
+static ieee80211_assoc_req_t *associationrequest;
+static u16 associationrequestlen;
+
+associationrequest = (ieee80211_assoc_req_t*)payloadptr;
+if((associationrequestlen = payloadlen - IEEE80211_ASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
+for(i = 0; i < CALIST_MAX - 1; i++)
+	{
+	if((calist + i)->tsakt == 0) break;
+	if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+	if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(calist + i)->tsakt = tsakt;
+	(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+	if((calist + i)->cadata->clientcount <= 0) return;
+	if((tsakt - (calist + i)->cadata->tsassoc) < TSSECOND1) return;
+	(calist + i)->cadata->akm = get_akm((calist + i)->cadata, associationrequestlen, associationrequest->ie);
+	if((calist + i)->cadata->akm == RSNPSK)
+		{
+		send_80211_ack();
+		send_80211_associationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa2();
+		(calist + i)->cadata->tsassoc = tsakt;
+		}
+	else if((calist + i)->cadata->akm == WPAPSK)
+		{
+		send_80211_ack();
+		send_80211_associationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa1();
+		(calist + i)->cadata->tsassoc = tsakt;
+		}
+	if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+	writeepb();
+	return;
+	}
+(calist + i)->tsakt = tsakt;
+memset((calist + i)->cadata, 0, CADATA_SIZE);
+(calist + i)->cadata->m2 = ' ';
+(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+(calist + i)->cadata->clientcount = clientcountmax;
+memcpy((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN);
+memcpy((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN);
+if(clientcountmax > 0)
+	{
+	(calist + i)->cadata->akm = get_akm((calist + i)->cadata, associationrequestlen, associationrequest->ie);
+	if((calist + i)->cadata->akm == RSNPSK)
+		{
+		(calist + i)->cadata->tsassoc = tsakt;
+		send_80211_ack();
+		send_80211_associationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa2();
+		(calist + i)->cadata->tsassoc = tsakt;
+		}
+	else if((calist + i)->cadata->akm == WPAPSK)
+		{
+		send_80211_ack();
+		send_80211_associationresponse();
+		nanosleep(&tsremain, &tsreq);
+		send_80211_eapol_m1_wpa1();
+		(calist + i)->cadata->tsassoc = tsakt;
+		}
+	}
+qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+writeepb();
+return;
+}
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static inline __attribute__((always_inline)) void send_80211_authenticationresponse(void)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_AUTH;
+wltxbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter1++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter1 = 1;
+memcpy(wltxbuffer + RTHTX_SIZE + MAC_SIZE_NORM, authenticationresponsedata, AUTHENTICATIONRESPONSE_SIZE);
+if((write(fd_socket_tx, wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + AUTHENTICATIONRESPONSE_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_authenticationresponse failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211authentication(void)
+{
+size_t i;
+static ieee80211_auth_t *auth;
+
+auth = (ieee80211_auth_t*)payloadptr;
+if(payloadlen < IEEE80211_AUTH_SIZE) return;
+if(auth->algorithm == OPEN_SYSTEM)
+	{
+	if(__hcx16le(auth->sequence) == 1) /* CA request */
+		{
+		for(i = 0; i < CALIST_MAX - 1; i++)
+			{
+			if((calist + i)->tsakt == 0) break;
+			if(memcmp((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
+			if(memcmp((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN) != 0) continue;
+			(calist + i)->tsakt = tsakt;
+			(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
+			if((calist + i)->cadata->clientcount <= 0) return;
+			if((tsakt - (calist + i)->cadata->tsauth) < TSSECOND1) return;
+				{
+				(calist + i)->cadata->tsauth = tsakt;
+				send_80211_ack();
+				send_80211_authenticationresponse();
+				}
+			if(i > CALIST_HALF) qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+			return;
+			}
+		(calist + i)->tsakt = tsakt;
+		memset((calist + i)->cadata, 0, CADATA_SIZE);
+		(calist + i)->cadata->m2 = ' ';
+		(calist + i)->cadata->clientcount = clientcountmax;
+		memcpy((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN);
+		memcpy((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN);
+		if(clientcountmax > 0)
+			{
+			(calist + i)->cadata->tsauth = tsakt;
+			send_80211_ack();
+			send_80211_authenticationresponse();
+			}
+		qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
+		writeepb();
+		}
+	else if(__hcx16le(auth->sequence) == 2)  /* AP response */
+		{
+		if(__hcx16le(auth->status) == 0)
+			{
+			for(i = 0; i < APLIST_MAX - 1; i++)
+				{
+				if((aplist + i)->tsakt == 0) break;
+				if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+				memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+				(aplist + i)->tsakt = tsakt;
+				(aplist + i)->apdata->opensystem = 1;
+				if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
+				memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+				if((aplist + i)->apdata->apcount <= 0) return;
+				if((aplist + i)->apdata->essidlen == 0) return;
+				if(((aplist + i)->apdata->akm != AKMPSK) && ((aplist + i)->apdata->akm != AKMPSK256)) return;
+				if((aplist + i)->apdata->m1 == '+') return;
+				if((tsakt - (aplist + i)->apdata->tsauthresponse) < TSSECOND05) return;
+				send_80211_ack();
+				send_80211_associationrequest2((aplist + i)->apdata);
+				(aplist + i)->apdata->tsauthresponse = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
+				return;
+				}
+			(aplist + i)->tsakt = tsakt;
+			memset((aplist + i)->apdata, 0, APDATA_SIZE);
+			(aplist + i)->apdata->channel = (scanlist + scanlistindex)->channel;
+			(aplist + i)->apdata->pmkid = ' ';
+			(aplist + i)->apdata->m1 = ' ';
+			(aplist + i)->apdata->m1m2 = ' ';
+			(aplist + i)->apdata->m1m2m3 = ' ';
+			(aplist + i)->apdata->pmkid = ' ';
+			(aplist + i)->apdata->akmstat = ' ';
+			(aplist + i)->apdata->apcount = apcountmax;
+			(aplist + i)->apdata->opensystem = 1;
+			memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+			memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+			if(apcountmax > 0)
+				{
+				if((aplist + i)->apdata->essidlen != 0)
+					{
+					if(((aplist + i)->apdata->akm != AKMPSK) && ((aplist + i)->apdata->akm != AKMPSK256)) return;
+						{
+						send_80211_ack();
+						send_80211_associationrequest2((aplist + i)->apdata);
+						(aplist + i)->apdata->tsauthresponse = tsakt;
+						(aplist + i)->apdata->apcount -= 1;
+						}
+					}
+				}
+			qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+			writeepb();
+			return;
+			}
+		}
+	return;
+	}
+writeepb();
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void process80211action(void)
+{
+static size_t i;
+static ieee80211_action_t *action;
+
+action = (ieee80211_action_t*)payloadptr;
+if(payloadlen < (IEEE80211_ACTION_SIZE + IEEE80211_IETAG_SIZE)) return;
+if((action->category == RADIO_MEASUREMENT) && (action->code == NEIGHBOR_REPORT_REQUEST)) writeepb();
+
+if(memcmp(macfrx->addr3, macfrx->addr2, ETH_ALEN) == 0)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if(memcmp((aplist + i)->apdata->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
+		(aplist + i)->tsakt = tsakt;
+		memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
+		return;
+		}
+	}
+if(memcmp(macfrx->addr3, macfrx->addr1, ETH_ALEN) == 0)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		if(memcmp((aplist + i)->apdata->maca, macfrx->addr3, ETH_ALEN) != 0) continue;
+		(aplist + i)->apdata->tsmacc = tsakt;
+		memcpy((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN);
+		return;
+		}
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_probereresponse_list()
+{
+static ssize_t ii;
+static ieee80211_beacon_proberesponse_t *beacontx;
+
+if(proberesponsetxindex >= proberesponsetxmax) proberesponsetxindex = 0;
+if((aprglist + proberesponsetxindex)->tsakt == 0) proberesponsetxindex = 0;
+if((aprglist + proberesponsetxindex)->tsakt == 0) return;
+
+ii = RTHTX_SIZE;
+macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_PROBE_RESP;
+wltxbuffer[ii + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, (aprglist + proberesponsetxindex)->apdata->maca, ETH_ALEN);
+memcpy(macftx->addr3, (aprglist + proberesponsetxindex)->apdata->maca, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter3++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
+ii += MAC_SIZE_NORM;
+beacontx = (ieee80211_beacon_proberesponse_t*)&wltxbuffer[ii];
+beacontx->timestamp = __hcx64le(beacontimestamp++);
+beacontx->beacon_interval = HCXTXBEACONINTERVAL;
+beacontx->capability = HCXTXCAPABILITY;
+ii += IEEE80211_PROBERESPONSE_SIZE;
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = (aprglist + proberesponsetxindex)->apdata->essidlen;
+memcpy(wltxbuffer + ii, (aprglist + proberesponsetxindex)->apdata->essid, (aprglist + proberesponsetxindex)->apdata->essidlen);
+ii += (aprglist + proberesponsetxindex)->apdata->essidlen;
+memcpy(wltxbuffer + ii, proberesponsedata, PROBERESPONSEDATA_SIZE);
+wltxbuffer[ii + OFFSETCHANNEL] = (u8)(scanlist + scanlistindex)->channel;
+ii += PROBERESPONSEDATA_SIZE;
+proberesponsetxindex += 1;
+if((write(fd_socket_tx, wltxbuffer, ii)) == ii)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_probereresponse failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void send_80211_probereresponse_directed(ieee80211_ietag_t *essid)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
@@ -1375,11 +2438,11 @@ macftx->type = IEEE80211_FTYPE_MGMT;
 macftx->subtype = IEEE80211_STYPE_PROBE_RESP;
 wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macclientrsp, ETH_ALEN);
-memcpy(macftx->addr2, macaprgrsp, ETH_ALEN);
-memcpy(macftx->addr3, macaprgrsp, ETH_ALEN);
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, macfrx->addr1, ETH_ALEN);
+memcpy(macftx->addr3, macfrx->addr3, ETH_ALEN);
 macftx->sequence = __hcx16le(seqcounter3++ << 4);
-if(seqcounter1 > 4095) seqcounter3 = 1;
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 beacontx = (ieee80211_beacon_proberesponse_t*)&wltxbuffer[ii];
 beacontx->timestamp = __hcx64le(beacontimestamp++);
@@ -1387,25 +2450,25 @@ beacontx->beacon_interval = HCXTXBEACONINTERVAL;
 beacontx->capability = HCXTXCAPABILITY;
 ii += IEEE80211_PROBERESPONSE_SIZE;
 wltxbuffer[ii ++] = 0;
-wltxbuffer[ii ++] = essidlenrsp;
-memcpy(&wltxbuffer[ii], essidrsp, essidlenrsp);
-ii += essidlenrsp;
-memcpy(&wltxbuffer[ii], &proberesponsedata, PROBERESPONSEDATA_SIZE);
-wltxbuffer[ii + 0x0c] = (u8)(scanlist + scanlistindex)->channel;
+wltxbuffer[ii ++] = essid->len;
+memcpy(wltxbuffer + ii, essid->ie, essid->len);
+ii += essid->len;
+memcpy(wltxbuffer + ii, proberesponsedata, PROBERESPONSEDATA_SIZE);
+wltxbuffer[ii + OFFSETCHANNEL] = (u8)(scanlist + scanlistindex)->channel;
 ii += PROBERESPONSEDATA_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+if((write(fd_socket_tx, wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_probereresponse failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_probereresponse failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_beacon(void)
+static inline __attribute__((always_inline)) void send_80211_probereresponse(apdata_t *stndata)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
@@ -1413,268 +2476,101 @@ static ieee80211_beacon_proberesponse_t *beacontx;
 ii = RTHTX_SIZE;
 macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_BEACON;
+macftx->subtype = IEEE80211_STYPE_PROBE_RESP;
 wltxbuffer[ii + 1] = 0;
 macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macbc, ETH_ALEN);
-memcpy(macftx->addr2, &macaprghidden, ETH_ALEN);
-memcpy(macftx->addr3, &macaprghidden, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter4++ << 4);
-if(seqcounter1 > 4095) seqcounter4 = 1;
+memcpy(macftx->addr1, macfrx->addr2, ETH_ALEN);
+memcpy(macftx->addr2, stndata->maca, ETH_ALEN);
+memcpy(macftx->addr3, stndata->maca, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter3++ << 4);
+if(seqcounter1 > BCD_MAX) seqcounter3 = 1;
 ii += MAC_SIZE_NORM;
 beacontx = (ieee80211_beacon_proberesponse_t*)&wltxbuffer[ii];
 beacontx->timestamp = __hcx64le(beacontimestamp++);
 beacontx->beacon_interval = HCXTXBEACONINTERVAL;
 beacontx->capability = HCXTXCAPABILITY;
-ii += IEEE80211_BEACON_SIZE;
-memcpy(&wltxbuffer[ii], &beacondata, BEACONDATA_SIZE);
-wltxbuffer[ii + 0x0e] = (u8)(scanlist + scanlistindex)->channel;
-ii += BEACONDATA_SIZE;
-if((write(fd_socket_tx, &wltxbuffer, ii)) == ii)
+ii += IEEE80211_PROBERESPONSE_SIZE;
+wltxbuffer[ii ++] = 0;
+wltxbuffer[ii ++] = stndata->essidlen;
+memcpy(wltxbuffer + ii, stndata->essid, stndata->essidlen);
+ii += stndata->essidlen;
+memcpy(wltxbuffer + ii, proberesponsedata, PROBERESPONSEDATA_SIZE);
+wltxbuffer[ii + OFFSETCHANNEL] = (u8)(scanlist + scanlistindex)->channel;
+ii += PROBERESPONSEDATA_SIZE;
+if((write(fd_socket_tx, wltxbuffer, ii)) == ii)
 	{
 	errortxcount = 0;
 	return;
 	}
 #ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_beacon failed: %s\n", strerror(errno));
+fprintf(fh_debug, "write_80211_probereresponse failed: %s\n", strerror(errno));
 #endif
 errortxcount++;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_proberequest_undirected(void)
+static inline __attribute__((always_inline)) void process80211proberequest(void)
 {
-macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_PROBE_REQ;
-wltxbuffer[RTHTX_SIZE + 1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macbc, ETH_ALEN);
-memcpy(macftx->addr2, macclientrg, ETH_ALEN);
-memcpy(macftx->addr3, macbc, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter2++ << 4);
-if(seqcounter1 > 4095) seqcounter2 = 1;
-memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)
-	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_proberequest_undirected failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_disassociation_fm_ap(const u8* macclient, const u8* macap, u8 reason)
-{
-macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_DISASSOC;
-wltxbuffer[RTHTX_SIZE +1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macclient, ETH_ALEN);
-memcpy(macftx->addr2, macap, ETH_ALEN);
-memcpy(macftx->addr3, macap, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter1++ << 4);
-if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_disassociation_fm_ap failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_disassociation_fm_client(const u8* macclient, const u8* macap, u8 reason)
-{
-macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_DISASSOC;
-wltxbuffer[RTHTX_SIZE +1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macap, ETH_ALEN);
-memcpy(macftx->addr2, macclient, ETH_ALEN);
-memcpy(macftx->addr3, macap, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter1++ << 4);
-if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
-	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_disassociation_fm_client failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_deauthentication_fm_ap(const u8* macclient, const u8* macap, u8 reason)
-{
-macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_DEAUTH;
-wltxbuffer[RTHTX_SIZE +1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macclient, ETH_ALEN);
-memcpy(macftx->addr2, macap, ETH_ALEN);
-memcpy(macftx->addr3, macap, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter1++ << 4);
-if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
-	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_deauthentication_fm_ap failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_deauthentication_fm_client(const u8* macclient, const u8* macap, u8 reason)
-{
-macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
-macftx->type = IEEE80211_FTYPE_MGMT;
-macftx->subtype = IEEE80211_STYPE_DEAUTH;
-wltxbuffer[RTHTX_SIZE +1] = 0;
-macftx->duration = HCXTXDURATION;
-memcpy(macftx->addr1, macap, ETH_ALEN);
-memcpy(macftx->addr2, macclient, ETH_ALEN);
-memcpy(macftx->addr3, macap, ETH_ALEN);
-macftx->sequence = __hcx16le(seqcounter1++ << 4);
-if(seqcounter1 > 4095) seqcounter1 = 1;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM] = reason;
-wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM +1] = 0;
-if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM +2)) == RTHTX_SIZE + MAC_SIZE_NORM +2)
-	{
-	errortxcount = 0;
-	return;
-	}
-#ifdef HCXDEBUG
-fprintf(fh_debug, "send_80211_deauthentication_fm_client failed: %s\n", strerror(errno));
-#endif
-errortxcount++;
-return;
-}
-/*===========================================================================*/
-/*===========================================================================*/
-/* RX 802.11 */
-static inline __attribute__((always_inline)) void get_tagvendor(infoelement_t *infoelement, int infolen, u8 *infostart)
-{
-static size_t c;
-static ieee80211_wpaie_t *iewpa;
-static ieee80211_wpasuite_t *wpasuite;
-static ieee80211_wpasuitecount_t *wpasuitecount;
+static size_t i;
+static ieee80211_proberequest_t *proberequest;
+static u16 proberequestlen;
+static ieee80211_ietag_t *essid;
 
-iewpa = (ieee80211_wpaie_t*)infostart;
-if(memcmp(&wpasuiteoui, iewpa->oui, 3) != 0) return;
-if(iewpa->type != 1) return;
-if(__hcx16le(iewpa->version) != 1) return;
-infostart += IEEE80211_WPAIE_SIZE;
-infolen -= IEEE80211_WPAIE_SIZE;
-wpasuite =(ieee80211_wpasuite_t*)infostart;
-if(memcmp(&wpasuiteoui, wpasuite->oui, 3) != 0) return;
-infostart += IEEE80211_WPASUITE_SIZE;
-infolen -= IEEE80211_WPASUITE_SIZE;
-wpasuitecount =(ieee80211_wpasuitecount_t*)infostart;
-infostart += IEEE80211_WPASUITECOUNT_SIZE;
-infolen -= IEEE80211_WPASUITECOUNT_SIZE;
-for(c = 0; c < __hcx16le(wpasuitecount->count); c++)
-	{
-	if(infolen <= 0) return;
-	wpasuite =(ieee80211_wpasuite_t*)infostart;
-	infostart += IEEE80211_WPASUITE_SIZE;
-	infolen -= IEEE80211_WPASUITE_SIZE;
-	}
-wpasuitecount =(ieee80211_wpasuitecount_t*)infostart;
-infostart += IEEE80211_WPASUITECOUNT_SIZE;
-infolen -= IEEE80211_WPASUITECOUNT_SIZE;
-for(c = 0; c < __hcx16le(wpasuitecount->count); c++)
-	{
-	if(infolen <= 0) return;
-	wpasuite =(ieee80211_wpasuite_t*)infostart;
-	if(memcmp(&wpasuiteoui, wpasuite->oui, 3) == 0)
-		{
-		if(wpasuite->type == WPA_AKM_PSK) infoelement->flags |= APWPAAKM_PSK;
-		}
-	infostart += IEEE80211_WPASUITE_SIZE;
-	infolen -= IEEE80211_WPASUITE_SIZE;
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void get_tagrsn(infoelement_t *infoelement, int infolen, u8 *infostart)
-{
-static size_t c;
-static ieee80211_rsnie_t *iersn;
-static ieee80211_rnsuite_t *rsnsuite;
-static ieee80211_rsnsuitecount_t *rsnsuitecount;
-static ieee80211_rsncapability_t *rsncapability;
+proberequest = (ieee80211_proberequest_t*)payloadptr;
+if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
+if((essid = get_tag(TAG_SSID, proberequestlen, proberequest->ie)) == NULL) return;
+if(essid->len > ESSID_MAX) return;
 
-iersn = (ieee80211_rsnie_t*)infostart;
-if(__hcx16le(iersn->version) != 1) return;
-infostart += IEEE80211_RSNIE_SIZE;
-infolen -= IEEE80211_RSNIE_SIZE;
-rsnsuite =(ieee80211_rnsuite_t*)infostart;
-if(memcmp(&rsnsuiteoui, rsnsuite->oui, 3) != 0) return;
-if(rsnsuite->type == RSN_CS_CCMP) infoelement->flags |= APGS_CCMP;
-if(rsnsuite->type == RSN_CS_TKIP) infoelement->flags |= APGS_TKIP;
-infostart += IEEE80211_RSNSUITE_SIZE;
-infolen -= IEEE80211_RSNSUITE_SIZE;
-rsnsuitecount =(ieee80211_rsnsuitecount_t*)infostart;
-infostart += IEEE80211_RSNSUITECOUNT_SIZE;
-infolen -= IEEE80211_RSNSUITECOUNT_SIZE;
-for(c = 0; c < __hcx16le(rsnsuitecount->count); c++)
+if((essid->len == 0) || (essid->ie[0] == 0))
 	{
-	if(infolen <= 0) return;
-	rsnsuite =(ieee80211_rnsuite_t*)infostart;
-	if(memcmp(&rsnsuiteoui, rsnsuite->oui, 3) == 0)
-		{
-		if(rsnsuite->type == RSN_CS_CCMP) infoelement->flags |= APCS_CCMP;
-		if(rsnsuite->type == RSN_CS_TKIP) infoelement->flags |= APCS_TKIP;
-		}
-	infostart += IEEE80211_RSNSUITE_SIZE;
-	infolen -= IEEE80211_RSNSUITE_SIZE;
+	if(macfrx->retry == 0) send_80211_probereresponse_list();
+	return;
 	}
-rsnsuitecount =(ieee80211_rsnsuitecount_t*)infostart;
-infostart += IEEE80211_RSNSUITECOUNT_SIZE;
-infolen -= IEEE80211_RSNSUITECOUNT_SIZE;
-for(c = 0; c < __hcx16le(rsnsuitecount->count); c++)
+for(i = 0; i < APRGLIST_MAX - 1; i++)
 	{
-	if(infolen <= 0) return;
-	rsnsuite =(ieee80211_rnsuite_t*)infostart;
-	if(memcmp(&rsnsuiteoui, rsnsuite->oui, 3) == 0)
+	if((aprglist + i)->tsakt == 0) break;
+	if((aprglist + i)->apdata->essidlen != essid->len) continue;
+	if(memcmp((aprglist + i)->apdata->essid, essid->ie, essid->len) != 0) continue;
+	if(macfrx->retry == 0)
 		{
-		if(rsnsuite->type == RSN_AKM_PSK) infoelement->flags |= APRSNAKM_PSK;
-		if(rsnsuite->type == RSN_AKM_PSK256) infoelement->flags |= APRSNAKM_PSK256;
-		if(rsnsuite->type == RSN_AKM_PSKFT) infoelement->flags |= APRSNAKM_PSKFT;
+		if(memcmp(macbc, macfrx->addr3, ETH_ALEN) == 0) send_80211_probereresponse((aprglist + i)->apdata);
+		else send_80211_probereresponse_directed(essid);
 		}
-	infostart += IEEE80211_RSNSUITE_SIZE;
-	infolen -= IEEE80211_RSNSUITE_SIZE;
+	(aprglist + i)->tsakt = tsakt;
+	if(i > APRGLIST_HALF) qsort(aprglist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+	return;
 	}
-if(infolen < 2) return;
-rsncapability = (ieee80211_rsncapability_t*)infostart;
-if((__hcx16le(rsncapability->capability) & MFP_REQUIRED) == MFP_REQUIRED) infoelement->flags |= AP_MFP;
+(aprglist + i)->tsakt = tsakt;
+memset((aprglist + i)->apdata, 0, APDATA_SIZE);
+(aprglist + i)->apdata->essidlen = essid->len;
+memcpy((aprglist + i)->apdata->essid, essid->ie, essid->len);
+(aprglist + i)->apdata->maca[5] = nicaprg & 0xff;
+(aprglist + i)->apdata->maca[4] = (nicaprg >> 8) & 0xff;
+(aprglist + i)->apdata->maca[3] = (nicaprg >> 16) & 0xff;
+(aprglist + i)->apdata->maca[2] = ouiaprg & 0xff;
+(aprglist + i)->apdata->maca[1] = (ouiaprg >> 8) & 0xff;
+(aprglist + i)->apdata->maca[0] = (ouiaprg >> 16) & 0xff;
+nicaprg++;
+if(macfrx->retry == 0)
+	{
+	if(memcmp(macbc, macfrx->addr3, ETH_ALEN) == 0) send_80211_probereresponse((aprglist + i)->apdata);
+	else send_80211_probereresponse_directed(essid);
+	}
+qsort(aprglist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
+writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void tagwalk_channel_essid_rsn(infoelement_t *infoelement, int infolen, u8 *infostart)
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
+static size_t i;
+static int tlen;
 static ieee80211_ietag_t *infoptr;
+static ieee80211_suite_t *rsn;
+static ieee80211_suite_t *wpa;
 
+apdata->channel = (scanlist + scanlistindex)->channel;
 while(0 < infolen)
 	{
 	infoptr = (ieee80211_ietag_t*)infostart;
@@ -1683,22 +2579,98 @@ while(0 < infolen)
 		{
 		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
 			{
-			infoelement->flags |= APIE_ESSID;
-			infoelement->essidlen = infoptr->len;
-			memcpy(infoelement->essid, &infoptr->ie[0], infoptr->len);
+			if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+				{
+				if(infoptr->ie[0] != 0)
+					{
+					apdata->essidlen = infoptr->len;
+					memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
+					}
+				}
 			}
 		}
 	else if(infoptr->id == TAG_CHAN)
 		{
-		if(infoptr->len == 1) infoelement->channel = infoptr->ie[0];
+		if(infoptr->len == 1) apdata->channel = (u8)infoptr->ie[0];
 		}
 	else if(infoptr->id == TAG_RSN)
 		{
-		if(infoptr->len >= IEEE80211_RSNIE_LEN_MIN) get_tagrsn(infoelement, infoptr->len, infoptr->ie);
+		if(infoptr->len >= RSNLEN_MIN)
+			{
+			rsn = (ieee80211_suite_t*)infoptr->ie;
+			if(__hcx16le(rsn->count) == 1)
+				{
+				if(memcmp(rsnccmp, rsn->suite, 3) == 0)
+					{
+					apdata->gcs = rsn->suite[3];
+					rsn += 1;
+					tlen = 8;
+					for(i = 0; i < __hcx16le(rsn->count); i++)
+						{
+						if(memcmp(rsnccmp, &infoptr->ie[tlen], 4) == 0) apdata->pcs = infoptr->ie[tlen +3];
+						else if((apdata->pcs == 0) && (memcmp(rsntkip, &infoptr->ie[tlen], 4) == 0)) apdata->pcs = infoptr->ie[tlen +3];
+						tlen += 4;
+						if(tlen > infoptr->len) return;
+						}
+					rsn = (ieee80211_suite_t*)&infoptr->ie[tlen];
+					tlen += 2;
+					for(i = 0; i < __hcx16le(rsn->count); i++)
+						{
+						if(memcmp(rsnpsk, &infoptr->ie[tlen], 4) == 0)
+							{
+							apdata->akm = infoptr->ie[tlen +3];
+							apdata->akmstat = 'p';
+							}
+						else if((apdata->akm == 0) && (memcmp(rsnpsk256, &infoptr->ie[tlen], 4) == 0))
+							{
+							apdata->akm = infoptr->ie[tlen +3];
+							apdata->akmstat = 'p';
+							}
+						tlen += 4;
+						if(tlen > infoptr->len) return;
+						}
+					apdata->mfp = infoptr->ie[tlen] & 0xc0;
+					}
+				}
+			}
 		}
 	else if(infoptr->id == TAG_VENDOR)
 		{
-		if(infoptr->len >= IEEE80211_WPAIE_LEN_MIN) get_tagvendor(infoelement, infoptr->len, infoptr->ie);
+		if(infoptr->len >= WPALEN_MIN)
+			{
+			if(memcmp(wpatype, infoptr->ie, SUITE_SIZE) == 0)
+				{
+				wpa = (ieee80211_suite_t*)(infoptr->ie +4);
+				if(__hcx16le(wpa->count) == 1)
+					{
+					if(memcmp(wpatkip, wpa->suite, 3) == 0)
+						{
+						apdata->mcs = wpa->suite[3];
+						wpa += 1;
+						tlen = 12;
+						for(i = 0; i < __hcx16le(wpa->count); i++)
+							{
+							if(memcmp(wpaccmp, &infoptr->ie[tlen], 4) == 0) apdata->ucs = infoptr->ie[tlen +3];
+							else if((apdata->ucs == 0) && (memcmp(wpatkip, &infoptr->ie[tlen], 4) == 0)) apdata->ucs = infoptr->ie[tlen +3];
+							tlen += 4;
+							if(tlen > infoptr->len) return;
+							}
+						wpa = (ieee80211_suite_t*)&infoptr->ie[tlen];
+						tlen += 2;
+						for(i = 0; i < __hcx16le(wpa->count); i++)
+							{
+							if(memcmp(wpapsk, &infoptr->ie[tlen], 4) == 0)
+								{
+								apdata->akm1 = infoptr->ie[tlen +3];
+								apdata->akmstat = 'p';
+								}
+							tlen += 4;
+							if(tlen > infoptr->len) return;
+							}
+						}
+					}
+				}
+			}
 		}
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
@@ -1706,753 +2678,37 @@ while(0 < infolen)
 return;
 }
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) int get_keyinfo(u16 kyif)
-{
-if(kyif & WPA_KEY_INFO_ACK)
-	{
-	if(kyif & WPA_KEY_INFO_INSTALL) return 3; /* handshake 3 */
-	else return 1; /* handshake 1 */
-	}
-else
-	{
-	if(kyif & WPA_KEY_INFO_SECURE) return 4; /* handshake 4 */
-	else return 2; /* handshake 2 */
-	}
-return 0;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211pspoll(void)
-{
-static size_t i;
-
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr1, (aplist +i)->macap, ETH_ALEN) == 0)
-		{
-		if((aplist +i)->status >= AP_EAPOL_M3) return;
-		if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-		memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-		return;
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211action(void)
-{
-static size_t i;
-static ieee80211_action_t *action;
-
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-	if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		if((aplist +i)->status >= AP_EAPOL_M3) return;
-		if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-		memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-		break;
-		}
-	}
-action = (ieee80211_action_t*)payloadptr;
-if(payloadlen < (IEEE80211_ACTION_SIZE + IEEE80211_IETAG_SIZE)) return;
-if((action->category == RADIO_MEASUREMENT) && (action->code == NEIGHBOR_REPORT_REQUEST)) writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211qosdata(void)
-{
-static size_t i;
-
-if((macfrx->to_ds != 1) && (macfrx->from_ds != 0)) return;
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-		{
-		if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-			{
-			if((aplist +i)->status >= AP_EAPOL_M3) return;
-			if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-			memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-			return;
-			}
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211qosnull(void)
-{
-static size_t i;
-
-if((macfrx->to_ds != 1) && (macfrx->from_ds != 0)) return;
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-		{
-		if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-			{
-			if((aplist +i)->status >= AP_EAPOL_M3) return;
-			if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-			memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-			return;
-			}
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211null(void)
-{
-static size_t i;
-
-if((macfrx->to_ds != 1) && (macfrx->from_ds != 0)) return;
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-		{
-		if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-			{
-			if((aplist +i)->status >= AP_EAPOL_M3) return;
-			if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-			memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-			return;
-			}
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211blockack(void)
-{
-static size_t i;
-
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-	if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		if((aplist +i)->status >= AP_EAPOL_M3) return;
-		if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-		memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-		return;
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211blockackreq(void)
-{
-static size_t i;
-
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-	if(memcmp((aplist +i)->macap, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		if((aplist +i)->status >= AP_EAPOL_M3) return;
-		if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) == 0) (aplist +i)->count = attemptapmax;
-		memcpy((aplist +i)->macclient, macfrx->addr2, ETH_ALEN);
-		return;
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eap_start(void)
-{
-static size_t i;
-
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr1, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->tsakt = tsakt;
-	(clientlist +i)->status |= CLIENT_EAP_START;
-	if((clientlist +i)->count == 0) return;
-	send_80211_eap_request_id();
-	(clientlist +i)->count -= 1;
-	return;
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m4(void)
-{
-static size_t i;
-
-authseqakt.replaycountm4 = __hcx64be(wpakey->replaycount);
-if(memcmp(&zeroed, &wpakey->nonce, 32) != 0)
-if((authseqakt.status & AP_EAPOL_M3) == AP_EAPOL_M3)
-	{
-	if(memcmp(&authseqakt.macap, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		if((authseqakt.replaycountm1 == (authseqakt.replaycountm4 -1)) && (authseqakt.replaycountm2 == (authseqakt.replaycountm4 -1)) && (authseqakt.replaycountm3 == authseqakt.replaycountm4))
-			{
-			authseqakt.kdv4 = kdv;
-			if(authseqakt.kdv3 == kdv)
-				{
-				if((tsakt - tshold) < EAPOLM4TIMEOUT)
-					{
-					if(memcmp(&zeroed, &wpakey->nonce, 32) != 0)
-						{
-						for(i = 0; i < APLIST_MAX -1; i++)
-							{
-							if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
-								{
-								(aplist +i)->tsakt = tsakt;
-								authseqakt.status = 0;
-								(aplist +i)->status |= AP_EAPOL_M4;
-								wanteventflag |= exiteapolm4flag;
-								return;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-authseqakt.status = 0;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m3(void)
-{
-static size_t i;
-
-authseqakt.replaycountm3 = __hcx64be(wpakey->replaycount);
-if((authseqakt.status & AP_EAPOL_M2) == AP_EAPOL_M2)
-	{
-	if(memcmp(&authseqakt.macap, macfrx->addr2, ETH_ALEN) == 0)
-		{
-		if(authseqakt.replaycountm2 == (authseqakt.replaycountm3 - 1))
-			{
-			authseqakt.kdv3 = kdv;
-			if(authseqakt.kdv2 == kdv)
-				{
-				if((tsakt - tshold) < EAPOLM3TIMEOUT)
-					{
-					if(memcmp(&authseqakt.noncem1, &wpakey->nonce[28], 4) == 0)
-						{
-						for(i = 0; i < APLIST_MAX -1; i++)
-							{
-							if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
-								{
-								(aplist +i)->tsakt = tsakt;
-								(aplist +i)->status |= AP_EAPOL_M3;
-								wanteventflag |= exiteapolm3flag;
-								return;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-authseqakt.status = 0;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m2rg(void)
-{
-size_t i;
-
-authseqakt.status = 0;
-writeepbm1();
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr1, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->tsakt = tsakt;
-	(clientlist +i)->status |= CLIENT_EAPOL_M2;
-	if((clientlist +i)->count == 0) return;
-	if(memcmp((clientlist +i)->mic, &wpakey->keymic[0], 4) == 0) send_80211_disassociation_fm_ap(macfrx->addr2, macfrx->addr1, WLAN_REASON_PREV_AUTH_NOT_VALID);
-	memcpy((clientlist +i)->mic, &wpakey->keymic[0], 4);
-	wanteventflag |= exiteapolm2rgflag;
-	(clientlist +i)->count -= 1;
-	return;
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m2(void)
-{
-authseqakt.replaycountm2 = __hcx64be(wpakey->replaycount);
-if(replaycountrg == authseqakt.replaycountm2)
-	{
-	process80211eapol_m2rg();
-	return;
-	}
-if((authseqakt.status & AP_EAPOL_M1) == AP_EAPOL_M1)
-	{
-	if(memcmp(&authseqakt.macap, macfrx->addr1, ETH_ALEN) == 0)
-		{
-		if(authseqakt.replaycountm1 == authseqakt.replaycountm2)
-			{
-			authseqakt.kdv2 = kdv;
-			if(authseqakt.kdv1 == authseqakt.kdv2)
-				{
-				if((tsakt - tshold) < EAPOLM2TIMEOUT)
-					{
-					authseqakt.status |= AP_EAPOL_M2;
-					wanteventflag |= exiteapolm2flag;
-					}
-				else authseqakt.status = 0;
-				return;
-				}
-			}
-		}
-	}
-authseqakt.status = 0;
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m1(void)
-{
-static size_t i;
-
-memset(&authseqakt, 0, AUTHSEQAKT_SIZE);
-memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
-authseqakt.kdv1 = kdv;
-authseqakt.replaycountm1 = __hcx64be(wpakey->replaycount);
-memcpy(&authseqakt.noncem1, &wpakey->nonce[28], 4);
-authseqakt.status = AP_EAPOL_M1;
-wanteventflag |= exiteapolm1flag;
-if(__hcx16be(wpakey->wpadatalen) == IEEE80211_PMKID_SIZE)
-	{
-	pmkid = (ieee80211_pmkid_t*)(eapolplptr + IEEE80211_WPAKEY_SIZE);
-	if(memcmp(&rsnsuiteoui, pmkid->oui, 3) == 0)
-		{
-		if(pmkid->len >= 0x14)
-			{
-			if(pmkid->type == PMKID_KDE)
-				{
-				if(memcmp(pmkid->pmkid, &zeroed, PMKID_MAX) != 0)
-					{
-					authseqakt.status |= AP_PMKID;
-					wanteventflag |= exiteapolpmkidflag;
-					}
-				}
-			}
-		}
-	}
-for(i = 0; i < APLIST_MAX - 1; i++)
-	{
-	if(memcmp((aplist +i)->macap, authseqakt.macap, ETH_ALEN) == 0)
-		{
-		(aplist +i)->status |= authseqakt.status;
-		(aplist +i)->tsakt = tsakt;
-		return;
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol(void)
-{
-eapolplptr = eapauthplptr + IEEE80211_EAPAUTH_SIZE;
-eapolpllen = eapauthpllen - IEEE80211_EAPAUTH_SIZE;
-if((eapolpllen + IEEE80211_EAPAUTH_SIZE + IEEE80211_LLC_SIZE) > payloadlen) return;
-wpakey = (ieee80211_wpakey_t*)eapolplptr;
-if((kdv = __hcx16be(wpakey->keyinfo) & WPA_KEY_INFO_TYPE_MASK) == 0) return;
-keyinfo = (get_keyinfo(__hcx16be(wpakey->keyinfo)));
-switch(keyinfo)
-	{
-	case M1:
-	process80211eapol_m1();
-	break;
-
-	case M2:
-	process80211eapol_m2();
-	break;
-
-	case M3:
-	process80211eapol_m3();
-	break;
-
-	case M4:
-	if(deauthenticationflag == true) process80211eapol_m4();
-	break;
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapauthentication(void)
-{
-tshold = tsakt;
-eapauthplptr = payloadptr + IEEE80211_LLC_SIZE;
-eapauthpllen = payloadlen - IEEE80211_LLC_SIZE;
-eapauth = (ieee80211_eapauth_t*)eapauthplptr;
-eapauthlen = __hcx16be(eapauth->len);
-if(eapauthlen > (eapauthpllen - IEEE80211_EAPAUTH_SIZE)) return;
-if(eapauth->type == EAPOL_KEY) process80211eapol();
-else if(eapauth->type == EAPOL_START) process80211eap_start();
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211reassociationresponse(void)
-{
-static size_t i;
-static ieee80211_assoc_or_reassoc_resp_t *reassociationresponse;
-
-tshold = tsakt;
-memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
-reassociationresponse = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
-if(payloadlen < IEEE80211_REASSOCIATIONRESPONSE_SIZE) return;
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->aid = __hcx16le(reassociationresponse->aid);
-	return;
-	}
-memset((clientlist + i), 0, CLIENTLIST_SIZE);
-(clientlist +i)->tsakt = tsakt;
-memcpy((clientlist +i)->macclient, macfrx->addr1, ETH_ALEN);
-memcpy((clientlist +i)->macap, macfrx->addr2, ETH_ALEN);
-(clientlist +i)->aid = reassociationresponse->aid;
-qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211reassociationrequest(void)
-{
-static size_t i;
-static ieee80211_reassoc_req_t *reassociationrequest;
-static u16 reassociationrequestlen;
-
-if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
-tshold = tsakt;
-reassociationrequest = (ieee80211_reassoc_req_t*)payloadptr;
-if((reassociationrequestlen = payloadlen - IEEE80211_REASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
-memcpy(&authseqakt.macap, macfrx->addr1, ETH_ALEN);
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr1, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->tsakt = tsakt;
-	if((clientlist +i)->count == 0) return;
-	if((tsakt - (clientlist +i)->tsassoc) > TIMEREASSOCWAIT)
-		{
-		tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
-		if(((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0)
-			{
-			if(((clientlist +i)->aid & 0xc0) == 0) (clientlist +i)->aid = HCXTXAID;
-			send_80211_reassociationresponse((clientlist +i)->aid);
-			send_80211_eapol_m1();
-			(clientlist +i)->count -= 1;
-			}
-		else (clientlist +i)->count = 0;
-		writeepb();
-		}
-	(clientlist +i)->tsassoc = tsakt;
-	return;
-	}
-memset((clientlist + i), 0, CLIENTLIST_SIZE);
-(clientlist +i)->tsakt = tsakt;
-(clientlist +i)->tsassoc = tsfirst;
-(clientlist +i)->tsreassoc = tsfirst;
-(clientlist +i)->count = attemptclientmax;
-(clientlist +i)->aid = HCXTXAID;
-memcpy((clientlist +i)->macclient, macfrx->addr2, ETH_ALEN);
-memcpy((clientlist +i)->macap, macfrx->addr1, ETH_ALEN);
-tagwalk_channel_essid_rsn(&(clientlist +i)->ie, reassociationrequestlen, reassociationrequest->ie);
-if((((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0) && (attemptclientmax > 0))
-	{
-	send_80211_reassociationresponse((clientlist +i)->aid);
-	send_80211_eapol_m1();
-	}
-else (clientlist +i)->count = 0;
-qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211associationresponse(void)
-{
-static size_t i;
-static ieee80211_assoc_or_reassoc_resp_t *associationresponse;
-
-tshold = tsakt;
-memcpy(&authseqakt.macap, macfrx->addr2, ETH_ALEN);
-if(memcmp(macfrx->addr1, &macclientrg, ETH_ALEN) == 0) return;
-associationresponse = (ieee80211_assoc_or_reassoc_resp_t*)payloadptr;
-if(payloadlen < IEEE80211_ASSOCIATIONRESPONSE_SIZE) return;
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr1, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr2, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->aid = __hcx16le(associationresponse->aid);
-	return;
-	}
-memset((clientlist + i), 0, CLIENTLIST_SIZE);
-(clientlist +i)->tsakt = tsakt;
-memcpy((clientlist +i)->macclient, macfrx->addr1, ETH_ALEN);
-memcpy((clientlist +i)->macap, macfrx->addr2, ETH_ALEN);
-(clientlist +i)->aid = __hcx16le(associationresponse->aid);
-qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211associationrequest(void)
-{
-static size_t i;
-static ieee80211_assoc_req_t *associationrequest;
-static u16 associationrequestlen;
-
-if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
-tshold = tsakt;
-associationrequest = (ieee80211_assoc_req_t*)payloadptr;
-if((associationrequestlen = payloadlen - IEEE80211_ASSOCIATIONREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
-memcpy(&authseqakt.macap, macfrx->addr1, ETH_ALEN);
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr1, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->tsakt = tsakt;
-	if((clientlist +i)->count == 0) return;
-	tagwalk_channel_essid_rsn(&(clientlist +i)->ie, associationrequestlen, associationrequest->ie);
-	if((tsakt - (clientlist +i)->tsassoc) > TIMEASSOCWAIT)
-		{
-		if(((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0)
-			{
-			send_80211_associationresponse();
-			send_80211_eapol_m1();
-			(clientlist +i)->count -= 1;
-			}
-		else (clientlist +i)->count = 0;
-		writeepb();
-		}
-	(clientlist +i)->tsassoc = tsakt;
-	return;
-	}
-memset((clientlist + i), 0, CLIENTLIST_SIZE);
-(clientlist +i)->tsakt = tsakt;
-(clientlist +i)->tsassoc = tsfirst;
-(clientlist +i)->tsreassoc = tsfirst;
-(clientlist +i)->count = attemptclientmax;
-memcpy((clientlist +i)->macclient, macfrx->addr2, ETH_ALEN);
-memcpy((clientlist +i)->macap, macfrx->addr1, ETH_ALEN);
-tagwalk_channel_essid_rsn(&(clientlist +i)->ie, associationrequestlen, associationrequest->ie);
-if((((clientlist +i)->ie.flags & APRSNAKM_PSK) != 0) && (attemptclientmax > 0))
-	{
-	send_80211_associationresponse();
-	send_80211_eapol_m1();
-	}
-else (clientlist +i)->count = 0;
-qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211authentication_fmclient(void)
-{
-size_t i;
-
-if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
-for(i = 0; i < CLIENTLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr2, (clientlist +i)->macclient, ETH_ALEN) != 0) continue;
-	if(memcmp(macfrx->addr1, (clientlist +i)->macap, ETH_ALEN) != 0) continue;
-	(clientlist +i)->tsakt = tsakt;
-	if((clientlist +i)->count == 0) return;
-	if((tsakt - (clientlist +i)->tsauth) > TIMEAUTHWAIT)
-		{
-		send_80211_authenticationresponse();
-		writeepb();
-		}
-	(clientlist +i)->tsauth = tsakt;
-	return;
-	}
-memset((clientlist + i), 0, CLIENTLIST_SIZE);
-(clientlist +i)->tsakt = tsakt;
-(clientlist +i)->tsauth = tsfirst;
-(clientlist +i)->tsassoc = tsfirst;
-(clientlist +i)->tsreassoc = tsfirst;
-(clientlist +i)->count = attemptclientmax;
-memcpy((clientlist +i)->macclient, macfrx->addr2, ETH_ALEN);
-memcpy((clientlist +i)->macap, macfrx->addr1, ETH_ALEN);
-if(attemptclientmax > 0) send_80211_authenticationresponse();
-qsort(clientlist, i + 1, CLIENTLIST_SIZE, sort_clientlist_by_tsakt);
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211authentication(void)
-{
-size_t i;
-static ieee80211_auth_t *auth;
-
-tshold = tsakt;
-auth = (ieee80211_auth_t*)payloadptr;
-if(payloadlen < IEEE80211_AUTH_SIZE) return;
-if(__hcx16le(auth->algorithm) == OPEN_SYSTEM)
-	{
-	if(__hcx16le(auth->sequence) == 1) process80211authentication_fmclient();
-	else if(__hcx16le(auth->sequence) == 2)
-		{
-		if(memcmp(&macclientrg, macfrx->addr1, 3) == 0)
-			{
-			for(i = 0; i < APLIST_MAX - 1; i++)
-				{
-				if(memcmp((aplist +i)->macap, macfrx->addr2, ETH_ALEN) == 0)
-					{
-					(aplist +i)->tsakt = tsakt;
-					(aplist +i)->status |= AP_IN_RANGE;
-					if((tsakt - (aplist +i)->tsauth) > TIMEAUTHWAIT)
-						{
-						if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_associationrequest(i);
-						writeepb();
-						}
-					(aplist +i)->tsauth = tsakt;
-					break;
-					}
-				}
-			}
-		}
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void get_tag(u8 ietag, essid_t *essid, int infolen, u8 *infostart)
-{
-static ieee80211_ietag_t *infoptr;
-
-while(0 < infolen)
-	{
-	infoptr = (ieee80211_ietag_t*)infostart;
-	if(infolen < (int)(infoptr->len + IEEE80211_IETAG_SIZE)) return;
-	if(infoptr->id == ietag)
-		{
-		essid->len = infoptr->len;
-		essid->essid = (u8*)infoptr->ie;
-		return;
-		}
-	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
-	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211proberequest_directed(void)
-{
-static size_t i;
-static ieee80211_proberequest_t *proberequest;
-static u16 proberequestlen;
-static essid_t essid;
-
-if(memcmp(macfrx->addr1, &macaprghidden, ETH_ALEN) == 0) return;
-proberequest = (ieee80211_proberequest_t*)payloadptr;
-if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
-get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, macfrx->addr1, essid.len, essid.essid);
-for(i = 0; i < MACLIST_MAX - 1; i++)
-	{
-	if(memcmp(macfrx->addr1, (maclist +i)->mac, ETH_ALEN) != 0) continue;
-	(maclist +i)->tsakt = tsakt;
-	return;
-	}
-(maclist +i)->tsakt = tsakt;
-memcpy((maclist +i)->mac, macfrx->addr1, ETH_ALEN);
-qsort(maclist, i + 1, MACLIST_SIZE, sort_maclist_by_tsakt);
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211proberequest_undirected(void)
-{
-static size_t i;
-static ieee80211_proberequest_t *proberequest;
-static u16 proberequestlen;
-static essid_t essid;
-
-proberequest = (ieee80211_proberequest_t*)payloadptr;
-if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
-get_tag(TAG_SSID, &essid, proberequestlen, proberequest->ie);
-if(attemptclientmax > 0)
-	{
-	if(essid.len == 0)
-		{
-		for(i = 0; i < proberesponsetxmax; i++)
-			{
-			if(proberesponseindex >= APRGLIST_MAX)
-				{
-				proberesponseindex = 0;
-				return;
-				}
-			if((aprglist + proberesponseindex)->essidlen == 0)
-				{
-				proberesponseindex = 0;
-				return;
-				}
-			send_80211_probereresponse(macfrx->addr2, (aprglist + proberesponseindex)->macaprg, (aprglist + proberesponseindex)->essidlen, (aprglist + proberesponseindex)->essid);
-			proberesponseindex++;
-			}
-		return;
-		}
-	}
-
-for(i = 0; i < APRGLIST_MAX - 1; i++)
-	{
-	if((aprglist +i)->essidlen != essid.len) continue;
-	if(memcmp((aprglist +i)->essid, essid.essid, essid.len) != 0) continue;
-	(aprglist +i)->tsakt = tsakt;
-	if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist +i)->macaprg, essid.len, essid.essid);
-	return;
-	}
-memset((aprglist + i), 0, APRGLIST_SIZE);
-(aprglist +i)->tsakt = tsakt;
-(aprglist +i)->essidlen = essid.len;
-memcpy((aprglist +i)->essid, essid.essid, essid.len);
-(aprglist +i)->macaprg[5] = nicaprg & 0xff;
-(aprglist +i)->macaprg[4] = (nicaprg >> 8) & 0xff;
-(aprglist +i)->macaprg[3] = (nicaprg >> 16) & 0xff;
-(aprglist +i)->macaprg[2] = ouiaprg & 0xff;
-(aprglist +i)->macaprg[1] = (ouiaprg >> 8) & 0xff;
-(aprglist +i)->macaprg[0] = (ouiaprg >> 16) & 0xff;
-nicaprg++;
-if(attemptclientmax > 0) send_80211_probereresponse(macfrx->addr2, (aprglist +i)->macaprg, essid.len, essid.essid);
-qsort(aprglist, i + 1, APRGLIST_SIZE, sort_aprglist_by_tsakt);
-writeepb();
-return;
-}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211proberesponse_rca(void)
+static inline __attribute__((always_inline)) void process80211proberesponse_rcascan(void)
 {
 static size_t i;
 static ieee80211_beacon_proberesponse_t *proberesponse;
 static u16 proberesponselen;
 
-if(memcmp(&macclientrg, macfrx->addr1, ETH_ALEN) != 0) return;
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
-if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
+if((proberesponselen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
-	if(memcmp(macfrx->addr3, (aplist +i)->macap, ETH_ALEN) != 0) continue;
-	(aplist +i)->tsauth = tsakt;
-	packetrcarxcount++;
-	if(((aplist +i)->status & AP_PROBERESPONSE) == 0) (aplist +i)->status |= AP_PROBERESPONSE;
-	tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie);
-	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-	if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-	(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
-	(aplist +i)->count += 1;
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
+	(aplist + i)->apdata->rtfrequency = rtfrequency;
+	(aplist + i)->apdata->rtrssi = rtrssi;
+	if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	else (aplist + i)->apdata->privacy = 'o';
+	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
-memset((aplist + i), 0, APLIST_SIZE);
-(aplist +i)->tsakt = tsakt;
-(aplist +i)->tshold1 = tsakt;
-(aplist +i)->tsauth = tsfirst;
-memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
-memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
-packetrcarxcount++;
-(aplist +i)->status |= AP_PROBERESPONSE;
-tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie);
-if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
-(aplist +i)->count = 1;
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
+(aplist + i)->apdata->rtfrequency = rtfrequency;
+(aplist + i)->apdata->rtrssi = rtrssi;
+if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+else (aplist + i)->apdata->privacy = 'o';
+get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -2464,62 +2720,65 @@ static ieee80211_beacon_proberesponse_t *proberesponse;
 static u16 proberesponselen;
 
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
-if((proberesponselen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
+if((proberesponselen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
-	if(memcmp(macfrx->addr3, (aplist +i)->macap, ETH_ALEN) != 0) continue;
-	(aplist +i)->tsakt = tsakt;
-	if(((aplist +i)->status & AP_PROBERESPONSE) == 0)
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	if((aplist + i)->apdata->proberesponse == false)
 		{
+		(aplist + i)->apdata->proberesponse = true;
 		writeepb();
-		#ifdef HCXNMEAOUT
-		if(fd_gps > 0) writegpwpl(i);
-		#endif
-		tshold = tsakt;
-		(aplist +i)->status |= AP_PROBERESPONSE;
 		}
-	tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie);
-	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-	if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
+	if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	else (aplist + i)->apdata->privacy = 'o';
+	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
-memset((aplist + i), 0, APLIST_SIZE);
-(aplist +i)->tsakt = tsakt;
-(aplist +i)->tshold1 = tsakt;
-(aplist +i)->tsauth = tsfirst;
-(aplist +i)->count = attemptapmax;
-memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
-memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
-(aplist +i)->status |= AP_PROBERESPONSE;
-tagwalk_channel_essid_rsn(&(aplist +i)->ie, proberesponselen, proberesponse->ie);
-if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-if(deauthenticationflag == true)
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->m1 = ' ';
+(aplist + i)->apdata->m1m2 = ' ';
+(aplist + i)->apdata->m1m2m3 = ' ';
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->akmstat = ' ';
+(aplist + i)->apdata->apcount = apcountmax;
+(aplist + i)->apdata->proberesponse = true;
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+memcpy((aplist + i)->apdata->macc, macclientrg, ETH_ALEN);
+if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+else (aplist + i)->apdata->privacy = 'o';
+get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+if(apcountmax > 0)
 	{
-	if(((aplist +i)->ie.flags & AP_MFP) == 0)
+	if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel)
 		{
-		if(((aplist +i)->ie.flags & APAKM_MASK) != 0) send_80211_deauthentication_fm_ap(macbc, (aplist +i)->macap, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
+		if((aplist + i)->apdata->akm == AKMPSK)
+			{
+			if((aplist + i)->apdata->essidlen != 0)
+				{
+				send_80211_associationrequest2bc((aplist + i)->apdata);
+				(aplist + i)->apdata->tsrequest = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
+				}
+			}
+		if((disassociationflag == true) && (((aplist + i)->apdata->mfp & MFP_REQUIRED) != MFP_REQUIRED))
+			{
+			send_80211_disassociationcaa(macfrx->addr1, macfrx->addr2);
+			(aplist + i)->apdata->tsrequest = tsakt;
+			(aplist + i)->apdata->apcount -= 1;
+			}
 		}
 	}
-if(associationflag == true)
-	{
-	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
-	}
-if(reassociationflag == true)
-	{
-	if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_reassociationrequest(i);
-	}
-writeepb();
-#ifdef HCXNMEAOUT
-if(fd_gps > 0) writegpwpl(i);
-#endif
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
-tshold = tsakt;
+writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211beacon_rca(void)
+static inline __attribute__((always_inline)) void process80211beacon_rcascan(void)
 {
 static size_t i;
 static ieee80211_beacon_proberesponse_t *beacon;
@@ -2529,26 +2788,25 @@ beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
-	if(memcmp(macfrx->addr3, (aplist +i)->macap, ETH_ALEN) != 0) continue;
-	(aplist +i)->tsakt = tsakt;
-	if(((aplist +i)->status & AP_BEACON) == 0) (aplist +i)->status |= AP_BEACON;
-	tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
-	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-	if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-	(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	(aplist + i)->tsakt = tsakt;
+	(aplist + i)->apdata->rtfrequency = rtfrequency;
+	(aplist + i)->apdata->rtrssi = rtrssi;
+	if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	else (aplist + i)->apdata->privacy = 'o';
+	get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
-memset((aplist + i), 0, APLIST_SIZE);
-(aplist +i)->tsakt = tsakt;
-(aplist +i)->tshold1 = tsakt;
-(aplist +i)->tsauth = tsfirst;
-memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
-memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
-(aplist +i)->status |= AP_BEACON;
-tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
-if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-(aplist +i)->frequency = (scanlist + scanlistindex)->frequency;
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+(aplist + i)->apdata->rtfrequency = rtfrequency;
+(aplist + i)->apdata->rtrssi = rtrssi;
+if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+else (aplist + i)->apdata->privacy = 'o';
+get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -2563,199 +2821,106 @@ beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
-	if(memcmp(macfrx->addr3, (aplist +i)->macap, ETH_ALEN) != 0) continue;
-	(aplist +i)->tsakt = tsakt;
-	if(((aplist +i)->status & AP_BEACON) == 0)
+	if((aplist + i)->tsakt == 0) break;
+	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
+	if((aplist + i)->apdata->beacon == true) get_tag_channel((aplist + i)->apdata, beaconlen, beacon->ie);
+	else get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	if((aplist + i)->apdata->beacon == false)
 		{
+		(aplist + i)->apdata->beacon = true;
 		writeepb();
-		tshold = tsakt;
-		#ifdef HCXNMEAOUT
-		if(fd_gps > 0) writegpwpl(i);
-		#endif
-		(aplist +i)->status |= AP_BEACON;
 		}
-	if((aplist +i)->status >= AP_EAPOL_M3) return;
-	tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
-	if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-	if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-	if((aplist +i)->tsakt - (aplist +i)->tshold1 > TIMEBEACONNEW)
+	(aplist + i)->tsakt = tsakt;
+	if((aplist + i)->apdata->channel != (scanlist + scanlistindex)->channel) return;
+	if((aplist + i)->apdata->m1m2m3 == '+') return; 
+	if((aplist + i)->apdata->pmkid == '+') return;
+	if((tsakt - (aplist + i)->apdata->tsrequest) < TSSECOND2) return;
+	if((tsakt - (aplist + i)->apdata->tsrequest) > TSHOUR1) (aplist + i)->apdata->apcount = apcountmax;
+	if((aplist + i)->apdata->apcount <= 0) return;
+	if((aplist + i)->apdata->essidlen != 0)
 		{
-		(aplist +i)->count = attemptapmax;
-		memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
-		(aplist +i)->tshold1 = tsakt;
-		}
-	if((aplist +i)->count == 0) return;
-	if(associationflag == true)
-		{
-		if(((aplist +i)->count % 8) == 6)
+		if(((aplist + i)->apdata->akm == AKMPSK) || ((aplist + i)->apdata->akm == AKMPSK256))
 			{
-			if(((aplist +i)->status & AP_EAPOL_M1) == 0)
+			if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0)
 				{
-				if(((aplist +i)->status & AP_ESSID) == AP_ESSID)
+				if((aplist + i)->apdata->m1 != '+')
 					{
-					if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_authenticationrequest();
+					send_80211_associationrequest2bc((aplist + i)->apdata);
+					send_80211_authenticationrequest((aplist + i)->apdata);
+					(aplist + i)->apdata->tsrequest = tsakt;
+					(aplist + i)->apdata->apcount -= 1;
 					}
+				}
+			else
+				{
+				send_80211_associationrequest2((aplist + i)->apdata);
+				(aplist + i)->apdata->tsrequest = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
 				}
 			}
 		}
-	if(deauthenticationflag == true)
+	if(disassociationflag == true) 
 		{
-		if(((aplist +i)->count % 8) == 4)
+		if(((aplist + i)->apdata->mfp & MFP_REQUIRED) != MFP_REQUIRED)
 			{
-			if(((aplist +i)->ie.flags & AP_MFP) == 0)
+			if((memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) || (tsakt - (aplist + i)->apdata->tsmacc) > TSMINUTE1)
 				{
-				if(((aplist +i)->ie.flags & APAKM_MASK) != 0)
-					{
-					if(memcmp(&macbc, (aplist +i)->macclient, ETH_ALEN) != 0)
-						{
-						send_80211_deauthentication_fm_ap((aplist +i)->macclient, (aplist +i)->macap, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-						send_80211_deauthentication_fm_client((aplist +i)->macclient, (aplist +i)->macap, WLAN_REASON_DEAUTH_LEAVING);
-						}
-					else send_80211_deauthentication_fm_ap(macbc, (aplist +i)->macap, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-					}
+				send_80211_disassociationcaa(macfrx->addr1, macfrx->addr2);
+				(aplist + i)->apdata->tsrequest = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
+				}
+			else
+				{
+				send_80211_disassociationcaa((aplist + i)->apdata->macc, macfrx->addr2);
+				(aplist + i)->apdata->tsrequest = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
 				}
 			}
 		}
-	if(reassociationflag == true)
-		{
-		if(((aplist +i)->count % 8) == 2)
-			{
-			if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_associationrequest_org(i);
-			}
-		if(((aplist +i)->count % 8) == 0)
-			{
-			if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_reassociationrequest(i);
-			}
-		}
-	(aplist +i)->count -= 1;
+	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
-memset((aplist + i), 0, APLIST_SIZE);
-(aplist +i)->tsakt = tsakt;
-(aplist +i)->tshold1 = tsakt;
-(aplist +i)->tsauth = tsfirst;
-(aplist +i)->count = attemptapmax;
-memcpy((aplist +i)->macap, macfrx->addr3, ETH_ALEN);
-memcpy((aplist +i)->macclient, &macbc, ETH_ALEN);
-(aplist +i)->status |= AP_BEACON;
-tagwalk_channel_essid_rsn(&(aplist +i)->ie, beaconlen, beacon->ie);
-if((aplist +i)->ie.channel == 0) (aplist +i)->ie.channel = (scanlist + scanlistindex)->channel;
-if((aplist +i)->ie.channel != (scanlist + scanlistindex)->channel) return;
-if(((aplist +i)->ie.flags & APIE_ESSID) == APIE_ESSID) (aplist +i)->status |= AP_ESSID;
-if(deauthenticationflag == true)
+(aplist + i)->tsakt = tsakt;
+memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->m1 = ' ';
+(aplist + i)->apdata->m1m2 = ' ';
+(aplist + i)->apdata->m1m2m3 = ' ';
+(aplist + i)->apdata->pmkid = ' ';
+(aplist + i)->apdata->akmstat = ' ';
+(aplist + i)->apdata->apcount = apcountmax;
+(aplist + i)->apdata->beacon = true;
+memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
+memcpy((aplist + i)->apdata->macc, macclientrg, ETH_ALEN);
+if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+else (aplist + i)->apdata->privacy = 'o';
+get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+if(apcountmax > 0)
 	{
-	if(((aplist +i)->ie.flags & AP_MFP) == 0)
+	if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel)
 		{
-		if(((aplist +i)->ie.flags & APAKM_MASK) != 0) send_80211_deauthentication_fm_ap(macbc, (aplist +i)->macap, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
+		if(((aplist + i)->apdata->akm == AKMPSK) || ((aplist + i)->apdata->akm == AKMPSK256))
+			{
+			if((aplist + i)->apdata->essidlen != 0)
+				{
+				send_80211_associationrequest2bc((aplist + i)->apdata);
+				(aplist + i)->apdata->tsrequest = tsakt;
+				(aplist + i)->apdata->apcount -= 1;
+				}
+			}
+		if((disassociationflag == true) && (((aplist + i)->apdata->mfp & MFP_REQUIRED) != MFP_REQUIRED))
+			{
+			send_80211_disassociationcaa(macfrx->addr1, macfrx->addr2);
+			(aplist + i)->apdata->tsrequest = tsakt;
+			(aplist + i)->apdata->apcount -= 1;
+			}
 		}
 	}
-if(associationflag == true)
-	{
-	if((((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) && (((aplist +i)->ie.flags & APIE_ESSID) == 0)) send_80211_authenticationrequest();
-	}
-if(proberequestflag == true)
-	{
-	if(((aplist +i)->ie.flags & APIE_ESSID) == 0) send_80211_proberequest_undirected();
-	}
-if(reassociationflag == true)
-	{
-	if(((aplist +i)->ie.flags & APRSNAKM_PSK) != 0) send_80211_associationrequest_org(i);
-	}
-writeepb();
-#ifdef HCXNMEAOUT
-if(fd_gps > 0) writegpwpl(i);
-#endif
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
-tshold = tsakt;
+writeepb();
 return;
 }
 /*===========================================================================*/
-/*===========================================================================*/
-#ifdef HCXNMEAOUT
-static inline __attribute__((always_inline)) void process_nmea0183(void)
-{
-static char *nmeaptr;
-static const char *gprmcid = "$GPRMC,";
-static const char *gpggaid = "$GPGGA,";
-
-if((nmealen = read(fd_gps, nmeabuffer, NMEA_SIZE)) < NMEA_MIN)
-	{
-	if(nmealen == - 1) errorcount++;
-	return;
-	}
-nmeapacketcount++;
-nmeabuffer[nmealen] = 0;
-if((nmeaptr = strstr(nmeabuffer, gprmcid)) != NULL)
-	{
-	gprmclen = 0;
-	while(gprmclen < (NMEA_MSG_MAX -2))
-		{
-		if(nmeaptr[gprmclen] == '*')
-			{
-			gprmclen += NMEA_CS_CR_LF_SIZE;
-			memcpy(&gprmc, nmeaptr, gprmclen);
-			break;
-			}
-		gprmclen++;
-		}
-	}
-if((nmeaptr = strstr(nmeabuffer, gpggaid)) != NULL)
-	{
-	gpggalen = 0;
-	while(gpggalen < (NMEA_MSG_MAX -2))
-		{
-		if(nmeaptr[gpggalen] == '*')
-			{
-			gpggalen += NMEA_CS_CR_LF_SIZE;
-			memcpy(&gpgga, nmeaptr, gpggalen);
-			return;
-			}
-		gpggalen++;
-		}
-	}
-return;
-}
-#endif
-/*===========================================================================*/
-static inline __attribute__((always_inline)) void process_packet_rca(void)
-{
-if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
-	{
-	if(packetlen == - 1) errorcount++;
-	return;
-	}
-rth = (rth_t*)packetptr;
-if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
-if(__hcx16le(rth->it_len) > packetlen)
-	{
-	errorcount++;
-	return;
-	}
-ieee82011ptr = packetptr + __hcx16le(rth->it_len);
-ieee82011len = packetlen - __hcx16le(rth->it_len);
-if(ieee82011len <= MAC_SIZE_RTS) return;
-macfrx = (ieee80211_mac_t*)ieee82011ptr;
-if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
-	{
-	payloadptr = ieee82011ptr +MAC_SIZE_LONG;
-	payloadlen = ieee82011len -MAC_SIZE_LONG;
-	}
-else
-	{
-	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
-	payloadlen = ieee82011len -MAC_SIZE_NORM;
-	}
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-packetcount++;
-if(macfrx->type == IEEE80211_FTYPE_MGMT)
-	{
-	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon_rca();
-	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse_rca();
-	}
-return;
-}
-/*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void process_packet(void)
 {
 if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
@@ -2785,29 +2950,28 @@ else
 	payloadlen = ieee82011len -MAC_SIZE_NORM;
 	}
 clock_gettime(CLOCK_REALTIME, &tspecakt);
-tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
+tsakt = ((u64)tspecakt.tv_sec * TSSECOND1) + tspecakt.tv_nsec;
 packetcount++;
 if(macfrx->type == IEEE80211_FTYPE_MGMT)
 	{
 	if(macfrx->subtype == IEEE80211_STYPE_BEACON) process80211beacon();
 	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP) process80211proberesponse();
-	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
-		{
-		if(memcmp(&macbc, macfrx->addr3, ETH_ALEN) == 0) process80211proberequest_undirected();
-		else process80211proberequest_directed();
-		}
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ) process80211proberequest();
 	else if(macfrx->subtype == IEEE80211_STYPE_AUTH) process80211authentication();
 	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_REQ) process80211associationrequest();
-	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_RESP) process80211associationresponse();
 	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_REQ)process80211reassociationrequest();
+	else if(macfrx->subtype == IEEE80211_STYPE_ASSOC_RESP) process80211associationresponse();
 	else if(macfrx->subtype == IEEE80211_STYPE_REASSOC_RESP) process80211reassociationresponse();
 	else if(macfrx->subtype == IEEE80211_STYPE_ACTION) process80211action();
 	}
 else if(macfrx->type == IEEE80211_FTYPE_CTL)
 	{
-	if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockack();
-	else if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211blockackreq();
-	else if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211pspoll();
+	if(macfrx->subtype == IEEE80211_STYPE_BACK_REQ) process80211rata();
+	else if(macfrx->subtype == IEEE80211_STYPE_BACK) process80211rata();
+	else if(macfrx->subtype == IEEE80211_STYPE_RTS) process80211rata();
+	else if(macfrx->subtype == IEEE80211_STYPE_VHT) process80211rata();
+	else if((macfrx->subtype == IEEE80211_STYPE_TRIGGER) && (memcmp(macbc, macfrx->addr1, 6) != 0)) process80211rata();
+//	else if(macfrx->subtype == IEEE80211_STYPE_PSPOLL) process80211pspoll();
 	}
 else if(macfrx->type == IEEE80211_FTYPE_DATA)
 	{
@@ -2820,17 +2984,147 @@ else if(macfrx->type == IEEE80211_FTYPE_DATA)
 		{
 		llcptr = payloadptr;
 		llc = (ieee80211_llc_t*)llcptr;
-		if((__hcx16be(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP)) process80211eapauthentication();
+		if((__hcx16be(llc->type) == LLC_TYPE_AUTH) && (llc->dsap == IEEE80211_LLC_SNAP) && (llc->ssap == IEEE80211_LLC_SNAP))
+			{
+			process80211eapauthentication();
+			return;
+			}
 		}
-	if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC) process80211qosnull();
-	else if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) process80211null();
+	if((macfrx->subtype &IEEE80211_STYPE_NULLFUNC) == IEEE80211_STYPE_NULLFUNC) process80211null();
+	else if((macfrx->subtype &IEEE80211_STYPE_QOS_NULLFUNC) == IEEE80211_STYPE_QOS_NULLFUNC) process80211qosnull();
+/*
+	else if((macfrx->subtype &IEEE80211_STYPE_DATA) == IEEE80211_STYPE_DATA)
 	else if((macfrx->subtype &IEEE80211_STYPE_QOS_DATA) == IEEE80211_STYPE_QOS_DATA) process80211qosdata();
+*/
+	}
+return;
+}
+/*===========================================================================*/
+static inline __attribute__((always_inline)) void send_80211_proberequest_undirected(void)
+{
+macftx = (ieee80211_mac_t*)&wltxbuffer[RTHTX_SIZE];
+macftx->type = IEEE80211_FTYPE_MGMT;
+macftx->subtype = IEEE80211_STYPE_PROBE_REQ;
+wltxbuffer[RTHTX_SIZE + 1] = 0;
+macftx->duration = HCXTXDURATION;
+memcpy(macftx->addr1, macbc, ETH_ALEN);
+memcpy(macftx->addr2, macclientrg, ETH_ALEN);
+memcpy(macftx->addr3, macbc, ETH_ALEN);
+macftx->sequence = __hcx16le(seqcounter2++ << 4);
+if(seqcounter1 > 4095) seqcounter4 = 1;
+memcpy(&wltxbuffer[RTHTX_SIZE + MAC_SIZE_NORM], &proberequest_undirected_data, PROBEREQUEST_UNDIRECTED_SIZE);
+if((write(fd_socket_tx, &wltxbuffer, RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)) == RTHTX_SIZE + MAC_SIZE_NORM + PROBEREQUEST_UNDIRECTED_SIZE)
+	{
+	errortxcount = 0;
+	return;
+	}
+#ifdef HCXDEBUG
+fprintf(fh_debug, "write_80211_proberequest_undirected failed: %s\n", strerror(errno));
+#endif
+errortxcount++;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static void get_radiotapfield(uint16_t rthlen)
+{
+static int i;
+static uint16_t pf;
+static rth_t *rth;
+static uint32_t *pp;
+
+rth = (rth_t*)packetptr;
+pf = RTHRX_SIZE;
+rtfrequency = 0;
+rtrssi = 0;
+if((rth->it_present & IEEE80211_RADIOTAP_EXT) == IEEE80211_RADIOTAP_EXT)
+	{
+	pp = (uint32_t*)packetptr;
+	for(i = 2; i < rthlen /4; i++)
+		{
+		#ifdef BIG_ENDIAN_HOST
+		pp[i] = byte_swap_32(pp[i]);
+		#endif
+		pf += 4;
+		if((pp[i] & IEEE80211_RADIOTAP_EXT) != IEEE80211_RADIOTAP_EXT) break;
+		}
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_TSFT) == IEEE80211_RADIOTAP_TSFT)
+	{
+	if(pf > rthlen) return;
+	if((pf %8) != 0) pf += 4;
+	pf += 8;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_FLAGS) == IEEE80211_RADIOTAP_FLAGS)
+	{
+	if(pf > rthlen) return;
+	pf += 1;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_RATE) == IEEE80211_RADIOTAP_RATE) pf += 1;
+if((rth->it_present & IEEE80211_RADIOTAP_CHANNEL) == IEEE80211_RADIOTAP_CHANNEL)
+	{
+	if(pf > rthlen) return;
+	if((pf %2) != 0) pf += 1;
+	rtfrequency = (packetptr[pf +1] << 8) + packetptr[pf];
+	pf += 4;
+	}
+if((rth->it_present & IEEE80211_RADIOTAP_FHSS) == IEEE80211_RADIOTAP_FHSS)
+		{
+		if((pf %2) != 0) pf += 1;
+		pf += 2;
+		}
+if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DBM_ANTSIGNAL) rtrssi = packetptr[pf];
+return;
+}
+/*===========================================================================*/
+static inline __attribute__((always_inline)) void process_packet_rcascan(void)
+{
+if((packetlen = read(fd_socket_rx, packetptr, PCAPNG_SNAPLEN)) < RTHRX_SIZE)
+	{
+	if(packetlen == -1) errorcount++;
+	return;
+	}
+rth = (rth_t*)packetptr;
+if((__hcx32le(rth->it_present) & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == 0) return;
+if(__hcx16le(rth->it_len) > packetlen)
+	{
+	errorcount++;
+	return;
+	}
+ieee82011ptr = packetptr + __hcx16le(rth->it_len);
+ieee82011len = packetlen - __hcx16le(rth->it_len);
+if(ieee82011len <= MAC_SIZE_RTS) return;
+macfrx = (ieee80211_mac_t*)ieee82011ptr;
+if((macfrx->from_ds == 1) && (macfrx->to_ds == 1))
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_LONG;
+	payloadlen = ieee82011len -MAC_SIZE_LONG;
+	}
+else
+	{
+	payloadptr = ieee82011ptr +MAC_SIZE_NORM;
+	payloadlen = ieee82011len -MAC_SIZE_NORM;
+	}
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+tsakt = ((u64)tspecakt.tv_sec * TSSECOND1) + tspecakt.tv_nsec;
+packetcount++;
+if(macfrx->type == IEEE80211_FTYPE_MGMT)
+	{
+	if(macfrx->subtype == IEEE80211_STYPE_BEACON)
+		{
+		get_radiotapfield(__hcx16le(rth->it_len));
+		process80211beacon_rcascan();
+		}
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_RESP)
+		{
+		get_radiotapfield(__hcx16le(rth->it_len));
+		process80211proberesponse_rcascan();
+		}
 	}
 return;
 }
 /*===========================================================================*/
 /*===========================================================================*/
-/* MAIN SCAN LOOP */
+/*SCAN LOOPs */
 static bool nl_scanloop(void)
 {
 static ssize_t i;
@@ -2853,18 +3147,15 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-#ifdef HCXNMEAOUT
-if(fd_gps > 0)
-	{
-	ev.data.fd = fd_gps;
-	ev.events = EPOLLIN;
-	if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_gps, &ev) < 0) return false;
-	epi++;
-	}
-#endif
-
 sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
+if(gpiostatusled > 0)
+	{
+	GPIO_SET = 1 << gpiostatusled;
+	nanosleep(&sleepled, NULL);
+	GPIO_CLR = 1 << gpiostatusled;
+	}
+if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
 	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
@@ -2874,7 +3165,7 @@ while(!wanteventflag)
 		if(errno != EINTR)
 			{
 			#ifdef HCXDEBUG
-			fprintf(fh_debug, "epret: %s\n", strerror(errno));
+			fprintf(fh_debug, "epret failed: %s\n", strerror(errno));
 			#endif
 			errorcount++;
 			}
@@ -2887,23 +3178,11 @@ while(!wanteventflag)
 			{
 			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
-			clock_gettime(CLOCK_REALTIME, &tspecakt);
-			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-			#ifdef HCXSTATUSOUT
-			show_realtime();
-			#endif
-			if((tsakt - tshold) > timehold)
+			if((lifetime % timehold) == 0)
 				{
 				scanlistindex++;
 				if(nl_set_frequency() == false) errorcount++;
-				tshold = tsakt;
 				}
-			#ifdef HCXNMEAOUT
-			if(((lifetime % 2) == 0) && (nmea2pcapflag == true))
-				{
-				if((gpggalen > 2) || (gprmclen > 2)) writecbnmea();
-				}
-			#endif
 			if((lifetime % 10) == 0)
 				{
 				if(gpiostatusled > 0)
@@ -2923,23 +3202,18 @@ while(!wanteventflag)
 				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % watchdogcountmax) == 0)
+			if((lifetime % timewatchdog) == 0)
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
-			if(beaconoffflag == false) send_80211_beacon();
 			}
-		#ifdef HCXNMEAOUT
-		else if(events[i].data.fd == fd_gps) process_nmea0183();
-		#endif
 		}
 	}
 return true;
 }
-/*===========================================================================*/
-/* RCA SCAN LOOP */
-static bool nl_scanloop_rca(const char *rcatypeflag)
+/*---------------------------------------------------------------------------*/
+static bool nl_scanloop_rds(void)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -2950,7 +3224,6 @@ static size_t packetcountlast = 0;
 static u64 timer1count;
 static struct timespec sleepled;
 
-tottime *= 5;
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
 ev.events = EPOLLIN;
@@ -2964,34 +3237,133 @@ epi++;
 
 sleepled.tv_sec = 0;
 sleepled.tv_nsec = GPIO_LED_DELAY;
+if(gpiostatusled > 0)
+	{
+	GPIO_SET = 1 << gpiostatusled;
+	nanosleep(&sleepled, NULL);
+	GPIO_CLR = 1 << gpiostatusled;
+	}
+
+if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
 	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
 	if(epret == -1)
 		{
-		if(errno != EINTR) errorcount++;
+		if(errno != EINTR)
+			{
+			#ifdef HCXDEBUG
+			fprintf(fh_debug, "epret failed: %s\n", strerror(errno));
+			#endif
+			errorcount++;
+			}
 		continue;
 		}
 	for(i = 0; i < epret; i++)
 		{
-		if(events[i].data.fd == fd_socket_rx) process_packet_rca();
+		if(events[i].data.fd == fd_socket_rx) process_packet();
 		else if(events[i].data.fd == fd_timer1)
 			{
 			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
-			clock_gettime(CLOCK_REALTIME, &tspecakt);
-			tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-			if((lifetime % 5) == 0) show_realtime_rca();
-			if((lifetime % 2) == 0)
+			if((lifetime % timehold) == 0)
 				{
+				show_realtime();
 				scanlistindex++;
 				if(nl_set_frequency() == false) errorcount++;
 				}
-			if(rcatypeflag[0] == 'a')
+			else if((lifetime % 5) == 0) show_realtime();
+			if((lifetime % 10) == 0)
 				{
-				send_80211_proberequest_undirected();
-				packetrcatxcount += 1;
+				if(gpiostatusled > 0)
+					{
+					GPIO_SET = 1 << gpiostatusled;
+					nanosleep(&sleepled, NULL);
+					GPIO_CLR = 1 << gpiostatusled;
+					}
+				if(gpiobutton > 0)
+					{
+					if(GET_GPIO(gpiobutton) > 0)
+						{
+						wanteventflag |= EXIT_ON_GPIOBUTTON;
+						if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
+						}
+					}
+				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
+			if((lifetime % timewatchdog) == 0)
+				{
+				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
+				packetcountlast = packetcount;
+				}
+			}
+		}
+	}
+return true;
+}
+/*---------------------------------------------------------------------------*/
+static bool nl_scanloop_rcascan()
+{
+static ssize_t i;
+static int fd_epoll = 0;
+static int epi = 0;
+static int epret = 0;
+static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
+static size_t packetcountlast = 0;
+static u64 timer1count;
+static struct timespec sleepled;
+
+if((fd_epoll= epoll_create(1)) < 0) return false;
+ev.data.fd = fd_socket_rx;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_socket_rx, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer1;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+sleepled.tv_sec = 0;
+sleepled.tv_nsec = GPIO_LED_DELAY;
+if(gpiostatusled > 0)
+	{
+	GPIO_SET = 1 << gpiostatusled;
+	nanosleep(&sleepled, NULL);
+	GPIO_CLR = 1 << gpiostatusled;
+	}
+
+if(nl_set_frequency() == false) errorcount++;
+while(!wanteventflag)
+	{
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
+	if(epret == -1)
+		{
+		if(errno != EINTR)
+			{
+			#ifdef HCXDEBUG
+			fprintf(fh_debug, "epret failed: %s\n", strerror(errno));
+			#endif
+			errorcount++;
+			}
+		continue;
+		}
+	for(i = 0; i < epret; i++)
+		{
+		if(events[i].data.fd == fd_socket_rx) process_packet_rcascan();
+		else if(events[i].data.fd == fd_timer1)
+			{
+			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
+			lifetime++;
+			if((lifetime % 5) == 0)
+				{
+				show_realtime_rca();
+				scanlistindex++;
+				if(nl_set_frequency() == false) errorcount++;
+				if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
 				}
 			if((lifetime % 10) == 0)
 				{
@@ -3009,9 +3381,10 @@ while(!wanteventflag)
 						if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 						}
 					}
+				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % watchdogcountmax) == 0)
+			if((lifetime % timewatchdog) == 0)
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
@@ -3074,8 +3447,8 @@ while(nla_ok(nlan, nlanremlen))
 		(freql + ipl->i)->channel = frequency_to_channel((freql + ipl->i)->frequency);
 		if((freql + ipl->i)->channel == 0) (freql + ipl->i)->frequency  = 0;
 		}
-	else if(nlan->nla_type == NL80211_FREQUENCY_ATTR_MAX_TX_POWER) (freql + ipl->i)->pwr = *((u32*)nla_data(nlan));
-	else if(nlan->nla_type == NL80211_FREQUENCY_ATTR_DISABLED) (freql + ipl->i)->status = IF_STAT_FREQ_DISABLED;
+	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_MAX_TX_POWER) (freql + ipl->i)->pwr = *((u32*)nla_data(nlan));
+	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_DISABLED) (freql + ipl->i)->status = IF_STAT_FREQ_DISABLED;
 	nlan = nla_next(nlan, &nlanremlen);
 	}
 if((freql + ipl->i)->frequency != 0) ipl->i++;
@@ -3094,41 +3467,97 @@ while(nla_ok(pos, nestremlen))
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_get_interfacelist(void)
+/*
+Linux Generic Netlink protocol
+    Netlink message header (type: 0x0025)
+    Command: NL80211_CMD_NEW_INTERFACE (7)
+    Family Version: 0
+    Reserved
+Linux 802.11 Netlink
+    Attribute: NL80211_ATTR_WIPHY
+        Len: 8
+        Type: 0x0001, NL80211_ATTR_WIPHY (1)
+        Attribute Value: 0x00000003 (3)
+    Attribute: NL80211_ATTR_IFNAME
+        Len: 12
+        Type: 0x0004, NL80211_ATTR_IFNAME (4)
+        Interface Name: hcxmon0
+    Attribute: NL80211_ATTR_IFTYPE
+        Len: 8
+        Type: 0x0005, NL80211_ATTR_IFTYPE (5)
+        Attribute Type: NL80211_IFTYPE_MONITOR (6)
+*/
+
+static inline bool nl_set_interface(void)
 {
-static ssize_t i;
 static size_t ii;
+static ssize_t i;
 static ssize_t msglen;
 static int nlremlen = 0;
-static u32 ifindex;
-static u32 wiphy;
 static struct nlmsghdr *nlh;
 static struct genlmsghdr *glh;
 static struct nlattr *nla;
 static struct nlmsgerr *nle;
-static char ifname[IF_NAMESIZE];
-static u8 vimac[ETH_ALEN];
+static u32 *wiphytmp;
+static u64 *wdevtmp;
+static u32 *ifidxtmp;
+static u8 *vimactmp;
+static char *ifnametmp;
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
 nlh->nlmsg_type = nlfamily;
-nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
 nlh->nlmsg_seq = nlseqcounter++;
 nlh->nlmsg_pid = hcxpid;
 i += sizeof(struct nlmsghdr);
 glh = (struct genlmsghdr*)(nltxbuffer + i);
-glh->cmd = NL80211_CMD_GET_INTERFACE;
+glh->cmd = NL80211_CMD_NEW_INTERFACE;
 glh->version = 1;
 glh->reserved = 0;
 i += sizeof(struct genlmsghdr);
+nla = (struct nlattr*)(nltxbuffer + i);
+nla->nla_len = 8;
+
+nla->nla_type = NL80211_ATTR_WIPHY;
+//*(u32*)nla_data(nla) = phyindex;
+i += 8;
+nla = (struct nlattr*)(nltxbuffer + i);
+nla->nla_len = 8;
+
+nla->nla_type = NL80211_ATTR_IFNAME;
+//memcpy(nla_data(nla), hcxname, hcxnamelen);
+i += 8;
+nla = (struct nlattr*)(nltxbuffer + i);
+nla->nla_len = 8;
+
+
+nla->nla_type = NL80211_ATTR_IFTYPE;
+*(u32*)nla_data(nla) = NL80211_IFTYPE_MONITOR;
+i += 8;
+if(((ifakttype & IFTYPEMONACT) == IFTYPEMONACT) && (activemonitorflag == true))
+	{
+	nla = (struct nlattr*)(nltxbuffer + i);
+	nla->nla_len = 8;
+	nla->nla_type = NL80211_ATTR_MNTR_FLAGS;
+	nla = (struct nlattr*)nla_data(nla);
+	nla->nla_len = 4;
+	nla->nla_type = NL80211_MNTR_FLAG_ACTIVE;
+	i += 8;
+	}
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
-ii = 0;
+
 while(1)
 	{
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
 	if(msglen == 0) break;
+	wiphytmp = NULL;
+	wdevtmp = NULL;
+	ifidxtmp = NULL;;
+	vimactmp = NULL;;
+	ifnametmp = NULL;
 	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, (u32)msglen); nlh = NLMSG_NEXT(nlh, msglen))
 		{
 		if(nlh->nlmsg_type == NLMSG_DONE) return true;
@@ -3146,26 +3575,120 @@ while(1)
 		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
-			if(nla->nla_type == NL80211_ATTR_IFINDEX) ifindex = *((u32*)nla_data(nla));
-			if(nla->nla_type == NL80211_ATTR_IFNAME) strncpy(ifname, nla_data(nla), IF_NAMESIZE -1);
-			if(nla->nla_type == NL80211_ATTR_WIPHY)
-				{
-				wiphy = *((u32*)nla_data(nla));
-				}
+			if(nla->nla_type == NL80211_ATTR_WDEV) wdevtmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_IFINDEX) ifidxtmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_IFNAME) ifnametmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_WIPHY) wiphytmp = nla_data(nla);
 			if(nla->nla_type == NL80211_ATTR_MAC)
 				{
-				if(nla->nla_len == 10) memcpy(vimac, nla_data(nla), ETH_ALEN);
+				if(nla->nla_len == 10) vimactmp = nla_data(nla);
 				}
 			nla = nla_next(nla, &nlremlen);
 			}
-		for(ii = 0; ii < INTERFACELIST_MAX; ii++)
+		for(ii = 0; ii < ifpresentlistcounter; ii++)
 			{
-			if((ifpresentlist + ii)->wiphy == wiphy)
+			if((ifpresentlist + ii)->wiphy == *(int*)wiphytmp)
 				{
-				(ifpresentlist + ii)->index = ifindex;
-				strncpy((ifpresentlist + ii)->name, ifname, IF_NAMESIZE);
-				memcpy((ifpresentlist + ii)->vimac, &vimac, ETH_ALEN);
-				break;
+				if(ifidxtmp != NULL) (ifpresentlist + ii)->index = *(u32*)ifidxtmp;
+				if(wdevtmp != NULL)
+					{
+					if((ifpresentlist + ii)->wdev != 0)
+						{
+						if((ifpresentlist + ii)->wdev != *(u64*)wdevtmp) (ifpresentlist + ii)->type |= IF_IS_SHARED;
+						}
+					(ifpresentlist + ii)->wdev = *(u64*)wdevtmp;
+					}
+				if(vimactmp != NULL)memcpy((ifpresentlist + ii)->vimac, vimactmp, ETH_ALEN);
+				if(ifnametmp != NULL)strncpy((ifpresentlist + ii)->name, ifnametmp, IF_NAMESIZE);
+				}
+			}
+		}
+	}
+return false;
+}
+/*---------------------------------------------------------------------------*/
+static bool nl_get_interfacelist(void)
+{
+static size_t ii;
+static ssize_t i;
+static ssize_t msglen;
+static int nlremlen = 0;
+static struct nlmsghdr *nlh;
+static struct genlmsghdr *glh;
+static struct nlattr *nla;
+static struct nlmsgerr *nle;
+static u32 *wiphytmp;
+static u64 *wdevtmp;
+static u32 *ifidxtmp;
+static u8 *vimactmp;
+static char *ifnametmp;
+
+i = 0;
+nlh = (struct nlmsghdr*)nltxbuffer;
+nlh->nlmsg_type = nlfamily;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
+nlh->nlmsg_seq = nlseqcounter++;
+nlh->nlmsg_pid = hcxpid;
+i += sizeof(struct nlmsghdr);
+glh = (struct genlmsghdr*)(nltxbuffer + i);
+glh->cmd = NL80211_CMD_GET_INTERFACE;
+glh->version = 1;
+glh->reserved = 0;
+i += sizeof(struct genlmsghdr);
+nlh->nlmsg_len = i;
+if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
+while(1)
+	{
+	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
+	if(msglen == -1) break;
+	if(msglen == 0) break;
+	wiphytmp = NULL;
+	wdevtmp = NULL;
+	ifidxtmp = NULL;;
+	vimactmp = NULL;;
+	ifnametmp = NULL;
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, (u32)msglen); nlh = NLMSG_NEXT(nlh, msglen))
+		{
+		if(nlh->nlmsg_type == NLMSG_DONE) return true;
+		if(nlh->nlmsg_type == NLMSG_ERROR)
+			{
+			nle = (struct nlmsgerr*)(nlrxbuffer + sizeof(struct nlmsghdr));
+			if(nle->error == 0) return true;
+			errorcount++;
+			nlfamily = 0;
+			return false;
+			}
+		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
+		if(glh->cmd != NL80211_CMD_NEW_INTERFACE) continue;
+		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
+		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
+		while(nla_ok(nla, nlremlen))
+			{
+			if(nla->nla_type == NL80211_ATTR_WDEV) wdevtmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_IFINDEX) ifidxtmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_IFNAME) ifnametmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_WIPHY) wiphytmp = nla_data(nla);
+			if(nla->nla_type == NL80211_ATTR_MAC)
+				{
+				if(nla->nla_len == 10) vimactmp = nla_data(nla);
+				}
+			nla = nla_next(nla, &nlremlen);
+			}
+		for(ii = 0; ii < ifpresentlistcounter; ii++)
+			{
+			if((ifpresentlist + ii)->wiphy == *(int*)wiphytmp)
+				{
+				if(ifidxtmp != NULL) (ifpresentlist + ii)->index = *(u32*)ifidxtmp;
+				if(wdevtmp != NULL)
+					{
+					if((ifpresentlist + ii)->wdev != 0)
+						{
+						if((ifpresentlist + ii)->wdev != *(u64*)wdevtmp) (ifpresentlist + ii)->type |= IF_IS_SHARED;
+						}
+					(ifpresentlist + ii)->wdev = *(u64*)wdevtmp;
+					}
+				if(vimactmp != NULL)memcpy((ifpresentlist + ii)->vimac, vimactmp, ETH_ALEN);
+				if(ifnametmp != NULL)strncpy((ifpresentlist + ii)->name, ifnametmp, IF_NAMESIZE);
 				}
 			}
 		}
@@ -3295,10 +3818,10 @@ while(1)
 return false;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_get_interfacecapabilities(void)
+static bool nl_get_interfacephylist(void)
 {
 static ssize_t i;
-static ssize_t ii;
+static size_t ii;
 static ssize_t msglen;
 static int nlremlen;
 static size_t dnlen;
@@ -3324,12 +3847,11 @@ i += sizeof(struct genlmsghdr);
 nla = (struct nlattr*)(nltxbuffer + i);
 nla->nla_len = 4;
 nla->nla_type = NL80211_ATTR_SPLIT_WIPHY_DUMP;
-*(u32*)nla_data(nla) = ifaktindex;
 i += 4;
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
 ii = 0;
-while(1)
+while(ii <= ifpresentlistcounter)
 	{
 	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
 	if(msglen == -1) break;
@@ -3355,7 +3877,7 @@ while(1)
 				{
 				(ifpresentlist + ii)->wiphy = *((u32*)nla_data(nla));
 				snprintf(driverfmt, DRIVER_FORMAT, "/sys/class/ieee80211/phy%d/device/driver", (ifpresentlist + ii)->wiphy);
-				memset(&driverlink, 0, DRIVER_LINK);
+				memset(driverlink, 0, DRIVER_LINK);
 				if((dnlen = readlink(driverfmt, driverlink, DRIVER_LINK)) > 0)
 					{
 					drivername = basename(driverlink);
@@ -3375,7 +3897,55 @@ while(1)
 			nla = nla_next(nla, &nlremlen);
 			}
 		}
-	if(ii < INTERFACELIST_MAX) ii++;
+	ii += 1;
+	}
+return false;
+}
+/*---------------------------------------------------------------------------*/
+static bool nl_get_interfacephycount(void)
+{
+static ssize_t i;
+static ssize_t msglen;
+static struct nlmsghdr *nlh;
+static struct genlmsghdr *glh;
+static struct nlattr *nla;
+static struct nlmsgerr *nle;
+
+nlh = (struct nlmsghdr*)nltxbuffer;
+nlh->nlmsg_type = nlfamily;
+nlh->nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP | NLM_F_ACK;
+nlh->nlmsg_seq = nlseqcounter++;
+nlh->nlmsg_pid = hcxpid;
+i += sizeof(struct nlmsghdr);
+glh = (struct genlmsghdr*)(nltxbuffer + i);
+glh->cmd = NL80211_CMD_GET_WIPHY;
+glh->version = 1;
+glh->reserved = 0;
+i += sizeof(struct genlmsghdr);
+nla = (struct nlattr*)(nltxbuffer + i);
+nla->nla_len = 4;
+nla->nla_type = NL80211_ATTR_SPLIT_WIPHY_DUMP;
+i += 4;
+nlh->nlmsg_len = i;
+if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
+ifpresentlistcounter = 0;
+while(1)
+	{
+	msglen = read(fd_socket_nl, &nlrxbuffer, NLRX_SIZE);
+	if(msglen == -1) break;
+	if(msglen == 0) break;
+	for(nlh = (struct nlmsghdr*)nlrxbuffer; NLMSG_OK(nlh, (u32)msglen); nlh = NLMSG_NEXT(nlh, msglen))
+		{
+		if(nlh->nlmsg_type == NLMSG_DONE) return true;
+		if(nlh->nlmsg_type == NLMSG_ERROR)
+			{
+			nle = (struct nlmsgerr*)(nlrxbuffer + sizeof(struct nlmsghdr));
+			if(nle->error == 0) return true;
+			errorcount++;
+			return 0;
+			}
+		}
+	ifpresentlistcounter += 1;
 	}
 return false;
 }
@@ -3594,7 +4164,7 @@ i += sizeof(struct ifinfomsg);
 rta = (struct rtattr*)(nltxbuffer+ i);
 rta->rta_len = 10;
 rta->rta_type = IFLA_ADDRESS;
-memcpy(&nltxbuffer[i + 4], &macclientrg, ETH_ALEN +2);
+memcpy(nltxbuffer + i + 4, macclientrg, ETH_ALEN +2);
 i += 12;
 nlh->nlmsg_len = i;
 if((write(fd_socket_rt, nltxbuffer, i)) != i) return false;
@@ -3710,6 +4280,8 @@ return false;
 /*---------------------------------------------------------------------------*/
 static bool rt_get_interfacelist(void)
 {
+
+static size_t ii;
 static ssize_t i;
 static ssize_t msglen;
 static struct nlmsghdr *nlh;
@@ -3717,7 +4289,7 @@ static struct ifinfomsg *ifih;
 static struct nlmsgerr *nle;
 static struct rtattr *rta;
 static int rtaremlen;
-static u8 hwmac[ETH_ALEN];
+static u8 *hwmactmp;
 
 i = 0;
 nlh = (struct nlmsghdr*)nltxbuffer;
@@ -3759,24 +4331,28 @@ while(1)
 		if((ifih->ifi_flags & IFF_UP) == IFF_UP) ifaktstatus |= IF_STAT_UP;
 		rta = (struct rtattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct ifinfomsg));
 		rtaremlen = NLMSG_PAYLOAD(nlh, 0) - sizeof(struct ifinfomsg);
+		hwmactmp = NULL;
 		while(RTA_OK(rta, rtaremlen))
 			{
 			#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 			if(rta->rta_type == IFLA_PERM_ADDRESS)
 				{
-				if(rta->rta_len == 10) memcpy(hwmac, rta_data(rta), ETH_ALEN);
+				if(rta->rta_len == 10) hwmactmp = rta_data(rta);
 				}
 			#else
 			if(rta->rta_type == IFLA_ADDRESS)
 				{
-				if(rta->rta_len == 10) memcpy(hwmac, rta_data(rta), ETH_ALEN);
+				if(rta->rta_len == 10) hwmactmp = rta_data(rta);
 				}
 			#endif
 			rta = RTA_NEXT(rta, rtaremlen);
 			}
-		for(i = 0; i < INTERFACELIST_MAX; i++)
+		for(ii = 0; ii < ifpresentlistcounter; ii++)
 			{
-			if((ifpresentlist +i)->index == ifih->ifi_index) memcpy((ifpresentlist +i)->hwmac, &hwmac, ETH_ALEN);
+			if((ifpresentlist + ii)->index == ifih->ifi_index)
+				{
+				if(hwmactmp != 0) memcpy((ifpresentlist + ii)->hwmac, hwmactmp, ETH_ALEN);
+				}
 			}
 		}
 	}
@@ -3809,7 +4385,7 @@ i += sizeof(struct genlmsghdr);
 nla = (struct nlattr*)(nltxbuffer + i);
 nla->nla_type = CTRL_ATTR_FAMILY_NAME;
 i += sizeof(struct nlattr);
-memcpy(nltxbuffer +i, NL80211_GENL_NAME, sizeof(NL80211_GENL_NAME));
+memcpy(nltxbuffer + i, NL80211_GENL_NAME, sizeof(NL80211_GENL_NAME));
 i += sizeof(NL80211_GENL_NAME);
 nla->nla_len = sizeof(struct nlattr) + sizeof(NL80211_GENL_NAME);
 nlh->nlmsg_len = i;
@@ -3852,9 +4428,9 @@ size_t i;
 if(ufrq == 0) return;
 for(i = 0; i < (FREQUENCYLIST_MAX -1); i++)
 	{
-	if((ifaktfrequencylist +i)->status == 0)
+	if((ifaktfrequencylist + i)->status == 0)
 		{
-		if((ifaktfrequencylist +i)->frequency == ufrq)
+		if((ifaktfrequencylist + i)->frequency == ufrq)
 			{
 			(scanlist + scanlistindex)->frequency = ufrq;
 			(scanlist + scanlistindex)->channel = frequency_to_channel(ufrq);
@@ -3867,7 +4443,7 @@ for(i = 0; i < (FREQUENCYLIST_MAX -1); i++)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static bool set_interface(bool interfacefrequencyflag, char *userfrequencylistname, char *userchannellistname, bool monitorflag)
+static bool set_interface(bool interfacefrequencyflag, char *userfrequencylistname, char *userchannellistname)
 {
 static size_t i;
 static char *ufld = NULL;
@@ -3880,13 +4456,14 @@ if(ifaktindex == 0)
 	{
 	for(i = 0; i < ifpresentlistcounter; i++)
 		{
-		if(((ifpresentlist +i)->type & IF_HAS_NLMON) == IF_HAS_NLMON)
+		if(((ifpresentlist + i)->type & IF_HAS_NLMON) == IF_HAS_NLMON)
 			{
-			ifaktindex = (ifpresentlist +i)->index;
-			ifakttype = (ifpresentlist +i)->type;
-			memcpy(&ifaktname, (ifpresentlist +i)->name, IF_NAMESIZE);
-			memcpy(&ifakthwmac, (ifpresentlist +i)->hwmac, ETH_ALEN);
-			ifaktfrequencylist = (ifpresentlist +i)->frequencylist;
+			ifaktwiphy = (ifpresentlist + i)->wiphy;
+			ifaktindex = (ifpresentlist + i)->index;
+			ifakttype = (ifpresentlist + i)->type;
+			memcpy(ifaktname, (ifpresentlist + i)->name, IF_NAMESIZE);
+			memcpy(ifakthwmac, (ifpresentlist + i)->hwmac, ETH_ALEN);
+			ifaktfrequencylist = (ifpresentlist + i)->frequencylist;
 			break;
 			}
 		}
@@ -3895,12 +4472,12 @@ else
 	{
 	for(i = 0; i < ifpresentlistcounter; i++)
 		{
-		if((ifpresentlist +i)->index == ifaktindex)
+		if((ifpresentlist + i)->index == ifaktindex)
 			{
-			if(((ifpresentlist +i)->type & IF_HAS_NLMON) == 0) return false;
-			ifakttype = (ifpresentlist +i)->type;
-			memcpy(&ifakthwmac, (ifpresentlist +i)->hwmac, ETH_ALEN);
-			ifaktfrequencylist = (ifpresentlist +i)->frequencylist;
+			if(((ifpresentlist + i)->type & IF_HAS_NLMON) == 0) return false;
+			ifakttype = (ifpresentlist + i)->type;
+			memcpy(ifakthwmac, (ifpresentlist + i)->hwmac, ETH_ALEN);
+			ifaktfrequencylist = (ifpresentlist + i)->frequencylist;
 			break;
 			}
 		}
@@ -3918,14 +4495,14 @@ if(interfacefrequencyflag == true)
 	{
 	for(i = 0; i < (FREQUENCYLIST_MAX -1); i++)
 		{
-		if((ifaktfrequencylist +i)->status == 0)
+		if((ifaktfrequencylist + i)->status == 0)
 			{
-			(scanlist + scanlistindex)->frequency = (ifaktfrequencylist +i)->frequency;
-			(scanlist + scanlistindex)->channel = (ifaktfrequencylist +i)->channel;
+			(scanlist + scanlistindex)->frequency = (ifaktfrequencylist + i)->frequency;
+			(scanlist + scanlistindex)->channel = (ifaktfrequencylist + i)->channel;
 			scanlistindex++;
 			if(scanlistindex >= (FREQUENCYLIST_MAX -1)) break;
 			}
-		if((ifaktfrequencylist +i)->frequency == 0) break;
+		if((ifaktfrequencylist + i)->frequency == 0) break;
 		}
 	}
 else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
@@ -3974,7 +4551,6 @@ else
 	}
 scanlistindex = 0;
 if(nl_set_frequency() == false) return false;
-if(monitorflag == false) show_interfacecapabilities2();
 return true;
 }
 /*===========================================================================*/
@@ -4001,16 +4577,45 @@ if(nlfamily == 0)
 	return false;
 	}
 nl_get_regulatorydomain();
-if(nl_get_interfacecapabilities() == false) return false;
-if(nl_get_interfacelist() == false) return false;
-for(i = 0; i < INTERFACELIST_MAX -1; i++)
+if(nl_get_interfacephycount() == false) return false;
+if((ifpresentlist = (interface_t*)calloc(ifpresentlistcounter, INTERFACELIST_SIZE)) == NULL) return false;
+for(i = 0; i < ifpresentlistcounter; i++)
 	{
-	if((ifpresentlist +i)->index == 0) break;
-	ifpresentlistcounter++;
+	if(((ifpresentlist + i)->frequencylist = (frequencylist_t*)calloc(FREQUENCYLIST_MAX, FREQUENCYLIST_SIZE)) == NULL) return false;
 	}
+#ifdef HCXDEBUG
+debugtms = clock();
+#endif
+if(nl_get_interfacephylist() == false) return false;
+#ifdef HCXDEBUG
+debugtms = clock() - debugtms; 
+debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
+fprintf(fh_debug, "nl_get_interfacephylist took %f seconds to execute \n", debugtmstaken); 
+#endif
+
+#ifdef HCXDEBUG
+debugtms = clock();
+#endif
+if(nl_get_interfacelist() == false) return false;
+#ifdef HCXDEBUG
+debugtms = clock() - debugtms; 
+debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
+fprintf(fh_debug, "nl_get_interfacelist took %f seconds to execute \n", debugtmstaken); 
+#endif
+
+#ifdef HCXDEBUG
+debugtms = clock();
+#endif
 if(rt_get_interfacelist() == false) return false;
-if(ifpresentlist->index == 0) return false;
-qsort(ifpresentlist, ifpresentlistcounter, INTERFACELIST_SIZE, sort_interfacelist_by_index);
+#ifdef HCXDEBUG
+debugtms = clock() - debugtms; 
+debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
+fprintf(fh_debug, "rt_get_interfacelist took %f seconds to execute \n", debugtmstaken); 
+#endif
+
+
+if(ifpresentlistcounter == 0) return false;
+qsort(ifpresentlist, ifpresentlistcounter, INTERFACELIST_SIZE, sort_interfacelist_by_wiphy);
 return true;
 }
 /*===========================================================================*/
@@ -4032,7 +4637,7 @@ priolen = sizeof(prioval);
 prioval = 20;
 if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
 memset(&saddr, 0, sizeof(saddr));
-saddr.sll_family = PF_PACKET;
+saddr.sll_family = AF_PACKET;
 saddr.sll_ifindex = ifaktindex;
 saddr.sll_protocol = htons(ETH_P_ALL);
 saddr.sll_halen = ETH_ALEN;
@@ -4088,7 +4693,7 @@ if(bpf.len > 0)
 		}
 	}
 memset(&saddr, 0, sizeof(saddr));
-saddr.sll_family = PF_PACKET;
+saddr.sll_family = AF_PACKET;
 saddr.sll_ifindex = ifaktindex;
 saddr.sll_protocol = htons(ETH_P_ALL);
 saddr.sll_halen = ETH_ALEN;
@@ -4104,81 +4709,6 @@ while((!wanteventflag) || (c != 0))
 	}
 return true;
 }
-/*===========================================================================*/
-/* GPS */
-#ifdef HCXNMEAOUT
-static bool open_nmea0183_file(char *hcxposoutname)
-{
-static int c;
-static struct stat statinfo;
-static char *hcxposfilename = NULL;
-static char hcxposname[PATH_MAX];
-
-if(hcxposoutname == NULL)
-	{
-	c = 0;
-	snprintf(hcxposname, PATH_MAX, "%s.nmea", timestring1);
-	while(stat(hcxposname, &statinfo) == 0)
-		{
-		snprintf(hcxposname, PATH_MAX, "%s-%02d.nmea", timestring1, c);
-		c++;
-		}
-	hcxposfilename = hcxposname;
-	}
-else hcxposfilename = hcxposoutname;
-if((fd_hcxpos = open(hcxposfilename, O_WRONLY | O_CREAT, 0644)) < 0) return false;
-return true;
-}
-/*---------------------------------------------------------------------------*/
-static bool open_socket_gpsd(char *hcxposoutname)
-{
-static int socket_gps_flags;
-static struct sockaddr_in gpsd_addr;
-static const char *gpsd_enable_nmea = "?WATCH={\"enable\":true,\"json\":false,\"nmea\":true}";
-
-if((fd_gps = socket(AF_INET, SOCK_STREAM, 0)) < 0) return false;
-memset(&gpsd_addr, 0, sizeof(struct sockaddr_in));
-gpsd_addr.sin_family = AF_INET;
-gpsd_addr.sin_port = htons(2947);
-gpsd_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-if(connect(fd_gps, (struct sockaddr*) &gpsd_addr, sizeof(gpsd_addr)) < 0) return false;
-if(fcntl(fd_gps, F_SETFL, socket_gps_flags | O_NONBLOCK) < 0) return false;
-if(write(fd_gps, gpsd_enable_nmea, 47) != 47) return false;
-if(open_nmea0183_file(hcxposoutname) == false) return false;
-return true;
-}
-/*---------------------------------------------------------------------------*/
-static bool open_device_nmea0183(char *nmea0183name, char *hcxposoutname)
-{
-static struct termios tty;
-
-if((fd_gps = open(nmea0183name, O_RDONLY | O_NONBLOCK)) < 0) return false;
-if(flock(fd_gps, LOCK_EX) < 0) return false;
-if(tcgetattr(fd_gps, &tty) < 0) return false;
-tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
-tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
-tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size
-tty.c_cflag |= CS8; // 8 bits per byte (most common)
-tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control (most common)
-tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = 1)
-tty.c_lflag &= ~ICANON;
-tty.c_lflag &= ~ECHO; // Disable echo
-tty.c_lflag &= ~ECHOE; // Disable erasure
-tty.c_lflag &= ~ECHONL; // Disable new-line echo
-tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
-tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
-tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
-tty.c_oflag &= ~OPOST; // Prevent special interpretation of output bytes (e.g. newline chars)
-tty.c_oflag &= ~ONLCR; // Prevent conversion of newline to carriage return/line feed
-tty.c_cc[VTIME] = 10;    // Wait for up to 1s (10 deciseconds), returning as soon as any data is received.
-tty.c_cc[VMIN] = 0;
-cfsetispeed(&tty, B9600);
-cfsetospeed(&tty, B9600);
-if (tcsetattr(fd_gps, TCSANOW, &tty) < 0) return false;
-if(open_nmea0183_file(hcxposoutname) == false) return false;
-return true;
-}
-#endif
 /*===========================================================================*/
 /* CONTROL SOCKETS */
 static void close_sockets(void)
@@ -4256,18 +4786,41 @@ tval1.it_interval.tv_nsec = TIMER1_INTERVAL_NSEC;
 if(timerfd_settime(fd_timer1, 0, &tval1, NULL) == -1) return false;
 return true;
 }
-/*---------------------------------------------------------------------------*/
-static bool set_timer_rca(void)
+/*===========================================================================*/
+/* FTC */
+static void save_ftc(void)
 {
-static struct itimerspec tval1;
+static char ftcname[PATH_MAX] = { 0 };
 
-if((fd_timer1 = timerfd_create(CLOCK_BOOTTIME, 0)) < 0) return false;
-tval1.it_value.tv_sec = TIMER_RCA_VALUE_SEC;
-tval1.it_value.tv_nsec = TIMER_RCA_VALUE_NSEC;
-tval1.it_interval.tv_sec = TIMER_RCA_INTERVAL_SEC;
-tval1.it_interval.tv_nsec = TIMER_RCA_INTERVAL_NSEC;
-if(timerfd_settime(fd_timer1, 0, &tval1, NULL) == -1) return false;
-return true;
+strncpy(ftcname, pwd->pw_dir, PATH_MAX -10);
+strcat(ftcname, "/.hcxftc");
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+if((fd_fakeclock = open(ftcname, O_WRONLY | O_TRUNC | O_CREAT, 0644)) > 0)
+	{
+	if(write(fd_fakeclock, &tspecakt, sizeof(struct timespec)) != sizeof(struct timespec)) fprintf(stderr, "failed to write timestamp\n");
+	close(fd_fakeclock);
+	}
+return;
+}
+/*---------------------------------------------------------------------------*/
+static void set_ftc(void)
+{
+static struct timespec tssaved = { 0 };
+static char ftcname[PATH_MAX] = { 0 };
+
+clock_gettime(CLOCK_REALTIME, &tspecakt);
+strncpy(ftcname, pwd->pw_dir, PATH_MAX -10);
+strcat(ftcname, "/.hcxftc");
+if((fd_fakeclock = open(ftcname, O_RDONLY)) > 0)
+	{
+	if(read(fd_fakeclock, &tssaved, sizeof(struct timespec)) == sizeof(struct timespec))
+		{
+		if(tspecakt.tv_sec < tssaved.tv_sec) clock_settime(CLOCK_REALTIME, &tssaved);
+		}
+	close(fd_fakeclock);
+	}
+save_ftc();
+return;
 }
 /*===========================================================================*/
 /* SIGNALHANDLER */
@@ -4293,17 +4846,10 @@ return true;
 static void init_values(void)
 {
 static size_t i;
-static struct timespec waitfordevice;
 
-waitfordevice.tv_sec = 1;
-waitfordevice.tv_nsec = 0;
 clock_gettime(CLOCK_REALTIME, &tspecakt);
-tsfirst = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-nanosleep(&waitfordevice, NULL);
-clock_gettime(CLOCK_REALTIME, &tspecakt);
-tsakt = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-tshold = ((u64)tspecakt.tv_sec * 1000000000ULL) + tspecakt.tv_nsec;
-strftime(timestring1, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
+tsakt = ((u64)tspecakt.tv_sec * TSSECOND1) + tspecakt.tv_nsec;
+strftime(timestring, TIMESTRING_LEN, "%Y%m%d%H%M%S", localtime(&tspecakt.tv_sec));
 seed += (unsigned int)tspecakt.tv_nsec & 0xffffffff;
 srand(seed);
 ouiaprg = (vendoraprg[rand() % ((VENDORAPRG_SIZE / sizeof(int)))]) &0xffffff;
@@ -4333,21 +4879,20 @@ macclientrg[1] = (ouiclientrg >> 8) & 0xff;
 macclientrg[0] = (ouiclientrg >> 16) & 0xff;
 strncpy(weakcandidate, WEAKCANDIDATEDEF, PSK_MAX);
 replaycountrg = (rand() % 0xfff) + 0xf000;
-eapolm1data[0x17] = (replaycountrg >> 8) &0xff;
-eapolm1data[+0x18] = replaycountrg &0xff;
+eapolm1wpa1data[0x17] = (replaycountrg >> 8) &0xff;
+eapolm1wpa1data[+0x18] = replaycountrg &0xff;
+eapolm1wpa2data[0x17] = (replaycountrg >> 8) &0xff;
+eapolm1wpa2data[+0x18] = replaycountrg &0xff;
 for(i = 0; i < 32; i++)
 	{
 	anoncerg[i] = rand() % 0xff;
-	eapolm1data[i + 0x19] = anoncerg[i];
+	eapolm1wpa1data[i + 0x19] = anoncerg[i];
+	eapolm1wpa2data[i + 0x19] = anoncerg[i];
 	snoncerg[i] = rand() % 0xff;
 	}
 packetptr = &epb[EPB_SIZE];
-memcpy(&wltxbuffer, &rthtxdata, RTHTX_SIZE);
-memcpy(&epbown[EPB_SIZE], &rthtxdata, RTHTX_SIZE);
-#ifdef HCXNMEAOUT
-memcpy(&gpwpl, &gpwplid, NMEA_GPWPLID_SIZE);
-memcpy(&gptxt, &gptxtid, NMEA_GPTXTID_SIZE);
-#endif
+memcpy(wltxbuffer, rthtxdata, RTHTX_SIZE);
+memcpy(epbown + EPB_SIZE, rthtxdata, RTHTX_SIZE);
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -4355,16 +4900,30 @@ static void close_lists(void)
 {
 static size_t i;
 
-if(maclist != NULL) free(maclist);
-if(clientlist != NULL) free(clientlist);
+for(i = 0; i < CALIST_MAX; i++)
+	{
+	if((calist + i)->cadata != NULL) free((calist + i)->cadata);
+	}
+if(calist != NULL) free(calist);
+
+for(i = 0; i < APRGLIST_MAX; i++)
+	{
+	if((aprglist + i)->apdata != NULL) free((aprglist + i)->apdata);
+	}
 if(aprglist != NULL) free(aprglist);
+
+for(i = 0; i < APLIST_MAX; i++)
+	{
+	if((aplist + i)->apdata != NULL) free((aplist + i)->apdata);
+	}
 if(aplist != NULL) free(aplist);
+
 if(scanlist != NULL) free(scanlist);
 if(ifpresentlist != NULL)
 	{
-	for(i = 0; i < INTERFACELIST_MAX; i++)
+	for(i = 0; i < ifpresentlistcounter; i++)
 		{
-		if((ifpresentlist +i)->frequencylist != NULL) free((ifpresentlist +i)->frequencylist);
+		if((ifpresentlist + i)->frequencylist != NULL) free((ifpresentlist + i)->frequencylist);
 		}
 	free(ifpresentlist);
 	}
@@ -4388,13 +4947,21 @@ ssize_t i;
 
 if((scanlist = (frequencylist_t*)calloc(SCANLIST_MAX, FREQUENCYLIST_SIZE)) == NULL) return false;
 if((aplist = (aplist_t*)calloc(APLIST_MAX, APLIST_SIZE)) == NULL) return false;
-if((aprglist = (aprglist_t*)calloc(APRGLIST_MAX, APRGLIST_SIZE)) == NULL) return false;
-if((clientlist = (clientlist_t*)calloc(CLIENTLIST_MAX, CLIENTLIST_SIZE)) == NULL) return false;
-if((maclist = (maclist_t*)calloc(MACLIST_MAX, MACLIST_SIZE)) == NULL) return false;
-if((ifpresentlist = (interface_t*)calloc(INTERFACELIST_MAX, INTERFACELIST_SIZE)) == NULL) return false;
-for(i = 0; i < INTERFACELIST_MAX; i++)
+for(i = 0; i < APLIST_MAX; i++)
 	{
-	if(((ifpresentlist +i)->frequencylist = (frequencylist_t*)calloc(FREQUENCYLIST_MAX, FREQUENCYLIST_SIZE)) == NULL) return false;
+	if(((aplist + i)->apdata = (apdata_t*)calloc(1, APDATA_SIZE)) == NULL) return false;
+	}
+
+if((aprglist = (aplist_t*)calloc(APRGLIST_MAX, APLIST_SIZE)) == NULL) return false;
+for(i = 0; i < APRGLIST_MAX; i++)
+	{
+	if(((aprglist + i)->apdata = (apdata_t*)calloc(1, APDATA_SIZE)) == NULL) return false;
+	}
+
+if((calist = (calist_t*)calloc(CALIST_MAX, CALIST_SIZE)) == NULL) return false;
+for(i = 0; i < CALIST_MAX; i++)
+	{
+	if(((calist + i)->cadata = (cadata_t*)calloc(1, CADATA_SIZE)) == NULL) return false;
 	}
 return true;
 }
@@ -4477,7 +5044,7 @@ return true;
 }
 /*---------------------------------------------------------------------------*/
 #ifdef HCXWANTLIBPCAP
-static bool compile_bpf(char *bpfs)
+static bool compile_bpf(char *bpfs, int bpfmode)
 {
 static u16 i;
 static pcap_t *hpcap = NULL;
@@ -4488,14 +5055,28 @@ if((hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN)) == NULL)
 	{
 	fprintf(stderr, "to 0pen libpcap\n");
 	return false;
-}	
+	}
 if(pcap_compile(hpcap, &bpfp, bpfs, 1, 0))
 	{
 	fprintf(stderr, "failed to compile BPF\n");
 	return false;
 	}
-bpfins = bpfp.bf_insns;
-for(i = 0; i < bpfp.bf_len; ++bpfins, ++i) fprintf(stdout, "%u %u %u %u\n", bpfins->code, bpfins->jt, bpfins->jf, bpfins->k);
+
+if(bpfmode == BPFD_HCX)
+	{
+	bpfins = bpfp.bf_insns;
+	for(i = 0; i < bpfp.bf_len; ++bpfins, ++ i) fprintf(stdout, "%u %u %u %u\n", bpfins->code, bpfins->jt, bpfins->jf, bpfins->k);
+	}
+else if(bpfmode == BPFD_ASM) bpf_dump(&bpfp, 1);
+else if(bpfmode == BPFD_C) bpf_dump(&bpfp, 2);
+else if(bpfmode == BPFD_TCPDUMP) bpf_dump(&bpfp, 3);
+else if(bpfmode == BPFD_DBG)
+	{
+	bpfins = bpfp.bf_insns;
+	fprintf(stdout, "%u", bpfp.bf_len);
+	for(i = 0; i < bpfp.bf_len; ++bpfins, ++ i) fprintf(stdout, ",%u %u %u %u", bpfins->code, bpfins->jt, bpfins->jf, bpfins->k);
+	fprintf(stdout, "\n");
+	}
 pcap_freecode(&bpfp);
 return true;
 }
@@ -4518,19 +5099,19 @@ while(i < (APRGLIST_MAX - 1))
 	{
 	if((len = fgetline(fh_essidlist, ESSID_MAX, linein)) == -1) break;
 	if((len == 0) || (len > ESSID_MAX)) continue;
-	(aprglist +i)->tsakt = tsakt -i;
-	(aprglist +i)->essidlen = len;
-	memcpy((aprglist +i)->essid, linein, len);
-	(aprglist +i)->macaprg[5] = nicaprg & 0xff;
-	(aprglist +i)->macaprg[4] = (nicaprg >> 8) & 0xff;
-	(aprglist +i)->macaprg[3] = (nicaprg >> 16) & 0xff;
-	(aprglist +i)->macaprg[2] = ouiaprg & 0xff;
-	(aprglist +i)->macaprg[1] = (ouiaprg >> 8) & 0xff;
-	(aprglist +i)->macaprg[0] = (ouiaprg >> 16) & 0xff;
+	(aprglist + i)->tsakt = tsakt -i;
+	(aprglist + i)->apdata->essidlen = len;
+	memcpy((aprglist + i)->apdata->essid, linein, len);
+	(aprglist + i)->apdata->maca[5] = nicaprg & 0xff;
+	(aprglist + i)->apdata->maca[4] = (nicaprg >> 8) & 0xff;
+	(aprglist + i)->apdata->maca[3] = (nicaprg >> 16) & 0xff;
+	(aprglist + i)->apdata->maca[2] = ouiaprg & 0xff;
+	(aprglist + i)->apdata->maca[1] = (ouiaprg >> 8) & 0xff;
+	(aprglist + i)->apdata->maca[0] = (ouiaprg >> 16) & 0xff;
 	nicaprg++;
 	i++;
 	}
-(aprglist +i)->essidlen = 0;
+(aprglist + i)->apdata->essidlen = 0;
 fclose(fh_essidlist);
 return;
 }
@@ -4647,16 +5228,6 @@ fprintf(stdout, "compiled with GNU libc headers %d.%d\n", __GLIBC__, __GLIBC_MIN
 #else
 fprintf(stdout, "glibc (__GLIBC_MINOR__) is not defined\n");
 #endif
-#ifdef HCXSTATUSOUT
-fprintf(stdout, "enabled REALTIME DISPLAY\n");
-#else
-fprintf(stdout, "disabled REALTIME DISPLAY\n");
-#endif
-#ifdef HCXNMEAOUT
-fprintf(stdout, "enabled GPS support\n");
-#else
-fprintf(stdout, "disabled GPS support\n");
-#endif
 #ifdef HCXWANTLIBPCAP
 fprintf(stdout, "enabled BPF compiler\n");
 #else
@@ -4673,21 +5244,6 @@ static inline void usage_additional(char *eigenname)
 {
 fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Additional information:\n-----------------------\n"
-	"get information about running services that have access to the device:\n"
-	" $ sudo systemctl --type=service --state=running\n"
-	"stop all services that have access to the interface, e.g.:\n"
-	" $ sudo systemctl stop NetworkManager.service\n"
-	" $ sudo systemctl stop wpa_supplicant.service\n"
-	"run %s - it will set an appropriate monitor mode\n"
-	" scan for ACCESS POINTS in range (packets are not stored to dump file, not in combination with attack modes)\n"
-	"  $ %s -i INTERFACENAME -F --rcascan=active\n"
-	" attack target(s) (not in combination with rcascan)\n"
-	"  $ %s -i INTERFACENAME -w dumpfile.pcapng -F --rds=1\n"
-	"   i     : name of the interface to be used\n"
-	"   w     : name of file to which packets are written\n"
-	"   F     : use all available channels\n"
-	"   rds=1 : sort real time display by status (last PMKID/EAPOL on top)\n"
-	"press ctrl+c to terminate\n"
 	"press GPIO button to terminate\n"
 	" hardware modification is necessary, read more:\n"
 	" https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"
@@ -4696,22 +5252,6 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"\n"
 	"Berkeley Packet Filter:\n"
 	"-----------------------\n"
-	"tcpdump decimal numper format:\n"
-	" example: tcpdump high level compiler:\n"
-	"  $ tcpdump -s %d -y IEEE802_11_RADIO wlan addr3 112233445566 -ddd > filter.bpf\n"
-	"  see man pcap-filter\n"
-	" example: bpf_asm low level compiler\n"
-	"  $ bpf_asm filter.asm | tr ',' '\\n' > filter.bpf\n"
-	"  see https://www.kernel.org/doc/html/latest/networking/filter.html\n"
-	" example: bpfc low level compiler:\n"
-	"  $ bpfc -f tcpdump -i filter.asm > filter.bpf\n"
-	"  see man bpfc\n"
-	"tcpdump C style format:\n"
-	" example: tcpdump high level compiler:\n"
-	"  $ tcpdump -s %d -y IEEE802_11_RADIO wlan addr3 112233445566 -dd > filter.bpf\n"
-	"  see man pcap-filter\n"
-	" example: bpfc low level compiler:\n"
-	"  $ bpfc -f C -i filter.asm > filter.bpf\n"
 	"  see man bpfc\n"
 	"\n"
 	"Important recommendation:\n"
@@ -4723,7 +5263,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Do not use tools to change the virtual MAC (like macchanger)!\n"
 	"Do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, PCAPNG_SNAPLEN, PCAPNG_SNAPLEN);
+	eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -4734,79 +5274,99 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"usage: %s <options>\n"
 	"\n"
 	"most common options:\n--------------------\n"
-	"-i <INTERFACE> : name of INTERFACE to be used\n"
-	"                  default: first suitable INTERFACE\n"
-	"                  warning:\n"
-	"                   %s changes the mode of the INTERFACE\n"
-	"                   %s changes the virtual MAC address of the INTERFACE\n"
-	"                   %s changes the channel of the INTERFACE\n"
-	"-w <outfile>   : write packets to a pcapng-format file named <outfile>\n"
-	"                  existing file will be overwritten\n" 
-	"                  default outfile name: yyyyddmmhhmmss-interfacename.pcapng\n"
-	"                  existing file will not be overwritten\n" 
-	"                  get more information: https://pcapng.com/\n"
-	"-c <digit>     : set channel (1a,2a,36b,...)\n"
-	"                  default: 1a,6a,11a\n"
-	"                  important notice: channel numbers are not unique\n"
-	"                  it is mandatory to add band information to the channel number (e.g. 12a)\n"
-	"                   band a: NL80211_BAND_2GHZ\n"
-	"                   band b: NL80211_BAND_5GHZ\n"
+	"-i <INTERFACE>   : name of INTERFACE to be used\n"
+	"                    default: first suitable INTERFACE\n"
+	"                    warning:\n"
+	"                     %s changes the mode of the INTERFACE\n"
+	"                     %s changes the virtual MAC address of the INTERFACE\n"
+	"                     %s changes the channel of the INTERFACE\n"
+	"-w <outfile>     : write packets to a pcapng-format file named <outfile>\n"
+	"                    default outfile name: yyyyddmmhhmmss-interfacename.pcapng\n"
+	"                    existing file will not be overwritten\n" 
+	"                    get more information: https://pcapng.com/\n"
+	"-c <digit>       : set channel (1a,2a,36b,...)\n"
+	"                    default: 1a,6a,11a\n"
+	"                    important notice: channel numbers are not unique\n"
+	"                    it is mandatory to add band information to the channel number (e.g. 12a)\n"
+	"                     band a: NL80211_BAND_2GHZ\n"
+	"                     band b: NL80211_BAND_5GHZ\n"
 	#if(LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
-	"                   band c: NL80211_BAND_6GHZ\n"
-	"                   band d: NL80211_BAND_60GHZ\n"
-	"                   band e: NL80211_BAND_S1GHZ (902 MHz)\n"
+	"                     band c: NL80211_BAND_6GHZ\n"
+	"                     band d: NL80211_BAND_60GHZ\n"
+	"                     band e: NL80211_BAND_S1GHZ (902 MHz)\n"
 	#endif
-	"                  to disable frequency management, set this option to a single frequency/channel\n"
-	"-f <digit>     : set frequency (2412,2417,5180,...)\n"
-	"-F             : use all available frequencies from INTERFACE\n"
-	"-t <second>    : minimum stay time (will increase on new stations and/or authentications)\n"
-	"                  default %llu seconds\n"
-	"-A             : ACK incoming frames\n"
-	"                  INTERFACE must support active monitor mode\n"
-	"-L             : show INTERFACE list and terminate\n"
-	"-l             : show INTERFACE list (tabulator separated and greppable) and terminate\n"
-	"-I <INTERFACE> : show detailed information about INTERFACE and terminate\n"
+	"                    to disable frequency management, set this option to a single frequency/channel\n"
+	"-f <digit>       : set frequency (2412,2417,5180,...)\n"
+	"-F               : use all available frequencies from INTERFACE\n"
+	"-t <second>      : minimum stay time (will increase on new stations and/or authentications)\n"
+	"                    default %d seconds\n"
+	"-A               : ACK incoming frames\n"
+	"                    INTERFACE must support active monitor mode\n"
+	"-L               : show PHYSICAL INTERFACE list and terminate\n"
+	"-l               : show PHYSICAL INTERFACE list (tabulator separated and greppable) and terminate\n"
+	"-I <INTERFACE>   : show detailed information about INTERFACE and terminate\n"
 #ifdef HCXWANTLIBPCAP
-	"--bpfc=<filter>: compile Berkeley Packet Filter (BPF) and exit\n"
-	"                  $ %s --bpfc=\"wlan addr3 112233445566\" > filter.bpf\n"
-	"                  see man pcap-filter\n"
+	"--bpfc=<filter>  : compile Berkeley Packet Filter (BPF) and exit\n"
+	"                    $ %s --bpfc=\"wlan addr3 112233445566\" > filter.bpf\n"
+	"                    see man pcap-filter\n"
+	"--bpfd=<mode>    : set output mode for compiled Berkeley Packet Filter (BPF)\n"
+	"                    default = 0\n"
+	"                    0 = compile BPF code as decimal numbers (readable by --bpf)\n"
+	"                    1 = compile BPF code as decimal numbers preceded with a count (readable by --bpf)\n"
+	"                    2 = compile BPF code as a C program fragment (readable by --bpf)\n"
+	"                    3 = compile BPF code as a ASM program (tcpdump style)\n"
+	"                    4 = compile BPF code as as decimal numbers (bpf_debug style)\n"
+	"                    see man pcap-filter\n"
 #endif
-	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
-	"                  see --help for more information\n"
-	"-h             : show this help\n"
-	"-v             : show version\n"
+	"--bpf=<file>     : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
+	"                    see --help for more information\n"
+	"--ftc            : enable fake time clock\n"
+	"--rds=<digit>    : enable real time display\n"
+	"                    attack mode:\n"
+	"                     0 = off(default)\n"
+	"                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)\n"
+	"                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)\n"
+	"                     3 = show all APs, show CLIENTs (M1M2ROGUE)\n"
+	"                     columns:\n"
+	"                      E = encryption (e)ncrypted / (o)pen\n"
+	"                      A = AKM (p)re-shared key\n"
+	"                      1 = received M1\n"
+	"                      2 = received M1M2\n"
+	"                      3 = received M1M2M3\n"
+	"                      P = received PMKID\n"
+	"                    rcascan mode\n"
+	"                     0 = show APs on current channel sorted by BEACON timestamp\n"
+	"                     1 = show APs on current channel sorted by RESPONSE timestamp\n"
+	"                     2 = show APs on current channel sorted by RSSI\n"
+	"--rcascan=<mode> : radio channel assement scan\n"
+	"                    (a)ctive = activ scan (transmit undirected PROBEREQUEST frames)\n"
+	"                     no PROBERESPONSE, AP is out of RANGE, packet injection is broken\n"
+	"                    (p)assive = passive scan (listen only)\n"
+	"-h               : show this help\n"
+	"-v               : show version\n"
 	"\n",
 #ifdef HCXWANTLIBPCAP
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD / 1000000000ULL, eigenname, BPF_MAXINSNS);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, eigenname, BPF_MAXINSNS);
 #else
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD / 1000000000ULL, BPF_MAXINSNS);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, BPF_MAXINSNS);
 #endif
 fprintf(stdout, "less common options:\n--------------------\n"
 	"-m <INTERFACE>            : set monitor mode and terminate\n"
-	"--disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
-	"--disable_proberequest    : do not transmit PROBEREQUEST frames\n"
-	"--disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
-	"--disable_reassociation   : do not REASSOCIATE a CLIENT\n"
-	"--disable_beacon          : disable internal BEACON\n"
-	"                             default: one BEACON/second to wildcard SSID\n"
+	"--m2max=<digit>           : set maximum of received M1M2ROGUE\n"
+	"                             default: %d M1M2ROGUE\n"
+	"                             to reject CLIENTs set 0\n"
+	"--associationmax=<digit>  : set maximum of attempts to associate with an AP\n"
+	"                             default: %d attempts\n"
+	"                             to disable association with an AP set 0\n"
+	"--disable_disassociation  : do not transmit DISASSOCIATION frames\n"
 	"--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer\n"
 	"                             default: %d\n"
 	"--essidlist=<file>        : initialize ESSID list with these ESSIDs\n"
 	"--errormax=<digit>        : set maximum allowed ERRORs\n"
 	"                             default: %d ERRORs\n"
 	"--watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received\n"
-	"                             default: %d seconds\n"
-	"--attemptclientmax=<digit>: set maximum of attempts to request an EAPOL M2\n"
-	"                             default: %d attempts\n"
-	"                             to disable CLIENT attacks set 0\n"
-	"--attemptapmax=<digit>    : set maximum of received BEACONs to request a PMKID or to get a 4-way handshake\n"
-	"                             default: stop after %d received BEACONs\n"
-	"                             attemptapmax=0 include this options:\n"
-	"                              disable_deauthentication: do not transmit DEAUTHENTICATION/DISASSOCIATION frames\n"
-	"                              disable_proberequest    : do not transmit PROBEREQUEST frames\n"
-	"                              disable_association     : do not AUTHENTICATE/ASSOCIATE\n"
-	"                              disable_reassociation   : do not REASSOCIATE a CLIENT\n",
-	PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX, ATTEMPTCLIENT_MAX, ATTEMPTAP_MAX / 8);
+	"                             default: %d seconds\n",
+	CLIENTCOUNT_MAX, APCOUNT_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX);
 fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
 	"                             bitmask:\n"
@@ -4836,50 +5396,8 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                             default: 0 (GPIO not in use)\n"
 	"--gpio_statusled=<digit>  : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                             default: 0 (GPIO not in use)\n"
-	#ifdef HCXNMEAOUT
-	"--nmea_dev=<NMEA device>  : open NMEA device (/dev/ttyACM0, /dev/tty/USB0, ...)\n"
-	"                             baudrate = BD9600\n"
-	"--gpsd                    : use gpsd to get position\n"
-	"                             gpsd will be switched to NMEA0183 mode\n"
-	"--nmea_out=<outfile>      : write GPS information to a nmea-format file named <outfile>\n"
-	"                             default outfile name: yyyymmddhhmmss.nmea\n"
-	"                             output: NMEA 0183 standard messages:\n"
-	"                                     $GPRMC: Position, velocity, time and date\n"
-	"                                     $GPGGA: Position, orthometric height, fix related data, time\n"
-	"                                     $GPWPL: Position and MAC AP\n"
-	"                                     $GPTXT: ESSID in HEX ASCII\n"
-	"                             use gpsbabel to convert to other formats:\n"
-	"                              gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
-	"                              gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
-	"                             get more information: https://en.wikipedia.org/wiki/NMEA_0183\n"
-	"--nmea_pcapng             : write GPS information to pcapng dump file\n"
-	#endif
-	"--rcascan=<character>     : do (R)adio (C)hannel (A)ssignment scan only\n"
-	"                             default = passive scan\n"
-	"                             a = active scan\n"
-	"                                 no PROBERESPONSE, AP is out of RANGE, packet injection is broken\n"
-	"                             p = passive scan\n"
-	"                            packets are not stored to dump file\n"
-	"                            not in combination with attack modes\n");
-	#ifdef HCXSTATUSOUT
-	fprintf(stdout, "--rds=<digit>             : sort real time display\n"
-			"                             attack mode:\n"
-			"                              default: sort by time (last seen on top)\n"
-			"                               1 = sort by status (last PMKID/EAPOL on top)\n"
-			"                             scan mode:\n"
-			"                               1 = sort by PROBERESPONSE count\n"
-			"                             Columns:\n"
-			"                              R = + AP display     : AP is in TX range or under attack\n"
-			"                              S = + AP display     : AUTHENTICATION KEY MANAGEMENT PSK\n"
-			"                              P = + AP display     : got PMKID hashcat / JtR can work on\n"
-			"                              1 = + AP display     : got EAPOL M1 (CHALLENGE)\n"
-			"                              3 = + AP display     : got EAPOL M1M2M3 or EAPOL M1M2M3M4 (AUTHORIZATION) hashcat / JtR can work on\n"
-			"                              E = + CLIENT display : got EAP-START MESSAGE\n"
-			"                              2 = + CLIENT display : got EAPOL M1M2 (ROGUE CHALLENGE) hashcat / JtR can work on\n");
-
-	#endif
-fprintf(stdout, "--help                    : show additional help (example and trouble shooting)\n"
-		"--version                 : show version\n\n");
+	"--help                    : show additional help (example and trouble shooting)\n"
+	"--version                 : show version\n\n");
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -4901,6 +5419,9 @@ int main(int argc, char *argv[])
 {
 static int auswahl = -1;
 static int index = 0;
+#ifdef HCXWANTLIBPCAP
+static int bpfdmode = 0;
+#endif
 static u8 exiteapolflag = 0;
 static u8 exitsigtermflag = 0;
 static u8 exitgpiobuttonflag = 0;
@@ -4908,17 +5429,18 @@ static u8 exittotflag = 0;
 static u8 exitwatchdogflag = 0;
 static u8 exiterrorflag = 0;
 static struct timespec tspecifo, tspeciforem;
+static struct tpacket_stats lStats = { 0 };
+static socklen_t lStatsLength = sizeof(lStats);
+static char *bpfname = NULL;
+#ifdef HCXWANTLIBPCAP
+static char *bpfstring = NULL;
+#endif
 static bool monitormodeflag = false;
 static bool interfaceinfoflag = false;
 static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
 static bool interfacelistshortflag = false;
 static bool rooterrorflag = false;
-static char *rcascanflag = NULL;
-static char *bpfname = NULL;
-#ifdef HCXWANTLIBPCAP
-static char *bpfstring = NULL;
-#endif
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
@@ -4931,30 +5453,20 @@ static char *nmeaoutname = NULL;
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLlAhHv";
-static struct tpacket_stats lStats = { 0 };
-static socklen_t lStatsLength = sizeof(lStats);
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
 #ifdef HCXWANTLIBPCAP
 	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
+	{"bpfd",			required_argument,	NULL,	HCX_BPFD},
 #endif
-	{"disable_deauthentication",	no_argument,		NULL,	HCX_DISABLE_DEAUTHENTICATION},
-	{"disable_proberequest",	no_argument,		NULL,	HCX_DISABLE_PROBEREQUEST},
-	{"disable_association",		no_argument,		NULL,	HCX_DISABLE_ASSOCIATION},
-	{"disable_reassociation",	no_argument,		NULL,	HCX_DISABLE_REASSOCIATION},
-	{"disable_beacon",		no_argument,		NULL,	HCX_DISABLE_BEACON},
-	{"proberesponsetx",		required_argument,	NULL,	HCX_PROBERESPONSETX_MAX},
-	{"attemptclientmax",		required_argument,	NULL,	HCX_ATTEMPT_CLIENT_MAX},
-	{"attemptapmax",		required_argument,	NULL,	HCX_ATTEMPT_AP_MAX},
+	{"ftc",				no_argument,		NULL,	HCX_FTC},
+	{"disable_disassociation",	no_argument,		NULL,	HCX_DISABLE_DISASSOCIATION},
+	{"m2max",			required_argument,	NULL,	HCX_M1M2ROGUE_MAX},
+	{"associationmax",		required_argument,	NULL,	HCX_APCOUNT_MAX},
+	{"prtxmax",			required_argument,	NULL,	HCX_PRTX_MAX},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
 	{"essidlist",			required_argument,	NULL,	HCX_ESSIDLIST},
-	#ifdef HCXNMEAOUT
-	{"nmea_dev",			required_argument,	NULL,	HCX_NMEA0183},
-	{"gpsd",			no_argument,		NULL,	HCX_GPSD},
-	{"nmea_out",			required_argument,	NULL,	HCX_NMEA0183_OUT},
-	{"nmea_pcapng",			no_argument,		NULL,	HCX_NMEA0183_PCAPNG},
-	#endif
 	{"errormax",			required_argument,	NULL,	HCX_ERROR_MAX},
 	{"watchdogmax",			required_argument,	NULL,	HCX_WATCHDOG_MAX},
 	{"onsigterm",			required_argument,	NULL,	HCX_ON_SIGTERM},
@@ -4965,10 +5477,8 @@ static const struct option long_options[] =
 	{"onerror",			required_argument,	NULL,	HCX_ON_ERROR},
 	{"gpio_button",			required_argument,	NULL,	HCX_GPIO_BUTTON},
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
+	{"rds",				required_argument,	NULL,	HCX_RDS},
 	{"rcascan",			required_argument,	NULL,	HCX_RCASCAN},
-	#ifdef HCXSTATUSOUT
-	{"rds",				required_argument,	NULL,	HCX_RD_SORT},
-	#endif
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP_ADDITIONAL},
 	{NULL,				0,			NULL,	0}
@@ -4985,7 +5495,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			perror("failed to get interface index");
 			exit(EXIT_FAILURE);
 			}
-		strncpy(ifaktname, optarg, IF_NAMESIZE -1);
+		strncpy(ifaktname, optarg, IF_NAMESIZE);
 		break;
 
 		case HCX_BPF:
@@ -5001,7 +5511,20 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			exit(EXIT_FAILURE);
 			}
 		break;
+
+		case HCX_BPFD:
+		bpfdmode = atoi(optarg);
+		if(bpfdmode > BPFD_DBG)
+			{
+			fprintf(stderr, "BPF mode ERROR (allowed 0 to 4)\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
 #endif
+		case HCX_FTC:
+		ftcflag = true;
+		break;
+
 		case HCX_PCAPNGNAME:
 		pcapngoutname = optarg;
 		break;
@@ -5022,57 +5545,28 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		essidlistname = optarg;
 		break;
 
-		case HCX_DISABLE_DEAUTHENTICATION:
-		deauthenticationflag = false;
+		case HCX_DISABLE_DISASSOCIATION:
+		disassociationflag = false;
 		break;
 
-		case HCX_DISABLE_PROBEREQUEST:
-		proberequestflag = false;
-		break;
-
-		case HCX_DISABLE_ASSOCIATION:
-		associationflag = false;
-		break;
-
-		case HCX_DISABLE_REASSOCIATION:
-		reassociationflag = false;
-		break;
-
-		case HCX_DISABLE_BEACON:
-		beaconoffflag = true;
-		break;
-
-		case HCX_PROBERESPONSETX_MAX:
+		case HCX_PRTX_MAX:
 		proberesponsetxmax = strtoul(optarg, NULL, 10);
-		if((proberesponsetxmax == 0) || (proberesponsetxmax > (APRGLIST_MAX - 1)))
-			{
-			fprintf(stderr, "must be greater than > 0 and < than %d \n", APRGLIST_MAX - 1);
-			exit(EXIT_FAILURE);
-			}
 		break;
 
-		case HCX_ATTEMPT_CLIENT_MAX:
-		attemptclientmax = strtoul(optarg, NULL, 10);
+		case HCX_M1M2ROGUE_MAX:
+		clientcountmax = strtoul(optarg, NULL, 10);
 		break;
 
-		case HCX_ATTEMPT_AP_MAX:
-		if((attemptapmax = strtoul(optarg, NULL, 10)) > 0) attemptapmax *= 8;
-		else
-			{
-			deauthenticationflag = false;
-			proberequestflag = false;
-			associationflag = false;
-			reassociationflag = false;
-			}
+		case HCX_APCOUNT_MAX:
+		apcountmax = strtoul(optarg, NULL, 10);
 		break;
 
 		case HCX_HOLD_TIME:
-		if((timehold = strtoull(optarg, NULL, 10)) < 2)
+		if((timehold = strtoull(optarg, NULL, 10)) < 5)
 			{
-			fprintf(stderr, "hold time must be > 2 seconds");
+			fprintf(stderr, "hold time must be >= 5 seconds");
 			exit(EXIT_FAILURE);
 			}
-		timehold *= 1000000000ULL;
 		break;
 
 		case HCX_TOT:
@@ -5085,7 +5579,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_WATCHDOG_MAX:
-		if((watchdogcountmax = atoi(optarg)) < 1)
+		if((timewatchdog = strtoul(optarg, NULL, 10)) < 1)
 			{
 			fprintf(stderr, "time out timer must be > 0\n");
 			exit(EXIT_FAILURE);
@@ -5093,7 +5587,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_ERROR_MAX:
-		if((errorcountmax = atoi(optarg)) < 1)
+		if((errorcountmax = strtoul(optarg, NULL, 10)) < 1)
 			{
 			fprintf(stderr, "error counter must be > 0\n");
 			exit(EXIT_FAILURE);
@@ -5105,7 +5599,6 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		exiteapolpmkidflag |= exiteapolflag & EXIT_ON_EAPOL_PMKID;
 		exiteapolm3flag |= exiteapolflag & EXIT_ON_EAPOL_M3;
 		exiteapolm2rgflag |= exiteapolflag & EXIT_ON_EAPOL_M2RG;
-		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
 		exiteapolm1flag |= exiteapolflag & EXIT_ON_EAPOL_M1;
 		break;
 
@@ -5200,51 +5693,22 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		interfacelistshortflag = true;
 		break;
 
-		#ifdef HCXNMEAOUT
-		case HCX_NMEA0183:
-		if(gpsdflag == true)
-			{
-			fprintf(stderr, "nmea_dev not allowed in combination with gpsd\n");
-			exit(EXIT_FAILURE);
-			}
-		nmea0183name = optarg;
-		break;
-
-		case HCX_GPSD:
-		if(nmea0183name != NULL)
-			{
-			fprintf(stderr, "gpsd not allowed in combination with nmea_dev\n");
-			exit(EXIT_FAILURE);
-			}
-		gpsdflag = true;
-		break;
-
-		case HCX_NMEA0183_OUT:
-		nmeaoutname = optarg;
-		break;
-
-		case HCX_NMEA0183_PCAPNG:
-		nmea2pcapflag = true;
-		break;
-		#endif
-
-		case HCX_RCASCAN:
-		rcascanflag = optarg;
-		if((rcascanflag[0] != 'a') && (rcascanflag[0] != 'p'))
-			{
-			fprintf(stderr, "rcascan: only (a) active or (p) passive allowed\n");
-			exit(EXIT_FAILURE);
-			}
-		break;
-
-		#ifdef HCXSTATUSOUT
-		case HCX_RD_SORT:
-		rdsort = strtol(optarg, NULL, 10);
-		break;
-		#endif
-
 		case HCX_SET_MONITORMODE_ACTIVE:
 		activemonitorflag = true;
+		break;
+
+		case HCX_RDS:
+		rds = strtol(optarg, NULL, 10);
+		break;
+
+		case HCX_RCASCAN:
+		if(optarg[0] == 'a') rcascanmode = RCASCAN_ACTIVE;
+		else if(optarg[0] == 'p') rcascanmode = RCASCAN_PASSIVE;
+		else
+			{
+			fprintf(stderr, "only (a)ctive or (p)assive is allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		case HCX_HELP:
@@ -5268,30 +5732,29 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		}
 	}
 setbuf(stdout, NULL);
+uid = getuid();
+pwd = getpwuid(uid);
+if((uid == 0) && (ftcflag == true)) set_ftc();
 hcxpid = getpid();
 #ifdef HCXDEBUG
-if((fh_debug = fopen("hcxdumptool.log", "a")) == NULL)
+if((fh_debug = fopen("hcxerror.log", "a")) == NULL)
 	{
-	fprintf(stdout, "error opening fhcxdumptool.log: %s\n", strerror(errno));
-	exit(EXIT_FAILURE);
+	fprintf(stdout, "error opening hcxerror.log: %s\n", strerror(errno));
+	goto byebye;
 	}
 #endif
 #ifdef HCXWANTLIBPCAP
 if(bpfstring != NULL)
 	{
-	if(compile_bpf(bpfstring) == true) exit(EXIT_SUCCESS);
-	else exit(EXIT_SUCCESS);
+	if(compile_bpf(bpfstring, bpfdmode) == true) exit(EXIT_SUCCESS);
+	else exit(EXIT_FAILURE);
 	}
 #endif
-if(interfacelistshortflag == false)
-	{
-	fprintf(stdout, "\nRequesting physical interface capabilities. This may take some time.\n"
-			"Please be patient...\n\n");
-	}
 if(set_signal_handler() == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to initialize signal handler\n");
+	wanteventflag |= EXIT_ON_ERROR;
 	goto byebye;
 	}
 if((gpiobutton + gpiostatusled) > 0)
@@ -5300,47 +5763,40 @@ if((gpiobutton + gpiostatusled) > 0)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize Raspberry Pi GPIO\n");
+		wanteventflag |= EXIT_ON_ERROR;
 		goto byebye;
+		}
+	if(gpiobutton > 0)
+		{
+		if(GET_GPIO(gpiobutton) > 0)
+			{
+			wanteventflag = EXIT_ON_SIGTERM;
+			if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
+			goto byebye;
+			}
 		}
 	}
 if(init_lists() == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to initialize lists\n");
+	wanteventflag |= EXIT_ON_ERROR;
 	goto byebye;
 	}
 init_values();
-#ifdef HCXNMEAOUT
-if(nmea0183name != NULL)
-	{
-	if(open_device_nmea0183(nmea0183name, nmeaoutname) == false)
-		{
-		errorcount++;
-		fprintf(stderr, "failed to open NMEA0183 device\n");
-		goto byebye;
-		}
-	}
-if(gpsdflag == true)
-	{
-	if(open_socket_gpsd(nmeaoutname) == false)
-		{
-		errorcount++;
-		fprintf(stderr, "failed to connect to GPSD\n");
-		goto byebye;
-		}
-	}
-#endif
 /*---------------------------------------------------------------------------*/
 if(open_control_sockets() == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to open control sockets\n");
+	wanteventflag |= EXIT_ON_ERROR;
 	goto byebye;
 	}
 if(get_interfacelist() == false)
 	{
 	errorcount++;
 	fprintf(stderr, "failed to get interface list\n");
+	wanteventflag |= EXIT_ON_ERROR;
 	goto byebye;
 	}
 if(interfacelistflag == true)
@@ -5359,16 +5815,17 @@ if(interfaceinfoflag == true)
 	goto byebye;
 	}
 /*---------------------------------------------------------------------------*/
-if(getuid() != 0)
+if(uid != 0)
 	{
 	errorcount++;
 	fprintf(stderr, "%s must be run as root\n", basename(argv[0]));
 	rooterrorflag = true;
 	goto byebye;
 	}
-if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistname, monitormodeflag) == false)
+if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistname) == false)
 	{
 	errorcount++;
+	wanteventflag |= EXIT_ON_ERROR;
 	fprintf(stderr, "failed to arm interface\n");
 	goto byebye;
 	}
@@ -5377,6 +5834,7 @@ if(monitormodeflag == true)
 	if(set_monitormode() == false)
 		{
 		errorcount++;
+		wanteventflag |= EXIT_ON_ERROR;
 		fprintf(stderr, "failed to set monitor mode\n");
 		}
 	if((userfrequencylistname != NULL) || (userchannellistname != 0))
@@ -5384,17 +5842,19 @@ if(monitormodeflag == true)
 		if(nl_set_frequency() == false)
 			{
 			errorcount++;
+			wanteventflag |= EXIT_ON_ERROR;
 			fprintf(stderr, "failed to set frequency\n");
 			}
 		}
 	goto byebye;
 	}
 if(essidlistname != NULL) read_essidlist(essidlistname);
-if(rcascanflag == NULL)
+if(rcascanmode == 0)
 	{
 	if(open_pcapng(pcapngoutname) == false)
 		{
 		errorcount++;
+		wanteventflag |= EXIT_ON_ERROR;
 		fprintf(stderr, "failed to open dump file\n");
 		goto byebye;
 		}
@@ -5402,46 +5862,46 @@ if(rcascanflag == NULL)
 if(open_socket_rx(bpfname) == false)
 	{
 	errorcount++;
+	wanteventflag |= EXIT_ON_ERROR;
 	fprintf(stderr, "failed to open raw packet socket\n");
 	goto byebye;
 	}
 if(open_socket_tx() == false)
 	{
 	errorcount++;
+	wanteventflag |= EXIT_ON_ERROR;
 	fprintf(stderr, "failed to open transmit socket\n");
 	goto byebye;
 	}
-if(rcascanflag == NULL)
+if(set_timer() == false)
 	{
-	if(set_timer() == false)
-		{
-		errorcount++;
-		fprintf(stderr, "failed to initialize timer\n");
-		goto byebye;
-		}
-	}
-else
-	{
-	if(set_timer_rca() == false)
-		{
-		errorcount++;
-		fprintf(stderr, "failed to initialize timer\n");
-		goto byebye;
-		}
+	errorcount++;
+	wanteventflag |= EXIT_ON_ERROR;
+	fprintf(stderr, "failed to initialize timer\n");
+	goto byebye;
 	}
 /*---------------------------------------------------------------------------*/
 tspecifo.tv_sec = 5;
 tspecifo.tv_nsec = 0;
 fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"It is made to detect vulnerabilities in your NETWORK mercilessly!\n"
-		"Misuse a network, without specific authorization,\n"
-		"may cause irreparable damage and result in significant consequences!\n"
-		"Not understanding what you were doing> is not going to work as an excuse!\n\n");
+		"Misuse within a network, without specific authorization, may cause\n"
+		"irreparable damage and result in significant consequences!\n"
+		"Not understanding what you were doing is not going to work as an excuse!\n\n");
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
-if(bpf.len == 0) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
-fprintf(stdout, "Initialize main scan loop...\033[?25l");
+if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
+fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
-if(rcascanflag == NULL)
+
+if(rcascanmode > 0)
+	{
+	if(nl_scanloop_rcascan() == false)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to initialize rcascan scan loop\n");
+		}
+	}
+else if(rds == 0)
 	{
 	if(nl_scanloop() == false)
 		{
@@ -5451,10 +5911,10 @@ if(rcascanflag == NULL)
 	}
 else
 	{
-	if(nl_scanloop_rca(rcascanflag) == false)
+	if(nl_scanloop_rds() == false)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to initialize rca scan loop\n");
+		fprintf(stderr, "failed to initialize main scan loop\n");
 		}
 	}
 /*---------------------------------------------------------------------------*/
@@ -5469,50 +5929,15 @@ if((monitormodeflag != true) && (interfacelistflag != true) && (interfaceinfofla
 close_fds();
 close_sockets();
 close_lists();
+
 if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
-errorcount += errortxcount;
-if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime\n", errorcount);
-if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime\n", errortxcount);
-if(errorcount > 0) fprintf(stderr, "Possible reasons:\n"
-			" driver is broken\n"
-			" driver is busy (misconfigured system, other services access the INTERFACE)\n");
+if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime (mostly caused by a broken driver)\n", errorcount);
+if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver)\n", errortxcount);
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
-if(lStats.tp_packets < 10) fprintf(stderr, "Warning: too less packets received (monitor mode may not work as expected)\n"
-			"Possible reasons:\n"
-			" driver is broken (most likely)\n"
-			" no transmitter in range\n"
-			" frames are filtered out by BPF\n");
-#ifdef HCXSTATUSOUT
-if(rcascanflag == NULL)
-	{
-	fprintf(stdout,"%ld SHB written to pcapng dumpfile\n", wshbcount);
-	fprintf(stdout,"%ld IDB written to pcapng dumpfile\n", widbcount);
-	fprintf(stdout,"%ld ECB written to pcapng dumpfile\n", wecbcount);
-	fprintf(stdout,"%ld EPB written to pcapng dumpfile\n", wepbcount);
-	}
-else
-	{
-	if(rcascanflag[0] == 'a')
-		{
-		if(packetrcarxcount > 0) fprintf(stdout, "%" PRIu64 " PROBERESPONSE(s) captured\n", packetrcarxcount);
-		else fprintf(stderr, "Warning: no PROBERESPONSES received (frame injection may not work as expected)\n"
-					"Possible reasons:\n"
-					" no AP in range\n"
-					" frames are filtered out by BPF\n"
-					" driver is broken\n"
-					" driver does not support frame injection\n\n");
-		}
-	}
-#endif
-#ifdef HCXNMEAOUT
-if(nmeapacketcount > 0) fprintf(stdout, "%ld NMEA sentence(s) received from device\n", nmeapacketcount);
-if(wecbnmeacount > 0) fprintf(stdout, "%ld ECB NMEA written to pcapng dumpfile\n", wecbnmeacount);
-if(wgpwplcount > 0)   fprintf(stdout, "%ld GPWPL record(s) written to file\n", wgpwplcount);
-#endif
-fprintf(stdout, "\n");
+if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
 	{
 	if((wanteventflag & EXIT_ON_EAPOL_PMKID) == EXIT_ON_EAPOL_PMKID) fprintf(stdout, "exit on PMKID\n");

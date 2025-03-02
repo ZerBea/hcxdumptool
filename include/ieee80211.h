@@ -31,6 +31,7 @@
 #define IEEE80211_STYPE_MGTRESERVED	0xf
 
 /* control */
+#define IEEE80211_STYPE_TRIGGER		0x2
 #define IEEE80211_STYPE_VHT		0x5
 #define IEEE80211_STYPE_CTL_EXT		0x6
 #define IEEE80211_STYPE_BACK_REQ	0x8
@@ -111,24 +112,24 @@ typedef struct __attribute__((packed))
  u64	timestamp;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define HCXTXBEACONINTERVAL	0x0400U
-#define HCXTXCAPABILITY		0x0431U
+#define HCXTXCAPABILITY		0x1431U
 #elif __BYTE_ORDER == __BIG_ENDIAN
 #define HCXTXBEACONINTERVAL	0x0004U
-#define HCXTXCAPABILITY		0x3104U
+#define HCXTXCAPABILITY		0x3114U
 #endif
  u16	beacon_interval;
 #define WLAN_CAPABILITY_PRIVACY		(1<<4)
  u16	capability;
  u8	ie[1];
 }ieee80211_beacon_proberesponse_t;
-#define	IEEE80211_BEACON_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
-#define	IEEE80211_PROBERESPONSE_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
+#define IEEE80211_BEACON_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
+#define IEEE80211_PROBERESPONSE_SIZE offsetof(ieee80211_beacon_proberesponse_t, ie)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((packed))
 {
  u8	ie[1];
 }ieee80211_proberequest_t;
-#define	IEEE80211_PROBEREQUEST_SIZE offsetof(ieee80211_proberequest_t, ie)
+#define IEEE80211_PROBEREQUEST_SIZE offsetof(ieee80211_proberequest_t, ie)
 /*===========================================================================*/
 typedef struct __attribute__((__packed__))
 {
@@ -139,17 +140,18 @@ typedef struct __attribute__((__packed__))
  u8	dialog;
  u8	ie[1];
 }ieee80211_action_t;
-#define	IEEE80211_ACTION_SIZE offsetof(ieee80211_action_t, ie)
+#define IEEE80211_ACTION_SIZE offsetof(ieee80211_action_t, ie)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
 #define OPEN_SYSTEM		0
+#define AUTHSUCCESS		0
  u16	algorithm;
  u16	sequence;
  u16	status;
  u8	ie[1];
 }ieee80211_auth_t;
-#define	IEEE80211_AUTH_SIZE offsetof(ieee80211_auth_t, ie)
+#define IEEE80211_AUTH_SIZE offsetof(ieee80211_auth_t, ie)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -169,11 +171,6 @@ typedef struct __attribute__((__packed__))
 typedef struct __attribute__((__packed__))
 {
  u16 capability;
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define HCXTXLISTENINTERVAL	0x0014U
-#elif __BYTE_ORDER == __BIG_ENDIAN
-#define HCXTXLISTENINTERVAL	0x1400U
-#endif
  u16 listen_interval;
  u8	ie[1];
 }ieee80211_assoc_req_t;
@@ -200,15 +197,18 @@ typedef struct __attribute__((__packed__))
 #define TAG_VENDOR	0xdd
  u8 	len;
  u8	ie[1];
+#define RSNLEN_MIN	18
+#define WPALEN_MIN	22
+
 }ieee80211_ietag_t;
-#define	IEEE80211_IETAG_SIZE offsetof(ieee80211_ietag_t, ie)
+#define IEEE80211_IETAG_SIZE offsetof(ieee80211_ietag_t, ie)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
  u8	control;
  u8	flags;
 }ieee80211_qos_t;
-#define	IEEE80211_QOS_SIZE (sizeof(ieee80211_qos_t))
+#define IEEE80211_QOS_SIZE (sizeof(ieee80211_qos_t))
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -223,8 +223,8 @@ typedef struct __attribute__((__packed__))
 #define LLC_TYPE_PREAUT	0x88c7
 #define LLC_TYPE_FRRR	0x890d
 }ieee80211_llc_t;
-#define	IEEE80211_LLC_SIZE (sizeof(ieee80211_llc_t))
-#define	IEEE80211_LLC_SNAP 0xaa
+#define IEEE80211_LLC_SIZE (sizeof(ieee80211_llc_t))
+#define IEEE80211_LLC_SNAP 0xaa
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -239,7 +239,7 @@ typedef struct __attribute__((__packed__))
  u16	len;
  u8	data[1];
 }ieee80211_eapauth_t;
-#define	IEEE80211_EAPAUTH_SIZE offsetof(ieee80211_eapauth_t, data)
+#define IEEE80211_EAPAUTH_SIZE offsetof(ieee80211_eapauth_t, data)
 /*---------------------------------------------------------------------------*/
 #define M1	1
 #define M2	2
@@ -255,50 +255,30 @@ typedef struct __attribute__((__packed__))
  u8	keyiv[16];
  u64	keyrsc;
  u8	keyid[8];
- u8	keymic[16];
+#define KEYMIC_MAX	16
+ u8	keymic[KEYMIC_MAX];
  u16	wpadatalen;
  u8	data[1];
 }ieee80211_wpakey_t;
-#define	IEEE80211_WPAKEY_SIZE offsetof(ieee80211_wpakey_t, data)
+#define IEEE80211_WPAKEY_SIZE offsetof(ieee80211_wpakey_t, data)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
- u8	id;
+ u8	tag;
  u8	len;
- u8	oui[3];
- u8	type;
-#define PMKID_KDE	4
- u8	pmkid[16];
+ u8	pmkoui[4];
+#define PMKID_MAX	16
+ u8	pmkid[PMKID_MAX];
 }ieee80211_pmkid_t;
-#define	IEEE80211_PMKID_SIZE (sizeof(ieee80211_pmkid_t))
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u16	version;
-}ieee80211_rsnie_t;
-#define	IEEE80211_RSNIE_SIZE sizeof(ieee80211_rsnie_t)
-#define IEEE80211_RSNIE_LEN_MIN	20
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u8	oui[3];
-#define RSN_CS_WEP		1
-#define RSN_CS_TKIP		2
-#define RSN_CS_WRAP		3
-#define RSN_CS_CCMP		4
-#define RSN_CS_WEP104		5
-#define RSN_AKM_PSK		2
-#define RSN_AKM_PSKFT		4
-#define RSN_AKM_PSK256		6
- u8	type;
-}ieee80211_rnsuite_t;
-#define	IEEE80211_RSNSUITE_SIZE sizeof(ieee80211_rnsuite_t)
+#define IEEE80211_PMKID_SIZE (sizeof(ieee80211_pmkid_t))
+#define IEEE80211_PMKIDIE_SIZE	(IEEE80211_PMKID_SIZE + IEEE80211_IETAG_SIZE)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
  u16	count;
-}ieee80211_rsnsuitecount_t;
-#define	IEEE80211_RSNSUITECOUNT_SIZE sizeof(ieee80211_rsnsuitecount_t)
+ u8	suite[4];
+}ieee80211_suite_t;
+#define IEEE80211_SUITE_SIZE sizeof(ieee80211_suite_t)
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -306,31 +286,6 @@ typedef struct __attribute__((__packed__))
  u16	capability;
 }ieee80211_rsncapability_t;
 #define	IEEE80211_RSNCAPABILITY_SIZE sizeof(ieee80211_rsncapability_t)
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u8	oui[3];
- u8	type;
- u16	version;
-}ieee80211_wpaie_t;
-#define	IEEE80211_WPAIE_SIZE sizeof(ieee80211_wpaie_t)
-#define IEEE80211_WPAIE_LEN_MIN	22
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u8	oui[3];
-#define WPA_CS_TKIP		2
-#define WPA_CS_CCMP		4
-#define WPA_AKM_PSK		2
- u8	type;
-}ieee80211_wpasuite_t;
-#define IEEE80211_WPASUITE_SIZE sizeof(ieee80211_wpasuite_t)
-/*---------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__))
-{
- u16	count;
-}ieee80211_wpasuitecount_t;
-#define	IEEE80211_WPASUITECOUNT_SIZE sizeof(ieee80211_wpasuitecount_t)
 /*===========================================================================*/
 /* DS bit usage
  *
@@ -395,19 +350,62 @@ static const u8 zeroed[] =
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static const u8 macbc[] =
+static u8 macbc[] =
 {
 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-static const u8 rsnsuiteoui[3] =
+#define WPAPSK		1
+#define RSNPSK		2
+#define RSNPSKFT	3
+#define RSNPSK256	4
+
+#define AKMPSK		2
+#define AKMPSKFT	4
+#define AKMPSK256	6
+
+#define SUITE_SIZE	4
+static const u8 rsnpmkid[SUITE_SIZE] =
 {
-0x00, 0x0f, 0xac
+0x00, 0x0f, 0xac, 0x04
 };
-static const u8 wpasuiteoui[3] =
+static const u8 rsntkip[SUITE_SIZE] =
 {
-0x00, 0x50, 0xf2
+0x00, 0x0f, 0xac, 0x02
 };
+static const u8 rsnccmp[SUITE_SIZE] =
+{
+0x00, 0x0f, 0xac, 0x04
+};
+static const u8 rsnpsk[SUITE_SIZE] =
+{
+0x00, 0x0f, 0xac, 0x02
+};
+static const u8 rsnpskft[SUITE_SIZE] =
+{
+0x00, 0x0f, 0xac, 0x04
+};
+static const u8 rsnpsk256[SUITE_SIZE] =
+{
+0x00, 0x0f, 0xac, 0x06
+};
+static const u8 wpatype[SUITE_SIZE] =
+{
+0x00, 0x50, 0xf2, 0x01
+};
+static const u8 wpatkip[SUITE_SIZE] =
+{
+0x00, 0x50, 0xf2, 0x02
+};
+static const u8 wpaccmp[SUITE_SIZE] =
+{
+0x00, 0x50, 0xf2, 0x04
+};
+static const u8 wpapsk[SUITE_SIZE] =
+{
+0x00, 0x50, 0xf2, 0x02
+};
+
 
 static const int vendoraprg[] =
 {

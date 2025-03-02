@@ -51,8 +51,10 @@ typedef struct  __attribute__((__packed__))
 static const u8 rthtxdata[] =
 {
 0x00, 0x00, /* radiotap version and padding */
-0x0a, 0x00, /* radiotap header length */
-0x00, 0x80, 0x00, 0x00, /* bitmap */
+0x0c, 0x00, /* radiotap header length */
+0x06, 0x80, 0x00, 0x00, /* bitmap */
+0x00, /* all flags cleared */
+0x02, /* rate */
 0x18, 0x00 /* tx flags */
 };
 #define RTHTX_SIZE sizeof(rthtxdata)

@@ -665,7 +665,10 @@ return 0;
 static inline __attribute__((always_inline)) u16 get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
+static ieee80211_suite_t *rsn;
 static u16 twstatus;
+static int tlen;
+static size_t i;
 
 twstatus = 0;
 while(0 < infolen)
@@ -709,9 +712,34 @@ while(0 < infolen)
 		}
 	else if(infoptr->id == TAG_RSN)
 		{
+		if(infoptr->len >= RSNLEN_MIN)
+			{
+			rsn = (ieee80211_suite_t*)infoptr->ie;
+			if(__hcx16le(rsn->count) == 1)
+				{
+				if(memcmp(rsnccmp, rsn->suite, 3) == 0)
+					{
+					rsn += 1;
+					tlen = 8;
+					for(i = 0; i < __hcx16le(rsn->count); i++)
+						{
+//						if(memcmp(rsnccmp, &infoptr->ie[tlen], 4) == 0) apdata->pcs = infoptr->ie[tlen +3];
+						tlen += 4;
+						if(tlen > infoptr->len) return twstatus;
+						}
+					rsn = (ieee80211_suite_t*)&infoptr->ie[tlen];
+					tlen += 2;
+
+
+					}
+				}
+			}
 		}
 	else if(infoptr->id == TAG_VENDOR)
 		{
+
+
+
 		}
 
 

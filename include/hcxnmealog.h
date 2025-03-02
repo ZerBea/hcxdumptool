@@ -52,11 +52,22 @@ typedef struct __attribute__((__packed__))
  char		ew;
  char		altitudeunit;
  int		channel;
-#define		RSNIE_PRESENT	0x0001;
+#define AKM_WEP		0x0001
+#define AKM_TKIP	0x0002
+#define AKM_RESERVED	0x0004
+#define AKM_CCMP128	0x0008
+#define AKM_WEP104	0x0010
+#define AKM_BIPCMAC128	0x0020
+#define AKM_NOT_ALLOWED	0x0040
+#define AKM_GCMP128	0x0080
+#define AKM_GCMP256	0x0100
+#define AKM_CCMP256	010200
+#define AKM_BIPGMAC128	0x0400
+#define AKM_BIBGMAC256	0x0800
+#define AKM_BIPCMAC256	0x1000
+#define AKM_UNKNOWN	0x2000
  u32		rsnie;
-#define		WPAIE_PRESENT	0x0001;
  u32		wpaie;
-#define		WPSIE_PRESENT	0x0001;
  u32		wpsie;
  u16		frequency;
  u8		rssi;

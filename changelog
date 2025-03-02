@@ -1,6 +1,142 @@
-01.03.2025
+02.03.2025
 ==========
-hcxnmealog: New passive tool to log NMEA 0183 tracks
+replaced hcxdumptool by hcxlabtool
+major changes:
+removed split screen ACCESS POINT <-> CLIENT
+improved attack modes
+added RSSI to rcascan
+moved entire GPS handling from hcxdumptool to new hcxnmealog (still work on progress)
+
+hcxdumptool:
+most common options:
+--------------------
+-i <INTERFACE>   : name of INTERFACE to be used
+                    default: first suitable INTERFACE
+                    warning:
+                     hcxlabtool changes the mode of the INTERFACE
+                     hcxlabtool changes the virtual MAC address of the INTERFACE
+                     hcxlabtool changes the channel of the INTERFACE
+-w <outfile>     : write packets to a pcapng-format file named <outfile>
+                    default outfile name: yyyyddmmhhmmss-interfacename.pcapng
+                    existing file will not be overwritten
+                    get more information: https://pcapng.com/
+-c <digit>       : set channel (1a,2a,36b,...)
+                    default: 1a,6a,11a
+                    important notice: channel numbers are not unique
+                    it is mandatory to add band information to the channel number (e.g. 12a)
+                     band a: NL80211_BAND_2GHZ
+                     band b: NL80211_BAND_5GHZ
+                     band c: NL80211_BAND_6GHZ
+                     band d: NL80211_BAND_60GHZ
+                     band e: NL80211_BAND_S1GHZ (902 MHz)
+                    to disable frequency management, set this option to a single frequency/channel
+-f <digit>       : set frequency (2412,2417,5180,...)
+-F               : use all available frequencies from INTERFACE
+-t <second>      : minimum stay time (will increase on new stations and/or authentications)
+                    default 7 seconds
+-A               : ACK incoming frames
+                    INTERFACE must support active monitor mode
+-L               : show PHYSICAL INTERFACE list and terminate
+-l               : show PHYSICAL INTERFACE list (tabulator separated and greppable) and terminate
+-I <INTERFACE>   : show detailed information about INTERFACE and terminate
+--bpfc=<filter>  : compile Berkeley Packet Filter (BPF) and exit
+                    $ hcxlabtool --bpfc="wlan addr3 112233445566" > filter.bpf
+                    see man pcap-filter
+--bpfd=<mode>    : set output mode for compiled Berkeley Packet Filter (BPF)
+                    default = 0
+                    0 = compile BPF code as decimal numbers (readable by --bpf)
+                    1 = compile BPF code as decimal numbers preceded with a count (readable by --bpf)
+                    2 = compile BPF code as a C program fragment (readable by --bpf)
+                    3 = compile BPF code as a ASM program (tcpdump style)
+                    4 = compile BPF code as as decimal numbers (bpf_debug style)
+                    see man pcap-filter
+--bpf=<file>     : input Berkeley Packet Filter (BPF) code (maximum 4096 instructions) in tcpdump decimal numbers format
+                    see --help for more information
+--ftc            : enable fake time clock
+--rds=<digit>    : enable real time display
+                    attack mode:
+                     0 = off(default)
+                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)
+                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)
+                     3 = show all APs, show CLIENTs (M1M2ROGUE)
+                     columns:
+                      E = encryption (e)ncrypted / (o)pen
+                      A = AKM (p)re-shared key
+                      1 = received M1
+                      2 = received M1M2
+                      3 = received M1M2M3
+                      P = received PMKID
+                    rcascan mode
+                     0 = show APs on current channel sorted by BEACON timestamp
+                     1 = show APs on current channel sorted by RESPONSE timestamp
+                     2 = show APs on current channel sorted by RSSI
+--rcascan=<mode> : radio channel assement scan
+                    (a)ctive = activ scan (transmit undirected PROBEREQUEST frames)
+                     no PROBERESPONSE, AP is out of RANGE, packet injection is broken
+                    (p)assive = passive scan (listen only)
+-h               : show this help
+-v               : show version
+
+less common options:
+--------------------
+-m <INTERFACE>            : set monitor mode and terminate
+--m2max=<digit>           : set maximum of received M1M2ROGUE
+                             default: 4 M1M2ROGUE
+                             to reject CLIENTs set 0
+--associationmax=<digit>  : set maximum of attempts to associate with an AP
+                             default: 100 attempts
+                             to disable association with an AP set 0
+--disable_disassociation  : do not transmit DISASSOCIATION frames
+--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer
+                             default: 1023
+--essidlist=<file>        : initialize ESSID list with these ESSIDs
+--errormax=<digit>        : set maximum allowed ERRORs
+                             default: 100 ERRORs
+--watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received
+                             default: 600 seconds
+--tot=<digit>             : enable timeout timer in minutes
+--exitoneapol=<type>      : exit on first EAPOL occurrence:
+                             bitmask:
+                               1 = PMKID (from AP)
+                               2 = EAPOL M2M3 (authorized)
+                               4 = EAPOL M1M2 (not authorized)
+                               8 = EAPOL M1M2ROGUE (not authorized)
+                              16 = EAPOL M1
+                             target BPF filter is recommended
+--onsigterm=<action>      : action when the program has been terminated (poweroff, reboot)
+                             poweroff: power off system
+                             reboot:   reboot system
+--ongpiobutton=<action>   : action when the program has been terminated (poweroff, reboot)
+                             poweroff: power off system
+                             reboot:   reboot system
+--ontot=<action>          : action when the program has been terminated (poweroff, reboot)
+                             poweroff: power off system
+                             reboot:   reboot system
+--onwatchdog=<action>     : action when the program has been terminated (poweroff, reboot)
+                             poweroff: power off system
+                             reboot:   reboot system
+--onerror=<action>        : action when the program has been terminated (poweroff, reboot)
+                             poweroff: power off system
+                             reboot:   reboot system
+--gpio_button=<digit>     : Raspberry Pi GPIO pin number of button (2...27)
+                             push GPIO button (> 10 seconds) to terminate program
+                             default: 0 (GPIO not in use)
+--gpio_statusled=<digit>  : Raspberry Pi GPIO number of status LED (2...27)
+                             default: 0 (GPIO not in use)
+--help                    : show additional help (example and trouble shooting)
+--version                 : show version
+
+
+added new passive GPS logger hcxnmealog. It can run in parallel with hcxdumptool, tshark or Wireshark
+data is logged to NMEA 0183 format (BSSID only - can be prosssed by gpsbabel) and CSV (tabulator separeted)
+
+There is still work in progress:
+evaluation of RSN-IE and log to CSV
+evaluation of WPA-IE and log to CSV
+evaluation of WPS-IE and log to CSV
+
+hcxnmealog:
+-n <file>      : output nmea 0183 track to file
                   track append to file: filename
                   use gpsbabel to convert to other formats:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
@@ -14,6 +150,12 @@ hcxnmealog: New passive tool to log NMEA 0183 tracks
                    ESSID (network name)
                    COUNTRY CODE (ISO / IEC 3166 alpha2 country code)
                    ENCRYPTION (encrypted / open)
+                   RSN INFORMATION ELEMENT
+                    bitmask (--help for more information)
+                   WPA INFORMATION ELEMENT
+                    bitmask (--help for more information)
+                   WPS INFORMATION ELEMENT
+                    bitmask (--help for more information)
                    FREQUENCY (interface frequency in MHz)
                    CHANNEL
                    RSSI (signal strength in dBm)
@@ -40,9 +182,6 @@ hcxnmealog: New passive tool to log NMEA 0183 tracks
                   see --help for more information
 --help         : show this help
 --version      : show version
-
-The aim is to log GPS information and AP information either to NMEA 0183 (for use with GPSBABELD and VIKING) or to universal CSV format.
-
 
 11.11.2024
 ==========
