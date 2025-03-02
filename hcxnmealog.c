@@ -907,6 +907,46 @@ exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 __attribute__ ((noreturn))
+static inline void usage_additional(char *eigenname)
+{
+fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
+	"Additional information:\n"
+	"Cipher Suites (bitmask)\n"
+	"    1 802.1X\n"
+	"    2 PSK\n"
+	"    4 FT + 802.1X\n"
+	"    8 FT + PSK\n"
+	"   16 802.1X SHA-256\n"
+	"   32 PSK SHA-256\n"
+	"   64 TDLS\n"
+	"  128 SAE SHA-256\n"
+	"  256 FT + SAE SHA-256\n"
+	"  512 AP Peer Key Authentication\n"
+	" 1024 802.1X Suite B EAP SH-256\n"
+	" 2048 802.1X Suite B EAP SH-384\n"
+	" 4096 FT + 802.1X SHA-384\n"
+	" 8192 unknown\n\n"
+	"Authentication Management Suites (bitmask)\n"
+	"    1 WEP\n"
+	"    2 TKIP\n"
+	"    4 RESERVED\n"
+	"    8 CCMP-128\n"
+	"   16 WEP-104\n"
+	"   32 BIP-CMAC-128\n"
+	"   64 NOT ALLOWED\n"
+	"  128 GCMP-128\n"
+	"  256 GCMP-256\n"
+	"  512 CCMP-256\n"
+	" 1024 BIP-GMAC-128\n"
+	" 2048 BIP-GMAC256\n"
+	" 4096 BIP-CMAC-256\n"
+	" 8192 unknown\n"
+	"\n", eigenname, VERSION_TAG, VERSION_YEAR);
+
+exit(EXIT_SUCCESS);
+}
+/*---------------------------------------------------------------------------*/
+__attribute__ ((noreturn))
 static void usage(char *eigenname)
 {
 fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
@@ -929,21 +969,11 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)\n" 
 	"                   ENCRYPTION (encrypted / open)\n" 
 	"                   RSN INFORMATION ELEMENT\n"
-	"                    bitmask:\n"
-	"                     cipher suites\n"
-	"                      0000000000000001 AES (CCM)\n"
-	"                      0000000000000010 TKIP\n"
-	"                     authentication key management\n"
-	"                      0000000100000000 PSK\n"
-	"                      0000001000000000 FT using PSK\n"
-	"                      0000010000000000 WPA\n"
-	"                      0000100000000000 SAE (SHA256)\n"
+	"                    bitmask (--help for more information)\n"
 	"                   WPA INFORMATION ELEMENT\n"
-	"                    bitmask:\n"
-	"                     00000001 WPA-IE present\n"
+	"                    bitmask (--help for more information)\n"
 	"                   WPS INFORMATION ELEMENT\n"
-	"                    bitmask:\n"
-	"                     00000001 WPS-IE present\n"
+	"                    bitmask (--help for more information)\n"
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"
@@ -998,7 +1028,7 @@ static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
-	{"help",			no_argument,		NULL,	HCX_HELP},
+	{"help",			no_argument,		NULL,	HCX_HELP_ADDITIONAL},
 	{NULL,				0,			NULL,	0}
 };
 
@@ -1047,6 +1077,10 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 
 		case HCX_HELP:
 		usage(basename(argv[0]));
+		break;
+
+		case HCX_HELP_ADDITIONAL:
+		usage_additional(basename(argv[0]));
 		break;
 
 		case HCX_VERSION:

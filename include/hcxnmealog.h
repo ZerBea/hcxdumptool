@@ -6,6 +6,7 @@
 #define HCX_BPF				1
 
 #define HCX_HELP			'h'
+#define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
 
 #define ERROR_MAX			100
