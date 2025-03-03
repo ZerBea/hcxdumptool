@@ -482,7 +482,7 @@ if(rds == 0)
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 	for(i = 0; i < APLIST_MAX - 1; i++)
 		{
-		if((aplist + i)->tsakt == 0) break;
+		if((aplist + i)->tsakt == 0) return;
 		if((scanlist + scanlistindex)->channel == (aplist + i)->apdata->channel)
 			{
 			tvlast = (aplist +i)->tsakt / 1000000000ULL;
@@ -507,8 +507,9 @@ if(rds == 0)
 				}
 			}
 		}
+	return;
 	}
-if(rds == 1)
+else if(rds == 1)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsresponse);
 	for(i = 0; i < APLIST_MAX - 1; i++)
@@ -539,7 +540,7 @@ if(rds == 1)
 			}
 		}
 	}
-if(rds == 2)
+else if(rds == 2)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_rtrssi);
 	for(i = 0; i < APLIST_MAX - 1; i++)
@@ -570,6 +571,7 @@ if(rds == 2)
 			}
 		}
 	}
+qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
 /*---------------------------------------------------------------------------*/
