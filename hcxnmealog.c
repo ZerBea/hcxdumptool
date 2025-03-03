@@ -662,7 +662,45 @@ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DB
 return 0;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void get_akm(apdata_t *apdata, u8 akmval)
+static inline __attribute__((always_inline)) void get_wpaakm(apdata_t *apdata, u8 akmval)
+{
+if(akmval == 1) apdata->wpaie |= AKM_8021X;
+else if(akmval == 2) apdata->wpaie |= AKM_PSK;
+else if(akmval == 3) apdata->wpaie |= AKM_FT8021X;
+else if(akmval == 4) apdata->wpaie |= AKM_FTPSK;
+else if(akmval == 5) apdata->wpaie |= AKM_8021XSHA256;
+else if(akmval == 6) apdata->wpaie |= AKM_PSKSHA256;
+else if(akmval == 7) apdata->wpaie |= AKM_TDLS;
+else if(akmval == 8) apdata->wpaie |= AKM_SAESHA256;
+else if(akmval == 9) apdata->wpaie |= AKM_FTSAESHA256;
+else if(akmval == 10) apdata->wpaie |= AKM_APPKA;
+else if(akmval == 11) apdata->wpaie |= AKM_80211XBEAPSHA256;
+else if(akmval == 12) apdata->wpaie |= AKM_80211XBEAPSHA384;
+else if(akmval == 13) apdata->wpaie |= AKM_FT802xSHA384;
+else apdata->wpaie |= AKM_UNKNOWN;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_wpacs(apdata_t *apdata, u8 csval)
+{
+if(csval == 1) apdata->wpaie |= CS_WEP;
+else if(csval == 2) apdata->wpaie |= CS_TKIP;
+else if(csval == 3) apdata->wpaie |= CS_RESERVED;
+else if(csval == 4) apdata->wpaie |= CS_CCMP128;
+else if(csval == 5) apdata->wpaie |= CS_WEP104;
+else if(csval == 6) apdata->wpaie |= CS_BIPCMAC128;
+else if(csval == 7) apdata->wpaie |= CS_GC_NOT_ALLOWED;
+else if(csval == 8) apdata->wpaie |= CS_GCMP128;
+else if(csval == 9) apdata->wpaie |= CS_GCMP256;
+else if(csval == 10) apdata->wpaie |= CS_CCMP256;
+else if(csval == 11) apdata->wpaie |= CS_BIPGMAC128;
+else if(csval == 12) apdata->wpaie |= CS_BIPGMAC256;
+else if(csval == 13) apdata->wpaie |= CS_BIPGMAC256;
+else apdata->wpaie |= CS_UNKNOWN;
+return;
+}
+/*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_rsnakm(apdata_t *apdata, u8 akmval)
 {
 if(akmval == 1) apdata->rsnie |= AKM_8021X;
 else if(akmval == 2) apdata->rsnie |= AKM_PSK;
@@ -681,7 +719,7 @@ else apdata->rsnie |= AKM_UNKNOWN;
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void get_cs(apdata_t *apdata, u8 csval)
+static inline __attribute__((always_inline)) void get_rsncs(apdata_t *apdata, u8 csval)
 {
 if(csval == 1) apdata->rsnie |= CS_WEP;
 else if(csval == 2) apdata->rsnie |= CS_TKIP;
@@ -704,6 +742,7 @@ static inline __attribute__((always_inline)) u16 get_tags(apdata_t *apdata, int 
 {
 static ieee80211_ietag_t *infoptr;
 static ieee80211_suite_t *rsn;
+static ieee80211_suite_t *wpa;
 static u16 twstatus;
 static int tlen;
 static size_t i;
@@ -758,12 +797,12 @@ while(0 < infolen)
 				{
 				if(memcmp(rsnccmp, rsn->suite, 3) == 0)
 					{
-					get_cs(apdata, infoptr->ie[5]);
+					get_rsncs(apdata, infoptr->ie[5]);
 					rsn += 1;
 					tlen = 8;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
-						if(memcmp(rsnccmp, &infoptr->ie[tlen], 3) == 0) get_cs(apdata, infoptr->ie[tlen +3]);
+						if(memcmp(rsnccmp, &infoptr->ie[tlen], 3) == 0) get_rsncs(apdata, infoptr->ie[tlen +3]);
 						tlen += 4;
 						if(tlen > infoptr->len) return 0;
 						}
@@ -771,20 +810,47 @@ while(0 < infolen)
 					tlen += 2;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
-						if(memcmp(rsnpsk, &infoptr->ie[tlen], 3) == 0)  get_akm(apdata, infoptr->ie[tlen +3]);
+						if(memcmp(rsnpsk, &infoptr->ie[tlen], 3) == 0) get_rsnakm(apdata, infoptr->ie[tlen +3]);
 						tlen += 4;
 						if(tlen > infoptr->len) return 0;
 						}
-//					apdata->mfp = infoptr->ie[tlen] & 0xc0;
 					}
 				}
 			}
 		}
 	else if(infoptr->id == TAG_VENDOR)
 		{
-
-
-
+		if(infoptr->len >= WPALEN_MIN)
+			{
+			if(memcmp(wpatype, infoptr->ie, SUITE_SIZE) == 0)
+				{
+				apdata->wpaie = 0;
+				wpa = (ieee80211_suite_t*)(infoptr->ie +4);
+				if(__hcx16le(wpa->count) == 1)
+					{
+					if(memcmp(wpatkip, wpa->suite, 3) == 0)
+						{
+						get_wpacs(apdata, infoptr->ie[3]);
+						wpa += 1;
+						tlen = 12;
+						for(i = 0; i < __hcx16le(wpa->count); i++)
+							{
+							if(memcmp(wpaccmp, &infoptr->ie[tlen], 3) == 0) get_wpacs(apdata, infoptr->ie[tlen +3]);
+							tlen += 4;
+							if(tlen > infoptr->len) return 0;
+							}
+						wpa = (ieee80211_suite_t*)&infoptr->ie[tlen];
+						tlen += 2;
+						for(i = 0; i < __hcx16le(wpa->count); i++)
+							{
+							if(memcmp(wpapsk, &infoptr->ie[tlen], 3) == 0) get_wpaakm(apdata, infoptr->ie[tlen +3]);
+							tlen += 4;
+							if(tlen > infoptr->len) return 0;
+							}
+						}
+					}
+				}
+			}
 		}
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
