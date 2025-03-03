@@ -723,7 +723,6 @@ while(0 < infolen)
 					tlen = 8;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
-						
 						fprintf(stderr, "cs%d\n", infoptr->ie[tlen +3]);
 //						if(memcmp(rsnccmp, &infoptr->ie[tlen], 4) == 0) apdata->pcs = infoptr->ie[tlen +3];
 						tlen += 4;
