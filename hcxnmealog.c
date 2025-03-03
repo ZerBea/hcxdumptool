@@ -56,7 +56,7 @@ static char ew = 0;
 static char altitudeunit = 0;
 static aplist_t *aplist = NULL;
 static FILE *fh_nmea = NULL;
-static FILE *fh_csv = NULL;
+static FILE *fh_tsv = NULL;
 static ssize_t packetlen = 0;
 static ssize_t nmealen = 0;
 static u64 lifetime = 0;
@@ -177,11 +177,11 @@ return true;
 static void close_files(void)
 {
 if(fh_nmea != NULL)fclose(fh_nmea);
-if(fh_csv != NULL)fclose(fh_csv);
+if(fh_tsv != NULL)fclose(fh_tsv);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static bool open_files(char *nmeaoutname, char *csvoutname)
+static bool open_files(char *nmeaoutname, char *tsvoutname)
 {
 if(nmeaoutname != NULL)
 	{
@@ -192,12 +192,12 @@ if(nmeaoutname != NULL)
 		return false;
 		}
 	}
-if(csvoutname != NULL)
+if(tsvoutname != NULL)
 	{
-	if((fh_csv = fopen(csvoutname, "a+")) == NULL)
+	if((fh_tsv = fopen(tsvoutname, "a+")) == NULL)
 		{
 		errorcount++;
-		fprintf(stderr, "failed to open CSV file\n");
+		fprintf(stderr, "failed to open tSV file\n");
 		return false;
 		}
 	}
@@ -578,19 +578,19 @@ while((nsen = strsep(&nres, "\n\r")) != NULL)
 		}
 	}
 if(fh_nmea != NULL) fflush(fh_nmea);
-if(fh_csv != NULL) fflush(fh_csv);
+if(fh_tsv != NULL) fflush(fh_tsv);
 return;
 }
 /*===========================================================================*/
-static inline __attribute__((always_inline)) void write_csv(int i)
+static inline __attribute__((always_inline)) void write_tsv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%08x\t%08x\t%8u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%08x\t%08x\t%8u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
 	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_csv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%8u\t%08x\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%8u\t%08x\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
 	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
@@ -790,7 +790,7 @@ for(i = 0; i < APLIST_MAX -1; i++)
 	if(twret > TWSTATUS_ERR)
 		{
 		if(fh_nmea != NULL) write_nmea();
-		if(fh_csv != NULL) write_csv(i);
+		if(fh_tsv != NULL) write_tsv(i);
 		}
 	return;
 	}
@@ -818,7 +818,7 @@ if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdat
 else (aplist + i)->apdata->encmode = openstr;
 twret = get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(fh_nmea != NULL) write_nmea();
-if(fh_csv != NULL) write_csv(i);
+if(fh_tsv != NULL) write_tsv(i);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -916,7 +916,7 @@ while(!wanteventflag)
 					fflush(stdout);
 					}
 				if(fh_nmea != NULL) fflush(fh_nmea);
-				if(fh_csv != NULL) fflush(fh_csv);
+				if(fh_tsv != NULL) fflush(fh_tsv);
 				}
 			}
 		}
@@ -985,7 +985,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx\n"
 	"                   gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml\n"
 	"                  time = UTC (in accordance with the NMEA 0183 standard)\n"
-	"-c <file>      : output separated by tabulator\n"
+	"-t <file>      : output separated by tabulator (tsv)\n"
 	"                  clolumns:\n"
 	"                   LINUX EPOCH (seconds that have passed since the date January 1st, 1970)\n"
 	"                    use date -d @epoch_value to convert to human readable time\n"
@@ -1045,10 +1045,10 @@ static int ifaktindex;
 static int baudrate;
 static char *gpsdevice;
 static char *nmeaoutname;
-static char *csvoutname;
+static char *tsvoutname;
 static char *bpfname;
 
-static const char *short_options = "n:c:d:b:i:hv";
+static const char *short_options = "n:t:d:b:i:hv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -1065,7 +1065,7 @@ baudrate = 9600;
 ifaktindex = 0;
 gpsdevice = NULL;
 nmeaoutname = NULL;
-csvoutname = NULL;
+tsvoutname = NULL;
 bpfname = NULL;
 
 while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) != -1)
@@ -1096,8 +1096,8 @@ while((auswahl = getopt_long (argc, argv, short_options, long_options, &index)) 
 		nmeaoutname = optarg;
 		break;
 
-		case HCX_OUTPUT_CSV:
-		csvoutname = optarg;
+		case HCX_OUTPUT_TSV:
+		tsvoutname = optarg;
 		break;
 
 		case HCX_HELP:
@@ -1124,7 +1124,7 @@ if(argc < 2)
 	}
 if(global_init() == false) goto byebye;
 if(open_devices(basename(argv[0]), ifaktindex, bpfname, gpsdevice, baudrate) == false) goto byebye;
-if(open_files(nmeaoutname, csvoutname) == false) goto byebye;
+if(open_files(nmeaoutname, tsvoutname) == false) goto byebye;
 
 if(gps_loop(basename(argv[0]), nmeaoutname) == false)
 	{

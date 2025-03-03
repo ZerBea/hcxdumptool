@@ -1,3 +1,7 @@
+03.03.2025
+==========
+changed option -c to -t because output is tabulator separated an not comma separated
+
 02.03.2025
 ==========
 replaced hcxdumptool by hcxlabtool
@@ -142,7 +146,7 @@ hcxnmealog:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o gpx -F out_file.gpx
                    gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
                   time = UTC (in accordance with the NMEA 0183 standard)
--c <file>      : output separated by tabulator
+-t <file>      : output separated by tabulator (tsv)
                   clolumns:
                    LINUX EPOCH (seconds that have passed since the date January 1st, 1970)
                     use date -d @epoch_value to convert to human readable time

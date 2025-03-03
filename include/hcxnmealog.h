@@ -1,5 +1,5 @@
 #define HCX_OUTPUT_NMEA			'n'
-#define HCX_OUTPUT_CSV			'c'
+#define HCX_OUTPUT_TSV			't'
 #define HCX_GPS_DEVICE			'd'
 #define HCX_GPS_BAUDRATE		'b'
 #define HCX_IFNAME			'i'
