@@ -613,7 +613,7 @@ fprintf(fh_nmea, "%s*%02X\r\n", nmeaoutbuffer, cs);
 return;
 }
 /*---------------------------------------------------------------------------*/
-static u8 getradiotapfield(uint16_t rthlen)
+static u8 get_radiotapfield(uint16_t rthlen)
 {
 static int i;
 static uint16_t pf;
@@ -662,6 +662,25 @@ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DB
 return 0;
 }
 /*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_cs(apdata_t *apdata, u8 csval)
+{
+if(csval == 1) apdata->rsnie |= CS_WEP;
+else if(csval == 2) apdata->rsnie |= CS_TKIP;
+else if(csval == 3) apdata->rsnie |= CS_RESERVED;
+else if(csval == 4) apdata->rsnie |= CS_CCMP128;
+else if(csval == 5) apdata->rsnie |= CS_WEP104;
+else if(csval == 6) apdata->rsnie |= CS_BIPCMAC128;
+else if(csval == 7) apdata->rsnie |= CS_GC_NOT_ALLOWED;
+else if(csval == 8) apdata->rsnie |= CS_GCMP128;
+else if(csval == 9) apdata->rsnie |= CS_GCMP256;
+else if(csval == 10) apdata->rsnie |= CS_CCMP256;
+else if(csval == 11) apdata->rsnie |= CS_BIPGMAC128;
+else if(csval == 12) apdata->rsnie |= CS_BIPGMAC256;
+else if(csval == 13) apdata->rsnie |= CS_BIPGMAC256;
+else apdata->rsnie |= CS_UNKNOWN;
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) u16 get_tags(apdata_t *apdata, int infolen, u8 *infostart)
 {
 static ieee80211_ietag_t *infoptr;
@@ -705,13 +724,14 @@ while(0 < infolen)
 			{
 			if((infoptr->ie[0] >= 'A') && (infoptr->ie[0] <= 'Z') && (infoptr->ie[1] >= 'A') && (infoptr->ie[1] <= 'Z'))
 				{
-				(apdata->country[0] = infoptr->ie[0]);
-				(apdata->country[1] = infoptr->ie[1]);
+				apdata->country[0] = infoptr->ie[0];
+				apdata->country[1] = infoptr->ie[1];
 				}
 			}
 		}
 	else if(infoptr->id == TAG_RSN)
 		{
+		apdata->rsnie = 0;
 		if(infoptr->len >= RSNLEN_MIN)
 			{
 			rsn = (ieee80211_suite_t*)infoptr->ie;
@@ -719,19 +739,17 @@ while(0 < infolen)
 				{
 				if(memcmp(rsnccmp, rsn->suite, 3) == 0)
 					{
+					get_cs(apdata, infoptr->ie[5]);
 					rsn += 1;
 					tlen = 8;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
-						fprintf(stderr, "cs%d\n", infoptr->ie[tlen +3]);
-//						if(memcmp(rsnccmp, &infoptr->ie[tlen], 4) == 0) apdata->pcs = infoptr->ie[tlen +3];
+						get_cs(apdata, infoptr->ie[tlen +3]);
 						tlen += 4;
 						if(tlen > infoptr->len) return twstatus;
 						}
 					rsn = (ieee80211_suite_t*)&infoptr->ie[tlen];
 					tlen += 2;
-
-
 					}
 				}
 			}
@@ -742,8 +760,6 @@ while(0 < infolen)
 
 
 		}
-
-
 	infostart += infoptr->len + IEEE80211_IETAG_SIZE;
 	infolen -= infoptr->len + IEEE80211_IETAG_SIZE;
 	}
@@ -758,7 +774,7 @@ static u16 beaconlen;
 static u16 twret;
 
 clock_gettime(CLOCK_REALTIME, &tspecakt);
-rssi = getradiotapfield(__hcx16le(rth->it_len));
+rssi = get_radiotapfield(__hcx16le(rth->it_len));
 if(tspecakt.tv_sec != tspecnmea.tv_sec) return;
 if(fix == 0) return;
 if(lon == 0) return;
@@ -937,35 +953,35 @@ static inline void usage_additional(char *eigenname)
 fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Additional information:\n"
 	"Cipher Suites (bitmask)\n"
-	" 0x00000001 802.1X\n"
-	" 0x00000002 PSK\n"
-	" 0x00000004 FT + 802.1X\n"
-	" 0x00000008 FT + PSK\n"
-	" 0x00000010 802.1X SHA-256\n"
-	" 0x00000020 PSK SHA-256\n"
-	" 0x00000040 TDLS\n"
-	" 0x00000080 SAE SHA-256\n"
-	" 0x00000100 FT + SAE SHA-256\n"
-	" 0x00000200 AP Peer Key Authentication\n"
-	" 0x00000400 802.1X Suite B EAP SH-256\n"
-	" 0x00000800 802.1X Suite B EAP SH-384\n"
-	" 0x00001000 FT + 802.1X SHA-384\n"
-	" 0x00008000 unknown\n\n"
+	" 0x00000001 WEP\n"
+	" 0x00000002 TKIP\n"
+	" 0x00000004 RESERVED\n"
+	" 0x00000008 CCMP-128\n"
+	" 0x00000010 WEP-104\n"
+	" 0x00000020 BIP-CMAC-128\n"
+	" 0x00000040 Group Address Traffic Not Allowed\n"
+	" 0x00000080 GCMP-128\n"
+	" 0x00000100 GCMP-256\n"
+	" 0x00000200 CCMP-256\n"
+	" 0x00000400 BIP-GMAC-128\n"
+	" 0x00000800 BIP-GMAC-256\n"
+	" 0x00001000 BIP-CMAC-256\n"
+	" 0x00008000 unknown\n"
 	"Authentication Management Suites (bitmask)\n"
-	" 0x00010000 WEP\n"
-	" 0x00020000 TKIP\n"
-	" 0x00040000 RESERVED\n"
-	" 0x00080000 CCMP-128\n"
-	" 0x00100000 WEP-104\n"
-	" 0x00200000 BIP-CMAC-128\n"
-	" 0x00400000 NOT ALLOWED\n"
-	" 0x00800000 GCMP-128\n"
-	" 0x01000000 GCMP-256\n"
-	" 0102000000 CCMP-256\n"
-	" 0x04000000 BIP-GMAC-128\n"
-	" 0x08000000 BIP-GMAC-256\n"
-	" 0x10000000 BIP-CMAC-256\n"
-	" 0x80000000 unknown\n"
+	" 0x00010000 802.1X\n"
+	" 0x00020000 PSK\n"
+	" 0x00040000 FT + 802.1X\n"
+	" 0x00080000 FT + PSK\n"
+	" 0x00100000 802.1X SHA-256\n"
+	" 0x00200000 PSK SHA-256\n"
+	" 0x00400000 TDLS\n"
+	" 0x00800000 SAE SHA-256\n"
+	" 0x01000000 FT + SAE SHA-256\n"
+	" 0x02000000 AP Peer Key Authentication\n"
+	" 0x04000000 802.1X Suite B EAP SH-256\n"
+	" 0x08000000 802.1X Suite B EAP SH-384\n"
+	" 0x10000000 FT + 802.1X SHA-384\n"
+	" 0x80000000 unknown\n\n"
 	"\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
