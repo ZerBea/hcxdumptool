@@ -662,6 +662,25 @@ if((rth->it_present & IEEE80211_RADIOTAP_DBM_ANTSIGNAL) == IEEE80211_RADIOTAP_DB
 return 0;
 }
 /*---------------------------------------------------------------------------*/
+static inline __attribute__((always_inline)) void get_akm(apdata_t *apdata, u8 akmval)
+{
+if(akmval == 1) apdata->rsnie |= AKM_8021X;
+else if(akmval == 2) apdata->rsnie |= AKM_PSK;
+else if(akmval == 3) apdata->rsnie |= AKM_FT8021X;
+else if(akmval == 4) apdata->rsnie |= AKM_FTPSK;
+else if(akmval == 5) apdata->rsnie |= AKM_8021XSHA256;
+else if(akmval == 6) apdata->rsnie |= AKM_PSKSHA256;
+else if(akmval == 7) apdata->rsnie |= AKM_TDLS;
+else if(akmval == 8) apdata->rsnie |= AKM_SAESHA256;
+else if(akmval == 9) apdata->rsnie |= AKM_FTSAESHA256;
+else if(akmval == 10) apdata->rsnie |= AKM_APPKA;
+else if(akmval == 11) apdata->rsnie |= AKM_80211XBEAPSHA256;
+else if(akmval == 12) apdata->rsnie |= AKM_80211XBEAPSHA384;
+else if(akmval == 13) apdata->rsnie |= AKM_FT802xSHA384;
+else apdata->rsnie |= AKM_UNKNOWN;
+return;
+}
+/*---------------------------------------------------------------------------*/
 static inline __attribute__((always_inline)) void get_cs(apdata_t *apdata, u8 csval)
 {
 if(csval == 1) apdata->rsnie |= CS_WEP;
@@ -744,12 +763,19 @@ while(0 < infolen)
 					tlen = 8;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
-						get_cs(apdata, infoptr->ie[tlen +3]);
+						if(memcmp(rsnccmp, &infoptr->ie[tlen], 3) == 0) get_cs(apdata, infoptr->ie[tlen +3]);
 						tlen += 4;
-						if(tlen > infoptr->len) return twstatus;
+						if(tlen > infoptr->len) return 0;
 						}
 					rsn = (ieee80211_suite_t*)&infoptr->ie[tlen];
 					tlen += 2;
+					for(i = 0; i < __hcx16le(rsn->count); i++)
+						{
+						if(memcmp(rsnpsk, &infoptr->ie[tlen], 3) == 0)  get_akm(apdata, infoptr->ie[tlen +3]);
+						tlen += 4;
+						if(tlen > infoptr->len) return 0;
+						}
+//					apdata->mfp = infoptr->ie[tlen] & 0xc0;
 					}
 				}
 			}
