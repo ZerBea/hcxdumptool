@@ -723,6 +723,8 @@ while(0 < infolen)
 					tlen = 8;
 					for(i = 0; i < __hcx16le(rsn->count); i++)
 						{
+						
+						fprintf(stderr, "cs%d\n", infoptr->ie[tlen +3]);
 //						if(memcmp(rsnccmp, &infoptr->ie[tlen], 4) == 0) apdata->pcs = infoptr->ie[tlen +3];
 						tlen += 4;
 						if(tlen > infoptr->len) return twstatus;
@@ -962,7 +964,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	" 0x01000000 GCMP-256\n"
 	" 0102000000 CCMP-256\n"
 	" 0x04000000 BIP-GMAC-128\n"
-	" 0x08000000 BIP-GMAC256\n"
+	" 0x08000000 BIP-GMAC-256\n"
 	" 0x10000000 BIP-CMAC-256\n"
 	" 0x80000000 unknown\n"
 	"\n", eigenname, VERSION_TAG, VERSION_YEAR);
