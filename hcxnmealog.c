@@ -747,8 +747,6 @@ static u16 twstatus;
 static int tlen;
 static size_t i;
 
-printf("\n\n");
-
 twstatus = 0;
 while(0 < infolen)
 	{
