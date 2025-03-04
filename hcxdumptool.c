@@ -5055,7 +5055,7 @@ struct bpf_insn *bpfins;
 
 if((hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN)) == NULL)
 	{
-	fprintf(stderr, "to 0pen libpcap\n");
+	fprintf(stderr, "failed to open libpcap\n");
 	return false;
 	}
 if(pcap_compile(hpcap, &bpfp, bpfs, 1, 0))
