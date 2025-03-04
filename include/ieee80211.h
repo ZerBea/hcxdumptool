@@ -202,6 +202,17 @@ typedef struct __attribute__((__packed__))
 
 }ieee80211_ietag_t;
 #define IEEE80211_IETAG_SIZE offsetof(ieee80211_ietag_t, ie)
+
+/*---------------------------------------------------------------------------*/
+typedef struct __attribute__((__packed__))
+{
+ u16	id;
+#define TAG_SSID	0x00
+ u16	len;
+ u8	et[1];
+}ieee80211_ieet_t;
+#define IEEE80211_IEET_SIZE offsetof(ieee80211_ieet_t, ie)
+
 /*---------------------------------------------------------------------------*/
 typedef struct __attribute__((__packed__))
 {
@@ -405,7 +416,10 @@ static const u8 wpapsk[SUITE_SIZE] =
 {
 0x00, 0x50, 0xf2, 0x02
 };
-
+static const u8 wpstype[SUITE_SIZE] =
+{
+0x00, 0x50, 0xf2, 0x04
+};
 
 static const int vendoraprg[] =
 {

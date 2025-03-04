@@ -584,16 +584,16 @@ return;
 /*===========================================================================*/
 static inline __attribute__((always_inline)) void write_tsv(int i)
 {
-if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%08x\t%08x\t%8u\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+if((aplist + i)->apdata->essid[0] != 0) fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t%.*s\t%c%c\t%s\t%08x\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid, (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
-	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
+	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel,(s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
-else fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%8u\t%08x\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
+else fprintf(fh_tsv, "%lld\t%02x%02x%02x%02x%02x%02x\t<WILDCARD SSID LEN %d>\t%c%c\t%s\t%8u\t%08x\t%u\t%d\t%d\t%f\t%f\t%f%c\t%f\t%f\t%f\t%f\n",
 	(long long)(aplist + i)->tsakt,
 	macfrx->addr3[0], macfrx->addr3[1], macfrx->addr3[2], macfrx->addr3[3], macfrx->addr3[4], macfrx->addr3[5], (aplist + i)->apdata->essidlen,  (aplist + i)->apdata->country[0], (aplist + i)->apdata->country[1],
-	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie, (aplist + i)->apdata->wpsie,
+	(aplist + i)->apdata->encmode, (aplist + i)->apdata->rsnie, (aplist + i)->apdata->wpaie,
 	(aplist + i)->apdata->frequency, (aplist + i)->apdata->channel, (s8)(aplist + i)->apdata->rssi,
 	(aplist + i)->apdata->latitude, (aplist + i)->apdata->longitude, (aplist + i)->apdata->altitude, (aplist + i)->apdata->altitudeunit, (aplist + i)->apdata->speed, (aplist + i)->apdata->pdop, (aplist + i)->apdata->hdop, (aplist + i)->apdata->vdop);
 return;
@@ -746,6 +746,8 @@ static ieee80211_suite_t *wpa;
 static u16 twstatus;
 static int tlen;
 static size_t i;
+
+printf("\n\n");
 
 twstatus = 0;
 while(0 < infolen)
@@ -1074,7 +1076,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	" 0x04000000 802.1X Suite B EAP SH-256\n"
 	" 0x08000000 802.1X Suite B EAP SH-384\n"
 	" 0x10000000 FT + 802.1X SHA-384\n"
-	" 0x80000000 unknown\n\n"
+	" 0x80000000 unknown\n"
 	"\n", eigenname, VERSION_TAG, VERSION_YEAR);
 exit(EXIT_SUCCESS);
 }
@@ -1105,10 +1107,6 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                    bitmask (--help for more information)\n"
 	"                   WPA INFORMATION ELEMENT (WPA1)\n"
 	"                    bitmask (--help for more information)\n"
-	"                   WPS INFORMATION ELEMENT\n"
-	"                    0 = WPS not in use\n"
-	"                    1 = WPS 1.0\n"
-	"                    2 = WPS 2.0\n"
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"
@@ -1133,7 +1131,7 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"\n"
 	"--bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
 	"                  see --help for more information\n"
-	"--help         : show this help\n"
+	"--help         : show additional help\n"
 	"--version      : show version\n"
 	"\n", eigenname, VERSION_TAG, VERSION_YEAR, eigenname, BPF_MAXINSNS);
 exit(EXIT_SUCCESS);

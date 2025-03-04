@@ -1,6 +1,10 @@
 03.03.2025
 ==========
-changed option -c to -t because output is tabulator separated an not comma separated
+hcxnmealog: removed WPS information - all tested APs use WPS 2.0!
+
+03.03.2025
+==========
+hcxnmealog: changed option -c to -t because output is tabulator separated an not comma separated
 
 02.03.2025
 ==========
@@ -134,11 +138,6 @@ less common options:
 added new passive GPS logger hcxnmealog. It can run in parallel with hcxdumptool, tshark or Wireshark
 data is logged to NMEA 0183 format (BSSID only - can be prosssed by gpsbabel) and CSV (tabulator separeted)
 
-There is still work in progress:
-evaluation of RSN-IE and log to CSV
-evaluation of WPA-IE and log to CSV
-evaluation of WPS-IE and log to CSV
-
 hcxnmealog:
 -n <file>      : output nmea 0183 track to file
                   track append to file: filename
@@ -154,11 +153,9 @@ hcxnmealog:
                    ESSID (network name)
                    COUNTRY CODE (ISO / IEC 3166 alpha2 country code)
                    ENCRYPTION (encrypted / open)
-                   RSN INFORMATION ELEMENT
+                   RSN INFORMATION ELEMENT (WPA2/WPA3)
                     bitmask (--help for more information)
-                   WPA INFORMATION ELEMENT
-                    bitmask (--help for more information)
-                   WPS INFORMATION ELEMENT
+                   WPA INFORMATION ELEMENT (WPA1)
                     bitmask (--help for more information)
                    FREQUENCY (interface frequency in MHz)
                    CHANNEL
@@ -184,8 +181,41 @@ hcxnmealog:
 
 --bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum 4096 instructions) in tcpdump decimal numbers format
                   see --help for more information
---help         : show this help
+--help         : show additional help
 --version      : show version
+
+Additional information:
+ 0x00000000 suite not in use
+Cipher Suites (bitmask)
+ 0x00000001 WEP
+ 0x00000002 TKIP
+ 0x00000004 RESERVED
+ 0x00000008 CCMP-128
+ 0x00000010 WEP-104
+ 0x00000020 BIP-CMAC-128
+ 0x00000040 Group Address Traffic Not Allowed
+ 0x00000080 GCMP-128
+ 0x00000100 GCMP-256
+ 0x00000200 CCMP-256
+ 0x00000400 BIP-GMAC-128
+ 0x00000800 BIP-GMAC-256
+ 0x00001000 BIP-CMAC-256
+ 0x00008000 unknown
+Authentication Management Suites (bitmask)
+ 0x00010000 802.1X
+ 0x00020000 PSK
+ 0x00040000 FT + 802.1X
+ 0x00080000 FT + PSK
+ 0x00100000 802.1X SHA-256
+ 0x00200000 PSK SHA-256
+ 0x00400000 TDLS
+ 0x00800000 SAE SHA-256
+ 0x01000000 FT + SAE SHA-256
+ 0x02000000 AP Peer Key Authentication
+ 0x04000000 802.1X Suite B EAP SH-256
+ 0x08000000 802.1X Suite B EAP SH-384
+ 0x10000000 FT + 802.1X SHA-384
+ 0x80000000 unknown
 
 11.11.2024
 ==========
