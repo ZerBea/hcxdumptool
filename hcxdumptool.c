@@ -4409,7 +4409,6 @@ while(1)
 			}
 		glh = (struct genlmsghdr*)NLMSG_DATA(nlh);
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
-		nlremlen = 0;
 		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
 		while(nla_ok(nla, nlremlen))
 			{
