@@ -5150,7 +5150,7 @@ if((procinfo = fopen("/proc/cpuinfo", "r")) != NULL)
 			{
 			if(strstr(linein, "Serial") != NULL)
 				{
-				if(len > 8) seed += strtoul(&linein[len - 6], NULL, 16);
+				seed += strtoul(&linein[len - 6], NULL, 16);
 				}
 			}
 		}
