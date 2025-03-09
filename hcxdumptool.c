@@ -760,6 +760,8 @@ static u16 addoption(u8 *posopt, u16 optioncode, u16 optionlen, char *option)
 static u16 padding;
 static option_header_t *optionhdr;
 
+if (optionlen == 0) return 0;
+
 optionhdr = (option_header_t*)posopt;
 optionhdr->option_code = optioncode;
 optionhdr->option_length = optionlen;
