@@ -2583,13 +2583,10 @@ while(0 < infolen)
 		{
 		if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
 			{
-			if((infoptr->len > 0) && (infoptr->len <= ESSID_MAX))
+			if(infoptr->ie[0] != 0)
 				{
-				if(infoptr->ie[0] != 0)
-					{
-					apdata->essidlen = infoptr->len;
-					memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
-					}
+				apdata->essidlen = infoptr->len;
+				memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
 				}
 			}
 		}
