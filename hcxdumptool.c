@@ -454,7 +454,7 @@ for(i = 0; i < ifpresentlistcounter; i++)
 		(ifpresentlist + i)->hwmac[0], (ifpresentlist + i)->hwmac[1], (ifpresentlist + i)->hwmac[2], (ifpresentlist + i)->hwmac[3], (ifpresentlist + i)->hwmac[4], (ifpresentlist + i)->hwmac[5],
 		(ifpresentlist + i)->vimac[0], (ifpresentlist + i)->vimac[1], (ifpresentlist + i)->vimac[2], (ifpresentlist + i)->vimac[3], (ifpresentlist + i)->vimac[4], (ifpresentlist + i)->vimac[5],
 		mode, IF_NAMESIZE, unassigned, (ifpresentlist + i)->driver, po);
-	
+
 	}
 fprintf(stdout, "\nmodes reported by the driver:\n"
 		"* active monitor mode available (do not trust it)\n"
@@ -616,7 +616,7 @@ if(rds == 1)
 		if((calist + i)->tsakt == 0) break;
 		if((scanlist + scanlistindex)->channel == (calist + i)->cadata->channel)
 
-		if((calist +i)->cadata->m2 == '+') 
+		if((calist +i)->cadata->m2 == '+')
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
@@ -655,7 +655,7 @@ else if(rds == 2)
 	for(i = 0; i < CALIST_MAX - 1; i++)
 		{
 		if((calist + i)->tsakt == 0) break;
-		if((calist +i)->cadata->m2 == '+') 
+		if((calist +i)->cadata->m2 == '+')
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
@@ -691,7 +691,7 @@ else if(rds == 3)
 	for(i = 0; i < CALIST_MAX - 1; i++)
 		{
 		if((calist + i)->tsakt == 0) break;
-		if((calist +i)->cadata->m2 == '+') 
+		if((calist +i)->cadata->m2 == '+')
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
@@ -926,7 +926,7 @@ epblen += TOTAL_SIZE;
 epbhdr->total_length = epblen;
 totallength->total_length = epblen;
 if(write(fd_pcapng, epb, epblen) != epblen) errorcount++;
-return;	
+return;
 }
 /*---------------------------------------------------------------------------*/
 static bool writeshb(void)
@@ -2834,7 +2834,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		}
 	(aplist + i)->tsakt = tsakt;
 	if((aplist + i)->apdata->channel != (scanlist + scanlistindex)->channel) return;
-	if((aplist + i)->apdata->m1m2m3 == '+') return; 
+	if((aplist + i)->apdata->m1m2m3 == '+') return;
 	if((aplist + i)->apdata->pmkid == '+') return;
 	if((tsakt - (aplist + i)->apdata->tsrequest) < TSSECOND2) return;
 	if((tsakt - (aplist + i)->apdata->tsrequest) > TSHOUR1) (aplist + i)->apdata->apcount = apcountmax;
@@ -2861,7 +2861,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 				}
 			}
 		}
-	if(disassociationflag == true) 
+	if(disassociationflag == true)
 		{
 		if(((aplist + i)->apdata->mfp & MFP_REQUIRED) != MFP_REQUIRED)
 			{
@@ -4590,9 +4590,9 @@ debugtms = clock();
 #endif
 if(nl_get_interfacephylist() == false) return false;
 #ifdef HCXDEBUG
-debugtms = clock() - debugtms; 
+debugtms = clock() - debugtms;
 debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
-fprintf(fh_debug, "nl_get_interfacephylist took %f seconds to execute \n", debugtmstaken); 
+fprintf(fh_debug, "nl_get_interfacephylist took %f seconds to execute \n", debugtmstaken);
 #endif
 
 #ifdef HCXDEBUG
@@ -4600,9 +4600,9 @@ debugtms = clock();
 #endif
 if(nl_get_interfacelist() == false) return false;
 #ifdef HCXDEBUG
-debugtms = clock() - debugtms; 
+debugtms = clock() - debugtms;
 debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
-fprintf(fh_debug, "nl_get_interfacelist took %f seconds to execute \n", debugtmstaken); 
+fprintf(fh_debug, "nl_get_interfacelist took %f seconds to execute \n", debugtmstaken);
 #endif
 
 #ifdef HCXDEBUG
@@ -4610,9 +4610,9 @@ debugtms = clock();
 #endif
 if(rt_get_interfacelist() == false) return false;
 #ifdef HCXDEBUG
-debugtms = clock() - debugtms; 
+debugtms = clock() - debugtms;
 debugtmstaken = ((double)debugtms)/CLOCKS_PER_SEC;
-fprintf(fh_debug, "rt_get_interfacelist took %f seconds to execute \n", debugtmstaken); 
+fprintf(fh_debug, "rt_get_interfacelist took %f seconds to execute \n", debugtmstaken);
 #endif
 
 
@@ -5284,7 +5284,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                     %s changes the channel of the INTERFACE\n"
 	"-w <outfile>     : write packets to a pcapng-format file named <outfile>\n"
 	"                    default outfile name: yyyyddmmhhmmss-interfacename.pcapng\n"
-	"                    existing file will not be overwritten\n" 
+	"                    existing file will not be overwritten\n"
 	"                    get more information: https://pcapng.com/\n"
 	"-c <digit>       : set channel (1a,2a,36b,...)\n"
 	"                    default: 1a,6a,11a\n"
