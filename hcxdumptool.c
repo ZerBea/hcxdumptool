@@ -5008,6 +5008,7 @@ static char linein[128];
 
 if((fh_filter = fopen(bpfname, "r")) == NULL) return false;
 bpf.filter = (struct sock_filter*)calloc(BPF_MAXINSNS, sizeof(struct sock_filter));
+if (bpf.filter == NULL) return false;
 bpf.len = 0;
 bpfptr = bpf.filter;
 while(bpf.len < BPF_MAXINSNS +1)
