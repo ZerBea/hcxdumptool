@@ -767,7 +767,7 @@ while(0 < infolen)
 						memcpy(apdata->essid, infoptr->ie, apdata->essidlen);
 						}
 					}
-				else if(apdata->essid[0] == 0) 
+				else if(apdata->essid[0] == 0)
 					{
 					twstatus |= TWSTATUS_ESSID;
 					apdata->essidlen = infoptr->len;
@@ -1098,9 +1098,9 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   LINUX EPOCH (seconds that have passed since the date January 1st, 1970)\n"
 	"                    use date -d @epoch_value to convert to human readable time\n"
 	"                   BSSID (MAC ACCESS POINT)\n"
-	"                   ESSID (network name)\n" 
-	"                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)\n" 
-	"                   ENCRYPTION (encrypted / open)\n" 
+	"                   ESSID (network name)\n"
+	"                   COUNTRY CODE (ISO / IEC 3166 alpha2 country code)\n"
+	"                   ENCRYPTION (encrypted / open)\n"
 	"                   RSN INFORMATION ELEMENT (WPA2/WPA3)\n"
 	"                    bitmask (--help for more information)\n"
 	"                   WPA INFORMATION ELEMENT (WPA1)\n"
@@ -1108,10 +1108,10 @@ fprintf(stdout, "%s %s (C) %s ZeroBeat\n"
 	"                   FREQUENCY (interface frequency in MHz)\n"
 	"                   CHANNEL\n"
 	"                   RSSI (signal strength in dBm)\n"
-	"                   lATITUDE (decimal degrees)\n" 
-	"                   LONGITUDE (decimal degrees)\n" 
-	"                   ALTITUDE (decimal degrees)\n" 
-	"                   SPEED (knots)\n" 
+	"                   lATITUDE (decimal degrees)\n"
+	"                   LONGITUDE (decimal degrees)\n"
+	"                   ALTITUDE (decimal degrees)\n"
+	"                   SPEED (knots)\n"
 	"                   PDOP (position -3D- dilution of precision)\n"
 	"                   HDOP (horizontal dilution of precision)\n"
 	"                   VDOP (vertical dilution of precision)\n"
