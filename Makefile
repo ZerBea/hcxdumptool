@@ -22,7 +22,7 @@ CFLAGS		+= -std=gnu99
 DEFS		= -DVERSION_TAG=\"$(VERSION_TAG)\" -DVERSION_YEAR=\"$(VERSION_YEAR)\"
 # comment to disable STATUS display (headless operation)
 DEFS		+= -DHCXSTATUSOUT
-# uncomment to enable BPF compiler
+# comment to disable BPF compiler
 DEFS		+= -DHCXWANTLIBPCAP
 LDFLAGS	+= -lpcap
 # uncomment to enable DEBUG log
