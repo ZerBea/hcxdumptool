@@ -4635,7 +4635,7 @@ mrq.mr_type = PACKET_MR_PROMISC;
 if(setsockopt(fd_socket_tx, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mrq, sizeof(mrq)) < 0) return false;
 priolen = sizeof(prioval);
 prioval = 20;
-if(setsockopt(fd_socket_rx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
+if(setsockopt(fd_socket_tx, SOL_SOCKET, SO_PRIORITY, &prioval, priolen) < 0) return false;
 memset(&saddr, 0, sizeof(saddr));
 saddr.sll_family = AF_PACKET;
 saddr.sll_ifindex = ifaktindex;
