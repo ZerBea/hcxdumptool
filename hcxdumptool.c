@@ -581,11 +581,14 @@ static size_t i, ii;
 static time_t tvlast;
 struct winsize w;
 
-if(system("clear") != 0) errorcount++;
-w.ws_row = 12;
-if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
-if(w.ws_row > 10) w.ws_row -= 4;
-ii = 0;
+if(rds < 4)
+	{
+	if(system("clear") != 0) errorcount++;
+	w.ws_row = 12;
+	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
+	if(w.ws_row > 10) w.ws_row -= 4;
+	ii = 0;
+	}
 qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 qsort(calist, CALIST_MAX, CALIST_SIZE, sort_calist_by_tsakt);
 fprintf(stdout, "CHA   LAST   EA123P    MAC-CL       MAC-AP    ESSID            SCAN:%6u/%u\n"
@@ -703,6 +706,40 @@ else if(rds == 3)
 				(calist + i)->cadata->maca[03],	(calist + i)->cadata->maca[04], (calist + i)->cadata->maca[05],
 				(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
 			if((ii += 1) > w.ws_row) break;
+			}
+		}
+	}
+else if(rds == 4)
+	{
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		tvlast = (aplist +i)->tsakt / 1000000000ULL;
+		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+			(aplist + i)->apdata->privacy,
+			(aplist + i)->apdata->akmstat,
+			(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
+			(aplist + i)->apdata->macc[00], (aplist + i)->apdata->macc[01], (aplist + i)->apdata->macc[02],
+			(aplist + i)->apdata->macc[03],	(aplist + i)->apdata->macc[04], (aplist + i)->apdata->macc[05],
+			(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+			(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+			(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+		}
+	for(i = 0; i < CALIST_MAX - 1; i++)
+		{
+		if((calist + i)->tsakt == 0) break;
+		if((calist +i)->cadata->m2 == '+')
+			{
+			tvlast = (calist +i)->tsakt / 1000000000ULL;
+			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				(calist + i)->cadata->m2,
+				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
+				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
+				(calist + i)->cadata->maca[00], (calist + i)->cadata->maca[01], (calist + i)->cadata->maca[02],
+				(calist + i)->cadata->maca[03],	(calist + i)->cadata->maca[04], (calist + i)->cadata->maca[05],
+				(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
 			}
 		}
 	}
@@ -5328,6 +5365,8 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)\n"
 	"                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)\n"
 	"                     3 = show all APs, show CLIENTs (M1M2ROGUE)\n"
+	"                     4 = show all APs, show CLIENTs (M1M2ROGUE)\n"
+	"                          disabled TIOCGWINSZ for redirect to stdout\n"
 	"                     columns:\n"
 	"                      E = encryption (e)ncrypted / (o)pen\n"
 	"                      A = AKM (p)re-shared key\n"
