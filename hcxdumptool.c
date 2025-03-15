@@ -472,10 +472,13 @@ static size_t i;
 static time_t tvlast;
 struct winsize w;
 
-if(system("clear") != 0) errorcount++;
-w.ws_row = 12;
-if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
-if(w.ws_row > 10) w.ws_row -= 4;
+if(rdtflag == false)
+	{
+	if(system("clear") != 0) errorcount++;
+	w.ws_row = 12;
+	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
+	if(w.ws_row > 10) w.ws_row -= 4;
+	}
 fprintf(stdout, "CHA  BEACON  RESPONSE RSSI    MAC-AP    ESSID                  SCAN:%6u/%u\n"
 		"------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
 if(rds == 0)
