@@ -1,3 +1,9 @@
+15.03.2025
+==========
+hcxdumptool: added new option --rdt to disable TIOCGWINSZ
+--rdt            : disable TIOCGWINSZ for real time displays
+
+
 03.03.2025
 ==========
 hcxnmealog: removed WPS information - all tested APs use WPS 2.0!

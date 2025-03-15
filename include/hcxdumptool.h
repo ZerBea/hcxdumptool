@@ -23,7 +23,8 @@
 #define HCX_ON_ERROR			20
 #define HCX_ESSIDLIST			21
 #define HCX_RDS				22
-#define HCX_RCASCAN			23
+#define HCX_RDT				23
+#define HCX_RCASCAN			24
 #define HCX_IFNAME			'i'
 #define HCX_PCAPNGNAME			'w'
 #define HCX_INTERFACE_INFO		'I'
