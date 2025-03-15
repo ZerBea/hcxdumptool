@@ -5357,8 +5357,13 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                    see man pcap-filter\n"
 #endif
 	"--bpf=<file>     : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
-	"                    see --help for more information\n"
-	"--ftc            : enable fake time clock\n"
+	"                    see --help for more information\n", 
+#ifdef HCXWANTLIBPCAP
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, eigenname, BPF_MAXINSNS);
+#else
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, BPF_MAXINSNS);
+#endif
+fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"--rds=<digit>    : enable real time display\n"
 	"                    attack mode:\n"
 	"                     0 = off(default)\n"
@@ -5384,12 +5389,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                    (p)assive = passive scan (listen only)\n"
 	"-h               : show this help\n"
 	"-v               : show version\n"
-	"\n",
-#ifdef HCXWANTLIBPCAP
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, eigenname, BPF_MAXINSNS);
-#else
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, TIMEHOLD, BPF_MAXINSNS);
-#endif
+	"\n");
 fprintf(stdout, "less common options:\n--------------------\n"
 	"-m <INTERFACE>            : set monitor mode and terminate\n"
 	"--m2max=<digit>           : set maximum of received M1M2ROGUE\n"
