@@ -943,7 +943,7 @@ epbhdr->cap_len = packetlen;
 epbhdr->org_len = packetlen;
 epbhdr->timestamp_high = tsakt >> 32;
 epbhdr->timestamp_low = (u32)tsakt & 0xffffffff;
-padding = (4 -(epbhdr->cap_len % 4)) % 4;
+padding = 4 -(epbhdr->cap_len % 4);
 epblen += packetlen;
 memset(epb +  epblen, 0, padding);
 epblen += padding;
