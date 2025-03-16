@@ -790,7 +790,7 @@ if (optionlen == 0) return 0;
 optionhdr = (option_header_t*)posopt;
 optionhdr->option_code = optioncode;
 optionhdr->option_length = optionlen;
-padding = (4 -(optionlen % 4)) % 4;
+padding = 4 -(epbhdr->cap_len % 4);
 memset(optionhdr->option_data, 0, optionlen +padding);
 memcpy(optionhdr->option_data, option, optionlen);
 return optionlen + padding + 4;
