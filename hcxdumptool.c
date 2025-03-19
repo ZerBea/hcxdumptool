@@ -945,7 +945,7 @@ epbhdr->timestamp_high = tsakt >> 32;
 epbhdr->timestamp_low = (u32)tsakt & 0xffffffff;
 padding = 4 -(epbhdr->cap_len % 4);
 epblen += packetlen;
-memset(epb +  epblen, 0, padding);
+memset(epb + epblen, 0, padding);
 epblen += padding;
 epblen += addoption(epb +epblen, SHB_EOC, 0, NULL);
 totallength = (total_length_t*)(epb +epblen);
@@ -2315,7 +2315,7 @@ if(auth->algorithm == OPEN_SYSTEM)
 		qsort(calist, i + 1, CALIST_SIZE, sort_calist_by_tsakt);
 		writeepb();
 		}
-	else if(__hcx16le(auth->sequence) == 2)  /* AP response */
+	else if(__hcx16le(auth->sequence) == 2) /* AP response */
 		{
 		if(__hcx16le(auth->status) == 0)
 			{
@@ -2546,7 +2546,7 @@ static u16 proberequestlen;
 static ieee80211_ietag_t *essid;
 
 proberequest = (ieee80211_proberequest_t*)payloadptr;
-if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE)  < IEEE80211_IETAG_SIZE) return;
+if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
 if((essid = get_tag(TAG_SSID, proberequestlen, proberequest->ie)) == NULL) return;
 if(essid->len > ESSID_MAX) return;
 
@@ -2720,7 +2720,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
 	(aplist + i)->apdata->rtfrequency = rtfrequency;
 	(aplist + i)->apdata->rtrssi = rtrssi;
-	if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2732,7 +2732,7 @@ memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
 (aplist + i)->apdata->rtfrequency = rtfrequency;
 (aplist + i)->apdata->rtrssi = rtrssi;
-if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2757,7 +2757,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		(aplist + i)->apdata->proberesponse = true;
 		writeepb();
 		}
-	if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2775,7 +2775,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->proberesponse = true;
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 memcpy((aplist + i)->apdata->macc, macclientrg, ETH_ALEN);
-if(__hcx16le(proberesponse->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
 if(apcountmax > 0)
@@ -2819,7 +2819,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	(aplist + i)->tsakt = tsakt;
 	(aplist + i)->apdata->rtfrequency = rtfrequency;
 	(aplist + i)->apdata->rtrssi = rtrssi;
-	if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+	if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2830,7 +2830,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 (aplist + i)->apdata->rtfrequency = rtfrequency;
 (aplist + i)->apdata->rtrssi = rtrssi;
-if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2918,7 +2918,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->beacon = true;
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 memcpy((aplist + i)->apdata->macc, macclientrg, ETH_ALEN);
-if(__hcx16le(beacon->capability) &  WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
+if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
 if(apcountmax > 0)
@@ -3471,7 +3471,7 @@ while(nla_ok(nlan, nlanremlen))
 		{
 		(freql + ipl->i)->frequency = *((u32*)nla_data(nlan));
 		(freql + ipl->i)->channel = frequency_to_channel((freql + ipl->i)->frequency);
-		if((freql + ipl->i)->channel == 0) (freql + ipl->i)->frequency  = 0;
+		if((freql + ipl->i)->channel == 0) (freql + ipl->i)->frequency = 0;
 		}
 	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_MAX_TX_POWER) (freql + ipl->i)->pwr = *((u32*)nla_data(nlan));
 	if(nlan->nla_type == NL80211_FREQUENCY_ATTR_DISABLED) (freql + ipl->i)->status = IF_STAT_FREQ_DISABLED;
@@ -5055,7 +5055,7 @@ while(bpf.len < BPF_MAXINSNS +1)
 		}
 	else
 		{
-		if(sscanf(linein, "{ %" SCNx16 ", %"  SCNu8 ", %" SCNu8 ", %" SCNx32 " },",&bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
+		if(sscanf(linein, "{ %" SCNx16 ", %" SCNu8 ", %" SCNu8 ", %" SCNx32 " },",&bpfptr->code, &bpfptr->jt, &bpfptr->jf, &bpfptr->k) != 4)
 			{
 			bpf.len = 0;
 			break;
