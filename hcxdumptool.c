@@ -625,7 +625,6 @@ if(rds == 1)
 		{
 		if((calist + i)->tsakt == 0) break;
 		if((scanlist + scanlistindex)->channel == (calist + i)->cadata->channel)
-
 		if((calist +i)->cadata->m2 == '+')
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
@@ -1164,6 +1163,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
 	(aplist + i)->tsakt = tsakt;
 	(aplist + i)->apdata->tsm3 = tsakt;
+	(aplist + i)->apdata->privacy = 'e';
 	if(memcmp((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN) != 0) break;
 	if(memcmp((aplist + i)->apdata->nonce, &wpakey->nonce[28], 4) != 0) break;
 	(aplist + i)->apdata->replaycount3 = __hcx64be(wpakey->replaycount);
@@ -1247,6 +1247,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	(aplist + i)->tsakt = tsakt;
 	(aplist + i)->apdata->tsm1 = tsakt;
 	(aplist + i)->apdata->m1 = '+';
+	(aplist + i)->apdata->privacy = 'e';
 	wanteventflag |= exiteapolm1flag;
 	if(memcmp(macclientrg, (aplist + i)->apdata->macc, ETH_ALEN) == 0) (aplist + i)->apdata->apcount = apcountmax;
 	memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
