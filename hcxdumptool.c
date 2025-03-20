@@ -1217,6 +1217,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(memcmp((aplist + i)->apdata->maca, macfrx->addr1, ETH_ALEN) != 0) continue;
 	(aplist + i)->tsakt = tsakt;
 	(aplist + i)->apdata->tsm2 = tsakt;
+	(aplist + i)->apdata->privacy ='e';
 	if(memcmp((aplist + i)->apdata->macc, macfrx->addr2, ETH_ALEN) != 0) break;
 	(aplist + i)->apdata->replaycount2 = __hcx64be(wpakey->replaycount);
 	if(((aplist + i)->apdata->replaycount1) != (aplist + i)->apdata->replaycount2) break;
@@ -1735,6 +1736,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	send_80211_null();
 	(aplist + i)->apdata->tsreassocresponse = tsakt;
 	(aplist + i)->apdata->apcount -= 1;
+	(aplist + i)->apdata->privacy = 'e';
 	if((aplist + i)->apdata->reassociationresponse == false)
 		{
 		(aplist + i)->apdata->reassociationresponse = true;
@@ -1754,6 +1756,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->apcount = apcountmax;
 (aplist + i)->apdata->reassociationresponse = true;
 (aplist + i)->apdata->aid = __hcx16le(capa->aid);
+(aplist + i)->apdata->privacy = 'e';
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -1791,6 +1794,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	send_80211_null();
 	(aplist + i)->apdata->tsassocresponse = tsakt;
 	(aplist + i)->apdata->apcount -= 1;
+	(aplist + i)->apdata->privacy = 'e';
 	if((aplist + i)->apdata->associationresponse == false)
 		{
 		(aplist + i)->apdata->associationresponse = true;
@@ -1810,6 +1814,7 @@ memset((aplist + i)->apdata, 0, APDATA_SIZE);
 (aplist + i)->apdata->apcount = apcountmax;
 (aplist + i)->apdata->associationresponse = true;
 (aplist + i)->apdata->aid = __hcx16le(capa->aid);
+(aplist + i)->apdata->privacy = 'e';
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -2306,6 +2311,7 @@ if(auth->algorithm == OPEN_SYSTEM)
 		(calist + i)->cadata->clientcount = clientcountmax;
 		memcpy((calist + i)->cadata->maca, macfrx->addr1, ETH_ALEN);
 		memcpy((calist + i)->cadata->macc, macfrx->addr2, ETH_ALEN);
+		(aplist + i)->apdata->privacy = ' ';
 		if(clientcountmax > 0)
 			{
 			(calist + i)->cadata->tsauth = tsakt;
@@ -2350,6 +2356,7 @@ if(auth->algorithm == OPEN_SYSTEM)
 			(aplist + i)->apdata->akmstat = ' ';
 			(aplist + i)->apdata->apcount = apcountmax;
 			(aplist + i)->apdata->opensystem = 1;
+			(aplist + i)->apdata->privacy = ' ';
 			memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 			memcpy((aplist + i)->apdata->macc, macfrx->addr1, ETH_ALEN);
 			if(apcountmax > 0)
