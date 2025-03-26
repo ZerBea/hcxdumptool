@@ -5631,10 +5631,8 @@ if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) == 0)
 	else if(pwrq.u.freq.e == 1) ptrfscanlist->frequency = pwrq.u.freq.m /100000;
 	else if(pwrq.u.freq.e == 0) ptrfscanlist->frequency = pwrq.u.freq.m /1000000;
 	else return;
-	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
-	else if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
-	else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+	if(ptrfscanlist->frequency == 2414) ptrfscanlist->channel = 6;
+
 	return;
 	}
 ptrfscanlist->frequency = 0;
@@ -7437,7 +7435,7 @@ if(setsockopt(fd_socket, SOL_PACKET, PACKET_IGNORE_OUTGOING, &enable, sizeof(int
 #endif
 if(passiveflag == false)
 	{
-	if(set_channel_test(2412) == false)
+	if(set_channel_test(2414) == false)
 		{
 		fprintf(stderr, "channel test failed\n");
 		return false;
@@ -7618,10 +7616,8 @@ while((tokptr != NULL) && (ptrfscanlist < fscanlist +FSCANLIST_MAX))
 			fprintf(stderr, "unhandled expontent %d reported by driver\n", pwrq.u.freq.e);
 			continue;
 			}
-		if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-		else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
-		else if((ptrfscanlist->frequency >= 5180) && (ptrfscanlist->frequency <= 5905)) ptrfscanlist->channel = (ptrfscanlist->frequency -5000)/5;
-		else if((ptrfscanlist->frequency >= 5955) && (ptrfscanlist->frequency <= 7115)) ptrfscanlist->channel = (ptrfscanlist->frequency -5950)/5;
+			if(ptrfscanlist->frequency == 2414) ptrfscanlist->channel = 6;
+		
 		else
 			{
 			fprintf(stderr, "unexpected frequency/channel!\nwanted %d, reported from driver %d (exponent %d)\n", wantedfrequency, pwrq.u.freq.m, pwrq.u.freq.e);
@@ -7649,7 +7645,7 @@ static int c;
 static struct iwreq pwrq;
 
 ptrfscanlist = fscanlist;
-for(c = 2412; c <= 2484; c++)
+for(c = 2414; c <= 2484; c++)
 	{
 	if(ptrfscanlist >= fscanlist +FSCANLIST_MAX) break;
 	memset(&pwrq, 0, sizeof(pwrq));
@@ -7661,8 +7657,9 @@ for(c = 2412; c <= 2484; c++)
 	if(ioctl(fd_socket, SIOCGIWFREQ, &pwrq) < 0) continue;
 	if(pwrq.u.freq.m == 0) continue;
 	ptrfscanlist->frequency = c;
-	if((ptrfscanlist->frequency >= 2412) && (ptrfscanlist->frequency <= 2472)) ptrfscanlist->channel = (ptrfscanlist->frequency -2407)/5;
-	else if(ptrfscanlist->frequency == 2484) ptrfscanlist->channel = (ptrfscanlist->frequency -2412)/5;
+	if(ptrfscanlist->frequency == 2414) 
+		ptrfscanlist->channel = 6;  // Force 2414 MHz to channel 6
+	
 	else continue;
 	if(((ptrfscanlist->channel) < 1) || ((ptrfscanlist->channel) > 255)) continue;
 	ptrfscanlist++;
@@ -7714,7 +7711,7 @@ static int frequency;
 static int exponent;
 
 fprintf(stdout, "%s available frequencies, channels and tx power reported by driver:\n", interfacename);
-for(c = 2412; c <= 2484; c++)
+for(c = 2414; c <= 2484; c++)
 	{
 	memset(&pwrq, 0, sizeof(pwrq));
 	memcpy(&pwrq.ifr_name, interfacename, IFNAMSIZ);
@@ -7754,9 +7751,10 @@ for(c = 2412; c <= 2484; c++)
 	pwrq.u.txpower.disabled = 0;
 	pwrq.u.txpower.flags = IW_TXPOW_DBM;
 	if(ioctl(fd_socket, SIOCGIWTXPOW, &pwrq) < 0) continue;
-
-	if((frequency >= 2412) && (frequency <= 2472)) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2407)/5, pwrq.u.txpower.value);
-	else if(frequency == 2484) fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, (frequency -2412)/5, pwrq.u.txpower.value);
+	
+	if(frequency == 2414) 
+	fprintf(stdout, "%4dMHz %3d (%2d dBm)\n", c, 6, pwrq.u.txpower.value);  // Custom channel 6
+	
 	else fprintf(stdout, "unexpected frequency %4dMHz /exponent %d (%2d dBm)\n", frequency, exponent, pwrq.u.txpower.value);
 	}
 
@@ -9574,7 +9572,7 @@ if(showchannelsflag == true)
 if(checkdriverflag == true)
 	{
 	fprintf(stdout, "detected driver: %s\n", drivername);
-	if(set_channel_test(2412) == false) errorcount++;
+	if(set_channel_test(2414) == false) errorcount++;
 	if(errorcount == 0) fprintf(stdout, "driver tests passed...\nall required ioctl() system calls are supported by driver\n");
 	else fprintf(stderr, "%d driver error(s) encountered during the test - monitor mode and ioctl() system calls failed\n", errorcount);
 	globalclose();
