@@ -479,8 +479,8 @@ if(rdtflag == false)
 	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
 	if(w.ws_row > 10) w.ws_row -= 4;
 	}
-fprintf(stdout, "CHA  BEACON  RESPONSE RSSI    MAC-AP    ESSID                  SCAN:%6u/%u\n"
-		"------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
+fprintf(stdout, "CHA| BEACON |RESPONSE|RSSI|   MAC-AP   |ESSID                (SCAN:%6u/%u)\n"
+		"---+--------+--------+----+------------+--------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
 if(rds == 0)
 	{
 	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
@@ -495,7 +495,7 @@ if(rds == 0)
 				{
 				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
 				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|%s|%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -503,7 +503,7 @@ if(rds == 0)
 				}
 			else
 				{
-				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|        |%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -527,7 +527,7 @@ else if(rds == 1)
 				{
 				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
 				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|%s|%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -535,7 +535,7 @@ else if(rds == 1)
 				}
 			else
 				{
-				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|        |%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -558,7 +558,7 @@ else if(rds == 2)
 				{
 				tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
 				strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s %s %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|%s|%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -566,7 +566,7 @@ else if(rds == 2)
 				}
 			else
 				{
-				fprintf(stdout, "%3u %s          %4d %02x%02x%02x%02x%02x%02x %.*s\n",
+				fprintf(stdout, "%3u|%s|        |%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
 				(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
 				(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
 				(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
@@ -595,8 +595,8 @@ if(rdtflag == false)
 	}
 qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 qsort(calist, CALIST_MAX, CALIST_SIZE, sort_calist_by_tsakt);
-fprintf(stdout, "CHA   LAST   EA123P    MAC-CL       MAC-AP    ESSID            SCAN:%6u/%u\n"
-		"------------------------------------------------------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
+fprintf(stdout, "CHA|  LAST  |EA123P|   MAC-CL   |   MAC-AP   |ESSID          (SCAN:%6u/%u)\n"
+		"---+--------+------+------------+------------+--------------------------------\n", (scanlist + scanlistindex)->frequency, (scanlist + scanlistindex)->channel);
 if(rds == 1)
 	{
 	for(i = 0; i < APLIST_MAX - 1; i++)
@@ -606,7 +606,7 @@ if(rds == 1)
 			{
 			tvlast = (aplist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-			fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+			fprintf(stdout, "%3u|%s|%c%c%c%c%c%c|%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (aplist + i)->apdata->channel, timestring,
 			(aplist + i)->apdata->privacy,
 			(aplist + i)->apdata->akmstat,
 			(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
@@ -629,7 +629,7 @@ if(rds == 1)
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				fprintf(stdout, "%3u|%s|ep+%c  |%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (calist + i)->cadata->channel, timestring,
 				(calist + i)->cadata->m2,
 				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
 				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
@@ -652,7 +652,7 @@ else if(rds == 2)
 			{
 			tvlast = (aplist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+				fprintf(stdout, "%3u|%s|%c%c%c%c%c%c|%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (aplist + i)->apdata->channel, timestring,
 				(aplist + i)->apdata->privacy,
 				(aplist + i)->apdata->akmstat,
 				(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
@@ -674,7 +674,7 @@ else if(rds == 2)
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				fprintf(stdout, "%3u|%s|ep+%c  |%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (calist + i)->cadata->channel, timestring,
 				(calist + i)->cadata->m2,
 				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
 				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
@@ -695,7 +695,7 @@ else if(rds == 3)
 		if((aplist + i)->tsakt == 0) break;
 		tvlast = (aplist +i)->tsakt / 1000000000ULL;
 		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-			fprintf(stdout, "%3u %s %c%c%c%c%c%c %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (aplist + i)->apdata->channel, timestring,
+			fprintf(stdout, "%3u|%s|%c%c%c%c%c%c|%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (aplist + i)->apdata->channel, timestring,
 			(aplist + i)->apdata->privacy,
 			(aplist + i)->apdata->akmstat,
 			(aplist + i)->apdata->m1, (aplist + i)->apdata->m1m2, (aplist + i)->apdata->m1m2m3, (aplist + i)->apdata->pmkid,
@@ -716,7 +716,7 @@ else if(rds == 3)
 			{
 			tvlast = (calist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%3u %s ep+%c   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", (calist + i)->cadata->channel, timestring,
+				fprintf(stdout, "%3u|%s|ep+%c  |%02x%02x%02x%02x%02x%02x|%02x%02x%02x%02x%02x%02x|%.*s\n", (calist + i)->cadata->channel, timestring,
 				(calist + i)->cadata->m2,
 				(calist + i)->cadata->macc[00], (calist + i)->cadata->macc[01], (calist + i)->cadata->macc[02],
 				(calist + i)->cadata->macc[03],	(calist + i)->cadata->macc[04], (calist + i)->cadata->macc[05],
