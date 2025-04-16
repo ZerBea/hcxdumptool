@@ -575,6 +575,34 @@ else if(rds == 2)
 			}
 		}
 	}
+else if(rds == 3)
+	{
+	qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_rtrssi);
+	for(i = 0; i < APLIST_MAX - 1; i++)
+		{
+		if((aplist + i)->tsakt == 0) break;
+		tvlast = (aplist +i)->tsakt / 1000000000ULL;
+		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+		if((aplist + i)->apdata->tsresponse > 0)
+			{
+			tvlast = (aplist + i)->apdata->tsresponse / 1000000000ULL;
+			strftime(timestringresponse, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
+			fprintf(stdout, "%3u|%s|%s|%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
+			(aplist + i)->apdata->channel, timestring, timestringresponse, (s8)(aplist + i)->apdata->rtrssi,
+			(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+			(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+			(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+			}
+		else
+			{
+			fprintf(stdout, "%3u|%s|        |%4d|%02x%02x%02x%02x%02x%02x|%.*s\n",
+			(aplist + i)->apdata->channel, timestring, (s8)(aplist + i)->apdata->rtrssi,
+			(aplist + i)->apdata->maca[00], (aplist + i)->apdata->maca[01], (aplist + i)->apdata->maca[02],
+			(aplist + i)->apdata->maca[03],	(aplist + i)->apdata->maca[04], (aplist + i)->apdata->maca[05],
+			(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+			}
+		}
+	}
 qsort(aplist, APLIST_MAX, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -5376,6 +5404,7 @@ fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"                     0 = show APs on current channel sorted by BEACON timestamp\n"
 	"                     1 = show APs on current channel sorted by PROBERESPONSE timestamp\n"
 	"                     2 = show APs on current channel sorted by RSSI\n"
+	"                     3 = show APs of all channels sorted by RSSI\n"
 	"--rdt            : disable TIOCGWINSZ for real time displays\n"
 	"--rcascan=<mode> : radio channel assement scan\n"
 	"                    (a)ctive = activ scan (transmit undirected PROBEREQUEST frames)\n"
