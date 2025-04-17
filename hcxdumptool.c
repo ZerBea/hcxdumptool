@@ -3422,8 +3422,11 @@ while(!wanteventflag)
 			if((lifetime % 5) == 0)
 				{
 				show_realtime_rca();
-				scanlistindex++;
-				if(nl_set_frequency() == false) errorcount++;
+				if((lifetime % timehold) == 0)
+					{
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					}
 				if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
 				}
 			if((lifetime % 10) == 0)
