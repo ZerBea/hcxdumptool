@@ -3304,7 +3304,6 @@ if(gpiostatusled > 0)
 	nanosleep(&sleepled, NULL);
 	GPIO_CLR = 1 << gpiostatusled;
 	}
-
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
