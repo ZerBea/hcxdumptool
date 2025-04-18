@@ -5666,6 +5666,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		exiteapolpmkidflag |= exiteapolflag & EXIT_ON_EAPOL_PMKID;
 		exiteapolm3flag |= exiteapolflag & EXIT_ON_EAPOL_M3;
 		exiteapolm2rgflag |= exiteapolflag & EXIT_ON_EAPOL_M2RG;
+		exiteapolm2flag |= exiteapolflag & EXIT_ON_EAPOL_M2;
 		exiteapolm1flag |= exiteapolflag & EXIT_ON_EAPOL_M1;
 		break;
 
