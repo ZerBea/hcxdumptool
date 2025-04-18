@@ -3334,7 +3334,6 @@ while(!wanteventflag)
 				scanlistindex++;
 				if(nl_set_frequency() == false) errorcount++;
 				}
-			else if((lifetime % 5) == 0) show_realtime();
 			if((lifetime % 10) == 0)
 				{
 				if(gpiostatusled > 0)
@@ -3419,14 +3418,11 @@ while(!wanteventflag)
 			{
 			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
-			if((lifetime % 5) == 0)
+			if((lifetime % timehold) == 0)
 				{
 				show_realtime_rca();
-				if((lifetime % timehold) == 0)
-					{
-					scanlistindex++;
-					if(nl_set_frequency() == false) errorcount++;
-					}
+				scanlistindex++;
+				if(nl_set_frequency() == false) errorcount++;
 				if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
 				}
 			if((lifetime % 10) == 0)
