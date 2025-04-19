@@ -3327,11 +3327,23 @@ while(!wanteventflag)
 			{
 			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
-			if((lifetime % timehold) == 0)
+			if(timehold < TIMEHOLD)
 				{
-				show_realtime();
-				scanlistindex++;
-				if(nl_set_frequency() == false) errorcount++;
+				if((lifetime % timehold) == 0)
+					{
+					show_realtime();
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					}
+				}
+			else
+				{
+				if((lifetime % 5) == 0)
+					{
+					show_realtime();
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					}
 				}
 			if((lifetime % 10) == 0)
 				{
@@ -3417,12 +3429,25 @@ while(!wanteventflag)
 			{
 			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
 			lifetime++;
-			if((lifetime % timehold) == 0)
+			if(timehold < TIMEHOLD)
 				{
-				show_realtime_rca();
-				scanlistindex++;
-				if(nl_set_frequency() == false) errorcount++;
-				if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
+				if((lifetime % timehold) == 0)
+					{
+					show_realtime_rca();
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
+					}
+				}
+			else
+				{
+				if((lifetime % 5) == 0)
+					{
+					show_realtime_rca();
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
+					}
 				}
 			if((lifetime % 10) == 0)
 				{
