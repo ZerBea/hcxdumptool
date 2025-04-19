@@ -1181,7 +1181,7 @@ writeepb();
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void process80211eapol_m3(void)
+  static inline __attribute__((always_inline)) void process80211eapol_m3(void)
 {
 size_t i;
 
@@ -5457,7 +5457,7 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
 	"                             bitmask:\n"
 	"                               1 = PMKID (from AP)\n"
-	"                               2 = EAPOL M2M3 (authorized)\n"
+	"                               2 = EAPOL M1M2M3 (authorized)\n"
 	"                               4 = EAPOL M1M2 (not authorized)\n"
 	"                               8 = EAPOL M1M2ROGUE (not authorized)\n"
 	"                              16 = EAPOL M1\n"
