@@ -5327,7 +5327,7 @@ __attribute__ ((noreturn))
 static inline void usage_additional(char *eigenname)
 {
 fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
-	"Additional information:\n-----------------------\n"
+	"Additional information (for commonly used options use -h):\n----------------------------------------------------------\n"
 	"press GPIO button to terminate\n"
 	" hardware modification is necessary, read more:\n"
 	" https://github.com/ZerBea/hcxdumptool/tree/master/docs\n"

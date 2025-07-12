@@ -1,3 +1,31 @@
+12.07.2025
+==========
+added an information to --help that there is another help menu (-h)
+
+$ hcxdumptool --help
+hcxdumptool 6.3.5-148-gdabec8a  (C) 2025 ZeroBeat
+Additional information (for commonly used options use -h):
+----------------------------------------------------------
+press GPIO button to terminate
+ hardware modification is necessary, read more:
+ https://github.com/ZerBea/hcxdumptool/tree/master/docs
+to store entire traffic, run tshark in parallel on the same interface:
+ $ tshark -i <interface> -w allframes.pcapng
+
+Berkeley Packet Filter:
+-----------------------
+  see man bpfc
+
+Important recommendation:
+-------------------------
+Do not set monitor mode by third party tools or third party scripts!
+Do not use virtual interfaces (monx, wlanxmon, prismx, ...)!
+Do not use virtual machines or emulators!
+Do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)!
+Do not use tools to change the virtual MAC (like macchanger)!
+Do not merge (pcapng) dump files, because this destroys assigned hash values!
+
+
 15.03.2025
 ==========
 hcxdumptool: added new option --rdt to disable TIOCGWINSZ
