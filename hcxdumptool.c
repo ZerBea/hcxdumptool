@@ -2581,7 +2581,7 @@ static u16 proberequestlen;
 static ieee80211_ietag_t *essid;
 
 proberequest = (ieee80211_proberequest_t*)payloadptr;
-if((proberequestlen = payloadlen - IEEE80211_PROBERESPONSE_SIZE) < IEEE80211_IETAG_SIZE) return;
+if((proberequestlen = payloadlen - IEEE80211_PROBEREQUEST_SIZE) < IEEE80211_IETAG_SIZE) return;
 if((essid = get_tag(TAG_SSID, proberequestlen, proberequest->ie)) == NULL) return;
 if(essid->len > ESSID_MAX) return;
 
