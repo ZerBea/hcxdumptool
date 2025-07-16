@@ -240,7 +240,7 @@ By default, hcxdumptool is utilizing three attack vectors:
 
 - Disconnecting a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
 
-- Allowing a CLIENT to connect to hcxdumptool to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax)
+- Allowing a CLIENT to connect to hcxdumptool (OSI layer 2 attack) to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax) 
 
 > [!WARNING]
 >
@@ -297,3 +297,5 @@ By default, hcxdumptool is utilizing three attack vectors:
 - [Status of Realtek out-of-kernel Drivers](https://github.com/morrownr/USB-WiFi/issues/314)
 
 - [PCAPNG Status Options](https://github.com/ZerBea/hcxdumptool/blob/master/docs/option-codes.md)
+
+- [OSI](https://www.geeksforgeeks.org/computer-networks/open-systems-interconnection-model-osi)
