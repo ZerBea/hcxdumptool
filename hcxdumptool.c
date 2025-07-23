@@ -4772,7 +4772,6 @@ if(bpf.len > 0)
 		#ifdef HCXDEBUG
 		fprintf(fh_debug, "SO_ATTACH_FILTER failed: %s\n", strerror(errno));
 		#endif
-		return false;
 		}
 	}
 memset(&saddr, 0, sizeof(saddr));
