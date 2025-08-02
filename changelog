@@ -1,3 +1,9 @@
+02.08.2025
+==========
+release v7.0.0 (according to hashcat v7.0.0)
+workaround on OpenWRT Linux Kernel bug: https://github.com/openwrt/openwrt/issues/19405
+
+
 12.07.2025
 ==========
 added an information to --help that there is another help menu (-h)
