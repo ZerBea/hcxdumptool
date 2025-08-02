@@ -3,6 +3,15 @@
 release v7.0.0 (according to hashcat v7.0.0)
 workaround on OpenWRT Linux Kernel bug: https://github.com/openwrt/openwrt/issues/19405
 
+$ hcxdumptool -v
+hcxdumptool 7.0.0 (C) 2025 ZeroBeat
+running on Linux kernel 6.12.40-2-lts
+running GNU libc version 2.42
+compiled by gcc 15.1.1
+compiled with Linux API headers 6.16.0
+compiled with GNU libc headers 2.42
+enabled BPF compiler
+
 
 12.07.2025
 ==========
