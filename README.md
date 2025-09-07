@@ -236,11 +236,11 @@ The BPF can be used to select a target (or multible targets) or to protect devic
 
 By default, hcxdumptool is utilizing three attack vectors:
 
-- Connecting to an ACCESS POINT to get a PMKID (turn off by --attemptapmax)
+- Connecting to an ACCESS POINT to get a PMKID (turn off by --associationmax=0)
 
-- Disconnecting a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --attemptapmax)
+- Disconnecting a CLIENT from an associated ACCESS POINT to get a complete handshake (M1M2M3M4) and a PMKID (turn off by --disable_disassociation)
 
-- Allowing a CLIENT to connect to hcxdumptool (OSI layer 2 attack) to get a challenge (M1M2) or an EAP-ID (turn off by --attemptclientmax) 
+- Allowing a CLIENT to connect to hcxdumptool (OSI layer 2 attack) to get a challenge (M1M2) or an EAP-ID (turn off by --m2max=0) 
 
 > [!WARNING]
 >
