@@ -1,3 +1,14 @@
+08.09.2025
+==========
+hcxdumptool modified option proberesponsetx: 
+--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer
+                             default: 1023
+                             to disable transmitting of PROBERESPONSE frames set 0
+
+Important notice:
+This does not disable to retrieve an M2 of a CLIENT that is connected to an AP.
+To disable this too set m2max to 0.
+
 02.08.2025
 ==========
 release v7.0.0 (according to hashcat v7.0.0)

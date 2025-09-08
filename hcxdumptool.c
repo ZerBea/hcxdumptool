@@ -2450,10 +2450,10 @@ static inline __attribute__((always_inline)) void send_80211_probereresponse_lis
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
+if(proberesponsetxmax == 0) return;
 if(proberesponsetxindex >= proberesponsetxmax) proberesponsetxindex = 0;
 if((aprglist + proberesponsetxindex)->tsakt == 0) proberesponsetxindex = 0;
 if((aprglist + proberesponsetxindex)->tsakt == 0) return;
-
 ii = RTHTX_SIZE;
 macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2496,6 +2496,7 @@ static inline __attribute__((always_inline)) void send_80211_probereresponse_dir
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
+if(proberesponsetxmax == 0) return;
 ii = RTHTX_SIZE;
 macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -2537,6 +2538,7 @@ static inline __attribute__((always_inline)) void send_80211_probereresponse(apd
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
 
+if(proberesponsetxmax == 0) return;
 ii = RTHTX_SIZE;
 macftx = (ieee80211_mac_t*)&wltxbuffer[ii];
 macftx->type = IEEE80211_FTYPE_MGMT;
@@ -5446,6 +5448,7 @@ fprintf(stdout, "less common options:\n--------------------\n"
 	"--disable_disassociation  : do not transmit DISASSOCIATION frames\n"
 	"--proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer\n"
 	"                             default: %d\n"
+	"                             to disable transmission of PROBERESPONSE frames set 0\n"
 	"--essidlist=<file>        : initialize ESSID list with these ESSIDs\n"
 	"--errormax=<digit>        : set maximum allowed ERRORs\n"
 	"                             default: %d ERRORs\n"
