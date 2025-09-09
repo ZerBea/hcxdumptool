@@ -5552,7 +5552,7 @@ static const struct option long_options[] =
 	{"disable_disassociation",	no_argument,		NULL,	HCX_DISABLE_DISASSOCIATION},
 	{"m2max",			required_argument,	NULL,	HCX_M1M2ROGUE_MAX},
 	{"associationmax",		required_argument,	NULL,	HCX_APCOUNT_MAX},
-	{"prtxmax",			required_argument,	NULL,	HCX_PRTX_MAX},
+	{"proberesponsetx",		required_argument,	NULL,	HCX_PRTX_MAX},
 	{"tot",				required_argument,	NULL,	HCX_TOT},
 	{"essidlist",			required_argument,	NULL,	HCX_ESSIDLIST},
 	{"errormax",			required_argument,	NULL,	HCX_ERROR_MAX},
