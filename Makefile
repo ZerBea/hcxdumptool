@@ -15,7 +15,7 @@ BINDIR		= $(DESTDIR)$(PREFIX)/bin
 HOSTOS		:= $(shell uname -s)
 
 CC		?= gcc
-CFLAGS		?= -O3 -Wall -Wextra -Wpedantic
+CFLAGS		?= -O3 -Wall -Wextra -Wpedantic -Wstrict-prototypes -Wunused-function
 CFLAGS		+= -std=gnu99
 # uncomment to enable DEBUG symbols
 #CFLAGS		+= -ggdb -fsanitize=address

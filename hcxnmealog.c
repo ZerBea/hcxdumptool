@@ -86,7 +86,7 @@ static char nmeaoutbuffer[NMEA_SIZE] = { 0 };
 static u8 rx[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 rxbuffer[PCAPNG_SNAPLEN * 2] = { 0 };
 /*===========================================================================*/
-static void close_devices()
+static void close_devices(void)
 {
 if(fd_gps != 0) close(fd_gps);
 if(fd_socket_rx != 0)
@@ -350,9 +350,6 @@ else
 	fprintf(stderr, "no GPS device selected\n");
 	return EXIT_SUCCESS;
 	}
-
-
-
 return true;
 }
 /*===========================================================================*/
@@ -390,7 +387,7 @@ if(timerfd_settime(fd_timer, 0, &tval, NULL) == -1) return false;
 return true;
 }
 /*===========================================================================*/
-static void global_deinit()
+static void global_deinit(void)
 {
 static size_t i;
 

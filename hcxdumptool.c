@@ -2445,7 +2445,7 @@ if(memcmp(macfrx->addr3, macfrx->addr1, ETH_ALEN) == 0)
 return;
 }
 /*---------------------------------------------------------------------------*/
-static inline __attribute__((always_inline)) void send_80211_probereresponse_list()
+static inline __attribute__((always_inline)) void send_80211_probereresponse_list(void)
 {
 static ssize_t ii;
 static ieee80211_beacon_proberesponse_t *beacontx;
@@ -3377,7 +3377,7 @@ while(!wanteventflag)
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_scanloop_rcascan()
+static bool nl_scanloop_rcascan(void)
 {
 static ssize_t i;
 static int fd_epoll = 0;
