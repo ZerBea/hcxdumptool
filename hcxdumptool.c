@@ -140,6 +140,8 @@ static int apcountmax = APCOUNT_MAX;
 static int clientcountmax = CLIENTCOUNT_MAX;
 
 static u64 packetcount = 1;
+static u64 beaconrcascancount = 0; 
+static u64 proberesponsercascancount = 0;
 static size_t proberesponsetxindex = 0;
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
 
@@ -2670,6 +2672,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+	proberesponsercascancount++;
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
@@ -2682,6 +2685,7 @@ if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsre
 if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+proberesponsercascancount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -2769,6 +2773,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	beaconrcascancount++;
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
@@ -2780,6 +2785,7 @@ memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+beaconrcascancount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -5797,6 +5803,11 @@ close_lists();
 if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
+if(rcascanmode == RCASCAN_ACTIVE)
+	{
+	if(beaconrcascancount == 0) fprintf(stderr, "0 BEACONs received (monitor mode is possibly broken)\n");
+	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly broken)\n");
+	}
 if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime (mostly caused by a broken driver)\n", errorcount);
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver)\n", errortxcount);
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
