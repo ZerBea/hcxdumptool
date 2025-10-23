@@ -5803,15 +5803,15 @@ close_lists();
 if(rooterrorflag == true) exit(EXIT_FAILURE);
 if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfoflag == true) || (interfacelistshortflag == true)) return EXIT_SUCCESS;
 fprintf(stdout, "\n\033[?25h");
-if(rcascanmode == RCASCAN_ACTIVE)
-	{
-	if(beaconrcascancount == 0) fprintf(stderr, "0 BEACONs received (monitor mode is possibly broken)\n");
-	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly broken)\n");
-	}
 if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime (mostly caused by a broken driver)\n", errorcount);
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver)\n", errortxcount);
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
+if(rcascanmode == RCASCAN_ACTIVE)
+	{
+	if(beaconrcascancount == 0) fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
+	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly notworking)\n");
+	}
 if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
 	{
