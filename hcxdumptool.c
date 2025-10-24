@@ -5392,6 +5392,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_PCAPNGNAME:
 		pcapngoutname = optarg;
+		if(rcascanmode  != 0)
+			{
+			fprintf(stderr, "combination of --rcascan and -w is not allowed\n");
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		case HCX_SET_SCANLIST_FROM_INTERFACE:
@@ -5579,6 +5584,12 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "only (a)ctive or (p)assive is allowed\n");
 			exit(EXIT_FAILURE);
 			}
+		if(pcapngoutname != NULL)
+			{
+			fprintf(stderr, "combination of --rcascan and -w is not allowed\n");
+			exit(EXIT_FAILURE);
+			}
+
 		break;
 
 		case HCX_HELP:
