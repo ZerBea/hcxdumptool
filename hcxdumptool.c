@@ -1204,6 +1204,10 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
 	wanteventflag |= exiteapolm3flag;
 	(aplist + i)->apdata->m1m2m3 = '+';
+	if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2M3\n",
+				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
+				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
 	writeepb();
 	return;
 	}
@@ -1230,6 +1234,10 @@ if(replaycountrg == replaycount)
 			memcpy((calist + i)->cadata->mic, wpakey->keymic, KEYMIC_MAX);
 			(calist + i)->cadata->clientcount -= 1;
 			(calist + i)->cadata->m2 = '+';
+			if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2ROGUE\n",
+					    (calist + i)->cadata->maca[0], (calist + i)->cadata->maca[1], (calist + i)->cadata->maca[2], (calist + i)->cadata->maca[3], (calist + i)->cadata->maca[4], (calist + i)->cadata->maca[5],
+					    (calist + i)->cadata->maca[0], (calist + i)->cadata->macc[1], (calist + i)->cadata->macc[2], (calist + i)->cadata->macc[3], (calist + i)->cadata->macc[4], (calist + i)->cadata->macc[5],
+					    (calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
 			(calist + i)->cadata->channel = (scanlist + scanlistindex)->channel;
 			wanteventflag |= exiteapolm2rgflag;
 			if((calist + i)->cadata->akm == RSNPSK) writeepbm1wpa2();
@@ -1253,6 +1261,10 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(((aplist + i)->apdata->replaycount1) != (aplist + i)->apdata->replaycount2) break;
 	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
 	(aplist + i)->apdata->m1m2 = '+';
+	if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2\n",
+				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
+				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
+				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
 	wanteventflag |= exiteapolm2flag;
 	writeepb();
 	return;
@@ -1295,7 +1307,14 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 					{
 					if(memcmp(zeroed, pmkid->pmkid, PMKID_MAX) != 0)
 						{
-						if((aplist + i)->apdata->essidlen != 0) (aplist + i)->apdata->pmkid = '+';
+						if((aplist + i)->apdata->essidlen != 0)
+							{
+							(aplist + i)->apdata->pmkid = '+';
+							if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s PMKID\n",
+							(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
+							(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
+							(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
+							}
 						memcpy((aplist + i)->apdata->rsnpmkid, pmkid->pmkid, PMKID_MAX);
 						wanteventflag |= exiteapolpmkidflag;
 						}
@@ -3262,6 +3281,94 @@ while(!wanteventflag)
 					scanlistindex++;
 					if(nl_set_frequency() == false) errorcount++;
 					}
+				}
+			if((lifetime % 10) == 0)
+				{
+				if(gpiostatusled > 0)
+					{
+					GPIO_SET = 1 << gpiostatusled;
+					nanosleep(&sleepled, NULL);
+					GPIO_CLR = 1 << gpiostatusled;
+					}
+				if(gpiobutton > 0)
+					{
+					if(GET_GPIO(gpiobutton) > 0)
+						{
+						wanteventflag |= EXIT_ON_GPIOBUTTON;
+						if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
+						}
+					}
+				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
+			if((lifetime % timewatchdog) == 0)
+				{
+				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
+				packetcountlast = packetcount;
+				}
+			}
+		}
+	}
+return true;
+}
+/*---------------------------------------------------------------------------*/
+static bool nl_scanloop_waterfall(void)
+{
+static ssize_t i;
+static int fd_epoll = 0;
+static int epi = 0;
+static int epret = 0;
+static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
+static size_t packetcountlast = 0;
+static u64 timer1count;
+static struct timespec sleepled;
+
+if((fd_epoll= epoll_create(1)) < 0) return false;
+ev.data.fd = fd_socket_rx;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_socket_rx, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer1;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+sleepled.tv_sec = 0;
+sleepled.tv_nsec = GPIO_LED_DELAY;
+if(gpiostatusled > 0)
+	{
+	GPIO_SET = 1 << gpiostatusled;
+	nanosleep(&sleepled, NULL);
+	GPIO_CLR = 1 << gpiostatusled;
+	}
+if(nl_set_frequency() == false) errorcount++;
+while(!wanteventflag)
+	{
+	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+	epret = epoll_pwait(fd_epoll, events, epi, timerwaitnd, NULL);
+	if(epret == -1)
+		{
+		if(errno != EINTR)
+			{
+			#ifdef HCXDEBUG
+			fprintf(fh_debug, "epret failed: %s\n", strerror(errno));
+			#endif
+			errorcount++;
+			}
+		continue;
+		}
+	for(i = 0; i < epret; i++)
+		{
+		if(events[i].data.fd == fd_socket_rx) process_packet();
+		else if(events[i].data.fd == fd_timer1)
+			{
+			if(read(fd_timer1, &timer1count, sizeof(u64)) == -1) errorcount++;
+			lifetime++;
+			if((lifetime % timehold) == 0)
+				{
+				scanlistindex++;
+				if(nl_set_frequency() == false) errorcount++;
 				}
 			if((lifetime % 10) == 0)
 				{
@@ -5785,6 +5892,14 @@ if(rcascanmode > 0)
 else if(rds == 0)
 	{
 	if(nl_scanloop() == false)
+		{
+		errorcount++;
+		fprintf(stderr, "failed to initialize main scan loop\n");
+		}
+	}
+else if(rds == 5)
+	{
+	if(nl_scanloop_waterfall() == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize main scan loop\n");
