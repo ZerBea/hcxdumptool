@@ -1209,7 +1209,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		{
 		tvlast = (aplist +i)->tsakt / 1000000000ULL;
 		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-		fprintf(stdout, "%s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2M3\n", timestring,
+		fprintf(stdout, "%s M123     %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -1245,7 +1245,7 @@ if(replaycountrg == replaycount)
 				{
 				tvlast = (calist +i)->tsakt / 1000000000ULL;
 				strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-				fprintf(stdout, "%s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2ROGUE\n", timestring,
+				fprintf(stdout, "%s M12ROGUE %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
 						(calist + i)->cadata->maca[0], (calist + i)->cadata->maca[1], (calist + i)->cadata->maca[2], (calist + i)->cadata->maca[3], (calist + i)->cadata->maca[4], (calist + i)->cadata->maca[5],
 						(calist + i)->cadata->maca[0], (calist + i)->cadata->macc[1], (calist + i)->cadata->macc[2], (calist + i)->cadata->macc[3], (calist + i)->cadata->macc[4], (calist + i)->cadata->macc[5],
 						(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
@@ -1277,7 +1277,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		{
 		tvlast = (aplist +i)->tsakt / 1000000000ULL;
 		strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-		fprintf(stdout, "%s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2\n", timestring,
+		fprintf(stdout, "%s M12      %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -1332,7 +1332,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 								{
 								tvlast = (aplist +i)->tsakt / 1000000000ULL;
 								strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-								fprintf(stdout, "%s %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s PMKID\n", timestring,
+								fprintf(stdout, "%s PMKID    %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
 										(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 										(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 										(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -5324,6 +5324,7 @@ fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)\n"
 	"                     3 = show all APs, show CLIENTs (M1M2ROGUE)\n"
 	"                     4 = show waterfall (PMKID & EAPOL)\n"
+	"                          TIME TYPE MAC_AP MAC_CLIENT ESSID\n"
 	"                     columns:\n"
 	"                      E = encryption (e)ncrypted / (o)pen\n"
 	"                      A = AKM (p)re-shared key\n"
