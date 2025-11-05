@@ -1204,7 +1204,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
 	wanteventflag |= exiteapolm3flag;
 	(aplist + i)->apdata->m1m2m3 = '+';
-	if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2M3\n",
+	if(rds == 4) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2M3\n",
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -1234,7 +1234,7 @@ if(replaycountrg == replaycount)
 			memcpy((calist + i)->cadata->mic, wpakey->keymic, KEYMIC_MAX);
 			(calist + i)->cadata->clientcount -= 1;
 			(calist + i)->cadata->m2 = '+';
-			if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2ROGUE\n",
+			if(rds == 4) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2ROGUE\n",
 					    (calist + i)->cadata->maca[0], (calist + i)->cadata->maca[1], (calist + i)->cadata->maca[2], (calist + i)->cadata->maca[3], (calist + i)->cadata->maca[4], (calist + i)->cadata->maca[5],
 					    (calist + i)->cadata->maca[0], (calist + i)->cadata->macc[1], (calist + i)->cadata->macc[2], (calist + i)->cadata->macc[3], (calist + i)->cadata->macc[4], (calist + i)->cadata->macc[5],
 					    (calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
@@ -1261,7 +1261,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(((aplist + i)->apdata->replaycount1) != (aplist + i)->apdata->replaycount2) break;
 	if(((aplist + i)->apdata->tsm2 - (aplist + i)->apdata->tsm1) > TSEAPOL1) break;
 	(aplist + i)->apdata->m1m2 = '+';
-	if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2\n",
+	if(rds == 4) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s EAPOL M1M2\n",
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 				(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 				(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -1310,7 +1310,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 						if((aplist + i)->apdata->essidlen != 0)
 							{
 							(aplist + i)->apdata->pmkid = '+';
-							if(rds == 5) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s PMKID\n",
+							if(rds == 4) fprintf(stdout, "%02x%02x%02x%02x%02x%02x <-> %02x%02x%02x%02x%02x%02x %.*s PMKID\n",
 							(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 							(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 							(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
@@ -5300,6 +5300,7 @@ fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)\n"
 	"                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)\n"
 	"                     3 = show all APs, show CLIENTs (M1M2ROGUE)\n"
+	"                     4 = show waterfall (PMKID & EAPOL)\n"
 	"                     columns:\n"
 	"                      E = encryption (e)ncrypted / (o)pen\n"
 	"                      A = AKM (p)re-shared key\n"
@@ -5897,7 +5898,7 @@ else if(rds == 0)
 		fprintf(stderr, "failed to initialize main scan loop\n");
 		}
 	}
-else if(rds == 5)
+else if(rds == 4)
 	{
 	if(nl_scanloop_waterfall() == false)
 		{
