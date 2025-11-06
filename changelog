@@ -1,3 +1,9 @@
+05.11.2025
+==========
+hcxdumptool: added waterfall status display mode (rds=4)
+Wraning: Expect massive packet drops especially when running the real time display on slow CPUs
+
+
 09.09.2025
 ==========
 release v7.0.1
@@ -5,7 +11,7 @@ hcxdumptool: fixed proberesponsetx error
 
 08.09.2025
 ==========
-hcxdumptool: modified option proberesponsetx: 
+hcxdumptool: modified option proberesponsetx:
 --proberesponsetx=<digit> : transmit n PROBERESPONSEs from the ESSID ring buffer
                              default: 1023
                              to disable transmitting of PROBERESPONSE frames set 0
