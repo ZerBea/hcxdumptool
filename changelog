@@ -1,7 +1,7 @@
 05.11.2025
 ==========
 hcxdumptool: added waterfall status display mode (rds=4)
-Wraning: Expect massive packet drops especially when running the real time display on slow CPUs
+Warning: Expect massive packet drops especially when running the real time display on slow CPUs
 
 
 09.09.2025
