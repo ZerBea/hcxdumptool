@@ -3168,7 +3168,6 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
-static struct timespec sleepled;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3181,14 +3180,6 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-sleepled.tv_sec = 0;
-sleepled.tv_nsec = GPIO_LED_DELAY;
-if(gpiostatusled > 0)
-	{
-	GPIO_SET = 1 << gpiostatusled;
-	nanosleep(&sleepled, NULL);
-	GPIO_CLR = 1 << gpiostatusled;
-	}
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
@@ -3255,7 +3246,6 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
-static struct timespec sleepled;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3268,14 +3258,6 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-sleepled.tv_sec = 0;
-sleepled.tv_nsec = GPIO_LED_DELAY;
-if(gpiostatusled > 0)
-	{
-	GPIO_SET = 1 << gpiostatusled;
-	nanosleep(&sleepled, NULL);
-	GPIO_CLR = 1 << gpiostatusled;
-	}
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
@@ -3355,7 +3337,6 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
-static struct timespec sleepled;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3368,14 +3349,6 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-sleepled.tv_sec = 0;
-sleepled.tv_nsec = GPIO_LED_DELAY;
-if(gpiostatusled > 0)
-	{
-	GPIO_SET = 1 << gpiostatusled;
-	nanosleep(&sleepled, NULL);
-	GPIO_CLR = 1 << gpiostatusled;
-	}
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
 	{
@@ -3442,7 +3415,6 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
-static struct timespec sleepled;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3454,15 +3426,6 @@ ev.data.fd = fd_timer1;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
-
-sleepled.tv_sec = 0;
-sleepled.tv_nsec = GPIO_LED_DELAY;
-if(gpiostatusled > 0)
-	{
-	GPIO_SET = 1 << gpiostatusled;
-	nanosleep(&sleepled, NULL);
-	GPIO_CLR = 1 << gpiostatusled;
-	}
 
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
