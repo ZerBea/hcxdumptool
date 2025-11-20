@@ -3219,12 +3219,7 @@ while(!wanteventflag)
 				}
 			if((lifetime % 10) == 0)
 				{
-				if(gpiostatusled > 0)
-					{
-					GPIO_SET = 1 << gpiostatusled;
-					nanosleep(&sleepled, NULL);
-					GPIO_CLR = 1 << gpiostatusled;
-					}
+				if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 				if(gpiobutton > 0)
 					{
 					if(GET_GPIO(gpiobutton) > 0)
@@ -3234,6 +3229,10 @@ while(!wanteventflag)
 						}
 					}
 				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			else if((lifetime % 10) == 1)
+				{
+				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((lifetime % timewatchdog) == 0)
@@ -3320,12 +3319,7 @@ while(!wanteventflag)
 				}
 			if((lifetime % 10) == 0)
 				{
-				if(gpiostatusled > 0)
-					{
-					GPIO_SET = 1 << gpiostatusled;
-					nanosleep(&sleepled, NULL);
-					GPIO_CLR = 1 << gpiostatusled;
-					}
+				if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 				if(gpiobutton > 0)
 					{
 					if(GET_GPIO(gpiobutton) > 0)
@@ -3335,6 +3329,10 @@ while(!wanteventflag)
 						}
 					}
 				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			else if((lifetime % 10) == 1)
+				{
+				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((lifetime % timewatchdog) == 0)
@@ -3408,12 +3406,7 @@ while(!wanteventflag)
 				}
 			if((lifetime % 10) == 0)
 				{
-				if(gpiostatusled > 0)
-					{
-					GPIO_SET = 1 << gpiostatusled;
-					nanosleep(&sleepled, NULL);
-					GPIO_CLR = 1 << gpiostatusled;
-					}
+				if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 				if(gpiobutton > 0)
 					{
 					if(GET_GPIO(gpiobutton) > 0)
@@ -3423,6 +3416,10 @@ while(!wanteventflag)
 						}
 					}
 				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			else if((lifetime % 10) == 1)
+				{
+				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((lifetime % timewatchdog) == 0)
@@ -3512,12 +3509,7 @@ while(!wanteventflag)
 				}
 			if((lifetime % 10) == 0)
 				{
-				if(gpiostatusled > 0)
-					{
-					GPIO_SET = 1 << gpiostatusled;
-					nanosleep(&sleepled, NULL);
-					GPIO_CLR = 1 << gpiostatusled;
-					}
+				if(gpiostatusled > 0) GPIO_SET = 1 << gpiostatusled;
 				if(gpiobutton > 0)
 					{
 					if(GET_GPIO(gpiobutton) > 0)
@@ -3527,6 +3519,10 @@ while(!wanteventflag)
 						}
 					}
 				if(errortxcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
+				}
+			else if((lifetime % 10) == 1)
+				{
+				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((lifetime % timewatchdog) == 0)
