@@ -32,6 +32,7 @@
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/reboot.h> 
 #include <sys/time.h>
 #include <sys/timerfd.h>
 #if defined (_POSIX_VERSION)
@@ -5949,11 +5950,11 @@ if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	fprintf(stdout, "exit on sigterm\n");
 	if(exitsigtermflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
+		if(reboot(RB_AUTOBOOT) == -1) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitsigtermflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
+		if(reboot(RB_POWER_OFF) == -1) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_GPIOBUTTON) == EXIT_ON_GPIOBUTTON)
@@ -5961,11 +5962,11 @@ else if((wanteventflag & EXIT_ON_GPIOBUTTON) == EXIT_ON_GPIOBUTTON)
 	fprintf(stdout, "exit on GPIO button\n");
 	if(exitgpiobuttonflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
+		if(reboot(RB_AUTOBOOT) == -1) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitgpiobuttonflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
+		if(reboot(RB_POWER_OFF) == -1) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_TOT) == EXIT_ON_TOT)
@@ -5973,11 +5974,11 @@ else if((wanteventflag & EXIT_ON_TOT) == EXIT_ON_TOT)
 	fprintf(stdout, "exit on TOT\n");
 	if(exittotflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
+		if(reboot(RB_AUTOBOOT) == -1) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exittotflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
+		if(reboot(RB_POWER_OFF) == -1) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_WATCHDOG) == EXIT_ON_WATCHDOG)
@@ -5985,11 +5986,11 @@ else if((wanteventflag & EXIT_ON_WATCHDOG) == EXIT_ON_WATCHDOG)
 	fprintf(stdout, "exit on watchdog\n");
 	if(exitwatchdogflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
+		if(reboot(RB_AUTOBOOT) == -1) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exitwatchdogflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
+		if(reboot(RB_POWER_OFF) == -1) fprintf(stderr, "can't power off\n");
 		}
 	}
 else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
@@ -5997,11 +5998,11 @@ else if((wanteventflag & EXIT_ON_ERROR) == EXIT_ON_ERROR)
 	fprintf(stdout, "exit on error\n");
 	if(exiterrorflag == EXIT_ACTION_REBOOT)
 		{
-		if(system("reboot") != 0) fprintf(stderr, "can't reboot system\n");
+		if(reboot(RB_AUTOBOOT) == -1) fprintf(stderr, "can't reboot system\n");
 		}
 	else if(exiterrorflag == EXIT_ACTION_POWEROFF)
 		{
-		if(system("poweroff") != 0) fprintf(stderr, "can't power off\n");
+		if(reboot(RB_POWER_OFF) == -1) fprintf(stderr, "can't power off\n");
 		}
 	}
 return EXIT_SUCCESS;
