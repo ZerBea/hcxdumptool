@@ -477,7 +477,8 @@ struct winsize w;
 
 if(rdtflag == false)
 	{
-	if(system("clear") != 0) errorcount++;
+	fputs("\033[2J\033[1;1H", stdout);
+	fflush(stdout);
 	w.ws_row = 12;
 	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
 	if(w.ws_row > 10) w.ws_row -= 4;
@@ -618,7 +619,8 @@ struct winsize w;
 
 if(rdtflag == false)
 	{
-	if(system("clear") != 0) errorcount++;
+	fputs("\033[2J\033[1;1H", stdout);
+	fflush(stdout);
 	w.ws_row = 12;
 	if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) errorcount++;
 	if(w.ws_row > 10) w.ws_row -= 4;
