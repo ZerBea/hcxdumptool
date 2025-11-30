@@ -18,6 +18,7 @@
 #include <linux/nl80211.h>
 #include <linux/rtnetlink.h>
 #include <linux/version.h>
+#include <sys/socket.h>
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <pwd.h>
@@ -4067,15 +4068,19 @@ nla->nla_len = 8;
 nla->nla_type = NL80211_ATTR_IFTYPE;
 *(u32*)nla_data(nla) = NL80211_IFTYPE_MONITOR;
 i += 8;
-if(((ifakttype & IFTYPEMONACT) == IFTYPEMONACT) && (activemonitorflag == true))
+if(activemonitorflag == true)
 	{
-	nla = (struct nlattr*)(nltxbuffer + i);
-	nla->nla_len = 8;
-	nla->nla_type = NL80211_ATTR_MNTR_FLAGS;
-	nla = (struct nlattr*)nla_data(nla);
-	nla->nla_len = 4;
-	nla->nla_type = NL80211_MNTR_FLAG_ACTIVE;
-	i += 8;
+	if((ifakttype & IFTYPEMONACT) == IFTYPEMONACT)
+		{
+		nla = (struct nlattr*)(nltxbuffer + i);
+		nla->nla_len = 8;
+		nla->nla_type = NL80211_ATTR_MNTR_FLAGS;
+		nla = (struct nlattr*)nla_data(nla);
+		nla->nla_len = 4;
+		nla->nla_type = NL80211_MNTR_FLAG_ACTIVE;
+		i += 8;
+		}
+	else fprintf(stderr, "\nWarning: active monitor mode requested by user, but not supported by driver!\n");
 	}
 nlh->nlmsg_len = i;
 if((write(fd_socket_nl, nltxbuffer, i)) != i) return false;
