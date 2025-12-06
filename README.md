@@ -2,13 +2,13 @@
 
 A tool to capture packets from WLAN devices and to discover potential weak points within own WiFi networks by running layer 2 attacks against the WPA protocol.
 
-Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
+Designed to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
 # hcxnmealog
 
 A tool to handle NMEA 0183 sentences from GPS devices.
 
-Designed to to run (mostly headless) on small systems like a Raspberry Pi Zero.
+Designed to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
 ### General Information
 
@@ -69,7 +69,7 @@ hcxdumptool -> hcxpcapngtool -> hcxhashtool (additional hcxpsktool/hcxeiutool) -
 
 ### Requirements
 
-You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by unexperienced users or newbies.
+You might expect me to recommend that everyone should be using hcxdumptool/hcxtools. But the fact of the matter is, however, that hcxdumptool/hcxtools is NOT recommended to be used by inexperienced users or newbies.
 If you are not familiar with Linux generally or if you do not have at least a basic level of knowledge as mentioned in section "Requirements", hcxdumptool/hcxtools is probably not what you are looking for.
 However, if you have that knowledge this tools can do magic.
 
@@ -77,10 +77,10 @@ However, if you have that knowledge this tools can do magic.
 - Knowledge of electromagnetic-wave engineering.
 - Detailed knowledge of 802.11 protocol.
 - Detailed knowledge of key derivation functions.
-- Detailed knwoldege of NMEA 0183 protocol.
+- Detailed knowledge of NMEA 0183 protocol.
 - Detailed knowledge of Linux.
 - Detailed knowledge of filter procedures. (Berkeley Packet Filter, capture filter, display filter, etc.)
-- Detailed knowledge of Bolean Operators.
+- Detailed knowledge of Boolean Operators.
 - Operating system: Linux (latest longterm or stable [kernel](https://www.kernel.org), mandatory >= 5.15)
 - Recommended distribution: [Arch Linux](https://archlinux.org/) (notebooks and desktop systems), [OpenWRT](https://openwrt.org/) (small systems like Raspberry Pi, WiFi router)
 - WLAN device chipset must be able to run in monitor mode.
@@ -99,7 +99,7 @@ However, if you have that knowledge this tools can do magic.
 >
 > While hcxdumptool and hcxtools are available through the package manager on most distributions, these packages are usually very old and outdated, thus cloning and building is recommended. 
 >
-> Make sure that your distribution is updated to it's latest version and make sure that all header files and dependencies have been installed BEFORE attempting to compile!
+> Make sure that your distribution is updated to its latest version and make sure that all header files and dependencies have been installed BEFORE attempting to compile!
 >
 > The packages mentioned in the "Requirements" section sometimes come under different names in a package manager! Make sure to install the correct packages!
 
@@ -170,7 +170,7 @@ Known as working WiFi chipsets:
 
 * MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
-* Realtek (rtl8xxxu) depending on chpset and the version of the Linux Kernel expect massive driver issues
+* Realtek (rtl8xxxu) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
 Not recommended WiFi chipsets:
 
@@ -232,7 +232,7 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 
 If you can't control the environment, it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
-The BPF can be used to select a target (or multible targets) or to protect devices.
+The BPF can be used to select a target (or multiple targets) or to protect devices.
 
 By default, hcxdumptool is utilizing three attack vectors:
 

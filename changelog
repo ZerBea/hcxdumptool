@@ -149,8 +149,8 @@ most common options:
                      0 = show APs on current channel sorted by BEACON timestamp
                      1 = show APs on current channel sorted by RESPONSE timestamp
                      2 = show APs on current channel sorted by RSSI
---rcascan=<mode> : radio channel assement scan
-                    (a)ctive = activ scan (transmit undirected PROBEREQUEST frames)
+--rcascan=<mode> : radio channel assessment scan
+                    (a)ctive = active scan (transmit undirected PROBEREQUEST frames)
                      no PROBERESPONSE, AP is out of RANGE, packet injection is broken
                     (p)assive = passive scan (listen only)
 -h               : show this help
@@ -207,7 +207,7 @@ less common options:
 
 
 added new passive GPS logger hcxnmealog. It can run in parallel with hcxdumptool, tshark or Wireshark
-data is logged to NMEA 0183 format (BSSID only - can be prosssed by gpsbabel) and CSV (tabulator separeted)
+data is logged to NMEA 0183 format (BSSID only - can be processed by gpsbabel) and CSV (tabulator separated)
 
 hcxnmealog:
 -n <file>      : output nmea 0183 track to file
@@ -217,7 +217,7 @@ hcxnmealog:
                    gpsbabel -w -t -i nmea -f in_file.nmea -o kml -F out_file.kml
                   time = UTC (in accordance with the NMEA 0183 standard)
 -t <file>      : output separated by tabulator (tsv)
-                  clolumns:
+                  columns:
                    LINUX EPOCH (seconds that have passed since the date January 1st, 1970)
                     use date -d @epoch_value to convert to human readable time
                    BSSID (MAC ACCESS POINT)
@@ -298,7 +298,7 @@ several fixes
 04.03.2024
 ==========
 README.md: removed entire instructions how to compile hcxdumptool on different distributions
-           check the distribution's page how to update the ditribution, how to install missing dependencies and missing header files
+           check the distribution's page how to update the distribution, how to install missing dependencies and missing header files
 
 
 25.02.2024
@@ -363,13 +363,13 @@ hcxdumptool: added full featured BPF compiler
 
 27.11.2023
 ==========
-hcxdumptool: accept Berklev Packet filter code in tcpdump raw format and in tcpdump c style format
+hcxdumptool: accept Berkeley Packet filter code in tcpdump raw format and in tcpdump c style format
 -bpf=<file>   : input Berkeley Packet Filter (BPF) code (maximum 4096 instructions)
                   in tcpdump raw format:
                    example: tcpdump high level compiler:
                     $ tcpdump -s 65535 -y IEEE802_11_RADIO wlan addr3 11:22:33:44:55:66 -ddd > filter.bpf
                     see man pcap-filter
-                   eample: bpf_asm low level compiler
+                   example: bpf_asm low level compiler
                     $ bpf_asm filter.asm | tr ',' '\n' > filter.bpf
                     see https://www.kernel.org/doc/html/latest/networking/filter.html
                    example: bpfc low level compiler:
@@ -396,7 +396,7 @@ hcxdumptool: removed option "disable_beacon" because it is replaced by option be
 
 01.09.2023
 ==========
-hcxdumptool: added new option to get shart and greppable interface list
+hcxdumptool: added new option to get short and greppable interface list
 
 
 26.07.2023
@@ -440,7 +440,7 @@ release v6.3.1
 ==========
 hcxdumptool: added option to remove active monitor flag
 -p             : do not set monitor mode: active (do not ACK incoming frames addressed to the device MAC
-                 default monitor mode: active (ACK all incoming frames addresed to the device MAC)
+                 default monitor mode: active (ACK all incoming frames addressed to the device MAC)
 
 This is a workaround on mt7601u devices/drivers.
 Running active monitor mode, only frames addressed to the MAC of the device
@@ -706,7 +706,7 @@ long options:
 --essidlist=<file>             : initialize ESSID list with this ESSIDs
 --errormax=<digit>             : set maximum allowed ERRORs
                                  default: 100 ERRORs
---watchdog=<seconds>           : set maximum TIMOUT when no packets received
+--watchdog=<seconds>           : set maximum TIMEOUT when no packets received
                                  default: 600 seconds
 --attemptclientmax=<digit>     : set maximum of attempts to request an EAPOL M2
                                  default: 10 attempts
@@ -874,7 +874,7 @@ Bus 005 Device 082: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Ad
 PCI:
 04:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
 
-That is neccessary because, since WiFi 6, channel numbers are no longer unique:
+That is necessary because, since WiFi 6, channel numbers are no longer unique:
 https://en.wikipedia.org/wiki/List_of_WLAN_channels
 
 
@@ -911,8 +911,8 @@ hcxdumptool: added new option to the next EAP request entry contained in the seq
 
 29.08.2021
 ==========
-hcxdumptool: GPIO flash intervall not longer hardcoded
---gpio_statusled_intervall=<digit> : Raspberry Pi GPIO LED flash intervall
+hcxdumptool: GPIO flash interval not longer hardcoded
+--gpio_statusled_intervall=<digit> : Raspberry Pi GPIO LED flash interval
                                      default = flash every 5 seconds
 
 
@@ -976,7 +976,7 @@ hcxdumptool: allow output to stdout
 
 14.02.2021
 ==========
-sll_pkttype = PACKET_OUTGOING is completey ingnored in promiscuous mode
+sll_pkttype = PACKET_OUTGOING is completely ignored in promiscuous mode
 At least I found a way to detect outgoing packets.
 Luckily IEEE80211_RADIOTAP_TX_FLAGS is set on outgoing packets. If we check this, we are able to ignore them.
 That save us CPU time.
@@ -1247,7 +1247,7 @@ hcxdumptool: added new option --do_targetscan
 
 17.05.2020
 ==========
-hcxdumptool: fixed issue that caused hcxdumptool to respond on probereuest even if --silent is selcted
+hcxdumptool: fixed issue that caused hcxdumptool to respond on probereuest even if --silent is selected
              allow MAC format 11:22:33:44:55:66 and 11-22-33-44-55-66 in filterlists
 
 
@@ -1308,7 +1308,7 @@ improved IE tag walk similar to hcxpcapngtool
 improved attack vector
 added new options to improve attack vector against hardened targets
 added more information to help menu
-added option to import Berkeley packet Filter code fom tcpdump as alternative to apfilterlist and clientfilterlist
+added option to import Berkeley packet Filter code from tcpdump as alternative to apfilterlist and clientfilterlist
 make less noise on the the channel (receive more, transmit less)
 WLAN REASON CODE (deauthentication) no longer hardcoded
 moved to git versioning on non releases
@@ -1385,7 +1385,7 @@ long options:
 --resume_ap_attacks=<digit>        : resume attacks against ACCESS POINTs after <n> BEACONs received
                                      default: 864000 BEACONs
 --disable_deauthentication         : do not send deauthentication or disassociation frames
-                                     affected: conntected clients
+                                     affected: connected clients
 --silent                           : do not transmit!
                                      hcxdumptool is acting like a passive dumper
                                      expect possible packet loss
@@ -1495,7 +1495,7 @@ improved IE tag walk similar to hcxpcapngtool
 improved attack vector
 added new options to improve attack vector against hardened targets
 added more information to help menu
-added option to import Berkeley packet Filter code fom tcpdump as alternative to apfilterlist and clientfilterlist
+added option to import Berkeley packet Filter code from tcpdump as alternative to apfilterlist and clientfilterlist
 make less noise on the the channel (receive more, transmit less)
 WLAN REASON CODE (deauthentication) no longer hardcoded
 moved to git versioning on non releases
@@ -1522,7 +1522,7 @@ handle PMKID in reassociationrequest
 ==========
 moved to v6.0.0
 hcxdumptool: complete rewrite from scratch
-             filterlist splitted (APs, CLIENTs), entries increased upt to 256 each list:
+             filterlist split (APs, CLIENTs), entries increased upt to 256 each list:
              --filterlist_ap
              --filterlist_client
              improved real time display:
@@ -1532,7 +1532,7 @@ hcxdumptool: complete rewrite from scratch
                  0: no status (default)
                  1: EAPOL
                  2: PROBE REQUEST/PROBE RESPONSE
-                 4: AUTHENTICATON
+                 4: AUTHENTICATION
                  8: ASSOCIATION/REASSOCIATION
                 16: BEACON
                 32: GPS (once a minute)
@@ -1713,7 +1713,7 @@ example:
 on client machine run hcxdumptool with option --client_port=12345
 $ hcxdumptool -i <interface> -o test.pcapng --enable_status=1 --client_port=12345
 
-on caputure machine run hcxdumptool with option --server_port=12345
+on capture machine run hcxdumptool with option --server_port=12345
 $ hcxdumptool -i <interface> -o test.pcapng --enable_status=1 --server_port=12345
 
 
@@ -1761,7 +1761,7 @@ hcxdumptool: added new options --tot and --reboot
 
 hcxdumptool return values:
 0 = every thing is fine
-1 = error occured
+1 = error occurred
 2 = tot reached
 
 
@@ -1806,7 +1806,7 @@ hcxdumptool: improved help
 
 12.06.2019
 ==========
-hcxdumptool: ignore more warnings if --ignore_warning is selcted
+hcxdumptool: ignore more warnings if --ignore_warning is selected
              do not report issues if you run this option!!!
 
 
@@ -1831,7 +1831,7 @@ EDIMAX EW-7711UAN  ID 7392:7710 Edimax Technology Co., Ltd
 ALLNET ALL-WA0150N ID 148f:7601 Ralink Technology, Corp. MT7601U Wireless Adapter
 TENDA W311U+       ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter
 LogiLink WL0151    ID 148f:5370 Ralink Technology, Corp. RT5370 Wireless Adapter
-regardles of the xhci issue.
+regardless of the xhci issue.
 
 
 14.04.2019
@@ -1884,7 +1884,7 @@ hcxdumptool: added new option --silent
 --silent : do not transmit!
            hcxdumptool is acting like a passive dumper
 
-added RTL8187. Removed the wron devices from the list (only RT3070 ia affected)
+added RTL8187. Removed the wrong devices from the list (only RT3070 ia affected)
 * USB ID 0bda:8187 Realtek Semiconductor Corp. RTL8187 Wireless Adapter (ALFA AWUS036H)
 * USB ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
 
@@ -1925,7 +1925,7 @@ hcxpioff: changed options wiringPi options to GPIO options
                                      default = GPIO not in use
 
 The GPIO is disabled on default. If you like to activate GPIO support you must do
-the hardware modifactions as described here: doc/gpiowait.odg
+the hardware modifications as described here: doc/gpiowait.odg
 and set the options according to your modification.
 You can choose every GPIO pin, as long as you use a pull down resistor to ground. 
 Raspberry model should be detected by automatic and according to the revision we use:
@@ -1971,7 +1971,7 @@ hcxdumptool: added new option:
 --ignore_warning                   : hcxdumptool will not terminate if other services take access on the device
                                    : warning: expect problems if hcxdumptool tries to change channels
 
-From now on, hcxdumptool will not terminate during the initalization
+From now on, hcxdumptool will not terminate during the initialization
 if another service take access on the interface.
 Expect problems and do not report issues related to this option!!!!
 
@@ -2072,7 +2072,7 @@ hcxdumptool moved to version 5.1.3 due several bug fixes and improved rcascan st
 
 18.02.2019
 ==========
-release hcxdumptool v 5.1.2 due to serveral bugfixes
+release hcxdumptool v 5.1.2 due to several bugfixes
 
 
 02.02.2019
@@ -2107,7 +2107,7 @@ test hcxdumptool:
 load module:
 $ sudo modprobe mac80211_hwsim
 
-run hcxdumptool to retrieve informations about the interface:
+run hcxdumptool to retrieve information about the interface:
 $ hcxdumptool -I
 wlan interfaces:
 020000000000 wlan0 (mac80211_hwsim)
@@ -2157,7 +2157,7 @@ hcxpioff: changed flash time
 ==========
 improved detection of broken driver
 from now on GPIO LED blinks twice every 5 seconds
-- if a possbile driver issue is detected
+- if a possible driver issue is detected
 - if no packets received during the last past 5 seconds
 
 another indicator is that the incoming packetcounter (rx=xxxx)
@@ -2206,7 +2206,7 @@ added new option to set access point MAC address
 improved detection of broken driver
 set default ERRORMAX to 100
 added option to set ERRORMAX
--T <digit>     : set maximum ERRROR count (hcxdumptool terminates when the value is reached)
+-T <digit>     : set maximum ERROR count (hcxdumptool terminates when the value is reached)
                  default: 100 errors
 
 Remarks:
@@ -2223,8 +2223,8 @@ Raspberry Pi: improved handling of GPIO switch
 ==========
 restore interface settings after -C
 improved help menu
--more informations about monitor mode
--more informations about packet injection
+-more information about monitor mode
+-more information about packet injection
 monitor mode and packet injection must be supported by the driver,
 otherwise hcxdumptool will not work.
 
@@ -2257,7 +2257,7 @@ switched to version 5.0.1
 added new option filter mode 3:
 --filterlist=<file>                : mac filter list
                                      format: 112233445566 + comment
-                                     maximum line lenght 255, maximum entries 64
+                                     maximum line length 255, maximum entries 64
 --filtermode=<digit>               : mode for filter list
                                      1: use filter list as protection list (default) in transmission branch
                                         receive everything, interact with all APs and CLIENTs in range,
@@ -2374,7 +2374,7 @@ added option to show beacons in status output:
                                      bitmask:
                                       1: EAPOL
                                       2: PROBEREQUEST/PROBERESPONSE
-                                      4: AUTHENTICATON
+                                      4: AUTHENTICATION
                                       8: ASSOCIATION
                                      16: BEACON
 
@@ -2458,19 +2458,19 @@ added communication between hcxdumptool and hcxpcaptool via pcapng option fields
 62109 for ANONCE uint8_t[32]
 
 enabled hardware handshake instead of software handshake
-changed beavior auf status:
+changed behavior of status:
 --enable_status=<digit>            : enables status messages
                                      bitmask:
                                      1: EAPOL
                                      2: PROBEREQUEST/PROBERESPONSE
-                                     4: AUTHENTICATON
+                                     4: AUTHENTICATION
                                      8: ASSOCIATION
 Now we use a bitmask to deliver status messages.
 
 
 06.08.2018
 ==========
-write ISB (Interface Statistic Block) at the end of a cpature
+write ISB (Interface Statistic Block) at the end of a capture
 
 
 04.08.2018
@@ -2534,7 +2534,7 @@ options:
 
 --filterlist=<file>                : mac filter list
                                      format: 112233445566 + comment
-                                     maximum line lenght 128, maximum entries 32
+                                     maximum line length 128, maximum entries 32
 --filtermode=<digit>               : mode for filter list
                                      1: use filter list as protection list (default)
                                      2: use filter list as target list
@@ -2610,7 +2610,7 @@ usage:
 hcxdumptool <options>
 
 options:
--i <interface> : interface (monitor mode must be eanabled)
+-i <interface> : interface (monitor mode must be enabled)
                  ip link set <interface> down
                  iw dev <interface> set type monitor
                  ip link set <interface> up

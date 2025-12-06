@@ -1,5 +1,5 @@
 #ifndef __BYTE_ORDER
-# error "Please fix ENDIANESS <endian.h>"
+# error "Please fix ENDIANNESS <endian.h>"
 #endif
 /*===========================================================================*/
 #define __hcxbswab16(x) \
