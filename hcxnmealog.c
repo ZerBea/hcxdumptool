@@ -176,8 +176,16 @@ return true;
 /*===========================================================================*/
 static void close_files(void)
 {
-if(fh_nmea != NULL)fclose(fh_nmea);
-if(fh_tsv != NULL)fclose(fh_tsv);
+if(fh_nmea != NULL)
+	{
+	fflush(fh_nmea);
+	fclose(fh_nmea);
+	}
+if(fh_tsv != NULL)
+	{
+	fflush(fh_tsv);
+	fclose(fh_tsv);
+	}
 return;
 }
 /*---------------------------------------------------------------------------*/
