@@ -179,12 +179,6 @@ static u16 seqcounter2 = 1; /*  */
 static u16 seqcounter3 = 1; /*  */
 static u16 seqcounter4 = 1; /*  */
 /*---------------------------------------------------------------------------*/
-#ifdef HCXNMEAOUT
-static const char gpwplid[] = "$GPWPL";
-static const char gptxtid[] = "$GPTXT,";
-static const char lookuptable[] = { '0', '1', '2','3','4','5','6','7','8','9','a','b','c','d','e','f' };
-#endif
-/*---------------------------------------------------------------------------*/
 static const u8 proberesponsedata[] =
 {
 /* Tag: Supported Rates 1(B), 2(B), 5.5(B), 11(B), 6(B), 9, 12(B), 18, [Mbit/sec] */
@@ -4903,10 +4897,17 @@ return;
 static void close_fds(void)
 {
 if(fd_timer1 != 0) close(fd_timer1);
-if(fd_pcapng != 0) close(fd_pcapng);
-#ifdef HCXNMEAOUT
-if(fd_gps != 0) close(fd_gps);
-if(fd_hcxpos != 0) close(fd_hcxpos);
+if(fd_pcapng != 0)
+	{
+	fsync(fd_pcapng);
+	close(fd_pcapng);
+	}
+#ifdef HCXDEBUG
+if(fh_debug != NULL)
+	{
+	fflush(fh_debug);
+	fclose(fh_debug);
+	}
 #endif
 return;
 }
@@ -5421,11 +5422,6 @@ static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
 static char *pcapngoutname = NULL;
-#ifdef HCXNMEAOUT
-static bool gpsdflag = false;
-static char *nmea0183name = NULL;
-static char *nmeaoutname = NULL;
-#endif
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
 static const char *short_options = "i:w:c:f:m:I:t:FLlAhHv";
@@ -5920,9 +5916,7 @@ else
 	}
 /*---------------------------------------------------------------------------*/
 byebye:
-#ifdef HCXDEBUG
-if(fh_debug != NULL) fclose(fh_debug);
-#endif
+sync();
 if((monitormodeflag != true) && (interfacelistflag != true) && (interfaceinfoflag != true) && (interfacelistshortflag != true) && (rooterrorflag == false))
 	{
 	if(getsockopt(fd_socket_rx, SOL_PACKET, PACKET_STATISTICS, &lStats, &lStatsLength) != 0) fprintf(stdout, "PACKET_STATISTICS failed\n");
