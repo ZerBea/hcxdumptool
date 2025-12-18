@@ -1,3 +1,12 @@
+18.12.2025
+==========
+hcxdumptool: added option to daemonize hcxdumptool
+--daemonize               : daemonize
+                             status messages are suppressed
+                              to terminate hcxdumptool send SIGTERM to its PID
+                              or press push button (modified Raspberry Pi)
+
+
 05.11.2025
 ==========
 hcxdumptool: added waterfall status display mode (rds=4)

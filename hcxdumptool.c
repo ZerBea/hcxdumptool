@@ -73,6 +73,7 @@ static int gpiostatusled = 0;
 static int gpiobutton = 0;
 
 static pid_t hcxpid = 0;
+static pid_t hcxsid = 0;
 
 static unsigned int seed = 7;
 
@@ -5373,8 +5374,13 @@ fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"                             default: 0 (GPIO not in use)\n"
 	"--gpio_statusled=<digit>  : Raspberry Pi GPIO number of status LED (2...27)\n"
 	"                             default: 0 (GPIO not in use)\n"
+	"--daemonize               : daemonize\n"
+	"                             status messages are suppressed\n"
+	"                              to terminate %s send SIGTERM to its PID\n"
+	"                              or press push button (modified Raspberry Pi)\n"
 	"--help                    : show additional help (example and trouble shooting)\n"
-	"--version                 : show version\n\n");
+	"--version                 : show version\n\n",
+	eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
@@ -5418,6 +5424,8 @@ static bool interfacefrequencyflag = false;
 static bool interfacelistflag = false;
 static bool interfacelistshortflag = false;
 static bool rooterrorflag = false;
+static bool daemon = false;
+
 static char *essidlistname = NULL;
 static char *userchannellistname = NULL;
 static char *userfrequencylistname = NULL;
@@ -5451,6 +5459,7 @@ static const struct option long_options[] =
 	{"gpio_statusled",		required_argument,	NULL,	HCX_GPIO_STATUSLED},
 	{"rds",				required_argument,	NULL,	HCX_RDS},
 	{"rdt",				no_argument,		NULL,	HCX_RDT},
+	{"daemonize",			no_argument,		NULL,	HCX_DAEMON},
 	{"rcascan",			required_argument,	NULL,	HCX_RCASCAN},
 	{"version",			no_argument,		NULL,	HCX_VERSION},
 	{"help",			no_argument,		NULL,	HCX_HELP_ADDITIONAL},
@@ -5697,7 +5706,10 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "combination of --rcascan and -w is not allowed\n");
 			exit(EXIT_FAILURE);
 			}
+		break;
 
+		case HCX_DAEMON:
+		daemon = true;
 		break;
 
 		case HCX_HELP:
@@ -5868,6 +5880,28 @@ if(set_timer() == false)
 	wanteventflag |= EXIT_ON_ERROR;
 	fprintf(stderr, "failed to initialize timer\n");
 	goto byebye;
+	}
+
+if(daemon == true)
+	{
+	if((hcxpid = fork()) < 0)
+		{
+		fprintf(stdout, "failed to daamonize %s\n", basename(argv[0]));
+		goto byebye;
+		}
+	if(hcxpid > 0)
+		{
+		fprintf(stdout, "daemonize %s (pid: %d)\n", basename(argv[0]), hcxpid);
+		goto byebye;
+		}
+	if((hcxsid = setsid()) < 0)
+		{
+		fprintf(stdout, "failed to daemonize %s\n", basename(argv[0]));
+		goto byebye;
+		}
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 	}
 /*---------------------------------------------------------------------------*/
 tspecifo.tv_sec = 5;
