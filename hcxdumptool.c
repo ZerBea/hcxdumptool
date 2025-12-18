@@ -5969,7 +5969,7 @@ if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caus
 if(rcascanmode == RCASCAN_ACTIVE)
 	{
 	if(beaconrcascancount == 0) fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
-	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly notworking)\n");
+	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly not working)\n");
 	}
 if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
