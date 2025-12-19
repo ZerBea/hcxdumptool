@@ -4528,7 +4528,7 @@ if(rt_set_interface(IFF_UP) == false) return false;
 if(nl_get_interfacestatus() == false) return false;
 if(rt_get_interfacestatus() == false) return false;
 show_interfacecapabilities();
-fprintf(stdout, "\n\nmonitor mode is active...\n");
+fprintf(stdout, "\n\nmonitor mode has been activated...\n");
 return true;
 }
 /*===========================================================================*/
