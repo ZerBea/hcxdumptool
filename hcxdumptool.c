@@ -5913,7 +5913,7 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 		"Not understanding what you were doing is not going to work as an excuse!\n\n");
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "BPF is unset! Make sure hcxdumptool is running in a 100%% controlled environment!\n\n");
-if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared interface!\nThis is not recommended because it leads to unwanted behavior!\n\n", basename(argv[0]));
+if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared interface!\nThis is not recommended because it leads to an unwanted behavior!\n\n", basename(argv[0]));
 fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
 
