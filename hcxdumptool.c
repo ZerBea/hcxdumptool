@@ -5229,14 +5229,14 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"\n"
 	"Important recommendation:\n"
 	"-------------------------\n"
-	"Do not set monitor mode by third party tools or third party scripts!\n"
-	"Do not use virtual interfaces (monx, wlanxmon, prismx, ...)!\n"
-	"Do not use virtual machines or emulators!\n"
+	"Do not run %s on a shared interface (monx, wlanxmon, prismx, ...)!\n"
+	"Do not set monitor mode by third party tools (e.g. iwconfig) or third party scripts!\n"
 	"Do not run other tools that take access to the interface in parallel (except: tshark, wireshark, tcpdump)!\n"
+	"Do not use virtual machines or emulators!\n"
 	"Do not use tools to change the virtual MAC (like macchanger)!\n"
 	"Do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
