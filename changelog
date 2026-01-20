@@ -5,7 +5,7 @@ hcxdumptool: allow to disable watchdog
                              default: 600 seconds
                              set 0 to disable watchdog (not recommended)
 
-Usually the watchdog should not trigger!
+Usually the watchdog should not trigger (ever ever)!
 But if it triggers, hcxdumptool has serious problems
 - related to the hardware hardware
 - related to the driver
