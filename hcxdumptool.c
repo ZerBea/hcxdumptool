@@ -58,6 +58,7 @@ static bool vmflag = true;
 static bool disassociationflag = true;
 static bool ftcflag = false;
 static bool rdtflag = false;
+static bool watchdogflag = true;
 
 static uid_t uid = 1000;
 static struct passwd *pwd = NULL;
@@ -3225,7 +3226,7 @@ while(!wanteventflag)
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % timewatchdog) == 0)
+			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
@@ -3316,7 +3317,7 @@ while(!wanteventflag)
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % timewatchdog) == 0)
+			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
@@ -3394,7 +3395,7 @@ while(!wanteventflag)
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % timewatchdog) == 0)
+			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
@@ -3487,7 +3488,7 @@ while(!wanteventflag)
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
 			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
-			if((lifetime % timewatchdog) == 0)
+			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
@@ -5343,7 +5344,8 @@ fprintf(stdout, "less common options:\n--------------------\n"
 	"--errormax=<digit>        : set maximum allowed ERRORs\n"
 	"                             default: %d ERRORs\n"
 	"--watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received\n"
-	"                             default: %d seconds\n",
+	"                             default: %d seconds\n"
+	"                             set 0 to disable watchdog (not recommended)\n",
 	CLIENTCOUNT_MAX, APCOUNT_MAX, PROBERESPONSETX_MAX, ERROR_MAX, WATCHDOG_MAX);
 fprintf(stdout, "--tot=<digit>             : enable timeout timer in minutes\n"
 	"--exitoneapol=<type>      : exit on first EAPOL occurrence:\n"
@@ -5566,11 +5568,8 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		break;
 
 		case HCX_WATCHDOG_MAX:
-		if((timewatchdog = strtoul(optarg, NULL, 10)) < 1)
-			{
-			fprintf(stderr, "time out timer must be > 0\n");
-			exit(EXIT_FAILURE);
-			}
+		timewatchdog = strtoul(optarg, NULL, 10);
+		if(timewatchdog == 0) watchdogflag = false;
 		break;
 
 		case HCX_ERROR_MAX:

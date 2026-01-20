@@ -1,3 +1,18 @@
+20.01.2026
+==========
+hcxdumptool: allow to disable watchdog
+--watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received
+                             default: 600 seconds
+                             set 0 to disable watchdog (not recommended)
+
+Usually the watchdog should not trigger!
+But if it triggers, hcxdumptool has serious problems
+- related to the hardware hardware
+- related to the driver
+- related to the configuration
+- related to the Berkeley Packet filter
+
+
 18.12.2025
 ==========
 hcxdumptool: added option to daemonize hcxdumptool
