@@ -5964,7 +5964,18 @@ if((monitormodeflag == true) || (interfacelistflag == true) || (interfaceinfofla
 fprintf(stdout, "\n\033[?25h");
 fprintf(stdout, "%u Packet(s) captured by kernel\n", lStats.tp_packets);
 fprintf(stdout, "%u Packet(s) dropped by kernel\n", lStats.tp_drops);
-if(errorcount > 0) fprintf(stderr, "%u ERROR(s) during runtime (mostly caused by a broken driver or a shared interface)\n", errorcount);
+if(errorcount > 0)
+	{
+	if(bpfname == NULL) fprintf(stderr, "%u ERROR(s) during runtime:\n"
+						"- mostly caused by a broken driver\n"
+						"- or running %s on a shared interface)\n"
+						"- or a misconfigured system\n", errorcount, basename(argv[0]));
+	else fprintf(stderr, "%u ERROR(s) during runtime:\n"
+				"- mostly caused by a broken driver\n"
+				"- or running %s on a shared interface)\n"
+				"- or a misconfigured system\n"
+				"- or a too restrictive BPF filter\n", errorcount, basename(argv[0]));
+	}
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver or a shared interface)\n", errortxcount);
 if(rcascanmode == RCASCAN_ACTIVE)
 	{
