@@ -10,8 +10,11 @@ assignees: ''
 **GitHub is for bugs and features - not for support**
 Questions must be posted in the discussion board https://github.com/ZerBea/hcxdumptool/discussions
 
-**Check the FAQ**
-Please review the discussions
+**Read CHANGELOG, README.md the discussions**
+Before you start hcxdumptool for the first time please read:
+https://github.com/ZerBea/hcxdumptool/blob/master/README.md
+https://github.com/ZerBea/hcxdumptool/blob/master/changelog
+https://github.com/ZerBea/hcxdumptool/discussions
 
 **Comment output of**
 1. $ sudo hcxdumptool -v
