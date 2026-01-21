@@ -5226,10 +5226,21 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"\n"
 	"Berkeley Packet Filter:\n"
 	"-----------------------\n"
+	"Before ypu start %s\n"
+	" always get general information about the target (ESSID, CHANNEL, MAC_AP. IN/OFF RANGE)\n"
+	"  %s --rcascan=active -F\n"
+	" always get more information about the behavior of the target (CLIENTS, FRAME TYPES)\n"
+	"  tshark\n"
+	" always design a filter tailored to the target and compile it\n"
+	"  %s --bpfc\n"
+	" always test the filter\n"
+	"  tshark -f\n"
+	" always apply the designed filter\n"
+	"  %s --bpf\n"
+	" Further information can be found here\n" 
 	"  see man bpfc\n"
 	"  see docs/example.md\n"
 	"  see https://docs.kernel.org/bpf\n"
-	"Always check your filter settings with tshark before starting an attack!\n"
 	"\n"
 	"Important recommendation:\n"
 	"-------------------------\n"
@@ -5240,7 +5251,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"Do not use tools to change the virtual MAC (like macchanger)!\n"
 	"Do not merge (pcapng) dump files, because this destroys assigned hash values!\n"
 	"\n",
-	eigenname, VERSION_TAG, VERSION_YEAR, eigenname);
+	eigenname, VERSION_TAG, VERSION_YEAR, eigenname, eigenname, eigenname, eigenname, eigenname);
 exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
