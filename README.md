@@ -230,7 +230,7 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 
 If you can't control the environment, it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
-The BPF can be used to select a target (or multiple targets) or to protect devices.
+The BPF should be used to select a target (or multiple targets) or to protect devices.
 
 [A document showcasing an example attack using hcxdumptool and hcxtools.](https://github.com/ZerBea/hcxdumptool/blob/master/docs/example.md)
 
