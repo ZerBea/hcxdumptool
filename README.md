@@ -26,8 +26,6 @@ Designed to run (mostly headless) on small systems like a Raspberry Pi Zero.
 
 - hcxdumptool uses the modern [pcapng](https://pcapng.com/) format, allowing for use with wireshark or tshark.
 
-- [A document showcasing an example attack using hcxdumptool and hcxtools.](https://github.com/ZerBea/hcxdumptool/blob/master/docs/example.md)
-
 ### What Doesn't hcxdumptool Do?
 
 - It does not crack WPA PSK related hashes. (Use Hashcat or JtR to recover the PSK.)
@@ -233,6 +231,8 @@ The entire toolkit (hcxdumptool and hcxtools) is designed to be an analysis tool
 If you can't control the environment, it is absolutely mandatory to set the [BPF](https://wiki.wireshark.org/CaptureFilters)!
 
 The BPF can be used to select a target (or multiple targets) or to protect devices.
+
+[A document showcasing an example attack using hcxdumptool and hcxtools.](https://github.com/ZerBea/hcxdumptool/blob/master/docs/example.md)
 
 By default, hcxdumptool is utilizing three attack vectors:
 
