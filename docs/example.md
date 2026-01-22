@@ -26,7 +26,21 @@ AP channel: **11**
 
 The creation of a [BPF](https://wiki.wireshark.org/CaptureFilters) is **mandatory** as it make hcxdumptool either _ignore_ the specified address, or _attack_ the specified address.
 
-The full command to create a BPF to _attack_ ccce1edc3bee would be as follows:
+First of all get as much as possbile information about the target (hcxdumptool in rcascan mode, tshark, Wireshark, tcpdump).
+
+The command to get general information about the target (ESSID, CHANNEL, MAC_AP. IN/OFF RANGE) is:
+
+```
+hcxdumptool -i INTERFACE_NAME --rcascan=active -F
+```
+
+The command to get more information about the behavior of target (frame types, connected CLIENTs) is:
+
+```
+tshark -i INTERFACE_NAME
+```
+
+The full command to create a BPF to the target (attack ccce1edc3bee) would be as follows:
 
 ```
 hcxdumptool --bpfc="wlan addr1 ccce1edc3bee or wlan addr2 ccce1edc3bee or wlan addr3 ccce1edc3bee or type mgt subtype probereq" > attack.bpf
@@ -38,7 +52,12 @@ The full command to create a BPF to _protect_ ccce1edc3bee would be as follows:
 hcxdumptool --bpfc="not wlan addr3 ccce1edc3bee" > protect.bpf
 ```
 
-Since we are going to attack 00c0cab035be, we will use the **attack.bpf** filter.
+The command to test the filter is:
+```
+tshark -i INTERFACE_NAME -f "wlan addr1 ccce1edc3bee or wlan addr2 ccce1edc3bee or wlan addr3 ccce1edc3bee or type mgt subtype probereq"
+```
+
+If everything is working as expected, we are going to attack 00c0cab035be ussing the **attack.bpf** filter.
 
 ### Step Two - Running hcxdumptool
 
