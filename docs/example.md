@@ -45,7 +45,7 @@ Since we are going to attack 00c0cab035be, we will use the **attack.bpf** filter
 Since we have now made the BPF, we can start the attack using all the information mentioned above.
 
 ```
-sudo hcxdumptool -i wlan0 -c 11a --bpf=attack.bpf -w TestAP.pcapng
+sudo hcxdumptool -i wlan0 -c 11a --bpf=attack.bpf -w testap.pcapng
 ```
 
 > [!NOTE]
