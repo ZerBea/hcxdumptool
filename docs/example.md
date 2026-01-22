@@ -67,7 +67,7 @@ exit on sigterm
 
 We now have a complete capture with all information needed for cracking the PSK. Before we crack the PSK, we need to convert it into a format Hashcat/JtR can understand using hcxpcapngtool.
 
-The command to do so is as follows:
+If you prefer hashcat, the command to do so is as follows:
 
 ```
 hcxpcapngtool -o testap.hc22000 testap.pcapng
@@ -147,7 +147,7 @@ Finally, we have a Hashcat/JtR compatible format for cracking the PSK of our tar
 
 There are many different ways to use Hashcat but we will just use a straight dictionary attack.
 
-The command will be as follows:
+The hashcat command will be as follows:
 
 ```
 hashcat -m 22000 testap.hc22000 wordlist
@@ -217,4 +217,95 @@ Hardware.Mon.#01.: Temp: 31c Fan:  0% Util:  0% Core:2865MHz Mem:10801MHz Bus:16
 Started: Thu Jan 22 08:52:24 2026
 Stopped: Thu Jan 22 08:52:28 2026
 ```
+
+If you prefer john, the command to do so is as follows:
+
+```
+hcxpcapngtool --john testap.john testap.pcapng
+```
+
+After running hcxpcapngtool, the output was as follows:
+
+```
+hcxpcapngtool 7.0.1-41-g6412f87 reading from testap.pcapng...
+
+summary capture file
+--------------------
+file name................................: testap.pcapng
+version (pcapng).........................: 1.0
+operating system.........................: Linux 6.18.5-arch1-1
+application..............................: hcxdumptool 7.0.1-46-g96125ac
+interface name...........................: wlp48s0f4u2u4
+interface vendor.........................: 74da38
+openSSL version..........................: 1.0
+weak candidate...........................: 12345678
+MAC ACCESS POINT.........................: 000e221bc298 (incremented on every new client)
+MAC CLIENT...............................: 90b4dd7b81dd
+REPLAYCOUNT..............................: 65021
+ANONCE...................................: b78dc26402ab03f5941cbd90a85909d2bfcb8a433e630144a31bd00eb9ed3984
+SNONCE...................................: ed0baac00e561183ca05efac8e7552c0df03b00ceec0d815e0e02bf867c2c0f8
+timestamp minimum (timestamp)............: 22.01.2026 07:49:45 (1769068185)
+timestamp maximum (timestamp)............: 22.01.2026 07:50:08 (1769068208)
+duration of the dump tool (seconds)......: 22
+used capture interfaces..................: 1
+link layer header type...................: DLT_IEEE802_11_RADIO (127)
+endianness (capture system)..............: little endian
+packets inside...........................: 53
+packets received on 2.4 GHz..............: 53
+ESSID (total unique).....................: 2
+BEACON (total)...........................: 1
+BEACON on 2.4 GHz channel (from IE_TAG)..: 11 
+PROBEREQUEST (undirected)................: 1
+PROBEREQUEST (directed)..................: 1
+PROBERESPONSE (total)....................: 1
+AUTHENTICATION (total)...................: 1
+AUTHENTICATION (OPEN SYSTEM).............: 1
+EAPOL messages (total)...................: 47
+EAPOL RSN messages.......................: 47
+EAPOLTIME gap (measured maximum msec)....: 41
+EAPOL ANONCE error corrections (NC)......: not detected
+EAPOL M1 messages (total)................: 44
+EAPOL M2 messages (total)................: 1
+EAPOL M3 messages (total)................: 1
+EAPOL M4 messages (total)................: 1
+EAPOL M4 messages (zeroed NONCE).........: 1
+EAPOL pairs (total)......................: 2
+EAPOL pairs written to old format JtR....: 1 (RC checked)
+EAPOL M12E2 (challenge - ANONCE from M1).: 1
+EAPOL M32E2 (authorized - ANONCE from M3): 1
+
+frequency statistics from radiotap header (frequency: received packets)
+-----------------------------------------------------------------------
+ 2462: 53
+
+session summary
+---------------
+processed pcapng files................: 1
+```
+
+The john command will be as follows:
+
+```
+john -w wordlist --format=wpapsk-opencl testap.john
+```
+
+After letting john run for a while, the output was as follows:
+
+```
+$ john -w wordlist --format=wpapsk-opencl testap.john
+Device 1: NVIDIA GeForce RTX 4080
+Using default input encoding: UTF-8
+Loaded 2 password hashes with no different salts (wpapsk-opencl, WPA/WPA2/PMF/PMKID PSK [PBKDF2-SHA1 HMAC-SHA256/AES-CMAC OpenCL])
+Note: Passwords longer than 21 [worst case UTF-8] to 63 [ASCII] rejected
+Note: Minimum length forced to 8 by format
+LWS=32 GWS=77824 (2432 blocks) 
+Proceeding with wordlist:/usr/share/john/password.lst
+Press 'q' or Ctrl-C to abort, 'h' for help, almost any other key for status
+12345678         (AP_7272)     
+12345678         (AP_7272)     
+2g 0:00:00:00 DONE (2026-01-22 10:03) 13.33g/s 518826p/s 518826c/s 1037KC/s Dev#1:48°C password..lilwayne6
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed
+```
+
 
