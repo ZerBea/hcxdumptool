@@ -339,3 +339,13 @@ Press 'q' or Ctrl-C to abort, 'h' for help, almost any other key for status
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed
 ```
+
+### Step Five - Password Vulnerability / Weak Point
+
+To check the network for a weak password, upload the pcapng dump file to [Distributed WPA PSK auditor](https://wpa-sec.stanev.org)
+
+either via the [web interface](https://wpa-sec.stanev.org/?submit)
+
+or via hcxtools. The will be as follows:
+
+wlancap2wpasec dump_file_name.pcapng
