@@ -349,3 +349,5 @@ either via the [web interface](https://wpa-sec.stanev.org/?submit)
 or via hcxtools. The will be as follows:
 
 wlancap2wpasec dump_file_name.pcapng
+
+If the Distributed WPA PSK auditor has found the password, it is strongly recommended that you change your password immediately!
