@@ -82,7 +82,7 @@ CHA|  LAST  |EA123P|   MAC-CL   |   MAC-AP   |ESSID          (SCAN:  2462/11)
 exit on sigterm
 ```
 
-### Step Three - Conversion
+### Step Three - Conversion - hashcat
 
 We now have a complete capture with all information needed for cracking the PSK. Before we crack the PSK, we need to convert it into a format Hashcat/JtR can understand using hcxpcapngtool.
 
@@ -160,7 +160,7 @@ processed pcapng files................: 1
 > 5. No PROBEREQUESTS were detected.
 > 6. Too few M1 frames were detected.
 
-### Step Four - Cracking
+### Step Four - Cracking - hashcat
 
 Finally, we have a Hashcat/JtR compatible format for cracking the PSK of our target network. For this example, we will use Hashcat for our cracking tool of choice.
 
@@ -237,6 +237,8 @@ Started: Thu Jan 22 08:52:24 2026
 Stopped: Thu Jan 22 08:52:28 2026
 ```
 
+### Step Three - Conversion - john
+
 If you prefer john, the command to do so is as follows:
 
 ```
@@ -302,6 +304,8 @@ session summary
 processed pcapng files................: 1
 ```
 
+### Step Four - Cracking - john
+
 The john command will be as follows:
 
 ```
@@ -326,5 +330,3 @@ Press 'q' or Ctrl-C to abort, 'h' for help, almost any other key for status
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed
 ```
-
-
