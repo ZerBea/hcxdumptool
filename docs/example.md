@@ -152,12 +152,12 @@ processed pcapng files................: 1
 ```
 
 > [!NOTE]
-> hcxpcapngtool will throw errors if:
+> hcxpcapngtool will throw errors and warnings if:
 > 1. The capture was too short/incomplete.
-> 2. The format used is old/outdated.
-> 3. Too many DEAUTHENTICATION frames were detected.
-> 4. The capture file was cleaned.
-> 5. No PROBEREQUESTS were detected.
+> 2. The format (cap/pcap) used is old/outdated.
+> 3. Too many DEAUTHENTICATION / DISASSOCIATION frames were detected.
+> 4. The capture file was (deadly) cleaned.
+> 5. No undirected PROBEREQUESTS were detected.
 > 6. Too few M1 frames were detected.
 
 ### Step Four - Cracking - hashcat
@@ -303,6 +303,15 @@ session summary
 ---------------
 processed pcapng files................: 1
 ```
+
+> [!NOTE]
+> hcxpcapngtool will throw errors and warnings if:
+> 1. The capture was too short/incomplete.
+> 2. The format (cap/pcap) used is old/outdated.
+> 3. Too many DEAUTHENTICATION / DISASSOCIATION frames were detected.
+> 4. The capture file was (deadly) cleaned.
+> 5. No undirected PROBEREQUESTS were detected.
+> 6. Too few M1 frames were detected.
 
 ### Step Four - Cracking - john
 
