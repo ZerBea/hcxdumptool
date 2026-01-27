@@ -166,10 +166,12 @@ Finally, we have a Hashcat/JtR compatible format for cracking the PSK of our tar
 
 There are many different ways to use Hashcat but we will just use a straight dictionary attack.
 
+I strongly recommend to use a separate pot file!
+
 The hashcat command will be as follows:
 
 ```
-hashcat -m 22000 testap.hc22000 wordlist
+hashcat -m 22000 --potfile-path=hashcat.wpa.pot testap.hc22000 wordlist
 ```
 
 After letting Hashcat run for a while, the output was as follows:
@@ -315,10 +317,12 @@ processed pcapng files................: 1
 
 ### Step Four - Cracking - john
 
+I strongly recommend to use a separate pot file!
+ 
 The john command will be as follows:
 
 ```
-john -w wordlist --format=wpapsk-opencl testap.john
+john --pot=john.wpa.pot -w wordlist --format=wpapsk-opencl testap.john
 ```
 
 After letting john run for a while, the output was as follows:
