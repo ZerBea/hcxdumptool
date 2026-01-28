@@ -5994,20 +5994,20 @@ if(errorcount > 0)
 				"- mostly caused by a broken driver\n"
 				"- or running %s on a shared interface)\n"
 				"- or a misconfigured system\n"
-				"- or a too restrictive BPF filter\n", errorcount, basename(argv[0]));
+				"- or a too restrictive Berkely Packet Filter\n", errorcount, basename(argv[0]));
 	}
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver or a shared interface)\n", errortxcount);
 if(rcascanmode == RCASCAN_ACTIVE)
 	{
 	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
-	else fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
+	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
 	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBERESPONSEs received \n", proberesponsercascancount);
-	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly not working)\n");
+	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection probably won't work)\n");
 	}
 if(rcascanmode == RCASCAN_PASSIVE)
 	{
 	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
-	else fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
+	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
 	}
 
 if((uid == 0) && (ftcflag == true)) save_ftc();
