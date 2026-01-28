@@ -5993,8 +5993,10 @@ if(errorcount > 0)
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver or a shared interface)\n", errortxcount);
 if(rcascanmode == RCASCAN_ACTIVE)
 	{
-	if(beaconrcascancount == 0) fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
-	if(proberesponsercascancount == 0) fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly not working)\n");
+	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
+	else fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
+	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBERESPONSEs received \n", proberesponsercascancount);
+	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly not working)\n");
 	}
 if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
