@@ -2721,26 +2721,32 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if((aplist + i)->tsakt == 0) break;
 	if(memcmp((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN) != 0) continue;
 	(aplist + i)->tsakt = tsakt;
-	if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
+	if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) == 0)
+		{
+		(aplist + i)->apdata->tsresponse = tsakt;
+		proberesponsercascancount++;
+		}
 	(aplist + i)->apdata->rtfrequency = rtfrequency;
 	(aplist + i)->apdata->rtrssi = rtrssi;
 	if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
-	proberesponsercascancount++;
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
 (aplist + i)->tsakt = tsakt;
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
-if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) != 0) (aplist + i)->apdata->tsresponse = tsakt;
+if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) == 0)
+	{
+	(aplist + i)->apdata->tsresponse = tsakt;
+	proberesponsercascancount++;
+	}
 (aplist + i)->apdata->rtfrequency = rtfrequency;
 (aplist + i)->apdata->rtrssi = rtrssi;
 if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
-proberesponsercascancount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -5998,6 +6004,12 @@ if(rcascanmode == RCASCAN_ACTIVE)
 	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBERESPONSEs received \n", proberesponsercascancount);
 	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection is possibly not working)\n");
 	}
+if(rcascanmode == RCASCAN_PASSIVE)
+	{
+	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
+	else fprintf(stderr, "0 BEACONs received (monitor mode is possibly not working)\n");
+	}
+
 if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
 	{
