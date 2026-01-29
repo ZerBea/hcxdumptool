@@ -146,6 +146,7 @@ static int clientcountmax = CLIENTCOUNT_MAX;
 static u64 packetcount = 1;
 static u64 beaconrcascancount = 0; 
 static u64 proberesponsercascancount = 0;
+static u64 proberequestrcascancount = 0;
 static size_t proberesponsetxindex = 0;
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
 
@@ -3463,7 +3464,11 @@ while(!wanteventflag)
 					show_realtime_rca();
 					scanlistindex++;
 					if(nl_set_frequency() == false) errorcount++;
-					if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
+					if(rcascanmode == RCASCAN_ACTIVE)
+						{
+						send_80211_proberequest_undirected();
+						proberequestrcascancount++;
+						}
 					}
 				}
 			else
@@ -3473,7 +3478,11 @@ while(!wanteventflag)
 					show_realtime_rca();
 					scanlistindex++;
 					if(nl_set_frequency() == false) errorcount++;
-					if(rcascanmode == RCASCAN_ACTIVE) send_80211_proberequest_undirected();
+					if(rcascanmode == RCASCAN_ACTIVE)
+						{
+						send_80211_proberequest_undirected();
+						proberequestrcascancount++;
+						}
 					}
 				}
 			if((lifetime % 10) == 0)
@@ -6003,7 +6012,7 @@ if(rcascanmode == RCASCAN_ACTIVE)
 	{
 	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
 	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
-	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBERESPONSEs received \n", proberesponsercascancount);
+	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUESTs transmitted\n%" PRIu64 " PROBERESPONSEs received\n", proberequestrcascancount, proberesponsercascancount);
 	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection probably won't work)\n");
 	}
 if(rcascanmode == RCASCAN_PASSIVE)
