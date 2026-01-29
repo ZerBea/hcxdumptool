@@ -5846,7 +5846,9 @@ if(set_interface(interfacefrequencyflag, userfrequencylistname, userchannellistn
 	{
 	errorcount++;
 	wanteventflag |= EXIT_ON_ERROR;
-	fprintf(stderr, "failed to arm interface\n");
+	fprintf(stderr, "failed to arm interface\n"
+			"mostly caused due to a broken driver\n"
+			"or driver does not support monitor mode\n");
 	goto byebye;
 	}
 if(monitormodeflag == true)
