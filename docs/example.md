@@ -18,7 +18,7 @@
 Usually the general workflow is always the same:
 
 ```
-hcxdumptool -> hcxtools (hcxpcapngtool, hcxhashtool, hcxpsktool) -> hashcat or john
+hcxdumptool -> hcxtools (hcxpcapngtool, hcxhashtool, hcxpsktool) -> hashcat or john -> upload to wpa-sec for a further weak password analysis
 ```
 
 ### Example Attack - Details/Goals
