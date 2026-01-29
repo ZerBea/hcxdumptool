@@ -1,5 +1,34 @@
 20.01.2026
 ==========
+hcxdumptool: added PROBEREQUEST counter
+             fixed PROBERESPONSE counter
+             added information why hcxdumptool can't arm the interface
+             added new option to rcascan to show only APs in range:
+--rds=<digit>    : enable real time display
+                    attack mode:
+                     0 = off(default)
+                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)
+                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)
+                     3 = show all APs, show CLIENTs (M1M2ROGUE)
+                     4 = show waterfall (PMKID & EAPOL)
+                          TIME TYPE MAC_AP MAC_CLIENT ESSID
+                     columns:
+                      E = encryption (e)ncrypted / (o)pen
+                      A = AKM (p)re-shared key
+                      1 = received M1 (+)
+                      2 = received M1M2 (+)
+                      3 = received M1M2M3 (+)
+                      P = received PMKID (+)
+                    rcascan mode
+                     0 = show APs on current channel sorted by BEACON timestamp
+                     1 = show APs on current channel sorted by PROBERESPONSE timestamp
+                     2 = show APs on current channel sorted by RSSI
+                     3 = show APs of all channels sorted by RSSI
+                     4 = show only APs in range on current channel sorted by PROBERESPONSE tim
+
+
+20.01.2026
+==========
 hcxdumptool: allow to disable watchdog
 --watchdogmax=<seconds>   : set maximum TIMEOUT when no packets received
                              default: 600 seconds
