@@ -13,6 +13,14 @@
 > **Do not use hcxdumptool on networks you do not have permission to use it on!**
 > For more information regarding the specifics of this warning, refer to the [caution](https://github.com/ZerBea/hcxdumptool#caution) section of the README.
 
+### General Workflow
+
+Usually the general workflow is always the same:
+
+```
+hcxdumptool -> hcxtools (hcxpcapngtool, hcxhashtool, hcxpsktool) -> hashcat or john
+```
+
 ### Example Attack - Details/Goals
 
 This example will simulate attacking a single network of interest.
