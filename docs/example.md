@@ -39,8 +39,18 @@ First of all get as much as possbile information about the target (hcxdumptool i
 The command to get general information about the target (ESSID, CHANNEL, MAC_AP. IN/OFF RANGE) is:
 
 ```
-hcxdumptool -i INTERFACE_NAME --rcascan=active -F
+hcxdumptool -i INTERFACE_NAME --rcascan=active --rds=1 -F
 ```
+
+The command to get general information about the target (ESSID, CHANNEL, MAC_AP. IN/OFF RANGE) and to check that it is within range:
+
+```
+hcxdumptool -i INTERFACE_NAME --rcascan=active --rds=5 -F
+```
+
+> [!NOTE]
+> The RSSI value ist completely useless since only one direction (TARGET -> ATTACK DEVICE) is measured!
+> PROBEREQUEST && PROBERESPONSE measures both directions!
 
 The command to get more information about the behavior of target (frame types, connected CLIENTs) is:
 
