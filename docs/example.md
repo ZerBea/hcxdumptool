@@ -50,7 +50,7 @@ hcxdumptool -i INTERFACE_NAME --rcascan=active --rds=5 -F
 
 > [!NOTE]
 > The RSSI value ist completely useless since only one direction (TARGET -> ATTACK DEVICE) is measured!
-> PROBEREQUEST && PROBERESPONSE measures both directions!
+> PROBEREQUEST && PROBERESPONSE measures both directions (TARGET <-> ATTACK DEVICE)!
 
 The command to get more information about the behavior of target (frame types, connected CLIENTs) is:
 
