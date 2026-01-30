@@ -84,6 +84,7 @@ static int fd_socket_unix = 0;
 static int fd_socket_rx = 0;
 static int fd_socket_tx = 0;
 static int fd_timer1 = 0;
+static int fd_timer2 = 0;
 static int fd_pcapng = 0;
 static int fd_fakeclock = 0;
 
@@ -131,7 +132,6 @@ static struct timespec tspecakt = { 0 };
 static struct timespec tsremain, tsreq = {0, TSWAITEAPOLA};
 
 static u64 tsakt = 0;
-static u64 tottime = 0;
 static u64 timehold = TIMEHOLD;
 static int timerwaitnd = TIMER_EPWAITND;
 
@@ -3218,6 +3218,7 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
+static u64 timer2count;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3228,6 +3229,11 @@ epi++;
 ev.data.fd = fd_timer1;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer2;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
 epi++;
 
 if(nl_set_frequency() == false) errorcount++;
@@ -3275,12 +3281,16 @@ while(!wanteventflag)
 				{
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
-			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
+			}
+		else if(events[i].data.fd == fd_timer2)
+			{
+			if(read(fd_timer2, &timer2count, sizeof(u64)) == -1) errorcount++;
+			wanteventflag |= EXIT_ON_TOT;
 			}
 		}
 	}
@@ -3296,6 +3306,7 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
+static u64 timer2count;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3306,6 +3317,11 @@ epi++;
 ev.data.fd = fd_timer1;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer2;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
 epi++;
 
 if(nl_set_frequency() == false) errorcount++;
@@ -3366,12 +3382,16 @@ while(!wanteventflag)
 				{
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
-			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
+			}
+		else if(events[i].data.fd == fd_timer2)
+			{
+			if(read(fd_timer2, &timer2count, sizeof(u64)) == -1) errorcount++;
+			wanteventflag |= EXIT_ON_TOT;
 			}
 		}
 	}
@@ -3387,6 +3407,7 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
+static u64 timer2count;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3397,6 +3418,11 @@ epi++;
 ev.data.fd = fd_timer1;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer2;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
 epi++;
 
 if(nl_set_frequency() == false) errorcount++;
@@ -3444,12 +3470,16 @@ while(!wanteventflag)
 				{
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
-			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
+			}
+		else if(events[i].data.fd == fd_timer2)
+			{
+			if(read(fd_timer2, &timer2count, sizeof(u64)) == -1) errorcount++;
+			wanteventflag |= EXIT_ON_TOT;
 			}
 		}
 	}
@@ -3465,6 +3495,7 @@ static int epret = 0;
 static struct epoll_event ev, events[EPOLL_EVENTS_MAX];
 static size_t packetcountlast = 0;
 static u64 timer1count;
+static u64 timer2count;
 
 if((fd_epoll= epoll_create(1)) < 0) return false;
 ev.data.fd = fd_socket_rx;
@@ -3475,6 +3506,11 @@ epi++;
 ev.data.fd = fd_timer1;
 ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
+epi++;
+
+ev.data.fd = fd_timer2;
+ev.events = EPOLLIN;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
 epi++;
 
 if(nl_set_frequency() == false) errorcount++;
@@ -3545,12 +3581,16 @@ while(!wanteventflag)
 				{
 				if(gpiostatusled > 0) GPIO_CLR = 1 << gpiostatusled;
 				}
-			if((tottime > 0) && (lifetime >= tottime)) wanteventflag |= EXIT_ON_TOT;
 			if((watchdogflag == true) && ((lifetime % timewatchdog) == 0))
 				{
 				if(packetcount == packetcountlast) wanteventflag |= EXIT_ON_WATCHDOG;
 				packetcountlast = packetcount;
 				}
+			}
+		else if(events[i].data.fd == fd_timer2)
+			{
+			if(read(fd_timer2, &timer2count, sizeof(u64)) == -1) errorcount++;
+			wanteventflag |= EXIT_ON_TOT;
 			}
 		}
 	}
@@ -4810,6 +4850,19 @@ tval1.it_interval.tv_nsec = TIMER1_INTERVAL_NSEC;
 if(timerfd_settime(fd_timer1, 0, &tval1, NULL) == -1) return false;
 return true;
 }
+/*---------------------------------------------------------------------------*/
+static bool set_timer2(time_t tottime)
+{
+static struct itimerspec tval2;
+
+if((fd_timer2 = timerfd_create(CLOCK_BOOTTIME, 0)) < 0) return false;
+tval2.it_value.tv_sec = tottime * 60;
+tval2.it_value.tv_nsec = 0;
+tval2.it_interval.tv_sec = 0;
+tval2.it_interval.tv_nsec = 0;
+if(timerfd_settime(fd_timer2, 0, &tval2, NULL) == -1) return false;
+return true;
+}
 /*===========================================================================*/
 /* FTC */
 static void save_ftc(void)
@@ -5491,6 +5544,7 @@ static u8 exitwatchdogflag = 0;
 static u8 exiterrorflag = 0;
 static struct timespec tspecifo, tspeciforem;
 static struct tpacket_stats lStats = { 0 };
+static time_t tottime = 0;
 static socklen_t lStatsLength = sizeof(lStats);
 static char *bpfname = NULL;
 #ifdef HCXWANTLIBPCAP
@@ -5640,7 +5694,11 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "time out timer must be > 0 minutes\n");
 			exit(EXIT_FAILURE);
 			}
-		tottime *= 60;
+		if(set_timer2(tottime) == false)
+			{
+			fprintf(stderr, "failed to set time out timer\n");
+			exit(EXIT_FAILURE);
+			}
 		break;
 
 		case HCX_WATCHDOG_MAX:
