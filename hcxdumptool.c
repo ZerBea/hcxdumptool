@@ -5439,7 +5439,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"--rds=<digit>    : enable real time display\n"
 	"                    attack mode:\n"
-	"                     0 = off(default)\n"
+	"                     0 = off / headless mode (default)\n"
 	"                     1 = show APs on current channel, show CLIENTs (M1M2ROGUE)\n"
 	"                     2 = show all APs (M1M2, M1M2M3 or PMKID), show CLIENTs (M1M2ROGUE)\n"
 	"                     3 = show all APs, show CLIENTs (M1M2ROGUE)\n"
@@ -5653,7 +5653,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 
 		case HCX_PCAPNGNAME:
 		pcapngoutname = optarg;
-		if(rcascanmode  != 0)
+		if(rcascanmode != 0)
 			{
 			fprintf(stderr, "combination of --rcascan and -w is not allowed\n");
 			exit(EXIT_FAILURE);
@@ -6061,9 +6061,9 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "Warning: BPF is unset!\nMake sure hcxdumptool is running in a 100%% controlled environment!\nCheckout (and understand) README.md and docs/example.md!\n\n");
 if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared (virtual) interface!\nThis is not recommended because it leads to an unwanted behavior!\n\n", basename(argv[0]));
-fprintf(stdout, "starting...\033[?25l\n");
+if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode...\033[?25l\n");
+else fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
-
 if(rcascanmode > 0)
 	{
 	if(nl_scanloop_rcascan() == false)
