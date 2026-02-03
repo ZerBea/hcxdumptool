@@ -3521,6 +3521,11 @@ if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
 epi++;
 
 if(nl_set_frequency() == false) errorcount++;
+if(rcascanmode == RCASCAN_ACTIVE)
+	{
+	send_80211_proberequest_undirected();
+	proberequestrcascancount++;
+	}
 while(!wanteventflag)
 	{
 	if(errorcount > errorcountmax) wanteventflag |= EXIT_ON_ERROR;
