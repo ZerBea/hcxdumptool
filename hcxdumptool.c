@@ -147,6 +147,8 @@ static u64 packetcount = 1;
 static u64 beaconrcascancount = 0; 
 static u64 proberesponsercascancount = 0;
 static u64 proberequestrcascancount = 0;
+static u64 proberequestbcrxrcacount = 0;
+static u64 proberequestdirxrcacount = 0;
 static size_t proberesponsetxindex = 0;
 static u32 proberesponsetxmax = PROBERESPONSETX_MAX;
 
@@ -3203,6 +3205,11 @@ if(macfrx->type == IEEE80211_FTYPE_MGMT)
 		get_radiotapfield(__hcx16le(rth->it_len));
 		process80211proberesponse_rcascan();
 		}
+	else if(macfrx->subtype == IEEE80211_STYPE_PROBE_REQ)
+		{
+		if(memcmp(macbc, macfrx->addr1, ETH_ALEN) == 0) proberequestbcrxrcacount++;
+		else proberequestdirxrcacount++;
+		}
 	}
 return;
 }
@@ -6119,13 +6126,16 @@ if(rcascanmode == RCASCAN_ACTIVE)
 	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
 	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUESTs transmitted\n%" PRIu64 " PROBERESPONSEs received\n", proberequestrcascancount, proberesponsercascancount);
 	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection probably won't work)\n");
+	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUESTs received\n", proberequestbcrxrcacount);
+	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUESTs received\n", proberequestdirxrcacount);
 	}
 if(rcascanmode == RCASCAN_PASSIVE)
 	{
 	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
 	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
+	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUESTs received\n", proberequestbcrxrcacount);
+	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUESTs received\n", proberequestdirxrcacount);
 	}
-
 if((uid == 0) && (ftcflag == true)) save_ftc();
 if(exiteapolflag != 0)
 	{
