@@ -6061,7 +6061,7 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "Warning: BPF is unset!\nMake sure hcxdumptool is running in a 100%% controlled environment!\nCheckout (and understand) README.md and docs/example.md!\n\n");
 if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared (virtual) interface!\nThis is not recommended because it leads to an unwanted behavior!\n\n", basename(argv[0]));
-if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode...\033[?25l\n");
+if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode (display off)...\033[?25l\n");
 else fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
 if(rcascanmode > 0)
