@@ -282,6 +282,8 @@ By default, hcxdumptool is utilizing three attack vectors:
 
 - [BPF Documentation](https://www.kernel.org/doc/html/latest/bpf/index.html)
 
+- [tshark capture filters](https://tshark.dev/capture/capture_filters/)
+
 - [Linux Commands Handbook](https://www.freecodecamp.org/news/the-linux-commands-handbook/)
 
 - [WPA2 Information](https://en.wikipedia.org/wiki/Wpa2)
