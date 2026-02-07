@@ -4904,9 +4904,10 @@ return true;
 }
 /*===========================================================================*/
 /* TIMER */
-static bool set_timer(void)
+static bool set_timer(intmax_t tottime)
 {
 static struct itimerspec tval1;
+static struct itimerspec tval2;
 
 if((fd_timer1 = timerfd_create(CLOCK_BOOTTIME, 0)) < 0) return false;
 tval1.it_value.tv_sec = TIMER1_VALUE_SEC;
@@ -4914,12 +4915,6 @@ tval1.it_value.tv_nsec = TIMER1_VALUE_NSEC;
 tval1.it_interval.tv_sec = TIMER1_INTERVAL_SEC;
 tval1.it_interval.tv_nsec = TIMER1_INTERVAL_NSEC;
 if(timerfd_settime(fd_timer1, 0, &tval1, NULL) == -1) return false;
-return true;
-}
-/*---------------------------------------------------------------------------*/
-static bool set_timer2(intmax_t tottime)
-{
-static struct itimerspec tval2;
 
 if((fd_timer2 = timerfd_create(CLOCK_BOOTTIME, 0)) < 0) return false;
 tval2.it_value.tv_sec = tottime;
@@ -5760,11 +5755,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "time out timer must be > 0 minutes\n");
 			exit(EXIT_FAILURE);
 			}
-		if(set_timer2(tottime * 60) == false)
-			{
-			fprintf(stderr, "failed to set time out timer\n");
-			exit(EXIT_FAILURE);
-			}
+		tottime *= 60;
 		break;
 
 		case HCX_WATCHDOG_MAX:
@@ -6076,7 +6067,7 @@ if(open_socket_tx() == false)
 	fprintf(stderr, "failed to open transmit socket\n");
 	goto byebye;
 	}
-if(set_timer() == false)
+if(set_timer(tottime) == false)
 	{
 	errorcount++;
 	wanteventflag |= EXIT_ON_ERROR;
