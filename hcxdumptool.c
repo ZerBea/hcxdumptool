@@ -3236,7 +3236,13 @@ if((fd_epoll= epoll_create(1)) < 0)
 	} 
 ev.data.fd = fd_socket_rx;
 ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_socket_rx, &ev) < 0) return false;
+if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_socket_rx, &ev) < 0)
+	{
+	#ifdef HCXDEBUG
+	fprintf(fh_debug, "epoll_ctl rx_socket failed: %s\n", strerror(errno));
+	#endif
+	return false;
+	} 
 epi++;
 
 ev.data.fd = fd_timer1;
