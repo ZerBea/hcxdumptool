@@ -3216,7 +3216,7 @@ return;
 /*===========================================================================*/
 /*===========================================================================*/
 /*SCAN LOOPs */
-static bool nl_scanloop(void)
+static bool nl_scanloop(intmax_t tottime)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -3256,16 +3256,19 @@ if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0)
 	} 
 epi++;
 
-ev.data.fd = fd_timer2;
-ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0)
+if(tottime > 0)
 	{
-	#ifdef HCXDEBUG
-	fprintf(fh_debug, "epoll_ctl timer 2 failed: %s\n", strerror(errno));
-	#endif
-	return false;
-	} 
-epi++;
+	ev.data.fd = fd_timer2;
+	ev.events = EPOLLIN;
+	if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0)
+		{
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "epoll_ctl timer 2 failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		} 
+	epi++;
+	}
 
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
@@ -3328,7 +3331,7 @@ while(!wanteventflag)
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_scanloop_rds(void)
+static bool nl_scanloop_rds(intmax_t tottime)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -3350,10 +3353,19 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-ev.data.fd = fd_timer2;
-ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
-epi++;
+if(tottime > 0)
+	{
+	ev.data.fd = fd_timer2;
+	ev.events = EPOLLIN;
+	if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0)
+		{
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "epoll_ctl timer 2 failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		} 
+	epi++;
+	}
 
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
@@ -3429,7 +3441,7 @@ while(!wanteventflag)
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_scanloop_waterfall(void)
+static bool nl_scanloop_waterfall(intmax_t tottime)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -3451,10 +3463,19 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-ev.data.fd = fd_timer2;
-ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
-epi++;
+if(tottime > 0)
+	{
+	ev.data.fd = fd_timer2;
+	ev.events = EPOLLIN;
+	if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0)
+		{
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "epoll_ctl timer 2 failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		} 
+	epi++;
+	}
 
 if(nl_set_frequency() == false) errorcount++;
 while(!wanteventflag)
@@ -3517,7 +3538,7 @@ while(!wanteventflag)
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool nl_scanloop_rcascan(void)
+static bool nl_scanloop_rcascan(intmax_t tottime)
 {
 static ssize_t i;
 static int fd_epoll = 0;
@@ -3539,10 +3560,19 @@ ev.events = EPOLLIN;
 if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer1, &ev) < 0) return false;
 epi++;
 
-ev.data.fd = fd_timer2;
-ev.events = EPOLLIN;
-if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0) return false;
-epi++;
+if(tottime > 0)
+	{
+	ev.data.fd = fd_timer2;
+	ev.events = EPOLLIN;
+	if(epoll_ctl(fd_epoll, EPOLL_CTL_ADD, fd_timer2, &ev) < 0)
+		{
+		#ifdef HCXDEBUG
+		fprintf(fh_debug, "epoll_ctl timer 2 failed: %s\n", strerror(errno));
+		#endif
+		return false;
+		} 
+	epi++;
+	}
 
 if(nl_set_frequency() == false) errorcount++;
 if(rcascanmode == RCASCAN_ACTIVE)
@@ -4887,12 +4917,12 @@ if(timerfd_settime(fd_timer1, 0, &tval1, NULL) == -1) return false;
 return true;
 }
 /*---------------------------------------------------------------------------*/
-static bool set_timer2(time_t tottime)
+static bool set_timer2(intmax_t tottime)
 {
 static struct itimerspec tval2;
 
 if((fd_timer2 = timerfd_create(CLOCK_BOOTTIME, 0)) < 0) return false;
-tval2.it_value.tv_sec = tottime * 60;
+tval2.it_value.tv_sec = tottime;
 tval2.it_value.tv_nsec = 0;
 tval2.it_interval.tv_sec = 0;
 tval2.it_interval.tv_nsec = 0;
@@ -5580,7 +5610,7 @@ static u8 exitwatchdogflag = 0;
 static u8 exiterrorflag = 0;
 static struct timespec tspecifo, tspeciforem;
 static struct tpacket_stats lStats = { 0 };
-static time_t tottime = 0;
+static intmax_t tottime = 0;
 static socklen_t lStatsLength = sizeof(lStats);
 static char *bpfname = NULL;
 #ifdef HCXWANTLIBPCAP
@@ -5730,7 +5760,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			fprintf(stderr, "time out timer must be > 0 minutes\n");
 			exit(EXIT_FAILURE);
 			}
-		if(set_timer2(tottime) == false)
+		if(set_timer2(tottime * 60) == false)
 			{
 			fprintf(stderr, "failed to set time out timer\n");
 			exit(EXIT_FAILURE);
@@ -6053,7 +6083,6 @@ if(set_timer() == false)
 	fprintf(stderr, "failed to initialize timer\n");
 	goto byebye;
 	}
-
 if(daemon == true)
 	{
 	if((hcxpid = fork()) < 0)
@@ -6091,7 +6120,7 @@ else fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
 if(rcascanmode > 0)
 	{
-	if(nl_scanloop_rcascan() == false)
+	if(nl_scanloop_rcascan(tottime) == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize rcascan scan loop\n");
@@ -6099,7 +6128,7 @@ if(rcascanmode > 0)
 	}
 else if(rds == 0)
 	{
-	if(nl_scanloop() == false)
+	if(nl_scanloop(tottime) == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize main scan loop\n");
@@ -6107,7 +6136,7 @@ else if(rds == 0)
 	}
 else if(rds == 4)
 	{
-	if(nl_scanloop_waterfall() == false)
+	if(nl_scanloop_waterfall(tottime) == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize main scan loop\n");
@@ -6115,7 +6144,7 @@ else if(rds == 4)
 	}
 else
 	{
-	if(nl_scanloop_rds() == false)
+	if(nl_scanloop_rds(tottime) == false)
 		{
 		errorcount++;
 		fprintf(stderr, "failed to initialize main scan loop\n");
