@@ -162,13 +162,13 @@ make install PREFIX=/usr/local (as super user)
 
 Known as working WiFi chipsets:
 
-* Realtek (rtl8xxxu)
+* Realtek (rtl8xxxu / rtw88)
+
+* MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
 * Atheros (ath9k_htc) old chipset
 
 * Ralink (rt2800usb) old chipset
-
-* MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
 Not recommended WiFi chipsets:
 
@@ -180,8 +180,7 @@ Not recommended WiFi chipsets:
 
 Absolutely not recommended:
 
-* All kinds of WiFi PCIe cards, due to massive interference.
-https://duckduckgo.com/?t=ffab&q=Static+Interference+from+PCIe+wifi&ia=web
+* All kinds of WiFi PCIe cards, due to massive [interference](https://duckduckgo.com/?t=ffab&q=Static+Interference+from+PCIe+wifi&ia=web)
 
 More information about possible issues or limitations can be found [here](https://github.com/ZerBea/hcxdumptool#useful-links).
 
@@ -189,15 +188,18 @@ More information about possible issues or limitations can be found [here](https:
 
 The best high frequency amplifier is a good antenna!
 
-It is much better to achieve gain using a good antenna instead of increasing transmission power.
+It is much better to achieve gain using a good (directional) antenna instead of increasing transmission power.
 
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
 | LOGILINK WL0097        | Grid Parabolic  |
 | TP-LINK TL-ANT2414 A/B | Panel           |
-| LevelOne WAN-1112      | Panel           |
 | DELOCK 88806           | Panel           |
 | TP-LINK TL-ANT2409 A   | Panel           |
+| LevelOne WAN-1112      | Panel           |
+| LogiLink WL0098        | Panel           |
+| ALFA APA-M04           | Panel           |
+| ALFA APA-M25           | Panel           |
 
 ### GPS devices (NMEA 0183 protocol)
 
