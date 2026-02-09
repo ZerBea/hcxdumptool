@@ -162,13 +162,13 @@ make install PREFIX=/usr/local (as super user)
 
 Known as working WiFi chipsets:
 
+* Realtek (rtl8xxxu)
+
 * Atheros (ath9k_htc) old chipset
 
 * Ralink (rt2800usb) old chipset
 
 * MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
-
-* Realtek (rtl8xxxu) depending on chipset and the version of the Linux Kernel expect massive driver issues
 
 Not recommended WiFi chipsets:
 
