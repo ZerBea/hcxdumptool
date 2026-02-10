@@ -151,16 +151,17 @@ make install PREFIX=/usr/local (as super user)
 >
 > **Always verify the actual chipset with 'lsusb' and/or 'lspci'!**
 >
-> No support for a third party driver which is not part of the [official Linux kernel](https://www.kernel.org/).
+> No support for a third party driver which is not part of the [official Linux kernel](https://www.kernel.org/), because there are hundreds of them in the wilderness.
+> I don't have the time for it, nor do I want to.
 > Report related issues to the site, from which you downloaded the driver.
 >
 > No support for a driver which doesn't support monitor mode and full frame injection natively.
-> If you need these features, do a request on www.kernel.org
+> If you need these features, do a request on [Bugzilla](https://bugzilla.kernel.org/).
 >
 > Several device and driver tests can be found [here](https://github.com/ZerBea/hcxdumptool/discussions/361).
-> Dependent on the version of the Linux kernel, expect massive driver issues.
+> Dependent on the version of the Linux kernel (especially the older ones), expect massive driver issues.
 
-Known as working WiFi chipsets:
+Known as [working WiFi chipsets / drivers](https://wireless.docs.kernel.org/en/latest/en/users/drivers.html):
 
 * Realtek (rtl8xxxu / rtw88)
 
@@ -176,7 +177,7 @@ Not recommended WiFi chipsets:
 
 * Broadcom (Neither monitor mode nor frame injection by official Linux kernel.)
 
-* Qualcomm (No frame injection by official Linux kernel.)
+* Qualcomm (No frame injection by official Linux kernel.
 
 Absolutely not recommended:
 
@@ -188,7 +189,9 @@ More information about possible issues or limitations can be found [here](https:
 
 The best high frequency amplifier is a good antenna!
 
-It is much better to achieve gain using a good (directional) antenna instead of increasing transmission power.
+A good antenna is extremely important, because antenna gain is working in both directions.
+
+Stupid increasing TX power doesn’t raise the level of the received signal on the same unit.
 
 | VENDOR MODEL           | TYPE            |
 | ---------------------- | --------------- |
