@@ -146,6 +146,7 @@ static int clientcountmax = CLIENTCOUNT_MAX;
 static u64 packetcount = 1;
 static u64 beaconrcascancount = 0; 
 static u64 proberesponsercascancount = 0;
+static u64 proberesponse2rcascancount = 0;
 static u64 proberequestrcascancount = 0;
 static u64 proberequestbcrxrcacount = 0;
 static u64 proberequestdirxrcacount = 0;
@@ -2771,6 +2772,11 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 		{
 		(aplist + i)->apdata->tsresponse = tsakt;
 		proberesponsercascancount++;
+		if((aplist + i)->apdata->proberesponse == false)
+			{
+			(aplist + i)->apdata->proberesponse = true;
+			proberesponse2rcascancount++;
+			}
 		}
 	(aplist + i)->apdata->rtfrequency = rtfrequency;
 	(aplist + i)->apdata->rtrssi = rtrssi;
@@ -2782,11 +2788,14 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	}
 (aplist + i)->tsakt = tsakt;
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->proberesponse = false;
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) == 0)
 	{
 	(aplist + i)->apdata->tsresponse = tsakt;
 	proberesponsercascancount++;
+	(aplist + i)->apdata->proberesponse = true;
+	proberesponse2rcascancount++;
 	}
 (aplist + i)->apdata->rtfrequency = rtfrequency;
 (aplist + i)->apdata->rtrssi = rtrssi;
@@ -2886,6 +2895,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	}
 (aplist + i)->tsakt = tsakt;
 memset((aplist + i)->apdata, 0, APDATA_SIZE);
+(aplist + i)->apdata->proberesponse = false;
 memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 (aplist + i)->apdata->rtfrequency = rtfrequency;
 (aplist + i)->apdata->rtrssi = rtrssi;
@@ -6174,7 +6184,7 @@ if(rcascanmode == RCASCAN_ACTIVE)
 	{
 	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
 	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
-	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUESTs transmitted\n%" PRIu64 " PROBERESPONSEs received\n", proberequestrcascancount, proberesponsercascancount);
+	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUESTs transmitted\n%" PRIu64 " PROBERESPONSEs received from %" PRIu64 " ACCESS POINT(s)\n", proberequestrcascancount, proberesponsercascancount, proberesponse2rcascancount);
 	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection probably won't work)\n");
 	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUESTs received\n", proberequestbcrxrcacount);
 	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUESTs received\n", proberequestdirxrcacount);
