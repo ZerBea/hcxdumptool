@@ -6185,21 +6185,21 @@ if(errorcount > 0)
 if(errortxcount > 0) fprintf(stderr, "%u TX ERROR(s) during runtime (mostly caused by a broken driver or a shared interface)\n", errortxcount);
 if(rcascanmode == RCASCAN_ACTIVE)
 	{
-	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
+	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACON(s) received\n", beaconrcascancount);
 	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
-	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUESTs transmitted\n%" PRIu64 " PROBERESPONSEs received\n", proberequestrcascancount, proberesponsercascancount);
-	else fprintf(stderr, "0 PROBERESPONSEs received (packet injection probably won't work)\n");
-	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUESTs received\n", proberequestbcrxrcacount);
-	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUESTs received\n", proberequestdirxrcacount);
+	if(proberesponsercascancount > 0) fprintf(stderr, "%" PRIu64 " PROBEREQUEST(s) transmitted\n%" PRIu64 " PROBERESPONSE(s) received\n", proberequestrcascancount, proberesponsercascancount);
+	else fprintf(stderr, "0 PROBERESPONSE(s) received (packet injection probably won't work)\n");
+	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUEST(s) received\n", proberequestbcrxrcacount);
+	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUEST(s) received\n", proberequestdirxrcacount);
 	if(proberesponse1rcascancount > 0) fprintf(stderr, "%" PRIu64 " ACCESS POINT(s) discovered\n", proberesponse1rcascancount);
-	if(proberesponse2rcascancount > 0) fprintf(stderr, "%" PRIu64 " ACCESS POINT(s) have responded\n", proberesponse2rcascancount);
+	if(proberesponse2rcascancount > 0) fprintf(stderr, "%" PRIu64 " ACCESS POINT(s) responded\n", proberesponse2rcascancount);
 	}
 if(rcascanmode == RCASCAN_PASSIVE)
 	{
-	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACONs received\n", beaconrcascancount);
-	else fprintf(stderr, "0 BEACONs received (monitor mode probably won't work)\n");
-	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUESTs received\n", proberequestbcrxrcacount);
-	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUESTs received\n", proberequestdirxrcacount);
+	if(beaconrcascancount > 0) fprintf(stderr, "%" PRIu64 " BEACON(s) received\n", beaconrcascancount);
+	else fprintf(stderr, "0 BEACON(s) received (monitor mode probably won't work)\n");
+	if(proberequestbcrxrcacount > 0) fprintf(stderr, "%" PRIu64 " undirected PROBEREQUEST(s) received\n", proberequestbcrxrcacount);
+	if(proberequestdirxrcacount > 0) fprintf(stderr, "%" PRIu64 " directed PROBEREQUEST(s) received\n", proberequestdirxrcacount);
 	if(proberesponse1rcascancount > 0) fprintf(stderr, "%" PRIu64 " ACCESS POINT(s) discovered\n", proberesponse1rcascancount);
 	}
 if((uid == 0) && (ftcflag == true)) save_ftc();
