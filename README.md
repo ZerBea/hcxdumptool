@@ -165,7 +165,7 @@ Known as [working WiFi chipsets / drivers](https://wireless.docs.kernel.org/en/l
 
 * Realtek (rtl8xxxu / rtw88)
 
-* MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues
+* MediaTek (mt76) depending on chipset and the version of the Linux Kernel expect massive driver issues - active monitor mode is broken
 
 * Atheros (ath9k_htc) old chipset
 
