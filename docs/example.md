@@ -64,6 +64,10 @@ The full command to create a BPF to the target (attack ccce1edc3bee) would be as
 hcxdumptool --bpfc="wlan addr1 ccce1edc3bee or wlan addr2 ccce1edc3bee or wlan addr3 ccce1edc3bee or type mgt subtype probereq" > attack.bpf
 ```
 
+> [!NOTE]
+> Do not(1) filter undirected PROBEREQUEST frames! They can contain PreSharedKeys!
+> If you don't want hcxdumptool to respond to PROBEREQUESTs set --proberesponsetx=0
+
 The full command to create a BPF to _protect_ ccce1edc3bee would be as follows:
 
 ```
