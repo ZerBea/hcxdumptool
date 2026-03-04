@@ -114,11 +114,17 @@ CHA|  LAST  |EA123P|   MAC-CL   |   MAC-AP   |ESSID          (SCAN:  2462/11)
 exit on sigterm
 ```
 Legend column EA123P:
+
 E = encryption (e)ncrypted / (o)pen
+
 A = AKM (p)re-shared key
+
 1 = received M1 (+)
+
 2 = received M1M2 (+)
+
 3 = received M1M2M3 (+)
+
 P = received PMKID (+)
 
 
