@@ -103,10 +103,29 @@ sudo hcxdumptool -i wlan0 --rds=3 -c 11a --proberesponsetx=0 --disable_disassoci
 
 After running that command for a while, the output was as follows:
 
+running rds mode 1, 2, 3
 ```
 CHA|  LAST  |EA123P|   MAC-CL   |   MAC-AP   |ESSID          (SCAN:  2462/11)
 ---+--------+------+------------+------------+--------------------------------
- 11|08:43:02|ep+++ |1246d6b3d1c3|ccce1edc3bee|AP_7272
+ 11|08:43:02|ep+++ |1246d6xxxxxx|ccce1exxxxxx|AP_7272
+^C
+1361 Packet(s) captured by kernel
+0 Packet(s) dropped by kernel
+exit on sigterm
+```
+Legend column EA123P:
+E = encryption (e)ncrypted / (o)pen
+A = AKM (p)re-shared key
+1 = received M1 (+)
+2 = received M1M2 (+)
+3 = received M1M2M3 (+)
+P = received PMKID (+)
+
+
+running rds mode 4
+```
+08:47:15 M12      dc15c8xxxxxx dce1a9xxxxxx AP_7272
+08:47:27 PMKID    5004b8xxxxxx 500ee4xxxxxx AP_7273
 ^C
 1361 Packet(s) captured by kernel
 0 Packet(s) dropped by kernel
