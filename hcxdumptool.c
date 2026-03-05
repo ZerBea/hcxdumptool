@@ -1259,9 +1259,9 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 			{
 			tvlast = (aplist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-			fprintf(stdout, "%s M123     %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+			fprintf(stdout, "%s M123  %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+					(aplist + i)->apdata->macc[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 					(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
-					(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 					(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
 			}
 		}
@@ -1298,9 +1298,9 @@ if(replaycountrg == replaycount)
 					{
 					tvlast = (calist +i)->tsakt / 1000000000ULL;
 					strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-					fprintf(stdout, "%s M12ROGUE %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
-							(calist + i)->cadata->maca[0], (calist + i)->cadata->maca[1], (calist + i)->cadata->maca[2], (calist + i)->cadata->maca[3], (calist + i)->cadata->maca[4], (calist + i)->cadata->maca[5],
-							(calist + i)->cadata->maca[0], (calist + i)->cadata->macc[1], (calist + i)->cadata->macc[2], (calist + i)->cadata->macc[3], (calist + i)->cadata->macc[4], (calist + i)->cadata->macc[5],
+					fprintf(stdout, "%s M12RG %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+							(aplist + i)->apdata->macc[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
+							(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
 							(calist + i)->cadata->essidlen, (calist + i)->cadata->essid);
 					}
 				}
@@ -1333,9 +1333,9 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 			{
 			tvlast = (aplist +i)->tsakt / 1000000000ULL;
 			strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-			fprintf(stdout, "%s M12      %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+			fprintf(stdout, "%s M12   %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+					(aplist + i)->apdata->macc[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 					(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
-					(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 					(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
 			}
 		}
@@ -1391,9 +1391,9 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 									{
 									tvlast = (aplist +i)->tsakt / 1000000000ULL;
 									strftime(timestring, TIMESTRING_LEN, "%H:%M:%S", localtime(&tvlast));
-									fprintf(stdout, "%s PMKID    %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+									fprintf(stdout, "%s PMKID %02x%02x%02x%02x%02x%02x %02x%02x%02x%02x%02x%02x %.*s\n", timestring,
+											(aplist + i)->apdata->macc[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 											(aplist + i)->apdata->maca[0], (aplist + i)->apdata->maca[1], (aplist + i)->apdata->maca[2], (aplist + i)->apdata->maca[3], (aplist + i)->apdata->maca[4], (aplist + i)->apdata->maca[5],
-											(aplist + i)->apdata->maca[0], (aplist + i)->apdata->macc[1], (aplist + i)->apdata->macc[2], (aplist + i)->apdata->macc[3], (aplist + i)->apdata->macc[4], (aplist + i)->apdata->macc[5],
 											(aplist + i)->apdata->essidlen, (aplist + i)->apdata->essid);
 									}
 								}
@@ -5516,7 +5516,7 @@ fprintf(stdout, "--ftc            : enable fake time clock\n"
 	"                        P = received PMKID (+)\n"
 	"                     4 = show waterfall (PMKID & EAPOL)\n"
 	"                       columns mode 4:\n"
-	"                        TIME TYPE MAC_AP MAC_CLIENT ESSID\n"
+	"                        TIME TYPE MAC_CLIENT MAC_AP ESSID\n"
 	"                    rcascan mode\n"
 	"                     0 = show APs on current channel sorted by BEACON timestamp\n"
 	"                     1 = show APs on current channel sorted by PROBERESPONSE timestamp\n"
@@ -6122,7 +6122,7 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "Warning: BPF is unset!\nMake sure hcxdumptool is running in a 100%% controlled environment!\nCheckout (and understand) README.md and docs/example.md!\n\n");
 if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared (virtual) interface!\nThis is not recommended because it leads to an unwanted behavior!\n\n", basename(argv[0]));
-if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode (display off)...\033[?25l\n");
+if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode (--rds=0 display off)...\033[?25l\n");
 else fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);
 if(rcascanmode > 0)
@@ -6143,6 +6143,7 @@ else if(rds == 0)
 	}
 else if(rds == 4)
 	{
+	fprintf(stdout, "\nTIME     EAPOL MAC_CL       MAC_AP       ESSID\n");
 	if(nl_scanloop_waterfall(tottime) == false)
 		{
 		errorcount++;

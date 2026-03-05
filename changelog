@@ -1,3 +1,8 @@
+05.03.2026
+==========
+hcxdumptool: changed rds=4 format (according to rds 1..3)
+from TIME TYPE MAC_AP MAC_CLIENT ESSID
+to   TIME TYPE MAC_CLIENT MAC_AP ESSID
 08.02.2026
 ==========
 bug fix release v7.1.2

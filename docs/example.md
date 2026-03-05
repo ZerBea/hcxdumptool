@@ -126,8 +126,9 @@ P = received PMKID (+)
 ```
 running rds mode 4
 
-08:47:15 M12      dc15c8xxxxxx dce1a9xxxxxx AP_7272
-08:47:27 PMKID    5004b8xxxxxx 500ee4xxxxxx AP_7273
+TIME     TYPE  MAC_CLIENT   MAC_AP       ESSID
+08:47:15 M12   dce1a9xxxxxx dc15c8xxxxxx AP_7272
+08:47:27 PMKID 500ee4xxxxxx 5004b8xxxxxx AP_7273
 ^C
 1361 Packet(s) captured by kernel
 0 Packet(s) dropped by kernel
