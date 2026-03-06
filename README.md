@@ -83,7 +83,7 @@ However, if you have that knowledge this tools can do magic.
 - Recommended distribution: [Arch Linux](https://archlinux.org/) (notebooks and desktop systems), [OpenWRT](https://openwrt.org/) (small systems like Raspberry Pi, WiFi router)
 - WLAN device chipset must be able to run in monitor mode.
 - WLAN device driver *must* support monitor and full frame injection mode.
-- gcc >= 14 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
+- gcc >= 15 recommended (deprecated versions are not supported: https://gcc.gnu.org/)
 - make
 - libpcap and libpcap-dev (If internal BPF compiler has been enabled.)
 - Raspberry Pi A, B, A+, B+, Zero (WH). (Recommended: Zero or A+, because of a very low power consumption), but notebooks and desktops will work as well.
