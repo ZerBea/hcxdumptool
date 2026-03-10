@@ -4984,6 +4984,7 @@ return;
 static void signal_handler(int signum)
 {
 if((signum == SIGINT) || (signum == SIGTERM) || (signum == SIGKILL) || (signum == SIGTSTP)) wanteventflag |= EXIT_ON_SIGTERM;
+else if(signum == SIGUSR1) wanteventflag |= EXIT_ON_SIGUSR1;
 return;
 }
 /*---------------------------------------------------------------------------*/
@@ -4997,6 +4998,8 @@ sa.sa_flags = SA_RESTART;
 if(sigaction(SIGINT, &sa, NULL) < 0) return false;
 if(sigaction(SIGTERM, &sa, NULL) < 0) return false;
 if(sigaction(SIGTSTP, &sa, NULL) < 0) return false;
+if(sigaction(SIGUSR1, &sa, NULL) < 0) return false;
+if(sigaction(SIGUSR2, &sa, NULL) < 0) return false;
 return true;
 }
 /*===========================================================================*/
@@ -5439,6 +5442,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	" SIGTERM = terminate\n"
 	" SIGKILL = terminate\n"
 	" SIGTSTP = terminate\n"
+	" SIGUSR1 = terminate and ignore commandline options\n"
 	"\n"
 	"Important recommendation:\n"
 	"-------------------------\n"
@@ -6229,7 +6233,13 @@ if(exiteapolflag != 0)
 	if((wanteventflag & EXIT_ON_EAPOL_M2RG) == EXIT_ON_EAPOL_M2RG) fprintf(stdout, "exit on EAPOL M1M2ROGUE\n");
 	if((wanteventflag & EXIT_ON_EAPOL_M1) == EXIT_ON_EAPOL_M1) fprintf(stdout, "exit on EAPOL M1\n");
 	}
-if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
+if((wanteventflag & EXIT_ON_SIGUSR1) == EXIT_ON_SIGUSR1)
+	{
+	fprintf(stdout, "exit on sigusr1\n");
+	return EXIT_SUCCESS;
+	}
+
+else if((wanteventflag & EXIT_ON_SIGTERM) == EXIT_ON_SIGTERM)
 	{
 	fprintf(stdout, "exit on sigterm\n");
 	if(exitsigtermflag == EXIT_ACTION_REBOOT)
