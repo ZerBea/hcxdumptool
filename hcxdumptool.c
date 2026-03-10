@@ -463,14 +463,17 @@ for(i = 0; i < ifpresentlistcounter; i++)
 
 	}
 fprintf(stdout, "\nmodes reported by the driver:\n"
-		"* active monitor mode available (do not trust it)\n"
+		"* active monitor mode available\n"
 		"   Warning:\n"
-		"   depending on the Linux kernel version,active monitor mode is broken on many mt76 drivers\n"
-		"* active monitor mode available (do not trust it)\n"
-		"S active monitor mode available on shared interface (do not trust it)\n"
+		"     do not trust what the driver reports!\n"
+		"     depending on the Linux kernel version, active monitor mode is broken on mt76 drivers\n"
+		"S active monitor mode available on shared interface\n"
+		"   Warning:\n"
+		"     do not trust what the driver reports!\n"
+		"     depending on the Linux kernel version, active monitor mode is broken on mt76 drivers\n"
 		"+ monitor mode available\n"
 		"s monitor mode available on shared interface\n"
-		"- no monitor available\n");
+		"- monitor not available\n");
 return;
 }
 /*---------------------------------------------------------------------------*/
