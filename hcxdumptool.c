@@ -464,6 +464,9 @@ for(i = 0; i < ifpresentlistcounter; i++)
 	}
 fprintf(stdout, "\nmodes reported by the driver:\n"
 		"* active monitor mode available (do not trust it)\n"
+		"   Warning:\n"
+		"   depending on the Linux kernel version,active monitor mode is broken on many mt76 drivers\n"
+		"* active monitor mode available (do not trust it)\n"
 		"S active monitor mode available on shared interface (do not trust it)\n"
 		"+ monitor mode available\n"
 		"s monitor mode available on shared interface\n"
