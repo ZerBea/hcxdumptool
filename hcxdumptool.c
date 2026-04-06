@@ -320,8 +320,6 @@ static const u8 associationresponsedata[] =
 0x01, 0x08, 0x02, 0x04, 0x0b, 0x16, 0x0c, 0x12, 0x18, 0x24,
 /* Tag: Extended Supported Rates 24, 36, 48, 54, [Mbit/sec] */
 0x32, 0x04, 0x30, 0x48, 0x60, 0x6c,
-
-
 };
 #define ASSOCIATIONRESPONSEDATA_SIZE sizeof(associationresponsedata)
 /*---------------------------------------------------------------------------*/
@@ -331,6 +329,11 @@ static const u8 authenticationresponsedata[] =
 };
 #define AUTHENTICATIONRESPONSE_SIZE sizeof(authenticationresponsedata)
 /*---------------------------------------------------------------------------*/
+static const char *interferename[] =  
+{
+"pidof airodump-ng", "pidof besside-ng", "pidof wesside-ng",
+"pidof NetworkManager"
+};
 /*---------------------------------------------------------------------------*/
 static u8 macaprghidden[ETH_ALEN] = { 0 };
 static u8 macaprg[ETH_ALEN] = { 0 };
@@ -350,6 +353,26 @@ static u8 epb[PCAPNG_SNAPLEN * 2] = { 0 };
 static u8 epbown[WLTXBUFFER] = { 0 };
 static u8 wltxbuffer[WLTXBUFFER] = { 0 };
 /*===========================================================================*/
+static void checkinterfered(void)
+{
+static FILE *fh_interfere;
+static size_t ip;
+static char pidline[PIDLINE];
+static char *pidptr = NULL;
+
+for(ip = 0; ip < (sizeof(interferename) / sizeof(char *)); ip++)
+	{
+	memset(&pidline, 0, PIDLINE);
+	fh_interfere = popen(interferename[ip],"r");
+	if(fh_interfere)
+		{
+		pidptr = fgets(pidline, PIDLINE, fh_interfere);
+		if(pidptr != NULL) fprintf(stderr, "warning possible interfere: %s is running\n", &interferename[ip][6]);
+		pclose(fh_interfere);
+		}
+	}
+return;
+}
 /*===========================================================================*/
 /* status print */
 /*---------------------------------------------------------------------------*/
@@ -6140,6 +6163,7 @@ fprintf(stdout, "\nThis is a highly experimental penetration testing tool!\n"
 if(vmflag == false) fprintf(stdout, "Failed to set virtual MAC!\n");
 if((bpf.len == 0) && (rcascanmode == 0)) fprintf(stderr, "Warning: BPF is unset!\nMake sure hcxdumptool is running in a 100%% controlled environment!\nCheckout (and understand) README.md and docs/example.md!\n\n");
 if((ifakttype & IF_IS_SHARED) == IF_IS_SHARED) fprintf(stderr, "Warning:\n%s is running on a shared (virtual) interface!\nThis is not recommended because it leads to an unwanted behavior!\n\n", basename(argv[0]));
+checkinterfered();
 if((rds == 0) && (rcascanmode == 0)) fprintf(stdout, "starting in headless mode (--rds=0 display off)...\033[?25l\n");
 else fprintf(stdout, "starting...\033[?25l\n");
 nanosleep(&tspecifo, &tspeciforem);

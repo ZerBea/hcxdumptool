@@ -41,6 +41,8 @@
 #define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
 /*---------------------------------------------------------------------------*/
+#define PIDLINE			1024
+
 #define HCX_DONE		1
 #define EXIT_ON_SIGTERM		0x00000001
 #define EXIT_ON_SIGUSR1		0x00000002
