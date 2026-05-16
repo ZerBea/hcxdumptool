@@ -109,6 +109,7 @@ static calist_t *calist = NULL;
 
 static frequencylist_t *ifaktfrequencylist = NULL;
 static char ifaktname[IF_NAMESIZE +1] = { 0 };
+static char *strtok_sv = NULL;
 static u8 ifakthwmac[ETH_ALEN] = { 0 };
 
 static u16 nlfamily = 0;
@@ -892,6 +893,7 @@ static u16 padding;
 static option_header_t *optionhdr;
 
 if (optionlen == 0) return 0;
+if (optionlen > PSK_MAX) return 0;
 optionhdr = (option_header_t*)posopt;
 optionhdr->option_code = optioncode;
 optionhdr->option_length = optionlen;
@@ -3858,7 +3860,7 @@ while(1)
 					(ifpresentlist + ii)->wdev = *(u64*)wdevtmp;
 					}
 				if(vimactmp != NULL)memcpy((ifpresentlist + ii)->vimac, vimactmp, ETH_ALEN);
-				if(ifnametmp != NULL)strncpy((ifpresentlist + ii)->name, ifnametmp, IF_NAMESIZE);
+				if(ifnametmp != NULL){snprintf((ifpresentlist + ii)->name, IF_NAMESIZE, "%s", ifnametmp);}
 				}
 			}
 		}
@@ -4051,7 +4053,7 @@ while(ii <= ifpresentlistcounter)
 				if((dnlen = readlink(driverfmt, driverlink, DRIVER_LINK)) > 0)
 					{
 					drivername = basename(driverlink);
-					if(drivername != NULL) strncpy((ifpresentlist + ii)->driver, drivername, DRIVERNAME_MAX -1);
+					if(drivername != NULL){snprintf((ifpresentlist + ii)->driver, DRIVERNAME_MAX, "%s", drivername);}
 					}
 				}
 			if(nla->nla_type == NL80211_ATTR_SUPPORTED_IFTYPES)
@@ -4683,18 +4685,18 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 	if(userfrequencylistname != NULL)
 		{
 		ufld = strdup(userfrequencylistname);
-		tokptr = strtok(ufld, ",");
+		tokptr = strtok_r(ufld, ",", &strtok_sv);
 		while((tokptr != NULL) && (i < (SCANLIST_MAX - 1)))
 			{
 			usrfrequency_to_scanlist(strtol(tokptr, NULL, 10));
-			tokptr = strtok(NULL, ",");
+			tokptr = strtok_r(NULL, ",", &strtok_sv);
 			}
 		free(ufld);
 		}
 	if(userchannellistname != NULL)
 		{
 		ufld = strdup(userchannellistname);
-		tokptr = strtok(ufld, ",");
+		tokptr = strtok_r(ufld, ",", &strtok_sv);
 		while((tokptr != NULL) && (i < (SCANLIST_MAX - 1)))
 			{
 			uband = strtol(tokptr, &userband, 10);
@@ -4706,7 +4708,7 @@ else if((userfrequencylistname != NULL) || (userchannellistname != NULL))
 			else if(userband[0] == 'e') ufreq = channel_to_frequency(uband, NL80211_BAND_S1GHZ);
 			#endif
 			usrfrequency_to_scanlist(ufreq);
-			tokptr = strtok(NULL, ",");
+			tokptr = strtok_r(NULL, ",", &strtok_sv);
 			}
 		free(ufld);
 		}
