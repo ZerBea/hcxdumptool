@@ -299,7 +299,7 @@ By default, hcxdumptool is utilizing three attack vectors:
 
 - [Kernel Bugzilla](https://bugzilla.kernel.org)
 
-- [About ath10k](https://wireless.wiki.kernel.org/en/users/Drivers/ath10k)
+- [About ath10k](https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath10k.html)
 
 - [Status of Realtek out-of-kernel Drivers](https://github.com/morrownr/USB-WiFi/issues/314)
 
