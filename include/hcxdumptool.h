@@ -137,7 +137,7 @@
 #define NLRX_SIZE		0xffff
 
 #define WEAKCANDIDATEDEF	"12345678"
-
+#define WEAKCANDIDATEDEF_SIZE	sizeof(WEAKCANDIDATEDEF)
 /*===========================================================================*/
 /*===========================================================================*/
 typedef struct __attribute__((__packed__))

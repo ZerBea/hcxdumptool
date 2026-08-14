@@ -340,11 +340,11 @@ static u8 macaprg[ETH_ALEN] = { 0 };
 static u8 macclientrg[ETH_ALEN +2] = { 0 };
 static u8 anoncerg[32] = { 0 };
 static u8 snoncerg[32] = { 0 };
-static char weakcandidate[PSK_MAX];
-static char timestring[TIMESTRING_LEN];
-static char timestringresponse[TIMESTRING_LEN];
+static char weakcandidate[PSK_MAX] = { 0 };
+static char timestring[TIMESTRING_LEN] = { 0 };
+static char timestringresponse[TIMESTRING_LEN] = { 0 };
 
-static char country[3];
+static char country[3] = { 0 };
 
 static u8 nltxbuffer[NLTX_SIZE] = { 0 };
 static u8 nlrxbuffer[NLRX_SIZE] = { 0 };
@@ -4031,7 +4031,7 @@ while(1)
 					(ifpresentlist + ii)->wdev = *(u64*)wdevtmp;
 					}
 				if(vimactmp != NULL)memcpy((ifpresentlist + ii)->vimac, vimactmp, ETH_ALEN);
-				if(ifnametmp != NULL)strncpy((ifpresentlist + ii)->name, ifnametmp, IF_NAMESIZE);
+				if(ifnametmp != NULL)memcpy((ifpresentlist + ii)->name, ifnametmp, IF_NAMESIZE);
 				}
 			}
 		}
@@ -4224,7 +4224,7 @@ while(ii <= ifpresentlistcounter)
 				if((dnlen = readlink(driverfmt, driverlink, DRIVER_LINK)) > 0)
 					{
 					drivername = basename(driverlink);
-					if(drivername != NULL) strncpy((ifpresentlist + ii)->driver, drivername, DRIVERNAME_MAX -1);
+					if(drivername != NULL) memcpy((ifpresentlist + ii)->driver, drivername, DRIVERNAME_MAX -1);
 					}
 				}
 			if(nla->nla_type == NL80211_ATTR_SUPPORTED_IFTYPES)
@@ -5145,7 +5145,7 @@ static void save_ftc(void)
 {
 static char ftcname[PATH_MAX] = { 0 };
 
-strncpy(ftcname, pwd->pw_dir, PATH_MAX -10);
+memcpy(ftcname, pwd->pw_dir, PATH_MAX -10);
 strcat(ftcname, "/.hcxftc");
 clock_gettime(CLOCK_REALTIME, &tspecakt);
 if((fd_fakeclock = open(ftcname, O_WRONLY | O_TRUNC | O_CREAT, 0644)) > 0)
@@ -5162,7 +5162,7 @@ static struct timespec tssaved = { 0 };
 static char ftcname[PATH_MAX] = { 0 };
 
 clock_gettime(CLOCK_REALTIME, &tspecakt);
-strncpy(ftcname, pwd->pw_dir, PATH_MAX -10);
+memcpy(ftcname, pwd->pw_dir, PATH_MAX -10);
 strcat(ftcname, "/.hcxftc");
 if((fd_fakeclock = open(ftcname, O_RDONLY)) > 0)
 	{
@@ -5233,7 +5233,7 @@ macclientrg[3] = (nicclientrg >> 16) & 0xff;
 macclientrg[2] = ouiclientrg & 0xff;
 macclientrg[1] = (ouiclientrg >> 8) & 0xff;
 macclientrg[0] = (ouiclientrg >> 16) & 0xff;
-strncpy(weakcandidate, WEAKCANDIDATEDEF, PSK_MAX);
+memcpy(weakcandidate, WEAKCANDIDATEDEF, WEAKCANDIDATEDEF_SIZE);
 replaycountrg = (rand() % 0xfff) + 0xf000;
 eapolm1wpa1data[0x17] = (replaycountrg >> 8) &0xff;
 eapolm1wpa1data[+0x18] = replaycountrg &0xff;
@@ -5903,7 +5903,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			perror("failed to get interface index");
 			exit(EXIT_FAILURE);
 			}
-		strncpy(ifaktname, optarg, IF_NAMESIZE);
+		memcpy(ifaktname, optarg, IF_NAMESIZE);
 		break;
 
 		case HCX_BPF:
@@ -6072,7 +6072,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			perror("failed to get interface index");
 			exit(EXIT_FAILURE);
 			}
-		strncpy(ifaktname, optarg, IF_NAMESIZE -1);
+		memcpy(ifaktname, optarg, IF_NAMESIZE -1);
 		interfaceinfoflag = true;
 		break;
 
@@ -6082,7 +6082,7 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 			perror("failed to get interface index");
 			exit(EXIT_FAILURE);
 			}
-		strncpy(ifaktname, optarg, IF_NAMESIZE -1);
+		memcpy(ifaktname, optarg, IF_NAMESIZE -1);
 		monitormodeflag = true;
 		break;
 
