@@ -59,6 +59,8 @@ static bool disassociationflag = true;
 static bool ftcflag = false;
 static bool rdtflag = false;
 static bool watchdogflag = true;
+static bool apbeacon = false;
+static bool approberesponse = false;
 
 static uid_t uid = 1000;
 static struct passwd *pwd = NULL;
@@ -2968,6 +2970,7 @@ static u16 proberesponselen;
 
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((proberesponselen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
+approberesponse = true;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -3020,6 +3023,7 @@ static u16 proberesponselen;
 
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((proberesponselen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
+approberesponse = true;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -3085,6 +3089,8 @@ static u16 beaconlen;
 
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
+apbeacon = true;
+
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -3122,6 +3128,7 @@ static u16 beaconlen;
 
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
+apbeacon = true;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
