@@ -1,3 +1,11 @@
+10.09.2026
+==========
+hcxdumptool: added option to enable or disable bpf compiler optioons
+--bpfo=<value>   : enable or disable code optimization
+                    0 = code optimization disabled
+                    1 = code optimization enabled (default)
+
+
 05.03.2026
 ==========
 hcxdumptool: changed rds=4 format (according to rds 1..3)

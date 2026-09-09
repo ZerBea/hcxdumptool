@@ -69,6 +69,7 @@ static u16 exiteapolm3flag = 0;
 static u16 exiteapolm2flag = 0;
 static u16 exiteapolm2rgflag = 0;
 static u16 exiteapolm1flag = 0;
+static int bpfoptimize = BPFO_OPTIMIZED;
 
 static int gpiostatusled = 0;
 static int gpiobutton = 0;
@@ -5420,7 +5421,7 @@ if((hpcap = pcap_open_dead(DLT_IEEE802_11_RADIO, PCAPNG_SNAPLEN)) == NULL)
 	fprintf(stderr, "failed to open libpcap\n");
 	return false;
 	}
-if(pcap_compile(hpcap, &bpfp, bpfs, 1, 0))
+if(pcap_compile(hpcap, &bpfp, bpfs, bpfoptimize, 0))
 	{
 	fprintf(stderr, "failed to compile BPF\n");
 	return false;
@@ -5706,6 +5707,9 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                    3 = compile BPF code as a ASM program (tcpdump style)\n"
 	"                    4 = compile BPF code as as decimal numbers (bpf_debug style)\n"
 	"                    see man pcap-filter\n"
+	"--bpfo=<value>   : enable or disable code optimization\n"
+	"                    0 = code optimization disabled\n"
+	"                    1 = code optimization enabled (default)\n"
 #endif
 	"--bpf=<file>     : input Berkeley Packet Filter (BPF) code (maximum %d instructions) in tcpdump decimal numbers format\n"
 	"                    see --help for more information\n", 
@@ -5865,6 +5869,7 @@ static const struct option long_options[] =
 #ifdef HCXWANTLIBPCAP
 	{"bpfc",			required_argument,	NULL,	HCX_BPFC},
 	{"bpfd",			required_argument,	NULL,	HCX_BPFD},
+	{"bpfo",			required_argument,	NULL,	HCX_BPFO},
 #endif
 	{"ftc",				no_argument,		NULL,	HCX_FTC},
 	{"disable_disassociation",	no_argument,		NULL,	HCX_DISABLE_DISASSOCIATION},
@@ -5925,6 +5930,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		if(bpfdmode > BPFD_DBG)
 			{
 			fprintf(stderr, "BPF mode ERROR (allowed 0 to 4)\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCX_BPFO:
+		bpfoptimize = atoi(optarg);
+		if((bpfoptimize < BPFO_NOT_OPTIMIZED) || (bpfoptimize > BPFO_OPTIMIZED)) 
+			{
+			fprintf(stderr, "BPF mode ERROR (allowed 0 or 1)\n");
 			exit(EXIT_FAILURE);
 			}
 		break;
