@@ -69,8 +69,9 @@ static u16 exiteapolm3flag = 0;
 static u16 exiteapolm2flag = 0;
 static u16 exiteapolm2rgflag = 0;
 static u16 exiteapolm1flag = 0;
+#ifdef HCXWANTLIBPCAP
 static int bpfoptimize = BPFO_OPTIMIZED;
-
+#endif
 static int gpiostatusled = 0;
 static int gpiobutton = 0;
 
