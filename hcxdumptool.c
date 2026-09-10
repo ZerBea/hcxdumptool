@@ -71,6 +71,7 @@ static u16 exiteapolm3flag = 0;
 static u16 exiteapolm2flag = 0;
 static u16 exiteapolm2rgflag = 0;
 static u16 exiteapolm1flag = 0;
+static int apholdmode = AP_HOLD_OFF;
 #ifdef HCXWANTLIBPCAP
 static int bpfoptimize = BPFO_OPTIMIZED;
 #endif
@@ -3090,7 +3091,6 @@ static u16 beaconlen;
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
 apbeacon = true;
-
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -3519,8 +3519,24 @@ while(!wanteventflag)
 			lifetime++;
 			if((lifetime % timehold) == 0)
 				{
-				scanlistindex++;
-				if(nl_set_frequency() == false) errorcount++;
+				if(apholdmode == AP_HOLD_OFF)
+					{
+					scanlistindex++;
+					if(nl_set_frequency() == false) errorcount++;
+					}
+				else
+					{
+					if((apbeacon == false) || (approberesponse == false))
+						{
+						scanlistindex++;
+						if(nl_set_frequency() == false) errorcount++;
+						}
+					else
+						{
+						apbeacon = false;
+						approberesponse = false;
+						}
+					}
 				}
 			if((lifetime % 10) == 0)
 				{
@@ -3619,8 +3635,24 @@ while(!wanteventflag)
 				if((lifetime % timehold) == 0)
 					{
 					show_realtime();
-					scanlistindex++;
-					if(nl_set_frequency() == false) errorcount++;
+					if(apholdmode == AP_HOLD_OFF)
+						{
+						scanlistindex++;
+						if(nl_set_frequency() == false) errorcount++;
+						}
+					else
+						{
+						if((apbeacon == false) || (approberesponse == false))
+							{
+							scanlistindex++;
+							if(nl_set_frequency() == false) errorcount++;
+							}
+						else
+							{
+							apbeacon = false;
+							approberesponse = false;
+							}
+						}
 					}
 				}
 			else
@@ -3628,8 +3660,24 @@ while(!wanteventflag)
 				if((lifetime % 5) == 0)
 					{
 					show_realtime();
-					scanlistindex++;
-					if(nl_set_frequency() == false) errorcount++;
+					if(apholdmode == AP_HOLD_OFF)
+						{
+						scanlistindex++;
+						if(nl_set_frequency() == false) errorcount++;
+						}
+					else
+						{
+						if((apbeacon == false) || (approberesponse == false))
+							{
+							scanlistindex++;
+							if(nl_set_frequency() == false) errorcount++;
+							}
+						else
+							{
+							apbeacon = false;
+							approberesponse = false;
+							}
+						}
 					}
 				}
 			if((lifetime % 10) == 0)
@@ -3831,8 +3879,24 @@ while(!wanteventflag)
 				if((lifetime % timehold) == 0)
 					{
 					show_realtime_rca();
-					scanlistindex++;
-					if(nl_set_frequency() == false) errorcount++;
+					if(apholdmode == AP_HOLD_OFF)
+						{
+						scanlistindex++;
+						if(nl_set_frequency() == false) errorcount++;
+						}
+					else
+						{
+						if((apbeacon == false) || (approberesponse == false))
+							{
+							scanlistindex++;
+							if(nl_set_frequency() == false) errorcount++;
+							}
+						else
+							{
+							apbeacon = false;
+							approberesponse = false;
+							}
+						}
 					if(rcascanmode == RCASCAN_ACTIVE)
 						{
 						send_80211_proberequest_undirected();
@@ -3845,8 +3909,24 @@ while(!wanteventflag)
 				if((lifetime % 5) == 0)
 					{
 					show_realtime_rca();
-					scanlistindex++;
-					if(nl_set_frequency() == false) errorcount++;
+					if(apholdmode == AP_HOLD_OFF)
+						{
+						scanlistindex++;
+						if(nl_set_frequency() == false) errorcount++;
+						}
+					else
+						{
+						if((apbeacon == false) || (approberesponse == false))
+							{
+							scanlistindex++;
+							if(nl_set_frequency() == false) errorcount++;
+							}
+						else
+							{
+							apbeacon = false;
+							approberesponse = false;
+							}
+						}
 					if(rcascanmode == RCASCAN_ACTIVE)
 						{
 						send_80211_proberequest_undirected();
@@ -5697,6 +5777,9 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-F               : use all available frequencies from INTERFACE\n"
 	"-t <second>      : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                    default %d seconds\n"
+	"-T <digit>       : stop channel hopping if AP has been detected by BEACON or PROBERESPONSE\n"
+	"                    0 = do not stop channel hopping (default)\n"
+	"                    1 = do not stop channel hopping (default)\n"
 	"-A               : ACK incoming frames\n"
 	"                    INTERFACE must support active monitor mode\n"
 	"                    Warning: active monitor mode is broken on many mt76 drivers\n"
@@ -5870,7 +5953,7 @@ static char *userfrequencylistname = NULL;
 static char *pcapngoutname = NULL;
 static const char *rebootstring = "reboot";
 static const char *poweroffstring = "poweroff";
-static const char *short_options = "i:w:c:f:m:I:t:FLlAhHv";
+static const char *short_options = "i:w:c:f:m:I:t:T:FLlAhHv";
 static const struct option long_options[] =
 {
 	{"bpf",				required_argument,	NULL,	HCX_BPF},
@@ -6000,6 +6083,15 @@ while((auswahl = getopt_long(argc, argv, short_options, long_options, &index)) !
 		if((timehold = strtoull(optarg, NULL, 10)) < 2)
 			{
 			fprintf(stderr, "hold time must be > 1 second\n");
+			exit(EXIT_FAILURE);
+			}
+		break;
+
+		case HCX_AP_HOLDMODE:
+		apholdmode = atoi(optarg);
+		if((apholdmode < AP_HOLD_OFF) || (apholdmode > AP_HOLD_ON)) 
+			{
+			fprintf(stderr, "BPF mode ERROR (allowed 0 or 1)\n");
 			exit(EXIT_FAILURE);
 			}
 		break;

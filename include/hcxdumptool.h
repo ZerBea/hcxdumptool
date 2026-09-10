@@ -38,6 +38,7 @@
 #define HCX_SHOW_INTERFACE_LIST		'L'
 #define HCX_SHOW_INTERFACE_LIST_SHORT	'l'
 #define HCX_HOLD_TIME			't'
+#define HCX_AP_HOLDMODE			'T'
 #define HCX_HELP			'h'
 #define HCX_HELP_ADDITIONAL		'H'
 #define HCX_VERSION			'v'
@@ -69,6 +70,9 @@
 #define IFTYPEMON		0x02
 #define IFTYPEMONACT		0x04
 
+#define AP_HOLD_OFF		0
+#define AP_HOLD_ON		1
+
 #define BPFD_HCX		0
 #define BPFD_TCPDUMP		1
 #define BPFD_C			2
@@ -76,7 +80,6 @@
 #define BPFD_DBG		4
 #define BPFO_NOT_OPTIMIZED	0
 #define BPFO_OPTIMIZED		1
-
 
 #define RCASCAN_ACTIVE		0x01
 #define RCASCAN_PASSIVE		0x02

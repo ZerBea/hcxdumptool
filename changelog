@@ -1,5 +1,13 @@
 10.09.2026
 ==========
+hcxdumptool: added option to stop channel scan if AP has been detected
+-T <digit>       : stop channel hopping if AP has been detected by BEACON or PROBERESPONSE
+                    0 = do not stop channel hopping (default)
+                    1 = do not stop channel hopping (default)
+
+
+10.09.2026
+==========
 hcxdumptool: added option to enable or disable bpf compiler optioons
 --bpfo=<value>   : enable or disable code optimization
                     0 = code optimization disabled
