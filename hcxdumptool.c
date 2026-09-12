@@ -5798,7 +5798,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"                    3 = compile BPF code as a ASM program (tcpdump style)\n"
 	"                    4 = compile BPF code as as decimal numbers (bpf_debug style)\n"
 	"                    see man pcap-filter\n"
-	"--bpfo=<value>   : enable or disable code optimization\n"
+	"--bpfo=<digit>   : enable or disable code optimization\n"
 	"                    0 = code optimization disabled\n"
 	"                    1 = code optimization enabled (default)\n"
 #endif
