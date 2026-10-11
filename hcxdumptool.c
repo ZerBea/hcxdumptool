@@ -3117,6 +3117,7 @@ memcpy((aplist + i)->apdata->maca, macfrx->addr2, ETH_ALEN);
 if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel) apbeacon = true;
 beaconrcascancount++;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
