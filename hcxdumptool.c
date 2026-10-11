@@ -2971,7 +2971,6 @@ static u16 proberesponselen;
 
 proberesponse = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((proberesponselen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-approberesponse = true;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -2992,6 +2991,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+	if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel) approberesponse = true;
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
 	}
@@ -3012,6 +3012,7 @@ if(memcmp(macclientrg, macfrx->addr1, ETH_ALEN) == 0)
 if(__hcx16le(proberesponse->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 else (aplist + i)->apdata->privacy = 'o';
 get_tags((aplist + i)->apdata, proberesponselen, proberesponse->ie);
+if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel) approberesponse = true;
 qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 return;
 }
@@ -3091,7 +3092,6 @@ static u16 beaconlen;
 
 beacon = (ieee80211_beacon_proberesponse_t*)payloadptr;
 if((beaconlen = payloadlen - IEEE80211_BEACON_SIZE) < IEEE80211_IETAG_SIZE) return;
-apbeacon = true;
 for(i = 0; i < APLIST_MAX - 1; i++)
 	{
 	if((aplist + i)->tsakt == 0) break;
@@ -3102,6 +3102,7 @@ for(i = 0; i < APLIST_MAX - 1; i++)
 	if(__hcx16le(beacon->capability) & WLAN_CAPABILITY_PRIVACY) (aplist + i)->apdata->privacy = 'e';
 	else (aplist + i)->apdata->privacy = 'o';
 	get_tags((aplist + i)->apdata, beaconlen, beacon->ie);
+	if((aplist + i)->apdata->channel == (scanlist + scanlistindex)->channel) apbeacon = true;
 	beaconrcascancount++;
 	if(i > APLIST_HALF) qsort(aplist, i + 1, APLIST_SIZE, sort_aplist_by_tsakt);
 	return;
