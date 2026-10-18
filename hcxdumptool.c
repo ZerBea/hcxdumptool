@@ -4114,6 +4114,7 @@ while(1)
 			{
 			if((ifpresentlist + ii)->wiphy == *(int*)wiphytmp)
 				{
+				if((ifpresentlist + ii)->index != 0 && ifnametmp != NULL && strncmp((char*)ifnametmp, ifaktname, IF_NAMESIZE) != 0) continue;
 				if(ifidxtmp != NULL) (ifpresentlist + ii)->index = *(u32*)ifidxtmp;
 				if(wdevtmp != NULL)
 					{
@@ -4265,6 +4266,10 @@ static struct nlmsghdr *nlh;
 static struct genlmsghdr *glh;
 static struct nlattr *nla;
 static struct nlmsgerr *nle;
+static struct nlattr *scanpart;
+static int scanrem;
+static size_t jj;
+static int partwiphy;
 static char *drivername = NULL;
 static char driverfmt[DRIVER_FORMAT] = { 0 };
 static char driverlink[DRIVER_LINK] = { 0 };
@@ -4307,6 +4312,29 @@ while(ii <= ifpresentlistcounter)
 		if(glh->cmd != NL80211_CMD_NEW_WIPHY) continue;
 		nla = (struct nlattr*)((unsigned char*)NLMSG_DATA(nlh) + sizeof(struct genlmsghdr));
 		nlremlen = NLMSG_PAYLOAD(nlh, 0) -4;
+		partwiphy = 0;
+		scanpart = nla;
+		scanrem = nlremlen;
+		while(nla_ok(scanpart, scanrem))
+			{
+			if(scanpart->nla_type == NL80211_ATTR_WIPHY)
+				{
+				partwiphy = *((int*)nla_data(scanpart));
+				break;
+				}
+			scanpart = nla_next(scanpart, &scanrem);
+			}
+		if(partwiphy != 0)
+			{
+			for(jj = 0; jj < ii; jj++)
+				{
+				if((ifpresentlist + jj)->wiphy == partwiphy)
+					{
+					ii = jj;
+					break;
+					}
+				}
+			}
 		while(nla_ok(nla, nlremlen))
 			{
 			if(nla->nla_type == NL80211_ATTR_WIPHY)
@@ -5766,7 +5794,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	"-c <digit>       : set channel (1a,2a,36b,...)\n"
 	"                    default: 1a,6a,11a\n"
 	"                    important notice: channel numbers are not unique\n"
-	"                    incorrect entries are ignored without further warning\n"
+	"                    arming the interface will fail on unsupported channels/bands\n"
 	"                    it is mandatory to add band information to the channel number (e.g. 12a)\n"
 	"                     band a: NL80211_BAND_2GHZ\n"
 	"                     band b: NL80211_BAND_5GHZ\n"
@@ -5777,7 +5805,7 @@ fprintf(stdout, "%s %s  (C) %s ZeroBeat\n"
 	#endif
 	"                    to disable frequency management, set this option to a single frequency/channel\n"
 	"-f <digit>       : set frequency (2412,2417,5180,...)\n"
-	"                    incorrect entries are ignored without further warning\n"
+	"                    arming the interface will fail on unsupported frequencies\n"
 	"-F               : use all available frequencies from INTERFACE\n"
 	"-t <second>      : minimum stay time (will increase on new stations and/or authentications)\n"
 	"                    default %d seconds\n"
